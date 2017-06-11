@@ -31,7 +31,7 @@ at <https://laravel.com/docs/master/upgrade>.
 * cleanup: `boolean`, default `true` - all database queries will be run in a transaction,
   which will be rolled back at the end of each test.
 * run_database_migrations: `boolean`, default `false` - run database migrations before each test.
-* database_migrations_path: `string`, default `` - path to the database migrations, relative to the root of the application.
+* database_migrations_path: `string`, default `null` - path to the database migrations, relative to the root of the application.
 * run_database_seeder: `boolean`, default `false` - run database seeder before each test.
 * database_seeder_class: `string`, default `` - database seeder class name.
 * environment_file: `string`, default `.env` - the environment file to load for the tests.
@@ -309,6 +309,18 @@ $I->checkOption('#agree');
 ```
 
  * `param` $option
+
+
+### clearApplicationHandlers
+ 
+Clear the registered application handlers.
+
+``` php
+<?php
+$I->clearApplicationHandlers();
+?>
+```
+
 
 
 ### click
@@ -825,6 +837,15 @@ $I->grabNumRecords('App\User', array('name' => 'davert'));
  * `[Part]` orm
 
 
+### grabPageSource
+ 
+Grabs current page source code.
+
+@throws ModuleException if no page was opened.
+
+ * `return` string Current page source code.
+
+
 ### grabRecord
  
 Retrieves record from database
@@ -910,6 +931,22 @@ $I->have('App\User', [], 'admin');
  * `param array` $attributes
  * `param string` $name
  * `[Part]` orm
+
+
+### haveApplicationHandler
+ 
+Register a handler than can be used to modify the Laravel application object after it is initialized.
+The Laravel application object will be passed as an argument to the handler.
+
+``` php
+<?php
+$I->haveApplicationHandler(function($app) {
+    $app->make('config')->set(['test_value' => '10']);
+});
+?>
+```
+
+ * `param` $handler
 
 
 ### haveBinding
@@ -1638,7 +1675,7 @@ $I->setCookie('PHPSESSID', 'el4ukv0kqbvoirg7nkp4dncpk3');
 
 ### submitForm
  
-Submits the given form on the page, optionally with the given form
+Submits the given form on the page, with the given form
 values.  Pass the form field's values as an array in the second
 parameter.
 
@@ -1839,4 +1876,4 @@ $I->uncheckOption('#notify');
 
  * `param` $option
 
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.2/src/Codeception/Module/Laravel5.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.3/src/Codeception/Module/Laravel5.php">Help us to improve documentation. Edit module reference</a></div>

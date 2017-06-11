@@ -8,9 +8,6 @@
  * file that was distributed with this source code.
  */
 
-/**
- * @since Class available since Release 4.0.0
- */
 class PHPUnit_Runner_Filter_Test extends RecursiveFilterIterator
 {
     /**
@@ -98,8 +95,7 @@ class PHPUnit_Runner_Filter_Test extends RecursiveFilterIterator
 
         if ($test instanceof PHPUnit_Framework_WarningTestCase) {
             $name = $test->getMessage();
-        }
-        else {
+        } else {
             $tmp = PHPUnit_Util_Test::describe($test, false);
 
             if ($tmp[0] != '') {

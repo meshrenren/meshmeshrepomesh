@@ -4,7 +4,6 @@ namespace Codeception;
 use Codeception\Lib\ModuleContainer;
 use Codeception\Step\Meta as MetaStep;
 use Codeception\Util\Locator;
-use Codeception\Lib\Console\Message;
 
 abstract class Step
 {
@@ -85,6 +84,11 @@ abstract class Step
     public function hasFailed()
     {
         return $this->failed;
+    }
+
+    public function getArguments()
+    {
+        return $this->arguments;
     }
 
     public function getArgumentsAsString($maxLength = 200)
@@ -214,7 +218,7 @@ abstract class Step
             return sprintf('%s %s', ucfirst($this->prefix), $this->humanize($this->getAction()));
         }
 
-        return sprintf('%s %s <span style="color: %s">%s</span>', ucfirst($this->prefix), $this->humanize($this->getAction()), $highlightColor, $this->getHumanizedArguments());
+        return sprintf('%s %s <span style="color: %s">%s</span>', ucfirst($this->prefix), htmlspecialchars($this->humanize($this->getAction())), $highlightColor, htmlspecialchars($this->getHumanizedArguments()));
     }
 
     public function getHumanizedActionWithoutArguments()
@@ -283,7 +287,7 @@ abstract class Step
         while (isset($stack[$i])) {
             $step = $stack[$i];
             $i--;
-            if (!isset($step['file']) or !isset($step['function'])) {
+            if (!isset($step['file']) or !isset($step['function']) or !isset($step['class'])) {
                 continue;
             }
 

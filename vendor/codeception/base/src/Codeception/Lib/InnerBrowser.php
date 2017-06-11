@@ -153,7 +153,7 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
 
         foreach ($this->headers as $header => $val) { // moved from REST module
 
-            if (!$val) {
+            if ($val === null || $val === '') {
                 continue;
             }
 
@@ -814,14 +814,14 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
      * DOM wouldn't expect them.
      *
      * @param Crawler $form the form
-     * @param string $action the form's absolute URL action
      * @return Form
      */
-    private function getFormFromCrawler(Crawler $form, $action)
+    private function getFormFromCrawler(Crawler $form)
     {
         $fakeDom = new \DOMDocument();
         $fakeDom->appendChild($fakeDom->importNode($form->getNode(0), true));
         $node = $fakeDom->documentElement;
+        $action = (string)$this->getFormUrl($form);
         $cloned = new Crawler($node, $action, $this->getBaseUrl());
         $shouldDisable = $cloned->filter(
             'input:disabled:not([disabled]),select option:disabled,select optgroup:disabled option:not([disabled])'
@@ -849,10 +849,10 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
         if (!$form) {
             $this->fail('The selected node is not a form and does not have a form ancestor.');
         }
-        $action = (string)$this->getFormUrl($form);
-        $identifier = $form->attr('id') ?: $action;
+
+        $identifier = $form->attr('id') ?: $form->attr('action');
         if (!isset($this->forms[$identifier])) {
-            $this->forms[$identifier] = $this->getFormFromCrawler($form, $action);
+            $this->forms[$identifier] = $this->getFormFromCrawler($form);
         }
         return $this->forms[$identifier];
     }
@@ -1050,17 +1050,21 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
     public function attachFile($field, $filename)
     {
         $form = $this->getFormFor($field = $this->getFieldByLabelOrCss($field));
-        $path = Configuration::dataDir() . $filename;
-        $name = $field->attr('name');
-        if (!is_readable($path)) {
-            $this->fail("file $filename not found in Codeception data path. Only files stored in data path accepted");
+        $filePath = codecept_data_dir() . $filename;
+        if (!file_exists($filePath)) {
+            throw new \InvalidArgumentException("File does not exist: $filePath");
         }
+        if (!is_readable($filePath)) {
+            throw new \InvalidArgumentException("File is not readable: $filePath");
+        }
+
+        $name = $field->attr('name');
         $formField = $this->matchFormField($name, $form, new FileFormField($field->getNode(0)));
         if (is_array($formField)) {
             $this->fail("Field $name is ignored on upload, field $name is treated as array.");
         }
 
-        $formField->upload($path);
+        $formField->upload($filePath);
     }
 
     /**
@@ -1326,6 +1330,18 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
             return null;
         }
         return $cookies->getValue();
+    }
+
+    /**
+     * Grabs current page source code.
+     *
+     * @throws ModuleException if no page was opened.
+     *
+     * @return string Current page source code.
+     */
+    public function grabPageSource()
+    {
+        return $this->_getResponseContent();
     }
 
     public function seeCookie($cookie, array $params = [])

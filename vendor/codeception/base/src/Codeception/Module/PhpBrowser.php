@@ -1,8 +1,6 @@
 <?php
 namespace Codeception\Module;
 
-use Codeception\Exception\ModuleConfigException;
-use Codeception\Exception\ModuleException;
 use Codeception\Lib\Connector\Guzzle6;
 use Codeception\Lib\InnerBrowser;
 use Codeception\Lib\Interfaces\MultiSession;
@@ -271,7 +269,8 @@ class PhpBrowser extends InnerBrowser implements Remote, MultiSession, RequiresP
         return [
             'client' => $this->client,
             'guzzle' => $this->guzzle,
-            'crawler' => $this->crawler
+            'crawler' => $this->crawler,
+            'headers' => $this->headers,
         ];
     }
 

@@ -25,8 +25,10 @@ use Codeception\Test\Descriptor;
 use Codeception\Test\Interfaces\ScenarioDriven;
 use Codeception\TestInterface;
 use Codeception\Util\Debug;
+use Codeception\Util\ActionSequence;
 use Codeception\Util\Locator;
 use Codeception\Util\Uri;
+use Facebook\WebDriver\Cookie;
 use Facebook\WebDriver\Exception\InvalidElementStateException;
 use Facebook\WebDriver\Exception\InvalidSelectorException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
@@ -54,27 +56,30 @@ use Symfony\Component\DomCrawler\Crawler;
  *
  * ### Selenium
  *
- * 1. Download [Selenium Server](http://docs.seleniumhq.org/download/)
- * 2. Launch the daemon: `java -jar selenium-server-standalone-2.xx.xxx.jar`
- * 3. Configure this module (in acceptance.suite.yml) by setting url and browser:
+ * To run Selenium Server you need [Java](https://www.java.com/) as well as Chrome or Firefox browser installed.
+ *
+ * 1. Download [Selenium Standalone Server](http://docs.seleniumhq.org/download/)
+ * 2. To use Chrome, install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/getting-started). To use Firefox, install [GeckoDriver](https://github.com/mozilla/geckodriver).
+ * 3. Launch the Selenium Server: `java -jar selenium-server-standalone-3.xx.xxx.jar`. To locate Chromedriver binary use `-Dwebdriver.chrome.driver=./chromedriver` option. For Geckodriver use `-Dwebdriver.gecko.driver=./geckodriver`.
+ * 4. Configure this module (in `acceptance.suite.yml`) by setting `url` and `browser`:
  *
  * ```yaml
  *     modules:
  *        enabled:
  *           - WebDriver:
  *              url: 'http://localhost/'
- *              browser: firefox
+ *              browser: chrome # 'chrome' or 'firefox'
  * ```
  *
  * ### PhantomJS
  *
- * PhantomJS is a headless alternative to Selenium Server that implements
+ * PhantomJS is a [headless browser](https://en.wikipedia.org/wiki/Headless_browser) alternative to Selenium Server that implements
  * [the WebDriver protocol](https://code.google.com/p/selenium/wiki/JsonWireProtocol).
  * It allows you to run Selenium tests on a server without a GUI installed.
  *
  * 1. Download [PhantomJS](http://phantomjs.org/download.html)
  * 2. Run PhantomJS in WebDriver mode: `phantomjs --webdriver=4444`
- * 3. Configure this module (in acceptance.suite.yml) by setting url and `phantomjs` as browser:
+ * 3. Configure this module (in `acceptance.suite.yml`) by setting url and `phantomjs` as browser:
  *
  * ```yaml
  *     modules:
@@ -83,6 +88,19 @@ use Symfony\Component\DomCrawler\Crawler;
  *              url: 'http://localhost/'
  *              browser: phantomjs
  * ```
+ *
+ * Since PhantomJS doesn't give you any visual feedback, it's probably a good idea to install [Codeception\Extension\Recorder](http://codeception.com/extensions#CodeceptionExtensionRecorder) which gives you screenshots of how PhantomJS "sees" your pages.
+ *
+ * ### Headless Selenium in Docker
+ *
+ * Docker can ship Selenium Server with all its dependencies and browsers inside a single container.
+ * Running tests inside Docker is as easy as pulling [official selenium image](https://github.com/SeleniumHQ/docker-selenium) and starting a container with Chrome:
+ *
+ * ```
+ * docker run --net=host selenium/standalone-chrome
+ * ```
+ *
+ * By using `--net=host` we allow selenium to access local websites.
  *
  * ## Cloud Testing
  *
@@ -154,11 +172,11 @@ use Symfony\Component\DomCrawler\Crawler;
  * * `browser` *required* - Browser to launch.
  * * `host` - Selenium server host (127.0.0.1 by default).
  * * `port` - Selenium server port (4444 by default).
- * * `restart` - Set to false (default) to share browser window between tests, or set to true to create a separate window for each test.
+ * * `restart` - Set to `false` (default) to use the same browser window for all tests, or set to `true` to create a new window for each test. In any case, when all tests are finished the browser window is closed.
  * * `window_size` - Initial window size. Set to `maximize` or a dimension in the format `640x480`.
  * * `clear_cookies` - Set to false to keep cookies, or set to true (default) to delete all cookies between tests.
  * * `wait` - Implicit wait (default 0 seconds).
- * * `capabilities` - Sets Selenium2 [desired capabilities](https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities). Should be a key-value array.
+ * * `capabilities` - Sets Selenium [desired capabilities](https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities). Should be a key-value array.
  * * `connection_timeout` - timeout for opening a connection to remote selenium server (30 seconds by default).
  * * `request_timeout` - timeout for a request to return something from remote selenium server (30 seconds by default).
  * * `pageload_timeout` - amount of time to wait for a page load to complete before throwing an error (default 0 seconds).
@@ -180,11 +198,6 @@ use Symfony\Component\DomCrawler\Crawler;
  *                  unexpectedAlertBehaviour: 'accept'
  *                  firefox_profile: '~/firefox-profiles/codeception-profile.zip.b64'
  * ```
- *
- * ### Status
- *
- * Stability: **stable**
- * Based on [facebook php-webdriver](https://github.com/facebook/php-webdriver)
  *
  * ## Usage
  *
@@ -286,6 +299,11 @@ class WebDriver extends CodeceptionModule implements
      */
     public $webDriver;
 
+    /**
+     * @var RemoteWebElement
+     */
+    protected $baseElement;
+
     public function _requires()
     {
         return ['Facebook\WebDriver\Remote\RemoteWebDriver' => '"facebook/webdriver": "^1.0.1"'];
@@ -314,10 +332,36 @@ class WebDriver extends CodeceptionModule implements
         if (!isset($this->webDriver)) {
             $this->_initializeSession();
         }
+        $this->setBaseElement();
+
         $test->getMetadata()->setCurrent([
             'browser' => $this->config['browser'],
             'capabilities' => $this->config['capabilities']
         ]);
+    }
+
+    /**
+     * Restarts a web browser.
+     * Can be used with `_reconfigure` to open browser with different configuration
+     *
+     * ```php
+     * <?php
+     * // inside a Helper
+     * $this->getModule('WebDriver')->_restart(); // just restart
+     * $this->getModule('WebDriver')->_restart(['browser' => $browser]); // reconfigure + restart
+     * ```
+     *
+     * @param array $config
+     * @api
+     */
+    public function _restart($config = [])
+    {
+        $this->webDriver->quit();
+        if (!empty($config)) {
+            $this->_reconfigure($config);
+        }
+        $this->_initialize();
+        $this->_initializeSession();
     }
 
     protected function loadFirefoxProfile()
@@ -596,13 +640,18 @@ class WebDriver extends CodeceptionModule implements
      * $I->amOnPage('/user/edit');
      * $I->makeScreenshot('edit_page');
      * // saved to: tests/_output/debug/edit_page.png
+     * $I->makeScreenshot();
+     * // saved to: tests/_output/debug/2017-05-26_14-24-11_4b3403665fea6.png
      * ?>
      * ```
      *
      * @param $name
      */
-    public function makeScreenshot($name)
+    public function makeScreenshot($name = null)
     {
+        if (empty($name)) {
+            $name = uniqid(date("Y-m-d_H-i-s_"));
+        }
         $debugDir = codecept_log_dir() . 'debug';
         if (!is_dir($debugDir)) {
             mkdir($debugDir, 0777);
@@ -687,6 +736,21 @@ class WebDriver extends CodeceptionModule implements
         }
         $cookie = reset($cookies);
         return $cookie['value'];
+    }
+
+    /**
+     * Grabs current page source code.
+     *
+     * @throws ModuleException if no page was opened.
+     *
+     * @return string Current page source code.
+     */
+    public function grabPageSource()
+    {
+        // Make sure that some page was opened.
+        $this->_getCurrentUri();
+
+        return $this->webDriver->getPageSource();
     }
 
     protected function filterCookies($cookies, $params = [])
@@ -787,7 +851,7 @@ class WebDriver extends CodeceptionModule implements
         if ($context) {
             $page = $this->matchFirstOrFail($this->webDriver, $context);
         }
-        $el = $this->findClickable($page, $link);
+        $el = $this->_findClickable($page, $link);
         if (!$el) {
             try {
                 $els = $this->match($page, $link);
@@ -803,11 +867,29 @@ class WebDriver extends CodeceptionModule implements
     }
 
     /**
-     * @param $page
-     * @param $link
+     * Locates a clickable element.
+     *
+     * Use it in Helpers or GroupObject or Extension classes:
+     *
+     * ```php
+     * <?php
+     * $module = $this->getModule('WebDriver');
+     * $page = $module->webDriver;
+     *
+     * // search a link or button on a page
+     * $el = $module->_findClickable($page, 'Click Me');
+     *
+     * // search a link or button within an element
+     * $topBar = $module->_findElements('.top-bar')[0];
+     * $el = $module->_findClickable($topBar, 'Click Me');
+     *
+     * ```
+     * @api
+     * @param $page WebDriver instance or an element to search within
+     * @param $link a link text or locator to click
      * @return WebDriverElement
      */
-    protected function findClickable($page, $link)
+    public function _findClickable($page, $link)
     {
         if (is_array($link) or ($link instanceof WebDriverBy)) {
             return $this->matchFirstOrFail($page, $link);
@@ -917,41 +999,49 @@ class WebDriver extends CodeceptionModule implements
 
     public function seeLink($text, $url = null)
     {
-        $nodes = $this->webDriver->findElements(WebDriverBy::partialLinkText($text));
+        $nodes = $this->baseElement->findElements(WebDriverBy::partialLinkText($text));
+        $currentUri = $this->_getCurrentUri();
+
         if (empty($nodes)) {
-            $this->fail("No links containing text '$text' were found in page " . $this->_getCurrentUri());
+            $this->fail("No links containing text '$text' were found in page $currentUri");
         }
         if ($url) {
-            $nodes = array_filter(
-                $nodes,
-                function (WebDriverElement $e) use ($url) {
-                    return trim($e->getAttribute('href')) == trim($url);
-                }
-            );
-            if (empty($nodes)) {
-                $this->fail("No links containing text '$text' and URL '$url' were found in page " . $this->_getCurrentUri());
-            }
+            $nodes = $this->filterNodesByHref($url, $nodes);
         }
+        $this->assertNotEmpty($nodes, "No links containing text '$text' and URL '$url' were found in page $currentUri");
     }
 
     public function dontSeeLink($text, $url = null)
     {
-        $nodes = $this->webDriver->findElements(WebDriverBy::partialLinkText($text));
+        $nodes = $this->baseElement->findElements(WebDriverBy::partialLinkText($text));
+        $currentUri = $this->_getCurrentUri();
         if (!$url) {
-            if (!empty($nodes)) {
-                $this->fail("Link containing text '$text' was found in page " . $this->_getCurrentUri());
-            }
-            return;
+            $this->assertEmpty($nodes, "Link containing text '$text' was found in page $currentUri");
+        } else {
+            $nodes = $this->filterNodesByHref($url, $nodes);
+            $this->assertEmpty($nodes, "Link containing text '$text' and URL '$url' was found in page $currentUri");
         }
+    }
+
+    /**
+     * @param string $url
+     * @param $nodes
+     * @return array
+     */
+    private function filterNodesByHref($url, $nodes)
+    {
+        //current uri can be relative, merging it with configured base url gives absolute url
+        $absoluteCurrentUrl = Uri::mergeUrls($this->_getUrl(), $this->_getCurrentUri());
+        $expectedUrl = Uri::mergeUrls($absoluteCurrentUrl, $url);
+
         $nodes = array_filter(
             $nodes,
-            function (WebDriverElement $e) use ($url) {
-                return trim($e->getAttribute('href')) == trim($url);
+            function (WebDriverElement $e) use ($expectedUrl, $absoluteCurrentUrl) {
+                $elementHref = Uri::mergeUrls($absoluteCurrentUrl, $e->getAttribute('href'));
+                return $elementHref === $expectedUrl;
             }
         );
-        if (!empty($nodes)) {
-            $this->fail("Link containing text '$text' and URL '$url' was found in page " . $this->_getCurrentUri());
-        }
+        return $nodes;
     }
 
     public function seeInCurrentUrl($uri)
@@ -1034,7 +1124,7 @@ class WebDriver extends CodeceptionModule implements
 
     protected function proceedSeeInFormFields($formSelector, array $params, $assertNot)
     {
-        $form = $this->match($this->webDriver, $formSelector);
+        $form = $this->match($this->baseElement, $formSelector);
         if (empty($form)) {
             throw new ElementNotFound($formSelector, "Form via CSS or XPath");
         }
@@ -1208,6 +1298,7 @@ class WebDriver extends CodeceptionModule implements
             if (!is_null($this->config['pageload_timeout'])) {
                 $this->webDriver->manage()->timeouts()->pageLoadTimeout($this->config['pageload_timeout']);
             }
+            $this->setBaseElement();
             $this->initialWindowSize();
         } catch (WebDriverCurlException $e) {
             throw new ConnectionException("Can't connect to Webdriver at {$this->wd_host}. Please make sure that Selenium Server or PhantomJS is running.");
@@ -1217,6 +1308,7 @@ class WebDriver extends CodeceptionModule implements
     public function _loadSession($session)
     {
         $this->webDriver = $session;
+        $this->setBaseElement();
     }
 
     public function _backupSession()
@@ -1233,6 +1325,7 @@ class WebDriver extends CodeceptionModule implements
         } catch (UnknownServerException $e) {
             // Session already closed so nothing to do
         }
+        $this->setBaseElement();
         unset($this->sessions[$key]);
     }
 
@@ -1288,7 +1381,7 @@ class WebDriver extends CodeceptionModule implements
             return $radioOrCheckbox;
         }
         if (is_array($radioOrCheckbox) or ($radioOrCheckbox instanceof WebDriverBy)) {
-            return $this->matchFirstOrFail($this->webDriver, $radioOrCheckbox);
+            return $this->matchFirstOrFail($this->baseElement, $radioOrCheckbox);
         }
 
         $locator = Crawler::xpathLiteral($radioOrCheckbox);
@@ -1358,7 +1451,7 @@ class WebDriver extends CodeceptionModule implements
 
     public function uncheckOption($option)
     {
-        $field = $this->findCheckable($this->webDriver, $option);
+        $field = $this->findCheckable($this->baseElement, $option);
         if (!$field) {
             throw new ElementNotFound($option, "Checkbox by Label or CSS or XPath");
         }
@@ -1379,9 +1472,12 @@ class WebDriver extends CodeceptionModule implements
     {
         $el = $this->findField($field);
         // in order to be compatible on different OS
-        $filePath = realpath(codecept_data_dir() . $filename);
+        $filePath = codecept_data_dir() . $filename;
+        if (!file_exists($filePath)) {
+            throw new \InvalidArgumentException("File does not exist: $filePath");
+        }
         if (!is_readable($filePath)) {
-            throw new \InvalidArgumentException("file not found or not readable: $filePath");
+            throw new \InvalidArgumentException("File is not readable: $filePath");
         }
         // in order for remote upload to be enabled
         $el->setFileDetector(new LocalFileDetector());
@@ -1390,7 +1486,7 @@ class WebDriver extends CodeceptionModule implements
         if ($this->isPhantom()) {
             $el->setFileDetector(new UselessFileDetector());
         }
-        $el->sendKeys($filePath);
+        $el->sendKeys(realpath($filePath));
     }
 
     /**
@@ -1398,19 +1494,21 @@ class WebDriver extends CodeceptionModule implements
      *
      * @return string
      */
-    public function getVisibleText()
+    protected function getVisibleText()
     {
-        $els = $this->webDriver->findElements(WebDriverBy::cssSelector('body'));
-        if (count($els)) {
+        if ($this->baseElement instanceof RemoteWebElement) {
+            return $this->baseElement->getText();
+        }
+        $els = $this->baseElement->findElements(WebDriverBy::cssSelector('body'));
+        if (isset($els[0])) {
             return $els[0]->getText();
         }
-
-        return "";
+        return '';
     }
 
     public function grabTextFrom($cssOrXPathOrRegex)
     {
-        $els = $this->match($this->webDriver, $cssOrXPathOrRegex, false);
+        $els = $this->match($this->baseElement, $cssOrXPathOrRegex, false);
         if (count($els)) {
             return $els[0]->getText();
         }
@@ -1422,7 +1520,7 @@ class WebDriver extends CodeceptionModule implements
 
     public function grabAttributeFrom($cssOrXpath, $attribute)
     {
-        $el = $this->matchFirstOrFail($this->webDriver, $cssOrXpath);
+        $el = $this->matchFirstOrFail($this->baseElement, $cssOrXpath);
         return $el->getAttribute($attribute);
     }
 
@@ -1439,7 +1537,7 @@ class WebDriver extends CodeceptionModule implements
 
     public function grabMultiple($cssOrXpath, $attribute = null)
     {
-        $els = $this->match($this->webDriver, $cssOrXpath);
+        $els = $this->match($this->baseElement, $cssOrXpath);
         return array_map(
             function (WebDriverElement $e) use ($attribute) {
                 if ($attribute) {
@@ -1493,7 +1591,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function seeElementInDOM($selector, $attributes = [])
     {
-        $els = $this->match($this->webDriver, $selector);
+        $els = $this->match($this->baseElement, $selector);
         $els = $this->filterByAttributes($els, $attributes);
         $this->assertNotEmpty($els);
     }
@@ -1507,7 +1605,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function dontSeeElementInDOM($selector, $attributes = [])
     {
-        $els = $this->match($this->webDriver, $selector);
+        $els = $this->match($this->baseElement, $selector);
         $els = $this->filterByAttributes($els, $attributes);
         $this->assertEmpty($els);
     }
@@ -1532,7 +1630,7 @@ class WebDriver extends CodeceptionModule implements
 
     public function seeNumberOfElementsInDOM($selector, $expected)
     {
-        $counted = count($this->match($this->webDriver, $selector));
+        $counted = count($this->match($this->baseElement, $selector));
         if (is_array($expected)) {
             list($floor, $ceil) = $expected;
             $this->assertTrue(
@@ -1639,7 +1737,13 @@ class WebDriver extends CodeceptionModule implements
         if ($this->isPhantom()) {
             throw new ModuleException($this, 'PhantomJS does not support working with popups');
         }
-        $this->assertContains($text, $this->webDriver->switchTo()->alert()->getText());
+        $alert = $this->webDriver->switchTo()->alert();
+        try {
+            $this->assertContains($text, $alert->getText());
+        } catch (\PHPUnit_Framework_AssertionFailedError $e) {
+            $alert->dismiss();
+            throw $e;
+        }
     }
 
     /**
@@ -1852,7 +1956,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function submitForm($selector, array $params, $button = null)
     {
-        $form = $this->match($this->webDriver, $selector);
+        $form = $this->match($this->baseElement, $selector);
         if (empty($form)) {
             throw new ElementNotFound($selector, "Form via CSS or XPath");
         }
@@ -1955,7 +2059,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function waitForElementChange($element, \Closure $callback, $timeout = 30)
     {
-        $el = $this->matchFirstOrFail($this->webDriver, $element);
+        $el = $this->matchFirstOrFail($this->baseElement, $element);
         $checker = function () use ($el, $callback) {
             return $callback($el);
         };
@@ -2045,14 +2149,19 @@ class WebDriver extends CodeceptionModule implements
      */
     public function waitForText($text, $timeout = 10, $selector = null)
     {
+        $message = sprintf(
+            'Waited for %d secs but text %s still not found',
+            $timeout,
+            Locator::humanReadableString($text)
+        );
         if (!$selector) {
             $condition = WebDriverExpectedCondition::textToBePresentInElement(WebDriverBy::xpath('//body'), $text);
-            $this->webDriver->wait($timeout)->until($condition);
+            $this->webDriver->wait($timeout)->until($condition, $message);
             return;
         }
 
         $condition = WebDriverExpectedCondition::textToBePresentInElement($this->getLocator($selector), $text);
-        $this->webDriver->wait($timeout)->until($condition);
+        $this->webDriver->wait($timeout)->until($condition, $message);
     }
 
     /**
@@ -2160,9 +2269,9 @@ class WebDriver extends CodeceptionModule implements
     {
         if (is_null($name)) {
             $this->webDriver->switchTo()->defaultContent();
-        } else {
-            $this->webDriver->switchTo()->frame($name);
+            return;
         }
+        $this->webDriver->switchTo()->frame($name);
     }
 
     /**
@@ -2184,7 +2293,12 @@ class WebDriver extends CodeceptionModule implements
         $condition = function ($wd) use ($script) {
             return $wd->executeScript($script);
         };
-        $this->webDriver->wait($timeout)->until($condition);
+        $message = sprintf(
+            'Waited for %d secs but script %s still not executed',
+            $timeout,
+            Locator::humanReadableString($script)
+        );
+        $this->webDriver->wait($timeout)->until($condition, $message);
     }
 
     /**
@@ -2228,8 +2342,8 @@ class WebDriver extends CodeceptionModule implements
      */
     public function dragAndDrop($source, $target)
     {
-        $snodes = $this->matchFirstOrFail($this->webDriver, $source);
-        $tnodes = $this->matchFirstOrFail($this->webDriver, $target);
+        $snodes = $this->matchFirstOrFail($this->baseElement, $source);
+        $tnodes = $this->matchFirstOrFail($this->baseElement, $target);
 
         $action = new WebDriverActions($this->webDriver);
         $action->dragAndDrop($snodes, $tnodes)->perform();
@@ -2260,7 +2374,7 @@ class WebDriver extends CodeceptionModule implements
     {
         $where = null;
         if (null !== $cssOrXPath) {
-            $el = $this->matchFirstOrFail($this->webDriver, $cssOrXPath);
+            $el = $this->matchFirstOrFail($this->baseElement, $cssOrXPath);
             $where = $el->getCoordinates();
         }
 
@@ -2341,7 +2455,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function doubleClick($cssOrXPath)
     {
-        $el = $this->matchFirstOrFail($this->webDriver, $cssOrXPath);
+        $el = $this->matchFirstOrFail($this->baseElement, $cssOrXPath);
         $this->webDriver->getMouse()->doubleClick($el->getCoordinates());
     }
 
@@ -2480,7 +2594,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function pressKey($element, $char)
     {
-        $el = $this->matchFirstOrFail($this->webDriver, $element);
+        $el = $this->matchFirstOrFail($this->baseElement, $element);
         $args = func_get_args();
         array_shift($args);
         $keys = [];
@@ -2615,7 +2729,7 @@ class WebDriver extends CodeceptionModule implements
 
                 if ($type == 'checkbox') {
                     //Find by value or css,id,xpath
-                    $field = $this->findCheckable($this->webDriver, $value, true);
+                    $field = $this->findCheckable($this->baseElement, $value, true);
                     if (!$field) {
                         throw new ElementNotFound($value, "Checkbox or Radio by Label or CSS or XPath");
                     }
@@ -2642,7 +2756,7 @@ class WebDriver extends CodeceptionModule implements
      */
     protected function matchVisible($selector)
     {
-        $els = $this->match($this->webDriver, $selector);
+        $els = $this->match($this->baseElement, $selector);
         $nodes = array_filter(
             $els,
             function (WebDriverElement $el) {
@@ -2685,7 +2799,7 @@ class WebDriver extends CodeceptionModule implements
         $this->sessionSnapshots[$name] = [];
 
         foreach ($this->webDriver->manage()->getCookies() as $cookie) {
-            if (in_array(trim($cookie['name']), [LocalServer::COVERAGE_COOKIE, LocalServer::COVERAGE_COOKIE])) {
+            if (in_array(trim($cookie['name']), [LocalServer::COVERAGE_COOKIE, LocalServer::COVERAGE_COOKIE_ERROR])) {
                 continue;
             }
 
@@ -2716,10 +2830,10 @@ class WebDriver extends CodeceptionModule implements
     /**
      * Check if the cookie domain matches the config URL.
      *
-     * @param array $cookie
+     * @param array|Cookie $cookie
      * @return bool
      */
-    private function cookieDomainMatchesConfigUrl(array $cookie)
+    private function cookieDomainMatchesConfigUrl($cookie)
     {
         if (!array_key_exists('domain', $cookie)) {
             return true;
@@ -2756,7 +2870,7 @@ class WebDriver extends CodeceptionModule implements
      */
     public function scrollTo($selector, $offsetX = null, $offsetY = null)
     {
-        $el = $this->matchFirstOrFail($this->webDriver, $selector);
+        $el = $this->matchFirstOrFail($this->baseElement, $selector);
         $x = $el->getLocation()->getX() + $offsetX;
         $y = $el->getLocation()->getY() + $offsetY;
         $this->webDriver->executeScript("window.scrollTo($x, $y)");
@@ -2852,5 +2966,78 @@ class WebDriver extends CodeceptionModule implements
         return $handles[($idx + $offset) % count($handles)];
     }
 
+    /**
+     * Waits for element and runs a sequence of actions inside its context.
+     * Actions can be defined with array, callback, or `Codeception\Util\ActionSequence` instance.
+     *
+     * Actions as array are recommended for simple to combine "waitForElement" with assertions;
+     * `waitForElement($el)` and `see('text', $el)` can be simplified to:
+     *
+     * ```php
+     * <?php
+     * $I->performOn($el, ['see' => 'text']);
+     * ```
+     *
+     * List of actions can be pragmatically build using `Codeception\Util\ActionSequence`:
+     *
+     * ```php
+     * <?php
+     * $I->performOn('.model', ActionSequence::build()
+     *     ->see('Warning')
+     *     ->see('Are you sure you want to delete this?')
+     *     ->click('Yes')
+     * );
+     * ```
+     *
+     * Actions executed from array or ActionSequence will print debug output for actions, and adds an action name to
+     * exception on failure.
+     *
+     * Whenever you need to define more actions a callback can be used. A WebDriver module is passed for argument:
+     *
+     * ```php
+     * <?php
+     * $I->performOn('.rememberMe', function (WebDriver $I) {
+     *      $I->see('Remember me next time');
+     *      $I->seeElement('#LoginForm_rememberMe');
+     *      $I->dontSee('Login');
+     * });
+     * ```
+     *
+     * In 3rd argument you can set number a seconds to wait for element to appear
+     *
+     * @param $element
+     * @param $actions
+     * @param int $timeout
+     */
+    public function performOn($element, $actions, $timeout = 10)
+    {
+        $this->waitForElement($element, $timeout);
+        $this->setBaseElement($element);
+        $this->debugSection('InnerText', $this->baseElement->getText());
 
+        if (is_callable($actions)) {
+            $actions($this);
+            $this->setBaseElement();
+            return;
+        }
+        if (is_array($actions)) {
+            $actions = ActionSequence::build()->fromArray($actions);
+        }
+
+        if (!$actions instanceof ActionSequence) {
+            throw new \InvalidArgumentException("2nd parameter, actions should be callback, ActionSequence or array");
+        }
+
+        $actions->run($this);
+        $this->setBaseElement();
+    }
+
+    protected function setBaseElement($element = null)
+    {
+        if ($element === null) {
+            $this->baseElement = $this->webDriver;
+            return;
+        }
+        $this->baseElement = $this->matchFirstOrFail($this->webDriver, $element);
+    }
 }
