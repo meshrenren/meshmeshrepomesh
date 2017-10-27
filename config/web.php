@@ -16,7 +16,9 @@ $config = [
         ],
         'user' => [
             'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
+            'enableAutoLogin' => false,
+            //'absoluteAuthTimeout' => 3600,
+            'loginUrl' => ['site/login'],
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -37,13 +39,13 @@ $config = [
                 ],
             ],
         ],
-		'view' => [
+		/*'view' => [
 			 'theme' => [
 				 'pathMap' => [
 					'@app/views' => '@vendor/dmstr/yii2-adminlte-asset/example-views/yiisoft/yii2-app'
 				 ],
 			 ],
-		],  
+		],  */
         'db' => require(__DIR__ . '/db.php'),
         
         'urlManager' => [
@@ -53,6 +55,19 @@ $config = [
             ],
         ],
         
+    ],
+    'as beforeRequest' => [  //if guest user access site so, redirect to login page.
+        'class' => 'yii\filters\AccessControl',
+        'rules' => [
+            [
+                'actions' => ['login', 'error'],
+                'allow' => true,
+            ],
+            [
+                'allow' => true,
+                'roles' => ['@'],
+            ],
+        ],
     ],
     'params' => $params,
 ];

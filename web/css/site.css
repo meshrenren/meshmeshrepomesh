@@ -113,3 +113,20 @@ a.desc:after {
 .nav > li > form > button.logout:focus {
     outline: none;
 }
+
+
+/*
+    ================ Custom CSS =====================
+*/
+.login-page, .register-page 
+{
+    background: #fff !important;
+}
+.site-login
+{
+    padding: 100px;
+}
+.site-login h1, .site-login p
+{
+    text-align: center;
+}

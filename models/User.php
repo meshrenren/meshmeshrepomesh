@@ -2,30 +2,40 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $id;
     public $username;
-    public $password;
     public $authKey;
     public $accessToken;
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    public $first_name;
+    public $last_name;
+    public $fullName;
+
+    const STATUS_DELETED = 0;
+    const STATUS_ACTIVE = 1;
+
+    /**
+     * @inheritdoc
+     */
+    public static function tableName()
+    {
+        return '{{%users}}';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        return [
+            ['is_active', 'default', 'value' => self::STATUS_ACTIVE],
+            ['is_active', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+            [['username','password'], 'string'],
+            [['email'], 'email'],
+            [['level_id', 'is_active'], 'integer']
+        ];
+    }
 
 
     /**
@@ -33,7 +43,11 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        $model = static::findOne(['id' => $id, 'is_active' => self::STATUS_ACTIVE]);
+        if($model){
+            $model->username = $model->username;
+        }
+        return $model;
     }
 
     /**
@@ -58,13 +72,14 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
+        $model = static::findOne(['username' => $username, 'is_active' => self::STATUS_ACTIVE]);
+        if($model)
+        {
+            $model->username = $model->username;
+            return $model;
         }
-
-        return null;
+        else
+            return null;
     }
 
     /**
@@ -99,6 +114,8 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
+        echo var_dump($this->password);
+
         return $this->password === $password;
     }
 }
