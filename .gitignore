@@ -1,6 +1,3 @@
-composer.lock
-vendor/*
-vendor/composer/*
 config/db.php
 config/params.php
 web/index.php
