@@ -15,7 +15,7 @@ use Yii;
  * @property string $birthday
  * @property integer $fk_branch
  * @property integer $mem_type
- * @property integer $isActive
+ * @property integer $is_active
  *
  * @property Loanaccount $loanaccount
  * @property MembershipType $memType
@@ -24,6 +24,7 @@ use Yii;
  */
 class Member extends \yii\db\ActiveRecord
 {
+    public $image;
     /**
      * @inheritdoc
      */
@@ -38,9 +39,11 @@ class Member extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['firstname', 'middlename', 'lastname', 'mem_date', 'birthday', 'fk_branch', 'mem_type', 'isActive'], 'required'],
+            [['image'], 'file'],
+            [['firstname', 'middlename', 'lastname', 'mem_date', 'birthday', 'fk_branch', 'mem_type', 'is_active'], 'required'],
             [['mem_date', 'birthday'], 'safe'],
-            [['fk_branch', 'mem_type', 'isActive'], 'integer'],
+            [['salary'], 'double'],
+            [['fk_branch', 'mem_type', 'is_active'], 'integer'],
             [['firstname', 'middlename', 'lastname'], 'string', 'max' => 25],
             [['mem_type'], 'exist', 'skipOnError' => true, 'targetClass' => MembershipType::className(), 'targetAttribute' => ['mem_type' => 'id']],
         ];
@@ -52,15 +55,17 @@ class Member extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'memberID' => 'Member ID',
-            'firstname' => 'Firstname',
-            'middlename' => 'Middlename',
-            'lastname' => 'Lastname',
-            'mem_date' => 'Mem Date',
-            'birthday' => 'Birthday',
-            'fk_branch' => 'Fk Branch',
-            'mem_type' => 'Mem Type',
-            'isActive' => 'Is Active',
+            'memberID'      => 'Member ID',
+            'firstname'     => 'First Name',
+            'middlename'    => 'Middle Name',
+            'lastname'      => 'Last Name',
+            'mem_date'      => 'Memebership Date',
+            'birthday'      => 'Birthdate',
+            'fk_branch'     => 'Branch',
+            'mem_type'      => 'Member Type',
+            'employee_no'   => 'Employee Number',
+            'gsis_no'       => 'GSIS Number',
+            'is_active'     => 'Is Active',
         ];
     }
 
@@ -94,5 +99,21 @@ class Member extends \yii\db\ActiveRecord
     public function getMemberFamilies()
     {
         return $this->hasMany(MemberFamily::className(), ['fk_memid' => 'memberID']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getBranch()
+    {
+        return $this->hasOne(Branch::className(), ['id' => 'fk_branch']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getDivision()
+    {
+        return $this->hasOne(Division::className(), ['id' => 'division']);
     }
 }

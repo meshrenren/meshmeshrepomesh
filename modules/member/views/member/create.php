@@ -8,7 +8,7 @@ use yii\helpers\Html;
 
 $this->title = 'Create Member';
 $this->params['breadcrumbs'][] = ['label' => 'Members', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
+//$this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="member-create">
 

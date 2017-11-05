@@ -33,6 +33,11 @@ To install AdminLTE v1 run:
 php composer.phar require dmstr/yii2-adminlte-asset "1.*"
 ```
 
+FAQ
+---
+
+- For issues with `DmitryBaranovskiy/eve.git`, please see [#118](https://github.com/dmstr/yii2-adminlte-asset/issues/118), [#119](https://github.com/dmstr/yii2-adminlte-asset/issues/119), [#123](https://github.com/dmstr/yii2-adminlte-asset/issues/123), [#131](https://github.com/dmstr/yii2-adminlte-asset/issues/131) and [#133](https://github.com/dmstr/yii2-adminlte-asset/issues/133) - this has nothing to do with `yii2-adminlte-asset`, update `composer` and `fxpio/composer-asset-plugin`.
+- For other [issues](https://github.com/dmstr/yii2-adminlte-asset/issues?utf8=%E2%9C%93&q=is%3Aissue), please search GitHub first.
 
 
 Quick Start
@@ -151,6 +156,15 @@ Here is the list of available skins:
 "skin-green-light"
 ```
 
+#### Disabling skin file loading, when using bundled assets
+
+    Yii::$container->set(
+        AdminLteAsset::className(),
+        [
+            'skin' => false,
+        ]
+    );
+
 If you want to use native DOM of headers AdminLTE
 
 ```html
@@ -181,8 +195,8 @@ About <small>static page</small>
 If you need to separate sections of the menu then just add the `li.header` item to `items`
 ```php
     'items' => [
-        ['label' => 'Gii', 'icon' => 'fa fa-file-code-o', 'url' => ['/gii']],
-        ['label' => 'Debug', 'icon' => 'fa fa-dashboard', 'url' => ['/debug']],
+        ['label' => 'Gii', 'icon' => 'file-code-o', 'url' => ['/gii']],
+        ['label' => 'Debug', 'icon' => 'dashboard', 'url' => ['/debug']],
         ['label' => 'MAIN NAVIGATION', 'options' => ['class' => 'header']], // here
         // ... a group items
         ['label' => '', 'options' => ['class' => 'header']],
@@ -195,13 +209,38 @@ To add a label for a item:
 
 ```php
 'items' => [
-        [
-            'label' => '<span>Mailbox</span><span class="pull-right-container"><small class="label pull-right bg-yellow">' . $mailCount . '</small></span>',
-            'icon' => 'fa fa fa-envelope-o',
-            'url' => ['/mailbox'],
-            'encode' => false,
-        ],
+    [
+        'label' => 'Mailbox',
+        'icon' => 'envelope-o',
+        'url' => ['/mailbox'],
+        'template'=>'<a href="{url}">{icon} {label}<span class="pull-right-container"><small class="label pull-right bg-yellow">123</small></span></a>'
+    ],
+]
 ```
+
+By default to icons will be added prefix of [Font Awesome](http://fontawesome.io/)
+
+### Template for Gii CRUD generator
+
+Tell Gii about our template. The setting is made in the config file:
+
+```php
+if (YII_ENV_DEV) {    
+    $config['modules']['gii'] = [
+        'class' => 'yii\gii\Module',      
+        'allowedIPs' => ['127.0.0.1', '::1', '192.168.0.*', '192.168.178.20'],  
+        'generators' => [ //here
+            'crud' => [
+                'class' => 'yii\gii\generators\crud\Generator',
+                'templates' => [
+                    'adminlte' => '@vendor/dmstr/yii2-adminlte-asset/gii/templates/crud/simple',
+                ]
+            ]
+        ],
+    ];
+}
+```
+
 
 Further Information
 -------------------

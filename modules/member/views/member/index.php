@@ -18,12 +18,16 @@ $this->params['breadcrumbs'][] = $this->title;
     <p>
         <?= Html::a('Create Member', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
-<?php Pjax::begin(); ?>    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
+<?php Pjax::begin(); ?>   
+    <?php
+        $gridColumns = [
+        ];
+    ?>
 
+<?= kartik\grid\GridView::widget([
+        'dataProvider'      => $dataProvider,
+        'filterModel'       => $searchModel,
+        'columns'           => [
             'memberID',
             'firstname',
             'middlename',
@@ -34,7 +38,9 @@ $this->params['breadcrumbs'][] = $this->title;
             // 'mem_type',
             // 'isActive',
 
-            ['class' => 'yii\grid\ActionColumn'],
+            ['class'        => 'yii\grid\ActionColumn'],
         ],
+        'responsive'        =>true,
+        'hover'             =>true
     ]); ?>
 <?php Pjax::end(); ?></div>

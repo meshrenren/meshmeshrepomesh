@@ -18,7 +18,7 @@ class MemberSearch extends Member
     public function rules()
     {
         return [
-            [['memberID', 'fk_branch', 'mem_type', 'isActive'], 'integer'],
+            [['memberID', 'fk_branch', 'mem_type', 'is_active'], 'integer'],
             [['firstname', 'middlename', 'lastname', 'mem_date', 'birthday'], 'safe'],
         ];
     }
@@ -64,7 +64,7 @@ class MemberSearch extends Member
             'birthday' => $this->birthday,
             'fk_branch' => $this->fk_branch,
             'mem_type' => $this->mem_type,
-            'isActive' => $this->isActive,
+            'is_active' => $this->is_active,
         ]);
 
         $query->andFilterWhere(['like', 'firstname', $this->firstname])
