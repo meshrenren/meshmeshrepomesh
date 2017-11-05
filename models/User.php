@@ -4,13 +4,13 @@ namespace app\models;
 
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $username;
+//    public $username;
     public $authKey;
     public $accessToken;
 
-    public $first_name;
-    public $last_name;
-    public $fullName;
+  //  public $first_name;
+   // public $last_name;
+   // public $fullName;
 
     const STATUS_DELETED = 0;
     const STATUS_ACTIVE = 1;

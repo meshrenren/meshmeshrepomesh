@@ -6,6 +6,7 @@
 
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
+use app\models\User;
 
 $this->title = 'Login';
 ?>
@@ -17,7 +18,7 @@ $this->title = 'Login';
             <h1><?= Html::encode($this->title) ?></h1>
 
             <p>Please fill out the following fields to login</p>
-
+				
             <?php 
                 $form = ActiveForm::begin(
                 [
