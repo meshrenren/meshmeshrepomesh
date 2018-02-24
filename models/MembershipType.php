@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\member\models;
+namespace app\models;
 
 use Yii;
 
@@ -49,6 +49,6 @@ class MembershipType extends \yii\db\ActiveRecord
      */
     public function getMembers()
     {
-        return $this->hasMany(Member::className(), ['mem_type' => 'id']);
+        return $this->hasMany(Member::className(), ['member_type_id' => 'id']);
     }
 }

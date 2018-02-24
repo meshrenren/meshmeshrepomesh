@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\member\models;
+namespace app\models;
 
 use Yii;
 
@@ -10,6 +10,7 @@ use Yii;
  * @property integer $id
  * @property string $branch_desc
  * @property string $address
+ * @property string $deleted_date
  *
  * @property MemberEmployment[] $memberEmployments
  */
@@ -30,6 +31,7 @@ class Branch extends \yii\db\ActiveRecord
     {
         return [
             [['branch_desc', 'address'], 'required'],
+            [['deleted_date'], 'safe'],
             [['branch_desc', 'address'], 'string', 'max' => 50],
         ];
     }
@@ -43,6 +45,7 @@ class Branch extends \yii\db\ActiveRecord
             'id' => 'ID',
             'branch_desc' => 'Branch Desc',
             'address' => 'Address',
+            'deleted_date' => 'Deleted Date',
         ];
     }
 
@@ -51,6 +54,6 @@ class Branch extends \yii\db\ActiveRecord
      */
     public function getMemberEmployments()
     {
-        return $this->hasMany(MemberEmployment::className(), ['branchID' => 'id']);
+        return $this->hasMany(MemberEmployment::className(), ['branch_id' => 'id']);
     }
 }

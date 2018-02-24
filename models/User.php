@@ -43,7 +43,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      */
     public static function findIdentity($id)
     {
-        $model = static::findOne(['id' => $id, 'is_active' => self::STATUS_ACTIVE]);
+        $model = static::findOne(['id' => $id, 'is_active' => self::STATUS_ACTIVE, 'deleted_date' => null]);
         if($model){
             $model->username = $model->username;
         }
@@ -72,7 +72,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        $model = static::findOne(['username' => $username, 'is_active' => self::STATUS_ACTIVE]);
+        $model = static::findOne(['username' => $username, 'is_active' => self::STATUS_ACTIVE, 'deleted_date' => null]);
         if($model)
         {
             $model->username = $model->username;

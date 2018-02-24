@@ -3,3 +3,12 @@ config/db.php
 config/params.php
 web/index.php
 web/.htaccess
+web/js/main.js
+web/mix-manifest.json
+node_modules
+webpack.mix.js
+package.json
+package-lock.json
+
+
+web/js/main.js

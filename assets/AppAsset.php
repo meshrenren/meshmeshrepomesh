@@ -21,6 +21,9 @@ class AppAsset extends AssetBundle
         'css/site.css',
     ];
     public $js = [
+        'plugins/moment/moment.js',
+        'plugins/moment/moment-with-locales.js',
+        'plugins/moment/moment-timezone-with-data-2010-2020.js',
     ];
     public $depends = [
         'yii\web\YiiAsset',

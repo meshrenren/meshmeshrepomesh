@@ -2,10 +2,10 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
-use app\modules\member\models\MembershipType;
-use app\modules\member\models\Branch;
-use app\modules\member\models\Division;
-use app\modules\member\models\Station;
+use app\models\MembershipType;
+use app\models\Branch;
+use app\models\Division;
+use app\models\Station;
 use kartik\widgets\DatePicker;
 
 /* @var $this yii\web\View */
@@ -21,11 +21,11 @@ use kartik\widgets\DatePicker;
     <div class = "row">
         <div class = "col-md-6">
             <?php
-                echo $form->field($model, 'firstname')->textInput(['maxlength' => true]);
+                echo $form->field($model, 'first_name')->textInput(['maxlength' => true]);
 
-                echo $form->field($model, 'middlename')->textInput(['maxlength' => true]);
+                echo $form->field($model, 'middle_name')->textInput(['maxlength' => true]);
 
-                echo $form->field($model, 'lastname')->textInput(['maxlength' => true]);
+                echo $form->field($model, 'last_name')->textInput(['maxlength' => true]);
 
                 echo $form->field($model, 'birthday')->widget(DatePicker::classname(), [
                         'pluginOptions'     => [
@@ -76,39 +76,38 @@ use kartik\widgets\DatePicker;
                     'options' => ['accept' => 'image/*'],
                 ])->label('Upload employee\'s profile picture');
 
-                echo $form->field($model, 'salary')->textInput();
+                echo $form->field($model, 'salary');
 
                 echo $form->field($model, 'position')->textInput();
 
                 echo $form->field($model, 'employee_no')->textInput();
 
                 $station_list = yii\helpers\ArrayHelper::map(Station::find()->all(), 'id', 'name');
-                echo $form->field($model, 'station')->widget(kartik\widgets\Select2::classname(), [
+                echo $form->field($model, 'station_id')->widget(kartik\widgets\Select2::classname(), [
                                 'data'      => $station_list,
                                 'options'   => ['placeholder' => 'Select station ...'],
                                         ]);
 
 
                 $division_list = yii\helpers\ArrayHelper::map(Division::find()->all(), 'id', 'name');
-                echo $form->field($model, 'division')->widget(kartik\widgets\Select2::classname(), [
+                echo $form->field($model, 'division_id')->widget(kartik\widgets\Select2::classname(), [
                                 'data'      => $division_list,
                                 'options'   => ['placeholder' => 'Select division ...'],
                                         ]);
 
                 $branch_list = yii\helpers\ArrayHelper::map(Branch::find()->all(), 'id', 'branch_desc');
-                echo $form->field($model, 'fk_branch')->widget(kartik\widgets\Select2::classname(), [
+                echo $form->field($model, 'branch_id')->widget(kartik\widgets\Select2::classname(), [
                                 'data'      => $branch_list,
                                 'options'   => ['placeholder' => 'Select branch ...'],
                                         ]);
 
 
                 $type_list = yii\helpers\ArrayHelper::map(MembershipType::find()->all(), 'id', 'description');
-                echo $form->field($model, 'mem_type')->widget(kartik\widgets\Select2::classname(), [
+                echo $form->field($model, 'member_type_id')->widget(kartik\widgets\Select2::classname(), [
                                 'data'      => $type_list,
                                 'options'   => ['placeholder' => 'Select type ...'],
                                         ]);
 
-                echo $form->field($model, 'is_active')->checkbox();
             ?>
         </div>
 

@@ -1,24 +1,25 @@
 <?php
 
-namespace app\modules\member\models;
+namespace app\models;
 
 use Yii;
 
 /**
- * This is the model class for table "station".
+ * This is the model class for table "division".
  *
  * @property integer $id
- * @property integer $name
- * @property integer $address
+ * @property string $name
+ * @property string $address
+ * @property string $deleted_date
  */
-class Station extends \yii\db\ActiveRecord
+class Division extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'station';
+        return 'division';
     }
 
     /**
@@ -28,7 +29,8 @@ class Station extends \yii\db\ActiveRecord
     {
         return [
             [['name', 'address'], 'required'],
-            [['name', 'address'], 'integer'],
+            [['deleted_date'], 'safe'],
+            [['name', 'address'], 'string', 'max' => 1000],
         ];
     }
 
@@ -41,6 +43,7 @@ class Station extends \yii\db\ActiveRecord
             'id' => 'ID',
             'name' => 'Name',
             'address' => 'Address',
+            'deleted_date' => 'Deleted Date',
         ];
     }
 }

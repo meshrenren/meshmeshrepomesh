@@ -57,9 +57,6 @@ $config = [
         
     ],
 	'modules' => [
-		'member' => [
-			'class' => 'app\modules\member\Member'
-		],
        'gridview' =>  [
             'class' => '\kartik\grid\Module'
         ]
