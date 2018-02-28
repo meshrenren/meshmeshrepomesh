@@ -130,3 +130,7 @@ a.desc:after {
 {
     text-align: center;
 }
+.form-control
+{
+    border-radius: 5px !important;
+}

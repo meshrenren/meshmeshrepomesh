@@ -1,11 +1,12 @@
 <template>
 	<div class="member-form">
-		<tabs>
+		<tabs ref = "tabsList">
 			<tab name="General Info">
 				<div class = "row">
 					<div class = "col-md-6">
-						<div class="form-group">
+						<div class="form-group input-name">
 						    <label for="exampleInputPassword1">Name</label>
+						    <div style = "clear:both;"></div>
 						    <input type="text" class="form-control" placeholder = "First Name">
 						    <input type="text" class="form-control" placeholder = "Middle Name">
 						    <input type="text" class="form-control" placeholder = "Last Name">
@@ -47,6 +48,29 @@
 						    <input type="number" class="form-control">
 						</div>
 					</div>
+					<div class = "col-md-12">
+						<button class = "btn btn-primary" @click = "nextTab()">Next</button>
+					</div>
+				</div>
+			</tab>
+
+			<tab name="Member Details"  :is-disabled="true">
+				<div class = "row">
+					This is a test
+					<div class = "col-md-12">
+						<button class = "btn btn-primary" @click = "previousTab()">Previous</button>
+						<button class = "btn btn-primary" @click = "nextTab()">Next</button>
+					</div>
+				</div>
+			</tab>
+
+			<tab name="Member Details 2"  :is-disabled="true">
+				<div class = "row">
+					This is a test 2
+
+					<div class = "col-md-12">
+						<button class = "btn btn-primary" @click = "previousTab()">Previous</button>
+					</div>
 				</div>
 			</tab>
 		</tabs>
@@ -54,7 +78,8 @@
 </template>
 
 <style lang="scss">
-  @import '~noty/src/noty.scss'
+  	@import '../../assets/member.scss';
+  	@import '~noty/src/noty.scss'
 </style>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -86,6 +111,7 @@ export default {
 			genderList		: gender,
 			statusVal		: status[0],
 			statusList		: status,
+			currentTab		: 0
 		}
 	},
     components: {
@@ -94,7 +120,28 @@ export default {
         Multiselect,
         Tabs,
         Tab
-    }   
+    }, 
+    methods: {
+    	nextTab(){
+    		let tabs = this.$refs.tabsList
+    		let index = this.currentTab + 1
+    		tabs.$children[this.currentTab].isActive = false
+    		tabs.$children[index].isActive = true
+
+    		tabs.$children[index].isDisabled = false
+
+    		this.currentTab = index
+    	},
+    	previousTab(){
+    		let tabs = this.$refs.tabsList
+    		let index = this.currentTab - 1
+    		tabs.$children[this.currentTab].isActive = false
+    		tabs.$children[index].isActive = true
+
+    		this.currentTab = index    		
+    	}
+
+    }
 }
 
 </script>
