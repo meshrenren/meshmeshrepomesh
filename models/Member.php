@@ -49,12 +49,10 @@ class Member extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['first_name', 'middle_name', 'last_name', 'image_path', 'mem_date', 'birthday', 'branch_id', 'member_type_id', 'station_id', 'division_id', 'employee_no', 'position', 'gender', 'civil_status', 'salary', 'gsis_no', 'telephone', 'is_active'], 'required'],
+            [['first_name', 'middle_name', 'last_name', 'mem_date', 'birthday', 'branch_id', 'member_type_id', 'station_id', 'division_id', 'is_active'], 'required'],
             [['mem_date', 'birthday', 'deleted_date'], 'safe'],
             [['branch_id', 'member_type_id', 'station_id', 'division_id', 'is_active'], 'integer'],
             [['salary'], 'number'],
-            [['first_name', 'middle_name', 'last_name'], 'string', 'max' => 25],
-            [['image_path', 'employee_no', 'position', 'gender', 'civil_status', 'gsis_no', 'telephone'], 'string', 'max' => 1000],
             [['member_type_id'], 'exist', 'skipOnError' => true, 'targetClass' => MembershipType::className(), 'targetAttribute' => ['member_type_id' => 'id']],
         ];
     }
