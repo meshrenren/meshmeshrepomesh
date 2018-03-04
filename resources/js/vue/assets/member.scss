@@ -1,0 +1,93 @@
+$ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
+
+@mixin breakpoint($class) {
+  @if $class == xs {
+    @media (max-width: 767px) { @content; }
+  }
+ 
+  @else if $class == sm {
+    @media (min-width: 768px) { @content; }
+  }
+ 
+  @else if $class == md {
+    @media (min-width: 992px) { @content; }
+  }
+ 
+  @else if $class == lg {
+    @media (min-width: 1200px) { @content; }
+  }
+
+  // @else if $class == xlg {
+  //   @media (min-width: 1279px) { @content; }
+  // }
+ 
+  @else {
+    @warn "Breakpoint mixin supports: xs, sm, md, lg";
+  }
+}
+
+@-webkit-keyframes bounceIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale(.3);
+  }
+
+  50% {
+    opacity: 1;
+    -webkit-transform: scale(1.05);
+  }
+
+  70% {
+    -webkit-transform: scale(.9);
+  }
+
+  100% {
+    -webkit-transform: scale(1);
+  }
+}
+
+@import url(http://fonts.googleapis.com/icon?family=Material+Icons);
+
+.multiselect{
+  min-height: 34px !important;
+
+  .multiselect__select{
+    height: 30px !important;
+  }
+
+  .multiselect__tags{
+    min-height: 34px !important;
+    padding: 4px 40px 0 8px !important;
+    border: 1px solid #d2d6de !important;
+  }
+
+}
+
+
+.member-form{
+
+  .tabs-component{
+
+    .tabs-component-panels{
+
+      .input-name{
+        display: inline-block;
+
+        >input{
+          width: 32%;
+          margin-right: 5px;
+          float: left;
+        }
+
+      }
+
+      .mx-datepicker{
+        width: 100% !important;
+
+      }
+
+    }
+
+  }
+
+}
