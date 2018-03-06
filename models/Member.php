@@ -14,7 +14,6 @@ use Yii;
  * @property string $image_path
  * @property string $mem_date
  * @property string $birthday
- * @property integer $branch_id
  * @property integer $member_type_id
  * @property integer $station_id
  * @property integer $division_id
@@ -49,9 +48,9 @@ class Member extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['first_name', 'middle_name', 'last_name', 'mem_date', 'birthday', 'branch_id', 'member_type_id', 'station_id', 'division_id', 'is_active'], 'required'],
+            [['first_name', 'middle_name', 'last_name', 'mem_date', 'member_type_id', 'station_id', 'division_id'], 'required'],
             [['mem_date', 'birthday', 'deleted_date'], 'safe'],
-            [['branch_id', 'member_type_id', 'station_id', 'division_id', 'is_active'], 'integer'],
+            [['member_type_id', 'station_id', 'division_id', 'is_active'], 'integer'],
             [['salary'], 'number'],
             [['member_type_id'], 'exist', 'skipOnError' => true, 'targetClass' => MembershipType::className(), 'targetAttribute' => ['member_type_id' => 'id']],
         ];
@@ -68,23 +67,23 @@ class Member extends \yii\db\ActiveRecord
             'middle_name' => 'Middle Name',
             'last_name' => 'Last Name',
             'image_path' => 'Image Path',
-            'mem_date' => 'Mem Date',
+            'mem_date' => 'Member Date',
             'birthday' => 'Birthday',
-            'branch_id' => 'Branch ID',
-            'member_type_id' => 'Member Type ID',
-            'station_id' => 'Station ID',
-            'division_id' => 'Division ID',
+            'member_type_id' => 'Member Type',
+            'station_id' => 'Station',
+            'division_id' => 'Division',
             'employee_no' => 'Employee No',
             'position' => 'Position',
             'gender' => 'Gender',
             'civil_status' => 'Civil Status',
             'salary' => 'Salary',
-            'gsis_no' => 'Gsis No',
+            'gsis_no' => 'GSIS No',
             'telephone' => 'Telephone',
             'is_active' => 'Is Active',
             'deleted_date' => 'Deleted Date',
         ];
     }
+
 
     /**
      * @return \yii\db\ActiveQuery
@@ -105,16 +104,17 @@ class Member extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getMemberEmployments()
+    public function getMemberFamilies()
     {
-        return $this->hasMany(MemberEmployment::className(), ['member_id' => 'id']);
+        return $this->hasMany(MemberFamily::className(), ['member_id' => 'id']);
     }
+
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getMemberFamilies()
+    public function getMemberEmployments()
     {
-        return $this->hasMany(MemberFamily::className(), ['member_id' => 'id']);
+        return $this->hasMany(MemberAddress::className(), ['member_id' => 'id']);
     }
 }

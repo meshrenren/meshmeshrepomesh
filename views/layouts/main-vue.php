@@ -37,6 +37,7 @@ use yii\helpers\Html;
             <?php $this->beginBody() ?>
 
             <div class="wrapper"  id = 'vue-app'>
+                <div id="main_preloader" class="main-preloader"></div>
 
                 <?= $this->render(
                     'header.php',

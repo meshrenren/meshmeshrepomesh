@@ -1,6 +1,7 @@
 <?php
 
 namespace app\models;
+use Yii;
 
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -33,7 +34,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             ['is_active', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
             [['username','password'], 'string'],
             [['email'], 'email'],
-            [['level_id', 'is_active'], 'integer']
+            [['username', 'password', 'email'], 'required'],
+            [['level_id', 'is_active'], 'integer'],
+
+            ['username', 'isUniqueUsername', 'on'=>['update_username', 'create']],
         ];
     }
 
@@ -117,5 +121,37 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         echo var_dump($this->password);
 
         return $this->password === $password;
+    }
+
+ 
+    public function isUniqueUsername($attribute, $params)
+    {
+        $org_id = Yii::$app->session->get('org_id');
+        //$result_check = preg_match ("/([%\$#\*''\"\"()[]\^!?<>]+)/", $this->access_id );
+        $result_check = preg_match ("/^[A-Za-z0-9_]+$/", $this->username );
+        if($result_check)
+        {
+            if($this->scenario == 'update_username')
+            {
+                $result = array_values(Yii::$app->db->createCommand('SELECT count(u.id) as count FROM users as u  WHERE u.username =\''.$this->username .'\' && u.id != '.$this->id .'')->queryAll())[0];
+                if($result['count'] >= 1){
+                        $this->addError($attribute, 'Username  "'.$this->username. '" has already been taken.');
+                }
+            }
+            else if($this->scenario == 'create')
+            {
+                $result = array_values(Yii::$app->db->createCommand('SELECT count(id) as count FROM users  WHERE username =\''.$this->username .'\' ')->queryAll())[0];
+                if($result['count'] >= 1){
+                        $this->addError($attribute, 'Username  "'.$this->username. '" has already been taken.');
+                }
+            }
+        }
+        else
+        {
+            $this->addError($attribute, 'Username only allows letters, numbers and underscore.');
+        }
+        
+        
+        //$this->addError($attribute, 'Username  "'.$this->id. '" has already been taken.');
     }
 }
