@@ -6,12 +6,8 @@ use Yii;
 
 class MemberController extends \yii\web\Controller
 {
-    public function actionIndex()
-    {
-        return $this->render('index');
-    }
 
-    public function actionCreate()
+    public function actionIndex($state)
     {    	
         $this->layout = 'main-vue';
   //       $emp  = new \app\models\Member();
@@ -40,15 +36,23 @@ class MemberController extends \yii\web\Controller
         	->joinWith(['memberType', 'division', 'station'])
         	->asArray()->all();
 
+        $view = "member-" . $state;
+
         return $this->render('create', [
         		'stationList'	=> $stationList,
         		'divisionList'	=> $divisionList,
         		'typeList'		=> $typeList,
-        		'memberList'	=> $members
+        		'memberList'	=> $members,
+        		'view'			=> $view
         	]);
     }
 
-    public function actionGetMember(){
+    public function actionView($member_id){
+        $this->layout = 'main-vue';
+    	return $this->render('view');
+    }
+
+    public function actionGetMembers(){
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
@@ -137,12 +141,19 @@ class MemberController extends \yii\web\Controller
         			$address->member_id = $model->id;
         			$address->save();
 
+        			$members = \app\models\Member::find()->innerJoinWith(['user'])
+        				->joinWith(['memberType', 'division', 'station'])
+        				->asArray()->all();
+
         			return [
 		        		'success' 	=> true,
-		        		'status'	=> 'okay'
+		        		'status'	=> 'okay',
+	        			'data'		=> $members
 		            ];
 
         		}
+
+
 
         		return [
 		        	'success' 	=> false,

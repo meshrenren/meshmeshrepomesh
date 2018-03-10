@@ -62,6 +62,6 @@ $address['province'] = null;
 	:data-division-list='<?= $divisionList ?>'
 	:data-type-list='<?= $typeList ?>'
 	:data-member-list='<?= $memberList ?>'
-	:data-view='<?= json_encode("member-create") ?>'
+	:data-view='<?= json_encode($view) ?>'
 	:base-url='<?= json_encode(Yii::$app->request->baseUrl) ?>' >
 </member-form>

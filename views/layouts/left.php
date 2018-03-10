@@ -30,7 +30,23 @@
                 'options' => ['class' => 'sidebar-menu'],
                 'items' => [
                     ['label' => 'QUICK MENU', 'options' => ['class' => 'header']],
-                    ['label' => 'Members', 'icon' => 'user-o', 'url' => ['member/member']],
+                    [
+                        'label'     => 'Members',
+                        'icon'      => 'user-o', 
+                        'items'      => [
+                            [
+                                'label'     => 'List', 
+                                'url'       => ['member/user/list'], 
+                                'visible'   => true
+                            ],
+                            [
+                                'label'     => 'Create', 
+                                'url'       => ['member/user/create'], 
+                                'visible'   => true
+                            ],
+
+                        ]
+                    ],
                     ['label' => 'Login', 'url' => ['site/login'], 'visible' => Yii::$app->user->isGuest],
                 ],
             ]

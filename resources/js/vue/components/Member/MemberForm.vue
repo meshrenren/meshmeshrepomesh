@@ -332,6 +332,12 @@ export default {
                     html: true,
                     export: true,
                 },
+				{
+                    label: 'Action',
+                    field: 'action',
+                    html: true,
+                    export: false,
+                },
         ]
 		let tabId = ['general_info', 'member_details', 'member_details_2']
 
@@ -389,6 +395,7 @@ export default {
 				lists[index].station_name = member.station.name
 				lists[index].division_name = member.division.name
 				lists[index].date_registered = vm.formatDate(member.mem_date, 'MMMM DD, YYYY')
+				lists[index].action = "<a href = '"+ vm.baseUrl+"/member/view/" + member.id + "' target = '_blank' class = 'btn btn-xs btn-info'><i class='fa fa-fw fa-eye'></i></a>"
     		})
 
     		return lists
@@ -465,7 +472,7 @@ export default {
 
             	new Noty({
 	                theme: 'relax',
-	                type: 'success',
+	                type: type ,
 	                layout: 'topRight',
 	                text: message,
 	                timeout: 2500
