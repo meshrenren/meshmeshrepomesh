@@ -1,217 +1,245 @@
 <template>
 	<div class="member-form">
-		<div class = "row">
-			<div class = "col-md-6">
-				<div class="form-group">
-					<div class = "row">
-				   		<label for="exampleInputPassword1" class = "col-md-3" >Name</label>
-					    <div  class = "col-md-9 input-name">
-						    <input type="text" class="form-control" v-model = "member.detail.first_name" style = "width: 33%;" placeholder = "First Name" required >
-						    <input type="text" class="form-control" v-model = "member.detail.middle_name" style = "width: 28%;" placeholder = "Middle Name" required >
-						    <input type="text" class="form-control" v-model = "member.detail.last_name" style = "width: 33%;" placeholder = "Last Name" required >
-		                    <span v-if="errors.detail.first_name" class="help text-red">{{ errors.detail.first_name[0]}}</span>
-		                    <span v-if="errors.detail.middle_name" class="help text-red">{{ errors.detail.middle_name[0] }}</span>
-		                    <span v-if="errors.detail.last_name" class="help text-red">{{ errors.detail.last_name[0] }}</span>
-						</div>
-					</div>
-				</div>
-				
-				<div class="form-group">
-					<div class = "row">
-					    <label for="exampleInputPassword1" class = "col-md-3">Username</label>
-					    <div class = "col-md-9">
-						    <input type="text" class="form-control"  v-model="member.user.username">
-                    		<span v-if="errors.user.username" class="help text-red">{{ errors.user.username[0] }}</span>
-						</div>
-					</div>
-				</div>
-						
-				<div class="form-group">
-					<div class = "row">
-					    <label for="exampleInputPassword1" class = "col-md-3">Password</label>
-					    <div class = "col-md-9">
-					    	<input type="password" class="form-control"  v-model="member.user.password">
-                    		<span v-if="errors.user.password" class="help text-red">{{ errors.user.password[0] }}</span>
-						</div>
-					</div>
-				</div>
-						
-				<div class="form-group">
-					<div class = "row">
-					    <label for="exampleInputPassword1" class = "col-md-3">Email</label>
-					    <div class = "col-md-9">
-					    	<input type="email" class="form-control"  v-model="member.user.email">
-                    		<span v-if="errors.user.email" class="help text-red">{{ errors.user.email[0] }}</span>
-						</div>
-					</div>
-				</div>
+		<section class="content-header">
+	      	<h1 v-html = "getViewTitle()">
+	      	</h1>
+	      	<ol class="breadcrumb">
+		        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+		        <li v-if = "pageView == 'member-create'"><a @click = "pageView = 'member-list'">Employee List</a></li>
+		        <li v-else  class="active" v-html = "getViewTitle()"></li>
+		        <li v-if = "pageView == 'member-create'" class="active" v-html = "getViewTitle()"></li>
+	      	</ol>
+	    </section>
 
-				<div class="form-group">
-					<div class = "row">
-						<label class = "col-md-3">Division</label>
-						<div class = "col-md-9">
-	                		<multiselect  v-model="member.detail.division_id" :options="divisionList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
-							</multiselect>
-                    		<span v-if="errors.detail.division_id" class="help text-red">{{ errors.detail.division_id[0] }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-					    <label class = "col-md-3">Station</label>
-					    <div class = "col-md-9">
-		              		<multiselect  v-model="member.detail.station_id" :options="stationList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
-							</multiselect>
-                    		<span v-if="errors.detail.station_id" class="help text-red">{{ errors.detail.station_id[0] }}</span>
-						</div>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-					    <label class = "col-md-3">Position</label>
-					    <div class = "col-md-9">
-					    	<input type="text" class="form-control" v-model = "member.detail.position">
-					    </div>
-					</div>
-				</div>			
+		<div class = "box">
+			<div class = "box-header" v-if = "pageView == 'member-create'">
+				<h3 class="box-title"></h3>
+				<div class="box-tools pull-right">
+            		<button class = "btn btn-primary" title="Save Member" @click = "saveForm()">Save</button>
+            		<button class="btn btn-default" title="Back to List" @click = "pageView = 'member-list'">Back to List</button>
+            	</div>
 			</div>
+	        <div class = "box-body">
+				<div class = "row member-list" v-if = "pageView == 'member-list'">
+					<div class = "toolbar">
+						<button type="button" class="btn btn-xs btn-default" @click = "pageView = 'member-create'">Create Member</button>
+					</div>
+					<datatable ref="tickettable" title="" :perPage="[10, 25, 50, 100]" :exportable="true" :printable="true" :columns="columnList" :rows="memberList" :sortable="false" :searchable="true" :exactSearch="false" >
+					</datatable>
+				</div>
+				<div class = "row member-create" v-if = "pageView == 'member-create'">
+					<div class = "col-md-6">
+						<div class="form-group">
+							<div class = "row">
+						   		<label for="exampleInputPassword1" class = "col-md-3" >Name</label>
+							    <div  class = "col-md-9 input-name">
+								    <input type="text" class="form-control" v-model = "memberForm.detail.first_name" style = "width: 33%;" placeholder = "First Name" required >
+								    <input type="text" class="form-control" v-model = "memberForm.detail.middle_name" style = "width: 28%;" placeholder = "Middle Name" required >
+								    <input type="text" class="form-control" v-model = "memberForm.detail.last_name" style = "width: 33%;" placeholder = "Last Name" required >
+				                    <span v-if="errors.detail.first_name" class="help text-red">{{ errors.detail.first_name[0]}}</span>
+				                    <span v-if="errors.detail.middle_name" class="help text-red">{{ errors.detail.middle_name[0] }}</span>
+				                    <span v-if="errors.detail.last_name" class="help text-red">{{ errors.detail.last_name[0] }}</span>
+								</div>
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<div class = "row">
+							    <label for="exampleInputPassword1" class = "col-md-3">Username</label>
+							    <div class = "col-md-9">
+								    <input type="text" class="form-control"  v-model="memberForm.user.username">
+		                    		<span v-if="errors.user.username" class="help text-red">{{ errors.user.username[0] }}</span>
+								</div>
+							</div>
+						</div>
+								
+						<div class="form-group">
+							<div class = "row">
+							    <label for="exampleInputPassword1" class = "col-md-3">Password</label>
+							    <div class = "col-md-9">
+							    	<input type="password" class="form-control"  v-model="memberForm.user.password">
+		                    		<span v-if="errors.user.password" class="help text-red">{{ errors.user.password[0] }}</span>
+								</div>
+							</div>
+						</div>
+								
+						<div class="form-group">
+							<div class = "row">
+							    <label for="exampleInputPassword1" class = "col-md-3">Email</label>
+							    <div class = "col-md-9">
+							    	<input type="email" class="form-control"  v-model="memberForm.user.email">
+		                    		<span v-if="errors.user.email" class="help text-red">{{ errors.user.email[0] }}</span>
+								</div>
+							</div>
+						</div>
 
-			<div class = "col-md-6">
-				<div class="form-group">
-					<div class = "row">
-						<label class = "col-md-3">Member Type</label>
-						<div class = "col-md-9">
-	                		<multiselect  v-model="member.detail.member_type_id" :options="typeList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
-							</multiselect>
-                    		<span v-if="errors.detail.member_type_id" class="help text-red">{{ errors.detail.member_type_id[0] }}</span>
+						<div class="form-group">
+							<div class = "row">
+								<label class = "col-md-3">Division</label>
+								<div class = "col-md-9">
+			                		<multiselect  v-model="memberForm.detail.division_id" :options="divisionList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
+									</multiselect>
+		                    		<span v-if="errors.detail.division_id" class="help text-red">{{ errors.detail.division_id[0] }}</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+							    <label class = "col-md-3">Station</label>
+							    <div class = "col-md-9">
+				              		<multiselect  v-model="memberForm.detail.station_id" :options="stationList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
+									</multiselect>
+		                    		<span v-if="errors.detail.station_id" class="help text-red">{{ errors.detail.station_id[0] }}</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+							    <label class = "col-md-3">Position</label>
+							    <div class = "col-md-9">
+							    	<input type="text" class="form-control" v-model = "memberForm.detail.position">
+							    </div>
+							</div>
+						</div>			
+					</div>
+
+					<div class = "col-md-6">
+						<div class="form-group">
+							<div class = "row">
+								<label class = "col-md-3">Member Type</label>
+								<div class = "col-md-9">
+			                		<multiselect  v-model="memberForm.detail.member_type_id" :options="typeList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
+									</multiselect>
+		                    		<span v-if="errors.detail.member_type_id" class="help text-red">{{ errors.detail.member_type_id[0] }}</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Membership Date</label>
+							    <div class = "col-md-9">
+						    		<date-picker v-model="memberForm.detail.mem_date" type="date" format="yyyy-MM-dd" lang="en"></date-picker>
+		                    		<span v-if="errors.detail.mem_date" class="help text-red">{{ errors.detail.mem_date[0] }}</span>
+						    	</div>
+						    </div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Birth date</label>
+							    <div class = "col-md-9">
+						    		<date-picker v-model="memberForm.detail.birthday" type="date" format="yyyy-MM-dd" lang="en"></date-picker>
+		                    		<span v-if="errors.detail.birthday" class="help text-red">{{ errors.detail.birthday[0] }}</span>
+						    	</div>
+						    </div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Gender</label>
+							    <div class = "col-md-9">
+						    		<multiselect  v-model="memberForm.detail.gender" :options="genderList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
+									</multiselect>
+		                    		<span v-if="errors.detail.gender" class="help text-red">{{ errors.detail.gender[0] }}</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Civil Status</label>
+							    <div class = "col-md-9">
+						    		<multiselect  v-model="memberForm.detail.civil_status" :options="statusList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
+									</multiselect>
+		                    		<span v-if="errors.detail.civil_status" class="help text-red">{{ errors.detail.civil_status[0] }}</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Salary</label>
+							    <div class = "col-md-9">
+						    		<input type="number" class="form-control" v-model="memberForm.detail.salary">
+						    	</div>
+						    </div>
+						</div>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Tel. No</label>
+							    <div class = "col-md-9">
+						    		<input type="text" class="form-control" v-model = "memberForm.detail.telephone">
+						    	</div>
+						    </div>
 						</div>
 					</div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Membership Date</label>
-					    <div class = "col-md-9">
-				    		<date-picker v-model="member.detail.mem_date" type="date" format="yyyy-MM-dd" lang="en"></date-picker>
-                    		<span v-if="errors.detail.mem_date" class="help text-red">{{ errors.detail.mem_date[0] }}</span>
-				    	</div>
-				    </div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Birth date</label>
-					    <div class = "col-md-9">
-				    		<date-picker v-model="member.detail.birthday" type="date" format="yyyy-MM-dd" lang="en"></date-picker>
-                    		<span v-if="errors.detail.birthday" class="help text-red">{{ errors.detail.birthday[0] }}</span>
-				    	</div>
-				    </div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Gender</label>
-					    <div class = "col-md-9">
-				    		<multiselect  v-model="member.detail.gender" :options="genderList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
-							</multiselect>
-                    		<span v-if="errors.detail.gender" class="help text-red">{{ errors.detail.gender[0] }}</span>
+					<div class = "col-md-12" style = "margin-top:20px;">
+					</div>
+					<div class = "col-md-6">								
+						<label>Primary Address:</label>
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Address</label>
+							    <div class = "col-md-9">
+								    <input type="text" class="form-control" v-model = "memberForm.address.address" >
+		                    		<span v-if="errors.address.address" class="help text-red">{{ errors.address.address[0] }}</span>
+						    	</div>
+						    </div>
+						</div>	
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">City</label>
+							    <div class = "col-md-9">
+								    <input type="text" class="form-control" v-model = "memberForm.address.city" >
+						    	</div>
+						    </div>
+						</div>	
+						<div class="form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Province</label>
+							    <div class = "col-md-9">
+								    <input type="text" class="form-control" v-model = "memberForm.address.province" >
+						    	</div>
+						    </div>
 						</div>
 					</div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Civil Status</label>
-					    <div class = "col-md-9">
-				    		<multiselect  v-model="member.detail.civil_status" :options="statusList" :searchable="false" :close-on-select="true" :allow-empty="false" label="label" placeholder="Select one" track-by="value" >
-							</multiselect>
-                    		<span v-if="errors.detail.civil_status" class="help text-red">{{ errors.detail.civil_status[0] }}</span>
+					<div class = "col-md-6">
+						<label>In case of Emergency:</label>
+						<div class = "form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Name</label>
+							    <div  class = "col-md-9">
+								    <input type="text" class="form-control" v-model = "memberForm.family.name" >
+		                    		<span v-if="errors.family.name" class="help text-red">{{ errors.family.name[0] }}</span>
+								</div>
+						    </div>
+						</div>
+						<div class = "form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Relation</label>
+							    <div  class = "col-md-9">
+								    <input type="text" class="form-control" v-model = "memberForm.family.relation" >
+		                    		<span v-if="errors.family.relation" class="help text-red">{{ errors.family.relation[0] }}</span>
+								</div>
+						    </div>
+						</div>
+						<div class = "form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Address</label>
+							    <div  class = "col-md-9">
+								    <textarea v-model = "memberForm.family.address" class="form-control"></textarea>
+								</div>
+						    </div>
+						</div>
+						<div class = "form-group">
+							<div class = "row">
+						    	<label class = "col-md-3">Contact No.</label>
+							    <div  class = "col-md-9">
+								    <input type="text" class="form-control" v-model = "memberForm.family.contact_no" >
+								</div>
+						    </div>
 						</div>
 					</div>
+					<div class = "col-md-12 content-btn">
+						<button class = "btn btn-primary" title="Save Member" @click = "saveForm()">Save</button>
+					</div>
 				</div>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Salary</label>
-					    <div class = "col-md-9">
-				    		<input type="number" class="form-control" v-model="member.detail.salary">
-				    	</div>
-				    </div>
-				</div>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Tel. No</label>
-					    <div class = "col-md-9">
-				    		<input type="text" class="form-control" v-model = "member.detail.telephone">
-				    	</div>
-				    </div>
-				</div>
-			</div>
-			<div class = "col-md-12">
-				<hr>
-			</div>
-			<div class = "col-md-6">								
-				<label>Primary Address:</label>
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Address</label>
-					    <div class = "col-md-9">
-						    <input type="text" class="form-control" v-model = "member.address.address" >
-                    		<span v-if="errors.address.address" class="help text-red">{{ errors.address.address[0] }}</span>
-				    	</div>
-				    </div>
-				</div>	
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">City</label>
-					    <div class = "col-md-9">
-						    <input type="text" class="form-control" v-model = "member.address.city" >
-				    	</div>
-				    </div>
-				</div>	
-				<div class="form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Province</label>
-					    <div class = "col-md-9">
-						    <input type="text" class="form-control" v-model = "member.address.province" >
-				    	</div>
-				    </div>
-				</div>
-			</div>
-			<div class = "col-md-6">
-				<label>In case of Emergency:</label>
-				<div class = "form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Name</label>
-					    <div  class = "col-md-9">
-						    <input type="text" class="form-control" v-model = "member.family.name" >
-                    		<span v-if="errors.family.name" class="help text-red">{{ errors.family.name[0] }}</span>
-						</div>
-				    </div>
-				</div>
-				<div class = "form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Relation</label>
-					    <div  class = "col-md-9">
-						    <input type="text" class="form-control" v-model = "member.family.relation" >
-                    		<span v-if="errors.family.relation" class="help text-red">{{ errors.family.relation[0] }}</span>
-						</div>
-				    </div>
-				</div>
-				<div class = "form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Address</label>
-					    <div  class = "col-md-9">
-						    <textarea v-model = "member.family.address" class="form-control"></textarea>
-						</div>
-				    </div>
-				</div>
-				<div class = "form-group">
-					<div class = "row">
-				    	<label class = "col-md-3">Contact No.</label>
-					    <div  class = "col-md-9">
-						    <input type="text" class="form-control" v-model = "member.family.contact_no" >
-						</div>
-				    </div>
-				</div>
-			</div>
-			<div class = "col-md-12">
-				<button class = "btn btn-primary" @click = "saveForm()">Save</button>
 			</div>
 		</div>
 	</div>
@@ -237,9 +265,10 @@
     import {Tabs, Tab} from 'vue-tabs-component'
     import VueTabs from 'vue-nav-tabs'
     import VTab from 'vue-nav-tabs'
+    import DataTable from 'vue-materialize-datatable'
 
 export default {
-	props: ['dataMember', 'dataUser', 'dataFamily', 'dataAddress', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataBranchList', 'baseUrl'],
+	props: ['dataMember', 'dataUser', 'dataFamily', 'dataAddress', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberList', 'dataView', 'baseUrl'],
 	data: function () {
 
 		let gender = [{ value : "Male", label : "Male"}, { value : "Female", label : "Female"}]
@@ -247,14 +276,71 @@ export default {
 					{ value : "Married", label : "Married"}, 
 					{ value : "Widow", label : "Widow"}, 
 					{ value : "Separated", label : "Separated"}]
+
+		let cols = [
+				{
+                    label: 'Name',
+                    field: 'full_name',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'ID Number',
+                    field: 'id_number',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Username',
+                    field: 'user_username',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Email',
+                    field: 'user_email',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Member Type',
+                    field: 'member_type_description',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Station',
+                    field: 'station_name',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Position',
+                    field: 'position_name',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Division',
+                    field: 'division_name',
+                    html: true,
+                    export: true,
+                },
+				{
+                    label: 'Date Registered',
+                    field: 'date_registered',
+                    html: true,
+                    export: true,
+                },
+        ]
 		let tabId = ['general_info', 'member_details', 'member_details_2']
 
 		return {
-			member 			: {detail : this.dataMember, user : this.dataUser, family : this.dataFamily, address : this.dataAddress},
+			memberForm 		: {detail : this.dataMember, user : this.dataUser, family : this.dataFamily, address : this.dataAddress},
 			stationList 	: this.dataStationList,
 			divisionList 	: this.dataDivisionList,
 			typeList 		: this.dataTypeList,
-			branchList 		: this.dataBranchList,
+			listMember 		: this.dataMemberList,
 			birthdateVal	: moment().format('YYYY-MM-DD'),
 			genderVal		: gender[0],
 			genderList		: gender,
@@ -269,6 +355,8 @@ export default {
               	showClear	: true,
               	showClose	: true,
             },
+            pageView		: this.dataView,
+            columnList		: cols
 		}
 	},
     components: {
@@ -276,12 +364,47 @@ export default {
         VueTimepicker,
         Multiselect,
         Tabs,
-        Tab
+        Tab,
+        datatable: DataTable
     }, 
     mounted: function () {
     	
+    }, 
+    computed: {
+    	memberList(){
+    		let vm = this
+
+    		let members = this.listMember
+    		let lists = []
+    		members.forEach(function(member, index) {
+				lists[index] = {}
+
+				//lists[index] = member
+				lists[index].full_name = member.first_name + ' '+ member.middle_name + ' '+  member.last_name
+				lists[index].id_number = member.id
+				lists[index].user_username = member.user.username
+				lists[index].user_email = member.user.email
+				lists[index].member_type_description = member.memberType.description
+				lists[index].position_name = member.position
+				lists[index].station_name = member.station.name
+				lists[index].division_name = member.division.name
+				lists[index].date_registered = vm.formatDate(member.mem_date, 'MMMM DD, YYYY')
+    		})
+
+    		return lists
+
+
+    	}
     },
-    methods: {    	
+    methods: {   
+    	getViewTitle(){
+			if(this.pageView == 'member-create'){
+				return "Create Member"
+			}
+			else if(this.pageView == 'member-list'){
+				return "Member List"
+			}
+    	},	
         formatDate(date, format){
           	if(date){
             	return moment(date).format(format)
@@ -300,12 +423,12 @@ export default {
     		vm.errors.family = {}
     		vm.errors.address = {}
 
-    		let new_member = this.member
+    		let new_member = this.memberForm
 
-    		if(vm.member.birthday != null){
-    			new_member.detail.birthday = vm.formatDate(vm.member.detail.birthday, "YYYY-MM-DD")
+    		if(vm.memberForm.birthday != null){
+    			new_member.detail.birthday = vm.formatDate(vm.memberForm.detail.birthday, "YYYY-MM-DD")
     		}
-    		new_member.detail.mem_date = vm.formatDate(vm.member.detail.mem_date, "YYYY-MM-DD")
+    		new_member.detail.mem_date = vm.formatDate(vm.memberForm.detail.mem_date, "YYYY-MM-DD")
     		console.log(new_member)
 
 
@@ -321,6 +444,9 @@ export default {
             	if(res.success == true){
             		type = "success"
             		message = "Member successfully added."
+
+            		vm.listMember = res.data
+            		vm.pageView = 'member-list'
             	}
             	else{
             		if(res.status == 'has-error'){

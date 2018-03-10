@@ -84,37 +84,39 @@ class Member extends \yii\db\ActiveRecord
         ];
     }
 
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
     public function getLoanaccount()
     {
         return $this->hasOne(Loanaccount::className(), ['member_id' => 'id']);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
     public function getMemberType()
     {
         return $this->hasOne(MembershipType::className(), ['id' => 'member_type_id']);
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
+    public function getStation()
+    {
+        return $this->hasOne(Station::className(), ['id' => 'station_id']);
+    }
+
+    public function getDivision()
+    {
+        return $this->hasOne(Division::className(), ['id' => 'division_id']);
+    }
+
     public function getMemberFamilies()
     {
         return $this->hasMany(MemberFamily::className(), ['member_id' => 'id']);
     }
 
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
     public function getMemberEmployments()
     {
         return $this->hasMany(MemberAddress::className(), ['member_id' => 'id']);
     }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id' => 'user_id']);
+    }
+
 }

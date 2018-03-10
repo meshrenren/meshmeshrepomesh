@@ -66,18 +66,51 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 
 .member-form{
 
-  .input-name{
-    display: inline-block;
+  .member-list{
+    table{
+      width: 100%;
+      table-layout: unset !important;
+    }
 
-    >input{
-      margin-right: 5px;
-      float: left;
+    ul.material-pagination{
+      list-style: none;
+    }
+
+    .toolbar{      
+      position: absolute;
+      right: 140px;
+      top: 33px;
+
+    }
+  }
+
+  .member-create{
+
+    .input-name{
+      display: inline-block;
+
+      >input{
+        margin-right: 5px;
+        float: left;
+      }
+
+    }
+
+    .content-btn{
+
+      button{
+        margin: 0 auto;
+        display: block;
+      }
+
+    }
+
+    .mx-datepicker{
+      width: 100% !important;
     }
 
   }
 
-  .mx-datepicker{
-    width: 100% !important;
-  }
+  
 
 }

@@ -8,6 +8,7 @@ use yii\helpers\Html;
 
 $this->title = 'Create Member';
 //$this->params['breadcrumbs'][] = $this->title;
+
 $member = array();
 $member['first_name'] = null;
 $member['middle_name'] = null;
@@ -50,27 +51,17 @@ $address['province'] = null;
     $stationList = yii\helpers\Html::encode(json_encode($stationList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
     $divisionList = yii\helpers\Html::encode(json_encode($divisionList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
     $typeList = yii\helpers\Html::encode(json_encode($typeList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-    $branchList = yii\helpers\Html::encode(json_encode($branchList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+    $memberList = yii\helpers\Html::encode(json_encode($memberList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
 ?>
-<div class="member-view">
-	<div class = "box">
-		<div class="box-header with-border">
-              <h3 class="box-title">Create Member</h3>
-        </div>
-        <div class = "box-body">
-		    <member-form
-				:data-member='<?= $member ?>'
-				:data-user='<?= $user ?>'
-				:data-family='<?= $family ?>'
-				:data-address='<?= $address ?>'
-				:data-station-list='<?= $stationList ?>'
-				:data-division-list='<?= $divisionList ?>'
-				:data-type-list='<?= $typeList ?>'
-				:data-branch-list='<?= $branchList ?>'
-				:base-url='<?= json_encode(Yii::$app->request->baseUrl) ?>'
-		    	>
-		    </member-form>
-		</div>
-	</div>
-
-</div>
+<member-form
+	:data-member='<?= $member ?>'
+	:data-user='<?= $user ?>'
+	:data-family='<?= $family ?>'
+	:data-address='<?= $address ?>'
+	:data-station-list='<?= $stationList ?>'
+	:data-division-list='<?= $divisionList ?>'
+	:data-type-list='<?= $typeList ?>'
+	:data-member-list='<?= $memberList ?>'
+	:data-view='<?= json_encode("member-create") ?>'
+	:base-url='<?= json_encode(Yii::$app->request->baseUrl) ?>' >
+</member-form>

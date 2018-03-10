@@ -14,6 +14,8 @@ class MemberController extends \yii\web\Controller
     public function actionCreate()
     {    	
         $this->layout = 'main-vue';
+  //       $emp  = new \app\models\Member();
+		// $att = $emp->attributes();
 
         $stationList  = \app\models\Station::find()
             ->select([
@@ -33,19 +35,36 @@ class MemberController extends \yii\web\Controller
             	'description as label'
             ])
         	->asArray()->all();
-        $branchList  = \app\models\Branch::find()
-            ->select([
-            	'id as value',
-            	'branch_desc as label'
-            ])
+
+        $members = \app\models\Member::find()->innerJoinWith(['user'])
+        	->joinWith(['memberType', 'division', 'station'])
         	->asArray()->all();
 
         return $this->render('create', [
         		'stationList'	=> $stationList,
         		'divisionList'	=> $divisionList,
         		'typeList'		=> $typeList,
-        		'branchList'	=> $branchList
+        		'memberList'	=> $members
         	]);
+    }
+
+    public function actionGetMember(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+
+        	$members = \app\models\Member::find()->innerJoinWith(['user'])
+        	->joinWith(['memberType', 'division', 'station'])
+        	->asArray()->all();
+
+
+        	return [
+		        'success' 	=> false,
+	        	'data'	=> $members
+		    ];
+        }
+
     }
 
     public function actionSaveMember(){
@@ -105,6 +124,7 @@ class MemberController extends \yii\web\Controller
         	else{
 
         		if($model->save()){
+        			$user->password = sha1($user->password);
         			$user->save();
 
         			//Save user id to member table

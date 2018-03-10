@@ -122,18 +122,29 @@ a.desc:after {
 {
     background: #fff !important;
 }
-.site-login
-{
-    padding: 100px;
-}
-.site-login h1, .site-login p
-{
-    text-align: center;
-}
+
+.site-login{
+    padding: 100px;}
+    .site-login h1, .site-login p{
+        text-align: center;
+    }
+
 .form-control
 {
     border-radius: 5px !important;
 }
+
+.box-header{
+    padding: 15px !important;}
+    .box-header>.box-tools{
+        right: 15px !important;
+        top: 10px !important;
+    }
+
+.box-body{
+    padding: 15px !important;
+}
+
 .main-preloader {
     position: fixed; 
     left: 0; top: 0; 
@@ -143,4 +154,8 @@ a.desc:after {
     overflow: visible; 
     background: rgba(0,0,0,0.1)  url(../images/loading.gif) no-repeat center center;
     display: none;
+}
+
+.content-header {
+    padding: 15px 0px 15px 0px !important;
 }
