@@ -24,33 +24,49 @@
             </div>
         </form>
         <!-- /.search form -->
+        <?php
+        if(!Yii::$app->user->isGuest){
+            echo dmstr\widgets\Menu::widget(
+                [
+                    'options' => ['class' => 'sidebar-menu tree', 'data-widget' => 'tree'],
+                    'items' => [
+                        ['label' => 'QUICK MENU', 'options' => ['class' => 'header']],
+                        [
+                            'label'     => 'Members',
+                            'icon'      => 'user-o', 
+                            'items'      => [
+                                [
+                                    'label'     => 'List', 
+                                    'url'       => ['member/user/list'], 
+                                    'visible'   => true
+                                ],
+                                [
+                                    'label'     => 'Create', 
+                                    'url'       => ['member/user/create'], 
+                                    'visible'   => true
+                                ],
 
-        <?= dmstr\widgets\Menu::widget(
-            [
-                'options' => ['class' => 'sidebar-menu'],
-                'items' => [
-                    ['label' => 'QUICK MENU', 'options' => ['class' => 'header']],
-                    [
-                        'label'     => 'Members',
-                        'icon'      => 'user-o', 
-                        'items'      => [
-                            [
-                                'label'     => 'List', 
-                                'url'       => ['member/user/list'], 
-                                'visible'   => true
-                            ],
-                            [
-                                'label'     => 'Create', 
-                                'url'       => ['member/user/create'], 
-                                'visible'   => true
-                            ],
-
-                        ]
+                            ]
+                        ],
                     ],
-                    ['label' => 'Login', 'url' => ['site/login'], 'visible' => Yii::$app->user->isGuest],
-                ],
-            ]
-        ) ?>
+                ]
+            ); 
+        }
+        else{
+            echo dmstr\widgets\Menu::widget(
+                [
+                    'options' => ['class' => 'sidebar-menu'],
+                    'items' => [
+                        ['label' => 'QUICK MENU', 'options' => ['class' => 'header']],
+                        ['label' => 'Login', 'url' => ['site/login'], 'visible' => Yii::$app->user->isGuest],
+                    ],
+                ]
+            ); 
+        }
+
+        ?>
+
+
 
     </section>
 

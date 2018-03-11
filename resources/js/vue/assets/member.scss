@@ -114,3 +114,97 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
   
 
 }
+
+.member-view{
+
+  .tab-content{
+    padding: 15px;
+
+    .table{
+
+      td{
+        position: relative;
+
+        .close{
+          top: -15px;
+        }
+
+      }
+
+      .action-column{
+        width: 20px;
+        vertical-align: top !important;
+      }
+
+    }
+
+  }
+
+
+  .float-multiselect{
+    position: absolute;
+    z-index: 2;
+    display: none;
+    width: 100%; 
+    background-color: #fff;
+
+    .mx-datepicker{
+      width: 100% !important;
+    }
+
+    .close{
+      position: absolute;
+      right: 3px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+  }
+
+  .box-profile{
+    padding-bottom: 30px !important;
+
+    .image-container{
+      margin-bottom: 20px;
+    }
+
+    .content-name{
+      position: relative;
+
+      input{
+        margin-top: 3px;
+      }
+
+    }
+
+    .list-group{
+      margin-top: 30px;
+
+      .list-group-item{
+        padding-right: 10px;
+      }
+
+    }
+
+    .close{
+      bottom: -15px;
+    }
+
+  }
+
+
+  .svg_edit, .svg_delete{
+    font-size: 10px;
+    vertical-align: top;
+
+    i{
+      vertical-align: top;
+    }
+  }
+
+}
+
+.close, .svg_edit, .svg_delete{
+  cursor: pointer;
+}
+        

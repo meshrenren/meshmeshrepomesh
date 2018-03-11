@@ -49,7 +49,45 @@ class MemberController extends \yii\web\Controller
 
     public function actionView($member_id){
         $this->layout = 'main-vue';
-    	return $this->render('view');
+
+        $stationList  = \app\models\Station::find()
+            ->select([
+            	"id as value",
+            	"name as label",
+            	"CONCAT('station_id','') as column_name"
+            ])
+        	->asArray()->all();
+        $divisionList  = \app\models\Division::find()
+            ->select([
+            	"id as value",
+            	"name as label",
+            	"CONCAT('division_id','') as column_name"
+            ])
+        	->asArray()->all();
+        $typeList  = \app\models\MembershipType::find()
+            ->select([
+            	"id as value",
+            	"description as label",
+            	"CONCAT('member_type_id','') as column_name"
+            ])
+        	->asArray()->all();
+
+        $member = \app\models\Member::find()->innerJoinWith(['user'])
+        	->where(['member.id' => $member_id])
+        	->joinWith(['memberType', 'division', 'station'])
+        	->select([
+            	"member.*",
+            	"users.username as username",
+            	"users.email as email"
+            ])
+        	->asArray()->one();
+
+    	return $this->render('view', [
+        		'stationList'	=> $stationList,
+        		'divisionList'	=> $divisionList,
+        		'typeList'		=> $typeList,
+        		'member'		=> $member,
+        ]);
     }
 
     public function actionGetMembers(){
@@ -87,6 +125,10 @@ class MemberController extends \yii\web\Controller
         		$model->station_id = $emp->detail->station_id->value;
         	if($model->division_id != null)
         		$model->division_id = $emp->detail->division_id->value;
+        	if($model->civil_status != null)
+        		$model->civil_status = $emp->detail->civil_status->value;
+        	if($model->gender != null)
+        		$model->gender = $emp->detail->gender->value;
         	$model->validate();
 
         	//User
@@ -163,6 +205,58 @@ class MemberController extends \yii\web\Controller
         	}
 
         	
+        }
+    }
+
+    public function actionUpdateMember(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+        	if($_POST['table'] == 'member'){
+        		$model = \app\models\Member::find()->where(['id' => $_POST['member_id']])->one();
+        	}
+        	else if($_POST['table'] == 'user'){
+        		$model = \app\models\User::find()->where(['id' => $_POST['user_id']])->one();        		
+        	}
+
+        	if(isset($model) && $model != null){
+        		$label = $_POST['label'];
+        		$value = $_POST['value'];
+        		$model->$label = $value;
+        		if($model->save()){
+        			if($label == 'fist_name' || $label == 'last_name'){
+        				$user = \app\models\User::find()->where(['id' => $model->user_id])->one(); 
+        				$user->$label = $value;
+        			}
+        			$member = \app\models\Member::find()->innerJoinWith(['user'])
+        				->joinWith(['memberType', 'division', 'station'])
+			        	->select([
+			            	"member.*",
+			            	"users.username as username",
+			            	"users.email as email"
+			            ])
+        				->asArray()->one();
+
+        			return [
+		        		'success' 	=> true,
+		        		'status'	=> 'okay',
+	        			'data'		=> $member
+		            ];
+        		}
+        		else{
+        			$error = $model->getErrors();
+        			return [
+		        		'success' 	=> false,
+		        		'status'	=> 'has-error',
+	        			'error'		=> $error
+		            ];
+        		}
+        	}
+        	return [
+		        'success' 	=> false,
+		        'status'	=> 'save-failed'
+		    ];
         }
     }
 

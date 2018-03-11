@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model app\modules\member\models\Member */
 
-$this->title = 'Create Member';
+$this->title = 'Member List';
 //$this->params['breadcrumbs'][] = $this->title;
 
 $member = array();

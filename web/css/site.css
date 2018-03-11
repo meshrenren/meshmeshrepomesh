@@ -159,3 +159,38 @@ a.desc:after {
 .content-header {
     padding: 15px 0px 15px 0px !important;
 }
+
+.detail-view th{
+    width: 30%;
+}
+.tab-content .detail-view tbody tr th,
+.tab-content .detail-view tbody tr td{
+    border-top: none !important;
+    padding: 8px 0px;
+    vertical-align: middle !important;
+}
+
+/* Avatar Image */
+.image-container{
+    width: 150px;
+    margin: 0 auto;
+}
+.circle-avatar {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    display: block;
+    padding-top: 100%;
+    border-radius: 50%;
+    background-position-y: center;
+    background-position-x: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    margin: 0 auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url(../images/user.png);
+    background-color: #DCDCDC;
+}
