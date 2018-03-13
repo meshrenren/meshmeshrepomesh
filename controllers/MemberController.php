@@ -82,11 +82,21 @@ class MemberController extends \yii\web\Controller
             ])
         	->asArray()->one();
 
+        $memberFamily = \app\models\MemberFamily::find()
+        		->where(['member_id' => $member_id])
+        		->asArray()->all();
+
+        $memberAddress = \app\models\MemberAddress::find()
+        		->where(['member_id' => $member_id])
+        		->asArray()->all();
+
     	return $this->render('view', [
         		'stationList'	=> $stationList,
         		'divisionList'	=> $divisionList,
         		'typeList'		=> $typeList,
         		'member'		=> $member,
+        		'memberFamily'	=> $memberFamily,
+        		'memberAddress'	=> $memberAddress,
         ]);
     }
 
@@ -253,6 +263,35 @@ class MemberController extends \yii\web\Controller
 		            ];
         		}
         	}
+        	return [
+		        'success' 	=> false,
+		        'status'	=> 'save-failed'
+		    ];
+        }
+    }
+
+    function actionUpdateFamilyMember(){
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+        	$model = \app\models\MemberFamily::find()->where(['id' => $_POST['family_id']])->one(); 
+        	if(isset($model) && $model != null){
+        		$label = $_POST['label'];
+        		$value = $_POST['value'];
+        		$model->$label = $value;
+        		if($model->save()){
+        			$memberFamily = \app\models\MemberFamily::find()
+		        		->where(['member_id' => $model->member_id])
+		        		->asArray()->all();
+
+		        	return [
+		        		'success' 	=> true,
+		        		'status'	=> 'okay',
+	        			'data'		=> $memberFamily
+		            ];
+        		}
+        	}
+
         	return [
 		        'success' 	=> false,
 		        'status'	=> 'save-failed'

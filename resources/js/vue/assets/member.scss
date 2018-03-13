@@ -111,8 +111,6 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 
   }
 
-  
-
 }
 
 .member-view{
@@ -136,6 +134,19 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
         vertical-align: top !important;
       }
 
+    }
+
+    #family table, #address table{
+
+      td{
+        width: 10%;
+      }
+
+    }
+
+    .update-link{
+      padding: 0px 6px;
+      border-bottom: 1px dashed #3c8dbc;
     }
 
   }
@@ -204,7 +215,7 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 
 }
 
-.close, .svg_edit, .svg_delete{
+.close, .svg_edit, .svg_delete, .update-link{
   cursor: pointer;
 }
         

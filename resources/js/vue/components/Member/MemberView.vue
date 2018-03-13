@@ -269,10 +269,135 @@
 							</div>
 						</div>
 						<div class = "tab-pane" id = "address">
-							This is Address
+							<table class = "table table-bordered table-hover dataTable">
+								<thead>
+									<tr>
+										<th>Address</th>
+										<th>City</th>
+										<th>Province</th>
+										<th>Is Mailing</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="(address, index) in memberAddress">
+										<td>
+											<span class = "update-link" @click = "showToggleAddress('addressAddress', index, true, 'address')">{{address.address}}</span>
+
+											<div class = "float-multiselect" :id = "'addressAddress_'+index">
+												<input title="Press enter to save" type="text" class = "form-control"
+													:value="address.address" 
+													ref="addressAddress"
+													placeholder = "Address (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberAddress(this, 'addressAddress', index, address.id, 'address')" >
+												<span class = "close" @click = "showToggleAddress('addressAddress', index, false)">Close</span>
+											</div>
+										</td>
+										<td>
+											<span class = "update-link" @click = "showToggleAddress('addressCity', index, true, 'city')">{{address.city}}</span>
+
+											<div class = "float-multiselect" :id = "'addressCity_'+index">
+												<input title="Press city to save" type="text" class = "form-control"
+													:value="address.address" 
+													ref="addressCity"
+													placeholder = "City (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberAddress(this, 'addressCity', index, address.id, 'city')" >
+												<span class = "close" @click = "showToggleAddress('addressCity', index, false)">Close</span>
+											</div>
+
+										</td>
+										<td>
+											<span class = "update-link" @click = "showToggleAddress('addressProvince', index, true, 'province')">{{address.province}}</span>
+
+											<div class = "float-multiselect" :id = "'addressAddress_'+index">
+												<input title="Press enter to save" type="text" class = "form-control"
+													:value="address.address" 
+													ref="addressProvince"
+													placeholder = "Province (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberAddress(this, 'addressProvince', index, address.id, 'province')" >
+												<span class = "close" @click = "showToggleAddress('addressProvince', index, false)">Close</span>
+											</div>
+										</td>
+										<td>
+											<span class = "update-link" @click = "showToggleAddress('addressMailing', index, true)" v-html = "address.is_mailing == 0 ? 'No' : 'Yes'"></span>
+
+											<div class = "float-multiselect" :id = "'addressMailing_'+index">
+												<label style = "backgroun-color: #fff;">
+							                      	<input title="Press enter to save" type="checkbox" :checked = "address.is_mailing == 0 ? false : true" 
+							                      	ref="addressMailing" 
+							                      	@click = "updateMemberAddress(this, 'addressMailing', index, address.id, 'is_mailing')">Is Mailing
+							                    </label>
+												<span class = "close" @click = "showToggleAddress('addressMailing', index, false)">Close</span>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</div>
 						<div class = "tab-pane" id = "family">
-							This is Family
+							<table class = "table table-bordered table-hover dataTable">
+								<thead>
+									<tr>
+										<th>Name</th>
+										<th>Relation</th>
+										<th>Address</th>
+										<th>Contact</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="(family, index) in memberFamily">
+										<td>
+											<span class = "update-link" @click = "showToggleFamily('familyName', index, true, 'name')">{{family.name}}</span>
+
+											<div class = "float-multiselect" :id = "'familyName_'+index">
+												<input title="Press enter to save" type="text" class = "form-control"
+													:value="family.name" 
+													ref="familyName"
+													placeholder = "Name (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberFamily(this, 'familyName', index, family.id, 'name')" >
+												<span class = "close" @click = "showToggleFamily('familyName', index, false)">Close</span>
+											</div>
+										</td>
+										<td>
+											<span class = "update-link" @click = "showToggleFamily('familyRelation', index, true, 'relation')">{{family.relation}}</span>
+
+											<div class = "float-multiselect" :id = "'familyRelation_'+index">
+												<input title="Press enter to save" type="text" class = "form-control"
+													:value="family.relation" 
+													ref="familyRelation"
+													placeholder = "Relation (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberFamily(this, 'familyRelation', index, family.id, 'relation')" >
+												<span class = "close" @click = "showToggleFamily('familyRelation', index, false)">Close</span>
+											</div>
+
+										</td>
+										<td>
+											<span class = "update-link" @click = "showToggleFamily('familyAddress', index, true, 'address')">{{family.address}}</span>
+
+											<div class = "float-multiselect" :id = "'familyAddress_'+index">
+												<input title="Press enter to save" type="text" class = "form-control"
+													:value="family.address" 
+													ref="familyAddress"
+													placeholder = "Address (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberFamily(this, 'familyAddress', index, family.id, 'address')" >
+												<span class = "close" @click = "showToggleFamily('familyAddress', index, false)">Close</span>
+											</div>
+
+										</td>
+										<td>
+											<span class = "update-link" @click = "showToggleFamily('familyContact', index, true, 'contact_no')">{{family.contact_no}}</span>
+
+											<div class = "float-multiselect" :id = "'familyAddress_'+index">
+												<input title="Press enter to save" type="text" class = "form-control"
+													:value="family.address" 
+													ref="familyContact"
+													placeholder = "Contact No. (Press enter to save)" 
+													v-on:keyup.enter = "updateMemberFamily(this, 'familyContact', index, family.id, 'contact_no')" >
+												<span class = "close" @click = "showToggleFamily('familyContact', index, false)">Close</span>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						</div>
 					</div>
 				</div>
@@ -305,7 +430,7 @@
     import { SweetModal } from 'sweet-modal-vue' 
 
 export default {
-	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'baseUrl'],
+	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberFamily', 'dataMemberAddress', 'baseUrl'],
 	data: function () {
 
 		let gender = [{ value : "Male", label : "Male", column_name : 'gender'}, { value : "Female", label : "Female", column_name : 'gender'}]
@@ -319,6 +444,8 @@ export default {
 			stationList 	: this.dataStationList,
 			divisionList 	: this.dataDivisionList,
 			typeList 		: this.dataTypeList,
+			memberFamily	: this.dataMemberFamily,
+			memberAddress	: this.dataMemberAddress,
 			genderList		: gender,
 			statusList		: status,
   			stationVal 		: {value : this.dataMember.station_id, label : this.dataMember.station.name, column_name : 'station_id'},
@@ -354,6 +481,28 @@ export default {
             	return moment(date).format(format)
           	}
           	return null
+        },
+        showToggleAddress(ref, index, state, detail = null){
+        	if(detail != null){
+        		this.$refs[ref][index].value = this.memberAddress[index][detail]
+        	}
+        	if(state){
+    			document.getElementById(ref+'_'+index).style.display = 'block'
+    		}
+    		else{
+    			document.getElementById(ref+'_'+index).style.display = 'none'
+    		}
+        },
+        showToggleFamily(ref, index, state, detail = null){
+        	if(detail != null){
+        		this.$refs[ref][index].value = this.memberFamily[index][detail]
+        	}
+        	if(state){
+    			document.getElementById(ref+'_'+index).style.display = 'block'
+    		}
+    		else{
+    			document.getElementById(ref+'_'+index).style.display = 'none'
+    		}
         },
     	showToggle(ref, state, detail = null){
     		if(detail != null){
@@ -394,6 +543,58 @@ export default {
 
     		this.showToggle(ref, false)
     	},
+    	updateMemberAddress(env, ref, index, family_id, detail){
+
+    	},
+    	updateMemberFamily(env, ref, index, family_id, detail){
+    		
+    		let vm = this
+    		let value = this.$refs[ref][index].value
+
+    		let data = new FormData()
+
+    		data.set('family_id', family_id)
+    		data.set('label', detail)
+    		data.set('value', value)
+    		axios.post(this.baseUrl+'/member/update-family-member', data).then((result) => {
+            	let res = result.data
+            	let type = ""
+            	let message = ""
+            	console.log(res)
+            	if(res.success == true){
+            		type = "success"
+            		message = "Family member successfully updated."
+
+            		vm.memberFamily = res.data
+
+            		vm.showToggleFamily(ref, index, false)
+            	}
+            	else{
+            		type = "error"
+	            	message = "Family Member not updated. Please try again or contact administrator."
+            	}            	
+
+            	new Noty({
+	                theme: 'relax',
+	                type: type ,
+	                layout: 'topRight',
+	                text: message,
+	                timeout: 2500
+	            }).show();
+	            
+            }).catch(function (error) {
+    			new Noty({
+		            theme: 'relax',
+		            type: 'error',
+		            layout: 'topRight',
+		            text: 'An error occured. Please try again or contact administrator',
+		            timeout: 2500
+		        }).show()
+
+    			if(error.response.status == 403)
+    				location.reload()
+  			})
+    	},
     	updateMember(env, ref, label, table ){
     		let value = this.$refs[ref].value
     		if(label == "mem_date" || label == "birthday"){
@@ -427,7 +628,7 @@ export default {
             	console.log(res)
             	if(res.success == true){
             		type = "success"
-            		message = "Member successfully update."
+            		message = "Member successfully updated."
 
             		vm.member = res.data
             	}
@@ -450,6 +651,8 @@ export default {
 	                text: message,
 	                timeout: 2500
 	            }).show();
+
+ 				main_preloader.style.display = 'none';
 
             }).catch(function (error) {
  				main_preloader.style.display = 'none';

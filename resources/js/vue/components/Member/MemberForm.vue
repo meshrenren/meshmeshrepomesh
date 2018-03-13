@@ -24,7 +24,7 @@
 					<div class = "toolbar">
 						<button type="button" class="btn btn-xs btn-default" @click = "pageView = 'member-create'">Create Member</button>
 					</div>
-					<datatable ref="tickettable" title="" :perPage="[10, 25, 50, 100]" :exportable="true" :printable="true" :columns="columnList" :rows="memberList" :sortable="false" :searchable="true" :exactSearch="false" >
+					<datatable ref="tickettable" title="" :perPage="[10, 25, 50, 100]" :exportable="true" :printable="true" :columns="columnList" :rows="listMember" :sortable="false" :searchable="true" :exactSearch="false" >
 					</datatable>
 				</div>
 				<div class = "row member-create" v-if = "pageView == 'member-create'">
@@ -280,61 +280,61 @@ export default {
 		let cols = [
 				{
                     label: 'Name',
-                    field: 'full_name',
+                    field: this.retFullName,
                     html: true,
                     export: true,
                 },
 				{
                     label: 'ID Number',
-                    field: 'id_number',
+                    field: 'id',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Username',
-                    field: 'user_username',
+                    field: 'user.username',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Email',
-                    field: 'user_email',
+                    field: 'user.email',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Member Type',
-                    field: 'member_type_description',
+                    field: 'memberType.description',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Station',
-                    field: 'station_name',
+                    field: 'station.name',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Position',
-                    field: 'position_name',
+                    field: 'position',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Division',
-                    field: 'division_name',
+                    field: 'division.name',
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Date Registered',
-                    field: 'date_registered',
+                    field: this.retDateRegistered,
                     html: true,
                     export: true,
                 },
 				{
                     label: 'Action',
-                    field: 'action',
+                    field: this.retAction,
                     html: true,
                     export: false,
                 },
@@ -377,33 +377,17 @@ export default {
     	
     }, 
     computed: {
-    	memberList(){
-    		let vm = this
-
-    		let members = this.listMember
-    		let lists = []
-    		members.forEach(function(member, index) {
-				lists[index] = {}
-
-				//lists[index] = member
-				lists[index].full_name = member.first_name + ' '+ member.middle_name + ' '+  member.last_name
-				lists[index].id_number = member.id
-				lists[index].user_username = member.user.username
-				lists[index].user_email = member.user.email
-				lists[index].member_type_description = member.memberType.description
-				lists[index].position_name = member.position
-				lists[index].station_name = member.station.name
-				lists[index].division_name = member.division.name
-				lists[index].date_registered = vm.formatDate(member.mem_date, 'MMMM DD, YYYY')
-				lists[index].action = "<a href = '"+ vm.baseUrl+"/member/view/" + member.id + "' target = '_blank' class = 'btn btn-xs btn-info'><i class='fa fa-fw fa-eye'></i></a>"
-    		})
-
-    		return lists
-
-
-    	}
     },
     methods: {   
+    	retDateRegistered(row){
+    		return this.formatDate(row.mem_date, 'MMMM DD, YYYY')
+    	},
+    	retFullName(row){
+    		return row.first_name + ' '+ row.middle_name + ' '+  row.last_name
+    	},
+    	retAction(row){
+    		return "<a href = '"+ this.baseUrl+"/member/view/" + row.id + "' target = '_blank' class = 'btn btn-xs btn-info'><i class='fa fa-fw fa-eye'></i></a>"
+    	},
     	getViewTitle(){
 			if(this.pageView == 'member-create'){
 				return "Create Member"
