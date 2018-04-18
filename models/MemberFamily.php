@@ -34,7 +34,7 @@ class MemberFamily extends \yii\db\ActiveRecord
         return [
             [['name'], 'required'],
             [['member_id', 'is_deceased'], 'integer'],
-            [['address'], 'string'],
+            [['fam_address'], 'string'],
             [['deleted_date'], 'safe'],
             [['name'], 'string', 'max' => 1000],
             [['relation', 'contact_no'], 'string', 'max' => 100],
@@ -51,7 +51,7 @@ class MemberFamily extends \yii\db\ActiveRecord
             'member_id' => 'Member ID',
             'name' => 'Name',
             'relation' => 'Relation',
-            'address' => 'Address',
+            'fam_address' => 'Address',
             'contact_no' => 'Contact No',
             'is_deceased' => 'Is Deceased',
             'deleted_date' => 'Deleted Date',

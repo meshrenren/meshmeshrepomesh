@@ -21,6 +21,7 @@ $config = [
             'loginUrl' => ['site/login'],
         ],
         'errorHandler' => [
+            'class' => 'yii\web\ErrorHandler',
             'errorAction' => 'site/error',
         ],
         'mailer' => [

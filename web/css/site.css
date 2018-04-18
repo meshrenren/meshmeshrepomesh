@@ -118,6 +118,16 @@ a.desc:after {
 /*
     ================ Custom CSS =====================
 */
+.main-header .logo .logo-mini>img{
+    width: 100%;
+    padding: 5px;
+}
+.main-header .logo .logo-lg>img{
+    width: 40px;
+    margin-right: 5px;
+}
+
+
 .login-page, .register-page 
 {
     background: #fff !important;
