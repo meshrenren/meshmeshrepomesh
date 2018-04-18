@@ -48,6 +48,23 @@
 
                             ]
                         ],
+                    		[
+                    				'label'     => 'Share Accounts',
+                    				'icon'      => 'user-o',
+                    				'items'      => [
+                    						[
+                    								'label'     => 'List',
+                    								'url'       => ['member/user/list'],
+                    								'visible'   => true
+                    						],
+                    						[
+                    								'label'     => 'Create',
+                    								'url'       => ['member/user/create'],
+                    								'visible'   => true
+                    						],
+                    						
+                    				]
+                    		],
                     ],
                 ]
             ); 

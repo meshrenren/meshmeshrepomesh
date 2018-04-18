@@ -31,7 +31,7 @@
 					<div class = "col-md-6">
 						<div class="form-group">
 							<div class = "row">
-						   		<label for="exampleInputPassword1" class = "col-md-3" >Name</label>
+						   		<label for="exampleInputPassword1" class = "col-md-3" >Namess me</label>
 							    <div  class = "col-md-9 input-name">
 								    <input type="text" class="form-control" v-model = "memberForm.detail.first_name" style = "width: 33%;" placeholder = "First Name" required >
 								    <input type="text" class="form-control" v-model = "memberForm.detail.middle_name" style = "width: 28%;" placeholder = "Middle Name" required >
@@ -247,7 +247,7 @@
 
 <style lang="scss">
   	@import '../../assets/member.scss';
-  	@import '~noty/src/noty.scss'
+  	@import '~noty/src/noty.scss';
 </style>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -256,7 +256,7 @@
 <script>
 
 	window.noty = require('noty')
-
+	
 	import axios from 'axios'
     import Noty from 'noty'
     import Multiselect from 'vue-multiselect'
@@ -383,7 +383,7 @@ export default {
     		let members = this.listMember
     		let lists = []
     		members.forEach(function(member, index) {
-				lists[index] = {}
+				//lists[index] = {}
 
 				//lists[index] = member
 				lists[index].full_name = member.first_name + ' '+ member.middle_name + ' '+  member.last_name
