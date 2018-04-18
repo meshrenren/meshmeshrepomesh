@@ -35,13 +35,12 @@ class MemberAddress extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['address'], 'required'],
+            [['con_address'], 'required'],
             [['member_id', 'is_mailing', 'is_permanent'], 'integer'],
             [['deleted_date'], 'safe'],
-            [['address'], 'string', 'max' => 1000],
-            [['city'], 'string', 'max' => 50],
-            [['province'], 'string', 'max' => 100],
-            [['member_id'], 'exist', 'skipOnError' => true, 'targetClass' => MemberAddress::className(), 'targetAttribute' => ['member_id' => 'ID']],
+            [['con_address'], 'string'],
+            [['city'], 'string'],
+            [['province'], 'string'],
         ];
     }
 
@@ -51,9 +50,9 @@ class MemberAddress extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'ID' => 'ID',
+            'id' => 'id',
             'member_id' => 'Member ID',
-            'address' => 'Address',
+            'con_address' => 'Address',
             'city' => 'City',
             'province' => 'Province',
             'is_mailing' => 'Is Mailing',
@@ -67,7 +66,7 @@ class MemberAddress extends \yii\db\ActiveRecord
      */
     public function getMember()
     {
-        return $this->hasOne(MemberAddress::className(), ['ID' => 'member_id']);
+        return $this->hasOne(MemberAddress::className(), ['id' => 'member_id']);
     }
 
     /**
@@ -75,6 +74,6 @@ class MemberAddress extends \yii\db\ActiveRecord
      */
     public function getMemberAddresses()
     {
-        return $this->hasMany(MemberAddress::className(), ['member_id' => 'ID']);
+        return $this->hasMany(MemberAddress::className(), ['member_id' => 'id']);
     }
 }

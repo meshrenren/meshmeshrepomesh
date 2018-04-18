@@ -38,6 +38,7 @@ class MemberController extends \yii\web\Controller
 
         $view = "member-" . $state;
 
+
         return $this->render('create', [
         		'stationList'	=> $stationList,
         		'divisionList'	=> $divisionList,
@@ -82,11 +83,21 @@ class MemberController extends \yii\web\Controller
             ])
         	->asArray()->one();
 
+        $memberFamily = \app\models\MemberFamily::find()
+        		->where(['member_id' => $member_id])
+        		->asArray()->all();
+
+        $memberAddress = \app\models\MemberAddress::find()
+        		->where(['member_id' => $member_id])
+        		->asArray()->all();
+
     	return $this->render('view', [
         		'stationList'	=> $stationList,
         		'divisionList'	=> $divisionList,
         		'typeList'		=> $typeList,
         		'member'		=> $member,
+        		'memberFamily'	=> $memberFamily,
+        		'memberAddress'	=> $memberAddress,
         ]);
     }
 
@@ -108,8 +119,6 @@ class MemberController extends \yii\web\Controller
         }
 
     }
-
-	
 
     public function actionSaveMember(){
 
@@ -137,8 +146,6 @@ class MemberController extends \yii\web\Controller
         	$user = new \app\models\User;
        		$user->setScenario('create');
         	$user->attributes = (array)$emp->user;
-        	$user->first_name = $model->first_name;
-        	$user->last_name = $model->last_name;
         	$user->level_id = 5;
         	$user->is_active = 1;
         	$user->is_member = 1;
@@ -160,8 +167,8 @@ class MemberController extends \yii\web\Controller
         		$error = array();
         		$error['detail'] = $model->getErrors();
         		$error['user'] = $user->getErrors();
-        		$error['family'] = $family->getErrors();
         		$error['address'] = $address->getErrors();
+                $error['family'] = $family->getErrors();
 
         		return [
 	        		'success' 	=> false,
@@ -227,11 +234,8 @@ class MemberController extends \yii\web\Controller
         		$value = $_POST['value'];
         		$model->$label = $value;
         		if($model->save()){
-        			if($label == 'fist_name' || $label == 'last_name'){
-        				$user = \app\models\User::find()->where(['id' => $model->user_id])->one(); 
-        				$user->$label = $value;
-        			}
         			$member = \app\models\Member::find()->innerJoinWith(['user'])
+                        ->where(['member.id' => $_POST['member_id']])
         				->joinWith(['memberType', 'division', 'station'])
 			        	->select([
 			            	"member.*",
@@ -259,6 +263,196 @@ class MemberController extends \yii\web\Controller
 		        'success' 	=> false,
 		        'status'	=> 'save-failed'
 		    ];
+        }
+    }
+
+    //Family Member
+    function actionAddMemberFamily(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+            $model = new \app\models\MemberFamily; 
+            if(isset($model) && $model != null){
+                $familyMember = json_decode($_POST['familyMember']);
+                $model->attributes = (array)$familyMember;
+                $model->member_id = $_POST['member_id'];
+                if($model->save()){
+                    $getFamily = \app\models\MemberFamily::find()
+                        ->where(['id' => $model->id])
+                        ->asArray()->one();
+
+                    return [
+                        'success'   => true,
+                        'status'    => 'okay',
+                        'data'      => $getFamily
+                    ];
+                }
+                else{
+                    $getErrors = array();
+                    if($model->hasErrors())
+                        $getErrors = $model->getErrors();
+                    return [
+                        'success'   => false,
+                        'status'    => 'has-error',
+                        'data'      => $getErrors
+                    ];
+                }
+            }
+
+            return [
+                'success'   => false,
+                'status'    => 'save-failed'
+            ];
+        }
+    }
+
+    function actionUpdateMemberFamily(){
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+        	$model = \app\models\MemberFamily::find()->where(['id' => $_POST['family_id']])->one(); 
+        	if(isset($model) && $model != null){
+        		$label = $_POST['label'];
+        		$value = $_POST['value'];
+        		$model->$label = $value;
+        		if($model->save()){
+        			$getFamily = \app\models\MemberFamily::find()
+		        		->where(['id' => $model->id])
+		        		->asArray()->one();
+
+		        	return [
+		        		'success' 	=> true,
+		        		'status'	=> 'okay',
+	        			'data'		=> $getFamily
+		            ];
+        		}
+        	}
+
+        	return [
+		        'success' 	=> false,
+		        'status'	=> 'save-failed'
+		    ];
+        }
+    }
+
+    function actionDeleteMemberFamily(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+            $model = \app\models\MemberFamily::find()->where(['id' => $_POST['family_id']])->one(); 
+            $id = $model->id;
+            if($model->delete()){
+                return [
+                    'success'   => true,
+                    'status'    => 'okay',
+                    'data'      => $id
+                ];
+            }
+            return [
+                'success'   => false,
+                'status'    => 'delete-failed'
+            ];
+        }
+    }
+
+    //Address Member
+    function actionAddMemberAddress(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+            $model = new \app\models\MemberAddress; 
+            if(isset($model) && $model != null){
+                $addressMember = json_decode($_POST['addressMember']);
+                $model->attributes = (array)$addressMember;
+                $model->member_id = $_POST['member_id'];
+                if($model->save()){
+                    $getAddress = \app\models\MemberAddress::find()
+                        ->where(['id' => $model->id])
+                        ->asArray()->one();
+
+                    return [
+                        'success'   => true,
+                        'status'    => 'okay',
+                        'data'      => $getAddress
+                    ];
+                }
+                else{
+                    $getErrors = array();
+                    if($model->hasErrors())
+                        $getErrors = $model->getErrors();
+                    return [
+                        'success'   => false,
+                        'status'    => 'has-error',
+                        'data'      => $getErrors
+                    ];
+                }
+            }
+
+            return [
+                'success'   => false,
+                'status'    => 'save-failed'
+            ];
+        }
+    }
+
+    function actionUpdateMemberAddress(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+            $model = \app\models\MemberAddress::find()->where(['id' => $_POST['address_id']])->one(); 
+            if(isset($model) && $model != null){
+                $label = $_POST['label'];
+                $value = $_POST['value'];
+                $model->$label = $value;
+
+                $model->validate([$label]);
+                if($model->hasErrors()){
+                    $getErrors = $model->getErrors();
+
+                    return [
+                        'success'   => false,
+                        'status'    => 'has-error',
+                        'data'      => $getErrors
+                    ];
+
+                }
+                else{
+                   $model->save();
+                   $getAddress = \app\models\MemberAddress::find()
+                        ->where(['id' => $model->id])
+                        ->asArray()->one();
+
+                    return [
+                        'success'   => true,
+                        'status'    => 'okay',
+                        'data'      => $getAddress
+                    ];
+                }
+            }
+            return [
+                'success'   => false,
+                'status'    => 'save-failed'
+            ];
+        }
+    }
+
+    function actionDeleteMemberAddress(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(isset($_POST)){
+            $model = \app\models\MemberAddress::find()->where(['id' => $_POST['address_id']])->one(); 
+            $id = $model->id;
+            if($model->delete()){
+                return [
+                    'success'   => true,
+                    'status'    => 'okay',
+                    'data'      => $id
+                ];
+            }
+            return [
+                'success'   => false,
+                'status'    => 'delete-failed'
+            ];
         }
     }
 

@@ -1,0 +1,154 @@
+$ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
+
+@mixin breakpoint($class) {
+  @if $class == xs {
+    @media (max-width: 767px) { @content; }
+  }
+ 
+  @else if $class == sm {
+    @media (min-width: 768px) { @content; }
+  }
+ 
+  @else if $class == md {
+    @media (min-width: 992px) { @content; }
+  }
+ 
+  @else if $class == lg {
+    @media (min-width: 1200px) { @content; }
+  }
+
+  // @else if $class == xlg {
+  //   @media (min-width: 1279px) { @content; }
+  // }
+ 
+  @else {
+    @warn "Breakpoint mixin supports: xs, sm, md, lg";
+  }
+}
+
+
+@-webkit-keyframes bounceIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale(.3);
+  }
+
+  50% {
+    opacity: 1;
+    -webkit-transform: scale(1.05);
+  }
+
+  70% {
+    -webkit-transform: scale(.9);
+  }
+
+  100% {
+    -webkit-transform: scale(1);
+  }
+}
+
+.table-toolbar{
+
+  float: right;
+  height: 64px;
+  border-bottom: solid 1px #DDDDDD;
+  display: table;
+  padding-right: 20px;
+
+  > div{
+    display: table-cell;  
+    vertical-align: middle;
+    padding-left: 10px;
+  }
+
+  .btn-filter.btn-lg.w-icon{
+    padding-left: 15px;
+    padding-right: 35%;
+  }
+
+}
+
+
+.multiselect{
+  min-height: 34px !important;
+
+  .multiselect__select{
+    height: 30px !important;
+  }
+
+  .multiselect__tags{
+    min-height: 34px !important;
+    padding: 4px 40px 0 8px !important;
+    border: 1px solid #d2d6de !important;
+  }
+
+}
+
+.float-update{
+  position: absolute;
+  z-index: 2;
+  display: none;
+  width: 100%; 
+  background-color: #fff;
+
+  .mx-datepicker{
+    width: 100% !important;
+  }
+
+  .close{
+    position: absolute;
+    right: 3px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+}
+
+.svg_edit, .svg_delete, .update-link, .pointer{
+  cursor: pointer;
+}
+
+ul.material-pagination{
+  list-style: none;
+}
+
+.sweet-modal{
+  
+  .sweet-title{
+    h2{
+      display: initial;
+    }
+  }
+
+  .sweet-content{
+    text-align: left !important;
+  }
+
+}
+
+.el-form{
+
+  .el-form-item{
+    margin-bottom: 20px !important;
+  }
+
+  .el-form-item__label{
+    text-align: left;
+  }
+
+  .el-select{
+    width : 100%
+  }
+  
+  .el-input-number{
+    width : 100%;
+
+    input{
+      text-align: left;
+    }
+  }
+
+  .el-date-editor{
+    width : 100%;
+  }
+} 

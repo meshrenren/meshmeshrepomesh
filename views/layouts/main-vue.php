@@ -32,7 +32,7 @@ use yii\helpers\Html;
             <?php $this->head() ?>
         </head>
 
-        <body class="hold-transition skin-blue sidebar-mini sidebar-collapse">
+        <body class="hold-transition skin-blue fixed sidebar-mini sidebar-collapse">
 
             <?php $this->beginBody() ?>
 

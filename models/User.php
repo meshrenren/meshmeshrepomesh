@@ -118,8 +118,6 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        echo var_dump($this->password);
-
         return $this->password === $password;
     }
 
@@ -153,5 +151,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         
         
         //$this->addError($attribute, 'Username  "'.$this->id. '" has already been taken.');
+    }
+
+
+
+    public function getMember(){
+        return $this->hasOne(Member::className(), ['user_id' => 'id']);
     }
 }
