@@ -9,7 +9,7 @@ class SeedController extends Controller
 {
 	public function actionOldMember()
     {
-    	$oldmembers = \app\models\Membersold::find()->orderBy('IDNum ASC')->all();
+    	$oldmembers = \app\models\Membersold::find()->orderBy('IDNum ASC')->select(['id', 'CONCAT(first_name, )'])->all();
     	foreach ($oldmembers as $oldmember) {
             $getMember = \app\models\Member::find()->where(['first_name' => $oldmember->FName, 'last_name' =>  $oldmember->SName, 'middle_name' =>  $oldmember->MName])->one();
             if($getMember == null){
