@@ -5,7 +5,7 @@
 				<div class = "box box-primary" id = "content-left">
 					<div class = "box-body box-profile">
 						<div class = "image-container">
-							<div class="circle-avatar"></div>
+							<div class="circle-avatar" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
 						</div>
 						<div class = "content-name">
 

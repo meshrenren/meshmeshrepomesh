@@ -9,6 +9,9 @@ Vue.component('member-view', MemberView)
 import ShareAccountForm from './components/Shareaccounts/ShareAccountForm.vue'
 Vue.component('share-account-form', ShareAccountForm)
 
+import SavingsForm from './components/Savings/SavingsForm.vue'
+Vue.component('savings-form', SavingsForm)
+
 
 import SearchMember from './components/General/SearchMember.vue'
 Vue.component('search-member', SearchMember)

@@ -118,6 +118,44 @@ a.desc:after {
 /*
     ================ Custom CSS =====================
 */
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/material-design/MaterialIcons-Regular.eot'); /* For IE6-8 */
+  src: local('Material Icons'),
+    local('MaterialIcons-Regular'),
+    url('/fonts/material-design/MaterialIcons-Regular.woff2') format('woff2'),
+    url('/fonts/material-design/MaterialIcons-Regular.woff') format('woff'),
+    url('/fonts/material-design/MaterialIcons-Regular.ttf') format('truetype');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
 .main-header .logo .logo-mini>img{
     width: 100%;
     padding: 5px;
@@ -128,9 +166,18 @@ a.desc:after {
 }
 
 
-.login-page, .register-page 
-{
+.register-page {
     background: #fff !important;
+}
+
+.login-box .login-box-body{
+    border-radius: 10px;
+}
+
+.login-logo img{
+    margin: 0 auto;
+    display: flex;
+    width: 100px;
 }
 
 .site-login{
@@ -178,6 +225,14 @@ a.desc:after {
     border-top: none !important;
     padding: 8px 0px;
     vertical-align: middle !important;
+}
+.user .user-header{
+    height: auto !important;
+}
+.dropdown-user-image{
+    width: 110px;
+    height: 110px;
+    margin: 0 auto;
 }
 
 /* Avatar Image */

@@ -177,7 +177,7 @@
 <style lang="scss">
   	@import '../../assets/site.scss';
   	@import '../../assets/member.scss';
-  	@import '~noty/src/noty.scss'
+  	@import '~noty/src/noty.scss';
 </style>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
@@ -388,15 +388,15 @@ export default {
 			        	inf_address[item] = this.memberForm[item]
 			        });
 			        Object.keys(this.dataFamily).forEach(item => {
-			        	inf_address[item] = this.memberForm[item]
+			        	inf_family[item] = this.memberForm[item]
 			        });
 
 		    		let new_member = {detail : inf_detail, user : inf_user, family : inf_family, address : inf_address}
 
 		    		if(vm.memberForm.birthday != null){
-		    			new_member.birthday = vm.formatDate(vm.memberForm.birthday, "YYYY-MM-DD")
+		    			new_member.detail.birthday = vm.formatDate(vm.memberForm.birthday, "YYYY-MM-DD")
 		    		}
-		    		new_member.mem_date = vm.formatDate(vm.memberForm.mem_date, "YYYY-MM-DD")
+		    		new_member.detail.mem_date = vm.formatDate(vm.memberForm.mem_date, "YYYY-MM-DD")
 		    		console.log(new_member)
 
 

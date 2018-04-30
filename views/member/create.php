@@ -1,5 +1,4 @@
 <?php
-
 use yii\helpers\Html;
 
 
@@ -36,11 +35,11 @@ $user['email'] = null;
 $family = array();
 $family['name'] = null;
 $family['relation'] = null;
-$family['address'] = null;
+$family['fam_address'] = null;
 $family['contact_no'] = null;
 
 $address = array();
-$address['address'] = null;
+$address['con_address'] = null;
 $address['city'] = null;
 $address['province'] = null;
 

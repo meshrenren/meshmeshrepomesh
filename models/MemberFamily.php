@@ -11,7 +11,7 @@ use Yii;
  * @property integer $member_id
  * @property string $name
  * @property string $relation
- * @property string $address
+ * @property string $fam_address
  * @property string $contact_no
  * @property integer $is_deceased
  * @property string $deleted_date

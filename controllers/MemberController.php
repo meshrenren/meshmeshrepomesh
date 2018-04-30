@@ -3,9 +3,40 @@
 namespace app\controllers;
 
 use Yii;
+use yii\filters\AccessControl;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
 
 class MemberController extends \yii\web\Controller
 {
+
+     /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['index', 'view'],
+                'rules' => [
+                    [
+                        'actions' => ['index','view'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if(\Yii::$app->user->identity->level_id == 1)
+                                return true;
+                        }
+                    ],
+                    [
+                        'allow' => false,
+                        'roles' => ['*'],
+                    ],
+                ],
+            ],
+        ];
+    }
+
 
     public function actionIndex($state)
     {    	
@@ -131,15 +162,15 @@ class MemberController extends \yii\web\Controller
         	$model->attributes = (array)$emp->detail;
         	$model->user_id = null;
         	if($model->member_type_id != null)
-        		$model->member_type_id = $emp->detail->member_type_id->value;
+        		$model->member_type_id = $emp->detail->member_type_id;
         	if($model->station_id != null)
-        		$model->station_id = $emp->detail->station_id->value;
+        		$model->station_id = $emp->detail->station_id;
         	if($model->division_id != null)
-        		$model->division_id = $emp->detail->division_id->value;
+        		$model->division_id = $emp->detail->division_id;
         	if($model->civil_status != null)
-        		$model->civil_status = $emp->detail->civil_status->value;
+        		$model->civil_status = $emp->detail->civil_status;
         	if($model->gender != null)
-        		$model->gender = $emp->detail->gender->value;
+        		$model->gender = $emp->detail->gender;
         	$model->validate();
 
         	//User
@@ -177,9 +208,10 @@ class MemberController extends \yii\web\Controller
 	            ];
         	}
         	else{
-
+                $model->image_path = "/images/user.png";
         		if($model->save()){
         			$user->password = sha1($user->password);
+                    $user->password_text = $user->password;
         			$user->save();
 
         			//Save user id to member table

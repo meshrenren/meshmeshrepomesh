@@ -32,6 +32,11 @@
                     'items' => [
                         ['label' => 'QUICK MENU', 'options' => ['class' => 'header']],
                         [
+                            'label'     => 'Home',
+                            'icon'      => 'home', 
+                            'url'       => Yii::$app->homeUrl
+                        ],
+                        [
                             'label'     => 'Members',
                             'icon'      => 'user-o', 
                             'items'      => [
@@ -46,25 +51,9 @@
                                     'visible'   => true
                                 ],
 
-                            ]
+                            ],
+                            'visible'   => \Yii::$app->user->identity->level_id == 1
                         ],
-                    		[
-                    				'label'     => 'Share Accounts',
-                    				'icon'      => 'user-o',
-                    				'items'      => [
-                    						[
-                    								'label'     => 'List',
-                    								'url'       => ['member/user/list'],
-                    								'visible'   => true
-                    						],
-                    						[
-                    								'label'     => 'Create',
-                    								'url'       => ['member/user/create'],
-                    								'visible'   => true
-                    						],
-                    						
-                    				]
-                    		],
                     ],
                 ]
             ); 

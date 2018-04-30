@@ -17,22 +17,56 @@ use yii\helpers\Html;
         <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
             <span class="sr-only">Toggle navigation</span>
         </a>
-        <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
-            <li><a href="#">Link</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <span class="caret"></span></a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="#">Action</a></li>
-                <li><a href="#">Another action</a></li>
-                <li><a href="#">Something else here</a></li>
-                <li class="divider"></li>
-                <li><a href="#">Separated link</a></li>
-                <li class="divider"></li>
-                <li><a href="#">One more separated link</a></li>
-              </ul>
-            </li>
-          </ul>
+        <?php
+        echo yii\bootstrap\Nav::widget(
+            [
+                'options' => ['class' => 'nav navbar-nav'],
+                'items' => [
+                    [
+                        'label'     => 'Home',
+                        'url'       => Yii::$app->homeUrl
+                    ],
+                    [
+                        'label'     => 'Profile',
+                        'url'       => '#', 
+                        'visible'   => \Yii::$app->user->identity->level_id <= 5
+                    ],
+                    [
+                        'label'     => 'Member',
+                        'items'      => [
+                            [
+                                'label'     => 'List', 
+                                'url'       => ['member/user/list'], 
+                                'visible'   => true
+                            ],
+                            [
+                                'label'     => 'Create', 
+                                'url'       => ['member/user/create'], 
+                                'visible'   => true
+                            ],
+
+                        ],
+                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                    ],
+                    [
+                        'label'     => 'Accounts',
+                        'url'       => '#', 
+                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                    ],
+                    [
+                        'label'     => 'Loan Products',
+                        'url'       => '#', 
+                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                    ],
+                    [
+                        'label'     => 'Reports',
+                        'url'       => '#', 
+                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                    ],
+                ],
+            ]
+        );
+        ?>
 
         <div class="navbar-custom-menu">
 
@@ -73,9 +107,37 @@ use yii\helpers\Html;
 
                 <li class="dropdown user user-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <img src="<?= $directoryAsset ?>/img/user2-160x160.jpg" class="user-image" alt="User Image"/>
+                        <div class = "user-image">
+                            <div class="circle-avatar" style = "background-image : url('<?= \Yii::$app->user->identity->member->image_path ?>')"></div>
+                        </div>
                         <span class="hidden-xs"><?php echo  \Yii::$app->user->identity->member->first_name . " " . \Yii::$app->user->identity->member->last_name; ?></span>
                     </a>
+                    <ul class="dropdown-menu">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <div class = "dropdown-user-image">
+                                <div class="circle-avatar" style = "background-image : url('<?= \Yii::$app->user->identity->member->image_path ?>')"></div>
+                            </div>
+
+                            <p>
+                                <?php echo  \Yii::$app->user->identity->member->first_name . " " . \Yii::$app->user->identity->member->last_name; ?> - <?php echo  \Yii::$app->user->identity->member->memberType->description ?>
+                                <small>Member since <?php echo date("M d, Y", strtotime(\Yii::$app->user->identity->member->mem_date)); ?></small>
+                            </p>
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <!--<div class="pull-left">
+                                <a href="#" class="btn btn-default btn-flat">Profile</a>
+                            </div>-->
+                            <div class="pull-right">
+                                <?= Html::a(
+                                    'Sign out',
+                                    ['/site/logout'],
+                                    ['data-method' => 'post', 'class' => 'btn btn-default btn-flat']
+                                ) ?>
+                            </div>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </div>

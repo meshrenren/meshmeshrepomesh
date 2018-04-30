@@ -60,7 +60,13 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $member = new \app\models\Member();
+        $countAll = $member->getMemberCount(0, 0, 'All');
+        $countLastYear = $member->getMemberCount("2017-01-01", "2017-12-31");
+        return $this->render('index',[
+            'countAll'      => $countAll,
+            'countLastYear' => $countLastYear
+        ]);
     }
 
     /**
@@ -96,8 +102,10 @@ class SiteController extends Controller
      */
     public function actionLogout()
     {
+        @session_regenerate_id(true);
         Yii::$app->user->logout();
-
+        Yii::$app->getSession()->destroy();
+        
         return $this->goHome();
     }
 

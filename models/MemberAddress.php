@@ -9,7 +9,7 @@ use Yii;
  *
  * @property integer $ID
  * @property integer $member_id
- * @property string $address
+ * @property string $con_address
  * @property string $city
  * @property string $province
  * @property integer $is_mailing

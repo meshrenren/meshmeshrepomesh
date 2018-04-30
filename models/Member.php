@@ -119,4 +119,16 @@ class Member extends \yii\db\ActiveRecord
         return $this->hasOne(User::className(), ['id' => 'user_id']);
     }
 
+    public function getMemberCount($start, $end, $state = NULL)
+    {
+        $count = 0;
+        if($state == "All"){
+            $count =  static::find()->count();
+        }
+        else{
+            $count =  static::find()->where(['between', 'mem_date', $start, $end ])->count();
+        }
+        return $count;
+    }
+
 }
