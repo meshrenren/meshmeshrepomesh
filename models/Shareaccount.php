@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\models\ShareProduct;
 use Yii;
 
 /**
@@ -57,6 +58,15 @@ class Shareaccount extends \yii\db\ActiveRecord
             'status' => 'Status',
         ];
     }
+    
+    
+    public function getShareProducts()
+    {
+    	$retval = ShareProduct::find()->asArray()->all();
+    	
+    	return $retval;
+    }
+    
 
     /**
      * @return \yii\db\ActiveQuery

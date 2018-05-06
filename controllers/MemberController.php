@@ -6,6 +6,7 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\models\Member;
 
 class MemberController extends \yii\web\Controller
 {
@@ -78,6 +79,18 @@ class MemberController extends \yii\web\Controller
         		'view'			=> $view
         	]);
     }
+    
+    public function actionGetMember()
+    {
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	$model = new Member();
+    	
+    	
+    	return $model->getMemberList($_POST['nameInput']);
+    	
+    }
+    
+    
 
     public function actionView($member_id){
         $this->layout = 'main-vue';
