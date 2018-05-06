@@ -3,16 +3,16 @@
 namespace app\controllers;
 
 use Yii;
-use app\models\Shareaccount;
-use app\models\ShareaccountSearch;
+use app\models\ShareProduct;
+use app\models\ShareProductSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
 /**
- * ShareaccountController implements the CRUD actions for Shareaccount model.
+ * ShareproductController implements the CRUD actions for ShareProduct model.
  */
-class ShareaccountController extends Controller
+class ShareproductController extends Controller
 {
     /**
      * @inheritdoc
@@ -30,12 +30,12 @@ class ShareaccountController extends Controller
     }
 
     /**
-     * Lists all Shareaccount models.
+     * Lists all ShareProduct models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $searchModel = new ShareaccountSearch();
+        $searchModel = new ShareProductSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
@@ -45,8 +45,8 @@ class ShareaccountController extends Controller
     }
 
     /**
-     * Displays a single Shareaccount model.
-     * @param string $id
+     * Displays a single ShareProduct model.
+     * @param integer $id
      * @return mixed
      */
     public function actionView($id)
@@ -57,34 +57,27 @@ class ShareaccountController extends Controller
     }
 
     /**
-     * Creates a new Shareaccount model.
+     * Creates a new ShareProduct model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-    	$this->layout = 'main-vue';
-        $model = new Shareaccount();
-        $shareProducts = $model->getShareProducts();
+        $model = new ShareProduct();
 
-       /* if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->accountnumber]);
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('create', [
                 'model' => $model,
             ]);
-        } */
-        
-        
-        return $this->render('create', [
-        		'model' => $model, 'shareProducts' => $shareProducts
-        ]);
+        }
     }
 
     /**
-     * Updates an existing Shareaccount model.
+     * Updates an existing ShareProduct model.
      * If update is successful, the browser will be redirected to the 'view' page.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionUpdate($id)
@@ -92,7 +85,7 @@ class ShareaccountController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->accountnumber]);
+            return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('update', [
                 'model' => $model,
@@ -101,9 +94,9 @@ class ShareaccountController extends Controller
     }
 
     /**
-     * Deletes an existing Shareaccount model.
+     * Deletes an existing ShareProduct model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param string $id
+     * @param integer $id
      * @return mixed
      */
     public function actionDelete($id)
@@ -114,15 +107,15 @@ class ShareaccountController extends Controller
     }
 
     /**
-     * Finds the Shareaccount model based on its primary key value.
+     * Finds the ShareProduct model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param string $id
-     * @return Shareaccount the loaded model
+     * @param integer $id
+     * @return ShareProduct the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Shareaccount::findOne($id)) !== null) {
+        if (($model = ShareProduct::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');

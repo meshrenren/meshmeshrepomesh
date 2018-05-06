@@ -57,7 +57,7 @@ export default {
 	        default: function () { return {} }
 	    },
 	},
-	data: function () {
+	data: function () {	
 		return{
 			formModel 	: {value : this.value},
 			isShowFloat : false,
