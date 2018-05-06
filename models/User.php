@@ -158,4 +158,24 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function getMember(){
         return $this->hasOne(Member::className(), ['user_id' => 'id']);
     }
+
+    public function checkUserAccess($key,$operation){
+        if($this->id){
+            $level_id = $this->level_id;
+
+            $accessLevel = LevelFunctions::find()->innerJoinWith(['function'])
+                ->where(['functions.function_key' => $key, 'level_id' => $level_id])
+                ->select(['level_functions.id', $operation])
+                ->one();
+
+            return $accessLevel->$operation;
+        }else{
+            Yii::$app->session->close();
+            Yii::$app->session->destroy();
+            return Yii::$app->response->redirect('site/login');
+        }
+
+        return 0;
+        
+    }
 }

@@ -7,21 +7,24 @@
 					<th>Address</th>
 					<th>City</th>
 					<th>Province</th>
-					<th width = "20px">Action</th>
+					<th width = "20px" v-if = "canEdit">Action</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="(address, index) in memberAddressList" :key = "index">
 					<td>
-						<form-info ref = "con_address" :value = "address.con_address" props = "con_address" label = "Address" @update = "updateInfo" :other-details = "{id : address.id, index : index}"></form-info>
+						<form-info ref = "con_address" :value = "address.con_address" props = "con_address" label = "Address" @update = "updateInfo" :other-details = "{id : address.id, index : index}" v-if = "canEdit"></form-info>
+							<span v-else >{{ address.con_address }}</span>
 					</td>
 					<td>
-						<form-info ref = "city" :value = "address.city" props = "city" label = "City" @update = "updateInfo" :other-details = "{id : address.id, index : index}"></form-info>
+						<form-info ref = "city" :value = "address.city" props = "city" label = "City" @update = "updateInfo" :other-details = "{id : address.id, index : index}" v-if = "canEdit"></form-info>
+							<span v-else >{{ address.city }}</span>
 					</td>
 					<td>
-						<form-info ref = "province" :value = "address.province" props = "province" label = "Province" @update = "updateInfo" :other-details = "{id : address.id, index : index}"></form-info>
+						<form-info ref = "province" :value = "address.province" props = "province" label = "Province" @update = "updateInfo" :other-details = "{id : address.id, index : index}" v-if = "canEdit"></form-info>
+							<span v-else >{{ address.province }}</span>
 					</td>
-					<td>
+					<td v-if = "canEdit">
 						<span class = "text-red pointer"  @click = "deleteInfo(address.id)"><i class="fa fa-fw fa-trash"></i></span>
 					</td>
 				</tr>
@@ -61,7 +64,7 @@ import Swal from 'sweetalert2'
 import FormInfo from '../FormInfo'
 
 export default {
-	props: ['memberAddress', 'memberId'],
+	props: ['memberAddress', 'memberId', 'canEdit'],
 	data: function () {
 		return{
 			addressModel		: {con_address : null, city : null, province : null},

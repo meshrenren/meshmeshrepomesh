@@ -1,7 +1,7 @@
 <template>	
 	<div class = "form-info">
 		<span class = "span-link" @click = "showFloat">{{ textValue }}</span>
-		<div class="form-update" v-if = "isShowFloat">
+		<div class="form-update" v-if = "isShowFloat" >
 			<el-form :model="formModel" ref="ruleForm" position = "top" @submit.native.prevent>
 			  	<el-form-item :label="label" prop="value" ref = "form_value">
 			  		<!-- If type is 'text' or 'email' -->
@@ -98,6 +98,10 @@ export default {
 	padding: 0px 4px;
     border-bottom: 1px dashed #3c8dbc;
     cursor: pointer;
+}
+.no-border{
+	border-bottom: none !important;
+	cursor: unset !important;
 }
 .form-update{
   	position: absolute;

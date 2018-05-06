@@ -15,3 +15,6 @@ Vue.component('savings-form', SavingsForm)
 
 import SearchMember from './components/General/SearchMember.vue'
 Vue.component('search-member', SearchMember)
+
+import PermissionSettings from './components/Settings/PermissionSettings.vue'
+Vue.component('permission-settings', PermissionSettings)

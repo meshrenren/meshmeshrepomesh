@@ -21,11 +21,21 @@ class MemberController extends \yii\web\Controller
                 'only' => ['index', 'view'],
                 'rules' => [
                     [
-                        'actions' => ['index','view'],
+                        'actions' => ['index'],
                         'allow' => true,
                         'matchCallback' => function() {
-                            if(\Yii::$app->user->identity->level_id == 1)
-                                return true;
+                            if( Yii::$app->user->identity->checkUserAccess("_member_profile_","_view") ){
+                                    return true;
+                            }
+                        }
+                    ],
+                    [
+                        'actions' => ['view'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view") || $_GET['member_id'] == Yii::$app->user->identity->member->id){
+                                    return true;
+                            }
                         }
                     ],
                     [

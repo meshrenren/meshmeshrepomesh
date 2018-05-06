@@ -8,21 +8,26 @@
 							<div class="circle-avatar" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
 						</div>
 						<div class = "content-name">
+							
+							<form-info ref = "first_name" :value = "member.first_name" props = "first_name" label = "First Name" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+							<span v-else >{{ member.first_name }}</span>
 
-							<form-info ref = "first_name" :value = "member.first_name" props = "first_name" label = "First Name" @update = "updateMemberInfo"></form-info>
+							<form-info ref = "middle_name" :value = "member.middle_name" props = "middle_name" label = "Middle Name" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+							<span v-else >{{ member.middle_name }}</span>
 
-							<form-info ref = "middle_name" :value = "member.middle_name" props = "middle_name" label = "Middle Name" @update = "updateMemberInfo"></form-info>
-
-							<form-info ref = "last_name" :value = "member.last_name" props = "last_name" label = "Last Name" @update = "updateMemberInfo"></form-info>
+							<form-info ref = "last_name" :value = "member.last_name" props = "last_name" label = "Last Name" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+							<span v-else >{{ member.last_name }}</span>
 						</div>
 						<ul class = "list-group list-group-unbordered">
 							<li class = "list-group-item">
 								<b>Username</b>
-								<form-info ref = "username" :value = "member.username" props = "username" label = "Username" @update = "updateUserInfo"></form-info>
+								<form-info ref = "username" :value = "member.username" props = "username" label = "Username" @update = "updateUserInfo" v-if = "canEdit"></form-info>
+							<span v-else >{{ member.username }}</span>
 							</li>
 							<li class = "list-group-item">
 								<b>Email</b>
-								<form-info ref = "email"  type = "email" :value = "member.email" props = "email" label = "Email" @update = "updateUserInfo"></form-info>
+								<form-info ref = "email"  type = "email" :value = "member.email" props = "email" label = "Email" @update = "updateUserInfo" v-if = "canEdit"></form-info>
+							<span v-else >{{ member.email }}</span>
 							</li>
 						</ul>
 					</div>
@@ -44,37 +49,43 @@
 											<tr>
 												<th>Member Type</th>
 												<td>
-													<form-info ref = "member_type_id" :text = "member.memberType.description" :value = "member.member_type_id" props = "member_type_id" label = "Member Type" type = "select" :options = "typeList" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "member_type_id" :text = "member.memberType.description" :value = "member.member_type_id" props = "member_type_id" label = "Member Type" type = "select" :options = "typeList" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.memberType.description }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Station</th>
 												<td>
-													<form-info ref = "station_id" :text = "member.station.name" :value = "member.station_id" props = "station_id" label = "Station" type = "select" :options = "stationList" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "station_id" :text = "member.station.name" :value = "member.station_id" props = "station_id" label = "Station" type = "select" :options = "stationList" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.station.name }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Division</th>
 												<td>
-													<form-info ref = "division_id" :text = "member.division.name" :value = "member.division_id" props = "division_id" label = "Division" type = "select" :options = "divisionList" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "division_id" :text = "member.division.name" :value = "member.division_id" props = "division_id" label = "Division" type = "select" :options = "divisionList" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.division.name }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Position</th>
 												<td>
-													<form-info ref = "position" :value = "member.position" props = "position" label = "Division" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "position" :value = "member.position" props = "position" label = "Division" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.position }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Membership Date</th>
 												<td>
-													<form-info ref = "mem_date" :text = "formatDate(member.mem_date, 'MMMM DD, YYYY')" :value = "member.mem_date" type = "date" props = "mem_date" label = "Membership Data" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "mem_date" :text = "formatDate(member.mem_date, 'MMMM DD, YYYY')" :value = "member.mem_date" type = "date" props = "mem_date" label = "Membership Data" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ formatDate(member.mem_date, 'MMMM DD, YYYY') }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Birthdate</th>
 												<td>
-													<form-info ref = "birthday" :text = "formatDate(member.birthday, 'MMMM DD, YYYY')" :value = "member.birthday" type = "date" props = "birthday" label = "Birthdate" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "birthday" :text = "formatDate(member.birthday, 'MMMM DD, YYYY')" :value = "member.birthday" type = "date" props = "birthday" label = "Birthdate" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ formatDate(member.birthday, 'MMMM DD, YYYY') }}</span>
 												</td>
 											</tr>
 										</tbody>
@@ -87,37 +98,43 @@
 											<tr>
 												<th>Gender</th>
 												<td>
-													<form-info ref = "gender" :text = "member.gender" :value = "member.gender" props = "gender" label = "Gender" type = "select" :options = "genderList" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "gender" :text = "member.gender" :value = "member.gender" props = "gender" label = "Gender" type = "select" :options = "genderList" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.gender }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Civil Status</th>
 												<td>
-													<form-info ref = "civil_status" :text = "member.civil_status" :value = "member.civil_status" props = "civil_status" label = "Civil Status" type = "select" :options = "statusList" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "civil_status" :text = "member.civil_status" :value = "member.civil_status" props = "civil_status" label = "Civil Status" type = "select" :options = "statusList" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.civil_status }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Employee Number</th>
 												<td>
-													<form-info ref = "employee_no" :value = "member.employee_no" props = "position" label = "Employee No." @update = "updateMemberInfo"></form-info>
+													<form-info ref = "employee_no" :value = "member.employee_no" props = "position" label = "Employee No." @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.employee_no }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Salary</th>
 												<td>
-													<form-info ref = "salary" :value = "member.salary" props = "salary" label = "Salary" type = "number" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "salary" :value = "member.salary" props = "salary" label = "Salary" type = "number" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.salary }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>GSIS Number</th>
 												<td>
-													<form-info ref = "gsis_no" :value = "member.gsis_no" props = "gsis_no" label = "GSIS No." @update = "updateMemberInfo"></form-info>
+													<form-info ref = "gsis_no" :value = "member.gsis_no" props = "gsis_no" label = "GSIS No." @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.gsis_no }}</span>
 												</td>
 											</tr>
 											<tr>
 												<th>Telephone</th>
 												<td>
-													<form-info ref = "telephone" :value = "member.telephone" props = "telephone" label = "Telephone" @update = "updateMemberInfo"></form-info>
+													<form-info ref = "telephone" :value = "member.telephone" props = "telephone" label = "Telephone" @update = "updateMemberInfo" v-if = "canEdit"></form-info>
+													<span v-else >{{ member.telephone }}</span>
 												</td>
 											</tr>
 										</tbody>
@@ -129,12 +146,14 @@
 							<member-address 
 								:member-address = "memberAddress"
 								:member-id="member.id"
+								:can-edit = "canEdit"
 							></member-address>
 						</div>
 						<div class = "tab-pane" id = "family">
 							<member-family 
 								:member-family = "memberFamily"
 								:member-id="member.id"
+								:can-edit = "canEdit"
 							></member-family>
 						</div>
 					</div>
@@ -153,6 +172,9 @@
 	.form-info{
 	    display: inline-block;
 	    float: right;
+	}
+	span{
+		float: right;
 	}
 }
 </style>
@@ -175,7 +197,7 @@
 	import MemberFamily from './ViewTab/MemberFamily'
 
 export default {
-	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberFamily', 'dataMemberAddress', 'baseUrl'],
+	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberFamily', 'dataMemberAddress', 'baseUrl', 'canEdit'],
 	data: function () {
 
 		let gender = [{ value : "Male", label : "Male", column_name : 'gender'}, { value : "Female", label : "Female", column_name : 'gender'}]
