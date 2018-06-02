@@ -82,13 +82,8 @@ export default {
                 let type = ""
                 let message = ""
                 console.log(res)
-                if(res.length > 0 ){
-                    this.tableData = res
-                    console.log("success")
-                }
-                else{
-                    console.log("no result")
-                } 
+
+                this.tableData = res 
                   
             }).catch(function (error) {
             

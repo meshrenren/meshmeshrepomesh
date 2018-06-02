@@ -69,7 +69,7 @@ export default {
       		memberDetails			: {id : null, fullname : null},
       		showSearchModal			: false,
       		savingAccountDetails 	: account,
-      		ruleAccount				: null
+      		ruleAccount				: null,
       	}
   	},
   	created(){
@@ -145,7 +145,8 @@ export default {
 					            timeout: 2500
 					        }).show()
 
-					        this.cancelForm()
+					        //vm.cancelForm()
+					        //location.reload()
 			            }).catch(error =>{
 
 			            	console.log(error)
@@ -157,7 +158,7 @@ export default {
 					            timeout: 3000
 					        }).show()
 
-					        if(error.response.status == 403)
+					        if(error.response && error.response.status == 403)
 			    				location.reload()
 			            })
 			        }, function(dismiss) {

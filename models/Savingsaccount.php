@@ -63,7 +63,7 @@ class SavingsAccount extends \yii\db\ActiveRecord
     }
 
     public function getMember() {
-        return $this->hasOne(Member::className(), [ 'id' => 'member_id' ] )->select(["*", "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname"]);
+        return $this->hasOne(Member::className(), [ 'id' => 'member_id' ] )->select(["member.*", "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname"]);
     }
 
 
