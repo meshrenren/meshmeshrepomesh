@@ -1,7 +1,7 @@
 <template>
 <div class="box box-info">
             <div class="box-header with-border">
-              <h3 class="box-title">Client Datas</h3>
+              <h3 class="box-title">Add Share Account</h3>
             </div>
             <!-- /.box-header -->
             <!-- form start -->
@@ -29,7 +29,7 @@
 <!-- start of body -->
       <el-form  label-width="120px" :model="shareaccount" ref="shareaccount">
         <el-form-item label="Share Product" prop="shareProduct" ref="shareProduct">
-          <el-select prop="shareProduct"  placeholder="Please Select Share Product">
+          <el-select v-model = "shareaccount.fk_share_product" prop="shareProduct"  placeholder="Please Select Share Product">
             <el-option
               v-for="product in shares" :key="product.id" :label="product.name" :value="product.id">
             </el-option>
