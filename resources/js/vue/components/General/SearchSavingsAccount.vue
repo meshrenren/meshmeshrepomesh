@@ -1,30 +1,41 @@
 <template>
-    <el-dialog title="Find Member" :visible.sync="dialogVisible"  width="45%" @close="closeModal">      
+    <el-dialog title="Find Account" :visible.sync="dialogVisible"  width="55%" @close="closeModal">  
         <el-form label-width="0" class="demo-dynamic" @submit.native.prevent>
             <el-form-item label="">
-                <el-input @keyup.enter.native="getMember()" v-model="nameInput">
-                    <el-button slot="append" type = "primary" @click="getMember()">Find Member</el-button>
+                <el-input @keyup.enter.native="getAccount()" v-model="nameInput">
+                    <el-button slot="append" type = "primary" @click="getAccount()">Find Member</el-button>
                 </el-input>
             </el-form-item>
         </el-form>
+
         <el-table :data="tableData" style="width: 100%" height="400" stripe border>
             <el-table-column label="ID" width="180">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.id }}</span>
+                    <span style="margin-left: 10px">{{ scope.row.account_no }}</span>
                 </template>
             </el-table-column>
-            <el-table-column label="Name" >
+            <el-table-column label="Name"  width="180">
                 <template slot-scope="scope">
                     <el-popover trigger="hover" placement="top">
-                        <p>Name: {{ scope.row.fullname }}</p>
+                        <p>Name: {{ scope.row.member.fullname }}</p>
                     
                         <div slot="reference" class="name-wrapper">
-                            <el-tag size="medium">{{ scope.row.fullname }}</el-tag>
+                            <el-tag size="medium">{{ scope.row.member.fullname }}</el-tag>
                         </div>
                     </el-popover>
                 </template>
             </el-table-column>
-            <el-table-column label="Action" width="100">
+            <el-table-column label="Savings Product" width="180">
+                <template slot-scope="scope">
+                    <span style="margin-left: 10px">{{ scope.row.product.description }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column label="Balance" width="150">
+                <template slot-scope="scope">
+                    <span style="margin-left: 10px">{{ scope.row.balance }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column label="Action">
                 <template slot-scope="scope">
                     <el-button size="mini" @click="handleEdit(scope.index, scope.row)">Select</el-button>
                 </template>
@@ -55,38 +66,40 @@ export default {
     props: ['baseUrl'],
  
     data: function () {
-        return {
-            tableData: null,
-            nameInput: "",
-            dialogVisible : true
-        }
+      return {               
+               tableData: null,
+               nameInput: "",
+               dialogVisible : true
+            }
     },
     methods: {
-        getMember(){
-            //start
+        getAccount(){
             let data = new FormData()
             data.set('nameInput', this.nameInput)
             
-            axios.post(this.baseUrl+'/member/get-member', data).then((result) => {
+            axios.post(this.baseUrl+'/savings/get-account', data).then((result) => {
                 let res = result.data
                 let type = ""
                 let message = ""
+                console.log(res)
                 if(res.length > 0 ){
                     this.tableData = res
                     console.log("success")
                 }
                 else{
                     console.log("no result")
-                }
+                } 
+                  
             }).catch(function (error) {
+            
                 console.log(error);
+
                 if(error.response.status == 403)
                     location.reload()
             })
         },
 
         handleEdit(index, row){
-             // console.log(row.id + '|' + row.fullname)
             this.$emit('select', row)
             this.dialogVisible = false
         }

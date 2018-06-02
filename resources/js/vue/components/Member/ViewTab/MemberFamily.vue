@@ -8,24 +8,28 @@
 					<th>Relation</th>
 					<th>Address</th>
 					<th>Contact</th>
-					<th width = "20px">Action</th>
+					<th width = "20px" v-if = "canEdit">Action</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="(family, index) in memberFamilyList" :key = "index">
 					<td>
-						<form-info ref = "name" :value = "family.name" props = "name" label = "Name" @update = "updateInfo" :other-details = "{id : family.id, index : index}"></form-info>
+						<form-info ref = "name" :value = "family.name" props = "name" label = "Name" @update = "updateInfo" :other-details = "{id : family.id, index : index}" v-if = "canEdit"></form-info>
+						<span v-else >{{ family.name }}</span>
 					</td>
 					<td>
-						<form-info ref = "relation" :value = "family.relation" props = "relation" label = "Relation" @update = "updateInfo" :other-details = "{id : family.id, index : index}"></form-info>
+						<form-info ref = "relation" :value = "family.relation" props = "relation" label = "Relation" @update = "updateInfo" :other-details = "{id : family.id, index : index}" v-if = "canEdit"></form-info>
+						<span v-else >{{ family.relation }}</span>
 					</td>
 					<td>
-						<form-info ref = "fam_address" :value = "family.fam_address" props = "fam_address" label = "Address" @update = "updateInfo" :other-details = "{id : family.id, index : index}"></form-info>
+						<form-info ref = "fam_address" :value = "family.fam_address" props = "fam_address" label = "Address" @update = "updateInfo" :other-details = "{id : family.id, index : index}" v-if = "canEdit"></form-info>
+						<span v-else >{{ family.fam_address }}</span>
 					</td>
 					<td>
-						<form-info ref = "contact_no" :value = "family.contact_no" props = "contact_no" label = "Contact" @update = "updateInfo" :other-details = "{id : family.id, index : index}"></form-info>
+						<form-info ref = "contact_no" :value = "family.contact_no" props = "contact_no" label = "Contact" @update = "updateInfo" :other-details = "{id : family.id, index : index}" v-if = "canEdit"></form-info>
+						<span v-else >{{ family.contact_no }}</span>
 					</td>
-					<td>
+					<td v-if = "canEdit">
 						<span class = "text-red pointer"  @click = "deleteInfo(family.id)"><i class="fa fa-fw fa-trash"></i></span>
 					</td>
 				</tr>
@@ -69,7 +73,7 @@ import Swal from 'sweetalert2'
 import FormInfo from '../FormInfo'
 
 export default {
-	props: ['memberFamily', 'memberId'],
+	props: ['memberFamily', 'memberId', 'canEdit'],
 	data: function () {
 		return{
 			familyModel			: {name : null, relation : null, fam_address : null, contact_no : null},
