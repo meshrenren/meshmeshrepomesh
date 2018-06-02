@@ -1,7 +1,7 @@
 <template>
   <el-dialog title="Find Member" :visible.sync="dialogVisible"  width="45%" @close="closeModal">      
     <el-form label-width="120px" class="demo-dynamic" @submit.native.prevent>
-        <el-form-item label="'Domain'">
+        <el-form-item label="Member Name">
             <el-input @keyup.enter.native="getMember()" v-model="nameInput"></el-input><el-button @click="getMember()">Find</el-button>
       </el-form-item>
     </el-form>

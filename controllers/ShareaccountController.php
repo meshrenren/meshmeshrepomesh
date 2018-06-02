@@ -8,6 +8,7 @@ use app\models\ShareaccountSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use app\models\ShareProduct;
 
 /**
  * ShareaccountController implements the CRUD actions for Shareaccount model.
@@ -42,6 +43,51 @@ class ShareaccountController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+    
+    public function actionCreateaccount()
+    {
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	
+    	$account =json_decode($_POST['shareaccount']);
+    	
+    	$connection = \Yii::$app->db;
+    	$transaction = $connection->beginTransaction();
+    	
+    	
+    	$modelShareProduct = new ShareProduct();
+    	$shareProd = $modelShareProduct->findOne($account->fk_share_product);
+    	$shareProd->transaction_serial = $shareProd->transaction_serial + 1;
+    	$shareProd->update();
+    	
+    	
+    	$model = new Shareaccount();
+    	$model->accountnumber = str_pad($account->fk_share_product, 3, '0', STR_PAD_LEFT)."-".str_pad($shareProd->transaction_serial, 5, '0', STR_PAD_LEFT);
+    	$model->fk_memid = $account->fk_memid;
+    	$model->date_created = date('Y-m-d H:i:s');
+	    $model->is_active = 1;
+	    $model->no_of_shares = $account->no_of_shares;
+	    $model->totalSubscription = $shareProd->amount_per_share * $account->no_of_shares;
+	    $model->balance=0;
+	    $model->status="ACTIVE";
+	    $model->fk_share_product = $account->fk_share_product;
+	    
+    	
+    
+    	
+    	if($model->save())
+    	{
+    		$transaction->commit();
+    		return "success";
+    	}
+    	else{ 
+    		$transaction->rollBack();
+    		return $model->errors; }
+    	
+    	
+    	
+    	//return $account;
+    	//return $account->fk_memid;
     }
 
     /**

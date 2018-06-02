@@ -1,80 +1,53 @@
 <template>
 <div class="box box-info">
             <div class="box-header with-border">
-              <h3 class="box-title">Client Datas</h3>
+              <h3 class="box-title">Client Data</h3>
             </div>
             <!-- /.box-header -->
             <!-- form start -->
-            <form class="form-horizontal">
-              <div class="box-body">
-                <div class="form-group">
-                  <label for="inputEmail3" class="col-sm-2 control-label">Customer ID</label>
-
-                  <div class="col-sm-8">
-                    <input type="text" v-model="id" class="form-control" id="inputEmail3" placeholder="ID" readOnly>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="inputPassword3" class="col-sm-2 control-label">Name</label>
-
-                  <div class="col-sm-8">
-                    <input type="text" v-model="fullname" class="form-control" id="inputPassword3" placeholder="Name" readOnly>
-                  </div>
-
-                  <el-button type="primary"  @click="showModal = true" round>Find Member</el-button>
-                </div>
-
-              </div>
-          
 <!-- start of body -->
       <el-form  label-width="120px" :model="shareaccount" ref="shareaccount">
+        <el-form-item label="Customer ID">
+          <el-input v-model="shareaccount.fk_memid" ></el-input>
+        </el-form-item>
+        <el-form-item label="Name">
+          <el-input v-model="fullname" ></el-input>
+        </el-form-item>
+
+        <el-form-item>
+           <el-button type="primary"  @click="showModal = true" round>Find Member</el-button>
+        </el-form-item>
+        
+
         <el-form-item label="Share Product" prop="shareProduct" ref="shareProduct">
-          <el-select prop="shareProduct"  placeholder="Please Select Share Product">
+          <el-select v-model="shareaccount.fk_share_product" prop="shareProduct"   placeholder="Please Select Share Producst">
             <el-option
               v-for="product in shares" :key="product.id" :label="product.name" :value="product.id">
             </el-option>
-            <el-option label="Zone two" value="beijing"></el-option>
+           
           </el-select>
         </el-form-item>
         
         <el-form-item label="No. Of Shares">
-          <el-input :v-model="shareaccount.no_of_shares" :value="shareaccount.no_of_shares"></el-input>
+          <el-input v-model="shareaccount.no_of_shares" :value="shareaccount.no_of_shares"></el-input>
         </el-form-item>
 
         
-        <el-form-item label="Activity time">
-          <el-col :span="11">
-            <el-date-picker type="date" placeholder="Pick a date"  style="width: 100%;"></el-date-picker>
-          </el-col>
-          <el-col class="line" :span="2">-</el-col>
-          <el-col :span="11">
-            <el-time-picker type="fixed-time" placeholder="Pick a time"  style="width: 100%;"></el-time-picker>
-          </el-col>
+        <el-form-item label="" prop="shareProduct" ref="shareProduct">
+   
+            <el-checkbox @change="toggleDeposit()" v-model="shareaccount.isWithDeposit" prop="shareProduct" label="Is With Deposit" name="type"></el-checkbox>
+     
         </el-form-item>
-        <el-form-item label="Instant delivery">
-          <el-switch ></el-switch>
+        
+        <el-form-item label="Amount" v-if="isWithDep">
+          <el-input v-model="shareaccount.Deposit" type="number"></el-input>
         </el-form-item>
-        <el-form-item label="Activity type">
-          <el-checkbox-group >
-            <el-checkbox label="Online activities" name="type"></el-checkbox>
-            <el-checkbox label="Promotion activities" name="type"></el-checkbox>
-            <el-checkbox label="Offline activities" name="type"></el-checkbox>
-            <el-checkbox label="Simple brand exposure" name="type"></el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-        <el-form-item label="Resources">
-          <el-radio-group >
-            <el-radio label="Sponsor"></el-radio>
-            <el-radio label="Venue"></el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="Activity form">
-          <el-input type="textarea"></el-input>
-        </el-form-item>
+        
         <el-form-item>
-          <el-button type="primary">Create</el-button>
-          <el-button>Cancel</el-button>
+            <el-button @click="onSubmit()" type="primary" >Creates</el-button>
+            <el-button>Cancel</el-button>
         </el-form-item>
+
       </el-form>
 <!-- end of body -->
 
@@ -86,7 +59,7 @@
               <!-- /.box-body -->
           
               <!-- /.box-footer -->
-            </form>
+           
      </div>
 </template>
 
@@ -127,11 +100,12 @@ export default {
                client: 'harold calioa',
                alien: 'alients',
                shares: this.shareProduct,
-               shareaccount: this.shareAccountDetails,
+               shareaccount: this.shareAccountDetails, //this is our form model
                id: "",
                fullname: "",
                dialogVisible: false,
-               showModal:false
+               showModal:false,
+               isWithDep: false
              }
     },
     methods: {
@@ -140,12 +114,34 @@ export default {
       console.log("populateFields",row)
       this.id = row.id
       this.fullname = row.fullname
+      this.shareaccount.fk_memid = row.id;
     },
 
-     lakosabot: function(value)
+     toggleDeposit(){
+        console.log(this.shareaccount.isWithDeposit);
+        this.shareaccount.Deposit = 0;
+        this.isWithDep = this.shareaccount.isWithDeposit;
+        
+     },
+
+
+     onSubmit()
      {
-      alien = value;
+       //first get the form data
+       let dataSubmitted = new FormData();
+
+       dataSubmitted.set('shareaccount', JSON.stringify(this.shareaccount));
+
+       axios.post(this.baseUrl+'/shareaccount/createaccount', dataSubmitted).then((result)=>{
+          let res  = result.data;
+          console.log(res);
+       });
+
+
      }
+
+
+
     }
   
 }

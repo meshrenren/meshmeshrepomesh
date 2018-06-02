@@ -2,21 +2,22 @@
 
 namespace app\models;
 
-use app\models\ShareProduct;
 use Yii;
 
 /**
  * This is the model class for table "shareaccount".
  *
  * @property string $accountnumber
- * @property string $fk_memid
- * @property integer $NoOfShares
- * @property integer $totalSubscription
+ * @property integer $fk_memid
+ * @property string $date_created
+ * @property integer $is_active
+ * @property integer $no_of_shares
+ * @property double $totalSubscription
  * @property double $balance
- * @property integer $dateCreated
  * @property string $status
+ * @property integer $fk_share_product
  *
- * @property Member $fkMem
+ * @property Shareproduct $fkShareProduct
  */
 class Shareaccount extends \yii\db\ActiveRecord
 {
@@ -34,12 +35,13 @@ class Shareaccount extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['accountnumber', 'fk_memid', 'NoOfShares', 'totalSubscription', 'balance', 'dateCreated', 'status'], 'required'],
-            [['fk_memid', 'NoOfShares', 'totalSubscription', 'dateCreated'], 'integer'],
-            [['balance'], 'number'],
+            [['accountnumber', 'fk_memid', 'date_created', 'is_active', 'no_of_shares', 'totalSubscription', 'balance', 'status', 'fk_share_product'], 'required'],
+            [['fk_memid', 'is_active', 'no_of_shares', 'fk_share_product'], 'integer'],
+            [['date_created'], 'safe'],
+            [['totalSubscription', 'balance'], 'number'],
             [['accountnumber'], 'string', 'max' => 25],
             [['status'], 'string', 'max' => 10],
-            [['fk_memid'], 'exist', 'skipOnError' => true, 'targetClass' => Member::className(), 'targetAttribute' => ['fk_memid' => 'id']],
+            [['fk_share_product'], 'exist', 'skipOnError' => true, 'targetClass' => Shareproduct::className(), 'targetAttribute' => ['fk_share_product' => 'id']],
         ];
     }
 
@@ -51,28 +53,27 @@ class Shareaccount extends \yii\db\ActiveRecord
         return [
             'accountnumber' => 'Accountnumber',
             'fk_memid' => 'Fk Memid',
-            'NoOfShares' => 'No Of Shares',
+            'date_created' => 'Date Created',
+            'is_active' => 'Is Active',
+            'no_of_shares' => 'No Of Shares',
             'totalSubscription' => 'Total Subscription',
             'balance' => 'Balance',
-            'dateCreated' => 'Date Created',
             'status' => 'Status',
+            'fk_share_product' => 'Fk Share Product',
         ];
     }
     
     
     public function getShareProducts()
     {
-    	$retval = ShareProduct::find()->asArray()->all();
-    	
-    	return $retval;
+    	return ShareProduct::find()->asArray()->all();
     }
-    
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getFkMem()
+    public function getFkShareProduct()
     {
-        return $this->hasOne(Member::className(), ['id' => 'fk_memid']);
+        return $this->hasOne(Shareproduct::className(), ['id' => 'fk_share_product']);
     }
 }

@@ -17,6 +17,8 @@ $shareAcct['no_of_shares'] = 782;
 $shareAcct['totalSubscription'] = null;
 $shareAcct['balance'] = null;
 $shareAcct['fk_share_product'] = null;
+$shareAcct['isWithDeposit'] = null;
+$shareAcct['Deposit'] = 0;
 
 
 $this->title = 'Create Shareaccount';
