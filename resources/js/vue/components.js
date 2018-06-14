@@ -22,3 +22,7 @@ Vue.component('savings-deposit-form', SavingsDepositForm)
 
 import SavingsAccountCreate from './components/Savings/SavingsAccountCreate.vue'
 Vue.component('savings-account-create', SavingsAccountCreate)
+
+//Time Deposit
+import TimeDepositCreate from './components/TimeDeposit/TimeDepositCreate.vue'
+Vue.component('time-deposit-create', TimeDepositCreate)

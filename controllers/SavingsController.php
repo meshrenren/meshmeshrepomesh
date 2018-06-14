@@ -135,7 +135,7 @@ class SavingsController extends \yii\web\Controller
 	        	];
 	        }
 	        else{
-	        	var_dump($model->getErrors());
+	        	//var_dump($model->getErrors());
 	        	return [
 	        		'success'	=> false
 	        	];
