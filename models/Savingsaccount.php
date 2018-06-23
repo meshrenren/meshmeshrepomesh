@@ -72,5 +72,87 @@ class SavingsAccount extends \yii\db\ActiveRecord
         
         return $retval;
     }
+    
+    
+    
+    public function calculateSavingsInterest()
+    {
+    	//get the necessary savings accounts;
+    	
+    	$qry = "SELECT * FROM savingsaccount sa inner join savingsproduct sp on sa.saving_product_id = sp.id where sa.balance >= sp.deposit_to_interest and sa.is_active=1";
+    	
+    	$branch = BranchParameters::findOne(['branch_code'=>'001']);
+    	
+    	
+    	$connection = Yii::$app->getDb();
+    	$command = $connection->createCommand($qry);
+    	
+    	$result = $command->queryAll();
+    	
+    	
+    	foreach($result as $rows)
+    	{
+    		
+    		
+    		
+    		$lastMonthEnd = date('Y-m-d', strtotime($branch->last_monthend));
+    		$currentDate = date('Y-m-d', strtotime($branch->currentdate));
+    		$monthEnd = date("Y-m-t", strtotime($branch->currentdate));
+    		$interest = 0;
+    		$pointerDate = date('Y-m-d', strtotime($lastMonthEnd. ' +1 day'));
+    		$averageBalance = 0;
+    		$totalBalance = 0;
+    		while ($pointerDate<=$monthEnd) {
+    			//get the average balance of member
+    			$qry2 = "select st.running_balance from savings_transaction st where st.fk_savings_id='".$rows["account_no"]."' and st.transaction_date like '".$pointerDate."%' order by id desc limit 1";
+    			$command = $connection->createCommand($qry2);
+    			
+    			$result3 = $command->queryOne();
+    			$averageBalance = $averageBalance + 3500;
+    			
+    			$pointerDate = date('Y-m-d', strtotime($pointerDate. ' +1 day'));
+    		}
+    		
+    		
+    		$interest = $averageBalance * 0.05;
+    		$totalBalance = $rows["balance"] + $interest;
+    		
+    		
+    		$mdlAccount = SavingsAccount::findOne(['account_no'=>$rows["account_no"]]);
+    		
+    		$mdlAccount->balance = $totalBalance;
+    		
+    		$mdlAccount->update();
+    		
+    		
+    		$mdlTrans = new SavingsTransaction();
+    		
+    		$mdlTrans->fk_savings_id = $rows["account_no"];
+    		$mdlTrans->amount = $interest;
+    		$mdlTrans->transaction_type = "INTEREST";
+    		$mdlTrans->transacted_by = 1;
+    		$mdlTrans->transaction_date = $currentDate;
+    		$mdlTrans->running_balance = $totalBalance;
+    		$mdlTrans->remarks = "IntPost.";
+    		
+    		
+    		$mdlTrans->save();
+    		
+    		
+    		return true;
+    		
+    	
+    		
+    		
+    		
+    	}
+    	
+    }
+    
+    
+    
+    
+    
+    
 
 }

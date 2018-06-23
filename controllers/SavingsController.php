@@ -6,6 +6,7 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
+use app\models\SavingsAccount;
 
 class SavingsController extends \yii\web\Controller
 {
@@ -86,6 +87,14 @@ class SavingsController extends \yii\web\Controller
 
         	
         }
+    }
+    
+    
+    public function actionBeginningofday()
+    {
+    	$model = new SavingsAccount();
+    	
+    	return $model->calculateSavingsInterest();
     }
 
     public function actionGetAccount(){
