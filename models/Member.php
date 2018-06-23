@@ -156,7 +156,7 @@ class Member extends \yii\db\ActiveRecord {
 		] );
 	}
 	public function getMemberList($name) {
-		$retval = $this->find()->innerJoinWith(['user'])->select(["*", "CONCAT(last_name,', ',first_name,' ',middle_name)fullname"])->where("CONCAT(last_name,', ',first_name,' ',middle_name) like '".$name."%'")->asArray()->all();
+		$retval = $this->find()->innerJoinWith(['user'])->select(["member.*", "CONCAT(last_name,', ',first_name,' ',middle_name)fullname"])->where("CONCAT(last_name,', ',first_name,' ',middle_name) like '".$name."%'")->asArray()->all();
 		
 		return $retval;
 	}

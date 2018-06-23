@@ -35,8 +35,8 @@
 						</el-form-item>		
 				  	</el-col>
 				  	<el-col :span="12">	
-						<el-form-item label="" prop="amount_type">
-						    <el-radio-group v-model="savingTransactionForm.amount_type">
+						<el-form-item label="" prop="transaction_type">
+						    <el-radio-group v-model="savingTransactionForm.transaction_type">
 						      	<el-radio label="Cash"></el-radio>
 						      	<el-radio label="Cheque"></el-radio>
 						    </el-radio-group>
@@ -53,6 +53,11 @@
 				</el-form>
 				<h3>Transaction List</h3>
 				<el-table :data="accountTransactionList" style="width: 50%" stripe border>
+		            <el-table-column label="Transaction ID">
+		                <template slot-scope="scope">
+		                    <span style="margin-left: 10px">{{ scope.row.id }}</span>
+		                </template>
+		            </el-table-column>
 		            <el-table-column label="Amount">
 		                <template slot-scope="scope">
 		                    <span style="margin-left: 10px">{{ scope.row.amount }}</span>
@@ -63,14 +68,14 @@
 		                    <span style="margin-left: 10px">{{ scope.row.transaction_type }}</span>
 		                </template>
 		            </el-table-column>
-		            <el-table-column label="Type">
-		                <template slot-scope="scope">
-		                    <span style="margin-left: 10px">{{ scope.row.amount_type }}</span>
-		                </template>
-		            </el-table-column>
-		            <el-table-column label="Running_balance">
+		            <el-table-column label="Running Balance">
 		                <template slot-scope="scope">
 		                    <span style="margin-left: 10px">{{ scope.row.running_balance }}</span>
+		                </template>
+		            </el-table-column>
+		            <el-table-column label="Remarks">
+		                <template slot-scope="scope">
+		                    <span style="margin-left: 10px">{{ scope.row.remarks }}</span>
 		                </template>
 		            </el-table-column>
 		        </el-table>
@@ -98,6 +103,7 @@ export default {
   		this.dataTransaction.forEach(function(detail){
   			transaction[detail] = null
   		})
+  		transaction['transaction_type'] = "Cash"
 		return{
 			accountDetails			: {product : {description : null}, 'member' : {fullname : null}},
 			savingTransactionForm 	: transaction,
@@ -109,7 +115,7 @@ export default {
 	created(){
 		this.ruleTransaction = {
   			amount : [{ required: true, message: 'Amount cannot be blank.', trigger: 'change' },],
-  			amount_type : [{ required: true, message: 'Amount Type cannot be blank.', trigger: 'change' },],
+  			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
 		}
 	},
     components: {
@@ -175,7 +181,10 @@ export default {
 		            }).then(function() {
 
 	            		let data = new FormData()
-	            		vm.savingTransactionForm.transaction_type = "CASHDEP"
+	            		if(vm.savingTransactionForm.transaction_type == "Cash")
+	            			vm.savingTransactionForm.transaction_type = "CASHDEP"
+	            		if(vm.savingTransactionForm.transaction_type == "Cheque")
+	            			vm.savingTransactionForm.transaction_type = "CHEQUEDEP"
 
 		    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
 
@@ -190,6 +199,7 @@ export default {
 			                else{
 			                    console.log("no result")
 			                } 
+			                location.reload()
 			                  
 			            }).catch(function (error) {
 			            

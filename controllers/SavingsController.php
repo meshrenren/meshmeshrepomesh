@@ -46,13 +46,18 @@ class SavingsController extends \yii\web\Controller
         	$accountDetails = json_decode($_POST['account']);
         	$accountDetails = (array)$accountDetails;
 
-    		$hasAccount = \app\models\SavingsAccount::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
+        	$hasAccount = null;
+        	$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
+
+        	if($product->is_multiple == 0)
+        		$hasAccount = \app\models\SavingsAccount::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
 
     		if($hasAccount == null){
     			$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
-    			$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
 	        	$account = new \app\models\SavingsAccount;
-	        	$account->account_no = $product->id . "-" . $member->id;
+	        	$trans_serial = $product->trans_serial + 1;
+	        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+	        	$account->account_no = $product->id . "-" . $trans_serial_pad;
 	        	$account->member_id = $member->id;
 	        	$account->saving_product_id = $accountDetails['saving_product_id'];
 	        	$account->balance = 0;
@@ -60,6 +65,8 @@ class SavingsController extends \yii\web\Controller
 	        	$account->transacted_date = date('Y-m-d H:i:s');
 	        	$account->is_active = 1;
 	        	if($account->save()){
+	        		$product->trans_serial = $trans_serial;
+	        		$product->save();
 	        		$getAccount = \app\models\SavingsAccount::find()->where(['account_no' => $account->account_no])->one();
 
 	        		return [
@@ -122,15 +129,8 @@ class SavingsController extends \yii\web\Controller
         	$model = new \app\models\SavingsTransaction;
         	$model->attributes = $transaction;
 
-        	$getTransactionType = \app\models\TransactionType::find()->where(['transaction_code' => $transaction['transaction_type']])->one();
         	$getSavingsAccount = \app\models\SavingsAccount::findOne($transaction['fk_savings_id']);
-        	$running_balance = $getSavingsAccount->balance;
-        	if($getTransactionType->credit_entry == 1){
-        		$running_balance = $running_balance + $transaction['amount'];
-        	}
-        	else if($getTransactionType->debit_entry == 1){        		
-        		$running_balance = $running_balance - $transaction['amount'];
-        	}
+        	$running_balance = $getSavingsAccount->balance + $transaction['amount'];
 
         	$model->transaction_date = date('Y-m-d H:i:s');
 	        $model->transacted_by = \Yii::$app->user->identity->id;
@@ -144,7 +144,7 @@ class SavingsController extends \yii\web\Controller
 	        	];
 	        }
 	        else{
-	        	var_dump($model->getErrors());
+	        	//var_dump($model->getErrors());
 	        	return [
 	        		'success'	=> false
 	        	];

@@ -36,7 +36,7 @@ class SavingsTransaction extends \yii\db\ActiveRecord
             [['transacted_by'], 'integer'],
             [['amount', 'running_balance'], 'number'],
             [['transaction_date'], 'safe'],
-            [['transaction_type', 'remarks', 'amount_type'], 'string'],
+            [['transaction_type', 'remarks'], 'string'],
         ];
     }
 
