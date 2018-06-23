@@ -79,4 +79,16 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
         
         return $retval;
     }
+
+    //Get the maturity amount of the account;
+    public function getMatureDays($maturity_date, $amount, $interest_rate, $term){
+        $curDate = date('Y-m-d');
+        $getDays = strtotime($curDate) - strtotime($maturity_date);
+        $getRate = $amount * ($interest_rate/100);
+        $getInterestPerDay = $getRate/$term;
+        $interestAmount = $getInterestPerDay * $get_days;
+
+        return $interestAmount;
+
+    }
 }

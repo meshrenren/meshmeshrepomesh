@@ -113,6 +113,10 @@ $ease-out: all .3s cubic-bezier(0.23, 1, 0.32, 1);
 
 }
 
+.click-class{
+  cursor: pointer;
+}
+
 .svg_edit, .svg_delete, .update-link, .pointer{
   cursor: pointer;
 }

@@ -53,8 +53,11 @@ class TimeDepositController extends \yii\web\Controller
         	$model->date_created = date('Y-m-d H:i:s');
 	        $model->created_by = \Yii::$app->user->identity->id;
 	        $model->balance = $tdaccount['amount'];
-	        var_dump($model->attributes);
+	        //var_dump($model->attributes);
 	        if($model->save()){
+                $product->trans_serial = $trans_serial;
+                $product->save();
+                
         		$tdTransaction = new \app\models\TimeDepositTransaction;
         		$tdTransaction->fk_account_number = $model->accountnumber;
         		$tdTransaction->transaction_type = 'TDCASHDEP';
@@ -88,6 +91,15 @@ class TimeDepositController extends \yii\web\Controller
 	    	$accountList = $model->getAccountListByMemberID($member_id);
 	    	return $accountList;
         	
+        }
+    }
+
+    public function actionGetMaturedAccounts(){
+        $date = date("Y-m-d");
+        $model = \app\models\TimeDepositAccount::find()->where(['maturity_date' => $date])->all();
+        foreach ($model as $timedeposit) {
+            $totalInterest = $timedeposit->getMatureDays($timedeposit->maturity_date, $timedeposit->amount, $timedeposit->interest_rate, $timedeposit->term);
+            $totalAmount = $timedeposit->amount + $totalInterest;
         }
     }
 
