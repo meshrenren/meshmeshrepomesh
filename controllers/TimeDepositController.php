@@ -57,7 +57,7 @@ class TimeDepositController extends \yii\web\Controller
 	        if($model->save()){
                 $product->trans_serial = $trans_serial;
                 $product->save();
-                
+                //var_dampa($model is model duhhh!!)
         		$tdTransaction = new \app\models\TimeDepositTransaction;
         		$tdTransaction->fk_account_number = $model->accountnumber;
         		$tdTransaction->transaction_type = 'TDCASHDEP';
