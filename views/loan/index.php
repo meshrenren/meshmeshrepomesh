@@ -1,9 +1,10 @@
 <?php
 /* @var $this yii\web\View */
-?>
-<h1>loan/index</h1>
+$this->title = 'Loan Evaluation';
 
-<p>
-    You may change the content of this page by modifying
-    the file <code><?= __FILE__; ?></code>.
-</p>
+$loandProduct = yii\helpers\Html::encode(json_encode($loandProduct, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+?>
+<loan-evaluation
+	:data-loan-product='<?= $loandProduct ?>'
+	>
+</loan-evaluation>

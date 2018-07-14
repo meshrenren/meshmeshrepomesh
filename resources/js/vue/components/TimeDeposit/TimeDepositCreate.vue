@@ -26,7 +26,7 @@
 					<el-row :gutter = "20">
 	        			<el-col :span="12">
 						  	<el-form-item label="Product" prop = "fk_td_product">
-						    	<el-select v-model="tdAccountDetails.fk_td_product" placeholder="Select" @change = "productChange">
+						    	<el-select v-model="tdAccountDetails.fk_td_product" placeholder="Select" @change = "productChange" ref = "fk_td_product">
 								    <el-option
 								      v-for="item in tdProductSelect"
 								      :key="item.value"
@@ -86,7 +86,6 @@
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
-    import swal from 'sweetalert2/dist/sweetalert2.all.min.js'
     import cloneDeep from 'lodash/cloneDeep'
 
     import SearchMember from '../General/SearchMember.vue'  
@@ -163,6 +162,9 @@ export default {
     		this.memberDetails = data
     		this.tdAccountDetails.member_id = data.id
     		this.getOtherAccounts(data.id)
+
+
+    		this.$refs.fk_td_product.focus()
     	},
     	productChange(val){
     		this.getRate(val, this.tdAccountDetails.term, this.tdAccountDetails.amount)
@@ -218,19 +220,18 @@ export default {
     		let vm = this	
     		this.$refs.tdAccountDetails.validate((valid) => {
 	          	if (valid) {
-	          		swal({
+	          		this.$swal({
 	                  title: 'Save Time Deposit Account?',
 	                  text: "Are you sure you want to save this transaction? This action cannot be undone.",
+	                  type: "warning",
+				 	  confirmButtonColor: '#3085d6',
+				  	  cancelButtonColor: '#d33',
 	                  showCancelButton: true,
 	                  confirmButtonText: 'Proceed',
-	                  confirmButtonColor: '#4087C5',
-	                  focusConfirm: false,
+	                  focusConfirm: true,
 	                  focusCancel: false,
 	                  cancelButtonText: 'Cancel',
 	                  reverseButtons: true,
-	                  background: '#ff3366',
-	                  width: '400px',
-	                  padding: 0
 		            }).then(function (result) {
 					  	if (result.value) {
 					    	let data = new FormData()

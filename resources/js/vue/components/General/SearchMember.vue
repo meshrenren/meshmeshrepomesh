@@ -2,12 +2,12 @@
     <el-dialog title="Find Member" :visible.sync="dialogVisible"  width="45%" @close="closeModal">      
         <el-form label-width="0" class="demo-dynamic" @submit.native.prevent>
             <el-form-item label="">
-                <el-input @keyup.enter.native="getMember()" v-model="nameInput">
-                    <el-button slot="append" type = "primary" @click="getMember()">Find Member</el-button>
+                <el-input v-model="nameInput" autofocus>
+                    <!-- <el-button slot="append" type = "primary" @click="getMember()">Find Member</el-button> -->
                 </el-input>
             </el-form-item>
         </el-form>
-        <el-table :data="tableData" style="width: 100%" height="400" stripe border>
+        <el-table :data="memberList" style="width: 100%" height="400" stripe border v-loading = "isGettingMember">
             <el-table-column label="ID" width="180">
                 <template slot-scope="scope">
                     <span style="margin-left: 10px">{{ scope.row.id }}</span>
@@ -52,13 +52,33 @@ window.noty = require('noty');
 
 
 export default {
-    props: ['baseUrl'],
+    props: [],
  
     data: function () {
         return {
-            tableData: null,
-            nameInput: "",
-            dialogVisible : true
+            tableData       : null,
+            nameInput       : "",
+            dialogVisible   : true,
+            isGettingMember : true
+        }
+    },
+    created(){
+        this.getMember()
+    },
+    computed: {
+        memberList(){            
+            let datalist = this.tableData
+            let filterKey = this.nameInput
+
+            if (filterKey) {
+                if(datalist){
+                    datalist = datalist.filter(function (row) {
+                        return String(row.fullname).toLowerCase().indexOf(filterKey) > -1
+                    })
+                }
+            }
+
+            return datalist
         }
     },
     methods: {
@@ -67,11 +87,12 @@ export default {
             let data = new FormData()
             data.set('nameInput', this.nameInput)
             
-            axios.post(this.baseUrl+'/member/get-member', data).then((result) => {
+            axios.post(this.$baseUrl+'/member/get-member', data).then((result) => {
                 let res = result.data
                 let type = ""
                 let message = ""
                 this.tableData = res
+                this.isGettingMember = false
             }).catch(function (error) {
                 console.log(error);
                 if(error.response.status == 403)
