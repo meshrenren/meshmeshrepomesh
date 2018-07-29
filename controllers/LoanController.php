@@ -8,11 +8,17 @@ class LoanController extends \yii\web\Controller
     {
     	$this->layout = 'main-vue';
 
-    	$loandProduct  = \app\models\LoanProduct::find()
+    	$loandProduct  = \app\models\LoanProduct::find()->joinWith(['serviceCharge'])
     		->asArray()->all();
+        $default_setting = array();
+
+        $settings  = new \app\models\DefaultSettings;
+        $default_setting['loan_redemption_insurance'] = $settings->getValue('loan_redemption_insurance');
+        $default_setting['loan_refundable_retention'] = $settings->getValue('loan_redemption_insurance');
     	
         return $this->render('index', [
-        	'loandProduct'		=> $loandProduct,
+        	'loandProduct'		   => $loandProduct,
+            'default_setting'      => $default_setting,
         ]);
     }
 

@@ -64,4 +64,9 @@ class LoanProduct extends \yii\db\ActiveRecord
     {
         return $this->hasOne(LoanInterestType::className(), ['id' => 'interest_type_id']);
     }
+
+    public function getServiceCharge()
+    {
+        return $this->hasMany(LoanServiceCharge::className(), ['loan_product_id' => 'id']);
+    }
 }

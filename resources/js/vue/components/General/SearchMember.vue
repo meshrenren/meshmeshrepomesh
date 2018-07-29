@@ -1,5 +1,5 @@
 <template>
-    <el-dialog title="Find Member" :visible.sync="dialogVisible"  width="45%" @close="closeModal">      
+    <el-dialog title="Find Member" :visible.sync="dialogVisible"  width="45%" top = "20px" @close="closeModal">      
         <el-form label-width="0" class="demo-dynamic" @submit.native.prevent>
             <el-form-item label="">
                 <el-input v-model="nameInput" autofocus>
