@@ -76,7 +76,8 @@ class ShareaccountController extends Controller
     
     	
     	if($model->save())
-    	{
+    	{+
+    	-
     		$transaction->commit();
     		return "success";
     	}
