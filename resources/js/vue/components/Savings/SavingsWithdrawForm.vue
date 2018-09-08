@@ -2,7 +2,7 @@
 	<div class="savings-deposit-form">
 		<div class="box box-info">
             <div class="box-header with-border">
-              	<h3 class="box-title">Deposit Savings Account</h3>
+              	<h3 class="box-title">Withdraw Savings Account</h3>
             </div>
             <div class = "box-body">
             	<el-row :gutter="20">
@@ -62,20 +62,14 @@
             					<el-form-item label="Current Balance" prop="current_balance">
 									<el-input-number v-model="savingTransactionForm.current_balance" controls-position="right" :disabled = "true"></el-input-number>
 								</el-form-item>
-								<el-form-item label="Deposit Amount" prop="amount">
-									<el-input-number v-model="savingTransactionForm.amount" controls-position="right" :min="1"></el-input-number>
+								<el-form-item label="Withdraw Amount" prop="amount">
+									<el-input-number v-model="savingTransactionForm.amount" controls-position="right" :min="1" :max = "savingTransactionForm.current_balance"></el-input-number>
 								</el-form-item>	
-								<el-form-item label="" prop="transaction_type">
-								    <el-radio-group v-model="savingTransactionForm.transaction_type">
-								      	<el-radio label="Cash"></el-radio>
-								      	<el-radio label="Cheque"></el-radio>
-								    </el-radio-group>
-								</el-form-item>
 								<el-form-item label="Remarks" prop="remarks">
-									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
+									<el-input type = "textarea" v-model="savingTransactionForm.remarks">
 									</el-input>
 								</el-form-item>	
-								<el-button type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Save Deposit</el-button>
+								<el-button type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Save Withdraw</el-button>
             				</el-form>
             			</div>
             		</el-col>
@@ -185,10 +179,7 @@ export default {
 		            }).then(function() {
 
 	            		let data = new FormData()
-	            		if(vm.savingTransactionForm.transaction_type == "Cash")
-	            			vm.savingTransactionForm.transaction_type = "CASHDEP"
-	            		if(vm.savingTransactionForm.transaction_type == "Cheque")
-	            			vm.savingTransactionForm.transaction_type = "CHEQUEDEP"
+	            		vm.savingTransactionForm.transaction_type = "WITHDRWL"
 
 		    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
 
@@ -249,3 +240,4 @@ export default {
 	
 </style>
 
+	

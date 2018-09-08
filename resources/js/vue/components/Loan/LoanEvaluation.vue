@@ -101,7 +101,7 @@
 					        			<el-form-item label="Service Change">
 							        		<el-row :gutter = "10">
 								        		<el-col :span="2">
-									    			<el-checkbox v-model="evaluationForm.service_charge"></el-checkbox>
+									    			<el-checkbox v-model="evaluationForm.service_charge" @change = "changeServiceCharge"></el-checkbox>
 									    		</el-col>
 								        		<el-col :span="21">
 									    			<el-input v-model="evaluationForm.service_charge_amount" :disabled = "true"></el-input>
@@ -112,7 +112,7 @@
 					        			<el-form-item label="Saving Retention">
 							        		<el-row :gutter = "10">
 								        		<el-col :span="2">
-									    			<el-checkbox v-model="evaluationForm.saving_retention"></el-checkbox>
+									    			<el-checkbox v-model="evaluationForm.saving_retention" @change = "changeSavingRetention"></el-checkbox>
 									    		</el-col>
 								        		<el-col :span="21">
 									    			<el-input v-model="evaluationForm.saving_retention_amount" :disabled = "true"></el-input>
@@ -122,7 +122,7 @@
 					        			<el-form-item label="Redemption Insurance">
 							        		<el-row :gutter = "10">
 								        		<el-col :span="2">
-									    			<el-checkbox v-model="evaluationForm.redemption_insurance"></el-checkbox>
+									    			<el-checkbox v-model="evaluationForm.redemption_insurance" @change = "changeRedemptionInsurance"></el-checkbox>
 									    		</el-col>
 								        		<el-col :span="21">
 									    			<el-input v-model="evaluationForm.redemption_insurance_amount" :disabled = "true"></el-input>
@@ -167,7 +167,7 @@
 export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	data: function () {
-		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, loan_balance : null, loan_amount : null, loan_repayment : null, service_charge : null, service_charge_amount : null, saving_retention : null, saving_retention_amount : null,  redemption_insurance : null,  redemption_insurance_amount : null, net_cash : null, principal_amortization_quincena : null, prepaid_amortization_quincena : null}
+		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, loan_balance : null, loan_amount : null, loan_repayment : null, service_charge : null, service_charge_amount : null, saving_retention : null, saving_retention_amount : null,  redemption_insurance : true,  redemption_insurance_amount : null, net_cash : null, principal_amortization_quincena : null, prepaid_amortization_quincena : null}
 		return {
 			evaluationForm 			: form,
 			loanProduct 			: this.dataLoanProduct,
@@ -188,7 +188,7 @@ export default {
     		let getProduct = this.loanProduct.find(pr =>{
     			return Number(pr.id) == Number(this.evaluationForm.product_loan_id)
     		})
-    		console.log("getProduct", getProduct)
+
     		if(getProduct){
     			if(Number(value) < Number(getProduct.term_min)){
     				callback(new Error("Term is below minimum allowed loan term!" +getProduct.product_name + " is " +getProduct.term_min + " to " +getProduct.term_max + " months."));
@@ -248,74 +248,111 @@ export default {
     	getProduct(product_id){
     		return this.loanProduct.find(lp => { return Number(lp.id) == Number(product_id) })
     	},
+    	changeServiceCharge(value){
+    		if(value){
+    			this.evaluateLoan()
+    		}
+    	},
+    	changeRedemptionInsurance(value){
+    		if(value){
+    			this.evaluateLoan()
+    		}
+    	},
+    	changeSavingRetention(value){
+    		if(value){
+    			this.evaluateLoan()
+    		}
+    	},
     	resetEvaluationForm(){
 
     	},
     	enterLoanAmount(){
     		console.log("Eva")
     		this.$refs.evaluationForm.validateField('amount', valid => {
-    			console.log(valid)
+    			if (valid) {
+    				console.log("Has Error")
+    			}
+    			else{
+    				console.log("Valid Amount")
+    				this.evaluationForm.loan_amount = this.evaluationForm.amount
+    				this.evaluateLoan()
+    			}
     		})
     	},
     	evaluateLoan(){    		
     		let vm = this	
     		let retention = this.dataDefaultSettings.loan_refundable_retention
     		let insurance = this.dataDefaultSettings.loan_redemption_insurance
-    		if(this.evaluationForm.product_loan_id && this.evaluationForm.duration && this.evaluationForm.amount){
-    			console.log("Calculate")
-    			let getProduct = this.loanProduct.find(lp => { return Number(lp.id) == Number(evaluationForm.product_loan_id) })
-    			let amount = Number(evaluationForm.amount)
-    			let duration = evaluationForm.duration
 
-    			if(getProduct){
-	    			let p_interest = getProduct.prepaid_interest
+    		this.$refs.evaluationForm.validate((valid) => {
+    			if (valid) {
+    		
+		    		if(this.evaluationForm.product_loan_id && this.evaluationForm.duration && this.evaluationForm.amount){
+		    			console.log("Calculate")
+		    			let getProduct = this.loanProduct.find(lp => { return Number(lp.id) == Number(this.evaluationForm.product_loan_id) })
+		    			let amount = Number(this.evaluationForm.amount)
+		    			let duration = this.evaluationForm.duration
 
-	    			if(p_interest){
-	    				this.evaluationForm.prepaid_interest = amount * (Number(p_interest) / 100)
-	    			}
 
-	    			//Calculate Service Charge
-	    			if(this.evaluationForm.service_charge){
+		    			console.log("getProduct", getProduct)
+		    			if(getProduct){
+			    			let p_interest = getProduct.prepaid_interest
+			    			let prepaid_interest = 0
+			    			let service_charge = 0
+			    			let saving_retention = 0
+			    			let redemption_insurance = 0
 
-		    			let getServiceFee = getProduct.serviceCharge.find(sc => { return Number(sc.month_term) == Number(duration) && amount < Number(sc.max_amount) && amount > Number(sc.min_amount)})
-		    			if(getServiceFee){
-		    				this.evaluationForm.service_charge_amount = amount * (Number(getServiceFee.percentage) / 100)
-		    			}
+			    			if(p_interest){
+			    				 prepaid_interest = amount * (Number(p_interest) / 100)
+			    				console.log("prepaid_interest", prepaid_interest)
+			    			}
+
+			    			//Calculate Service Charge
+			    			if(this.evaluationForm.service_charge){
+
+				    			let getServiceFee = getProduct.serviceCharge.find(sc => { return Number(sc.month_term) == Number(duration) && amount < Number(sc.max_amount) && amount > Number(sc.min_amount)})
+				    			if(getServiceFee){
+				    				service_charge = amount * (Number(getServiceFee.percentage) / 100)
+				    				console.log("service_charge", service_charge)
+				    			}
+
+				    		}
+
+				    		//Calculate Retention
+			    			if(this.evaluationForm.saving_retention){
+
+				    			saving_retention = amount * (Number(this.dataDefaultSettings.loan_refundable_retention) / 100)
+				    			console.log("saving_retention", saving_retention)
+				    			
+				    		}
+
+				    		//Calculate Insurance
+			    			if(this.evaluationForm.redemption_insurance){
+
+				    			redemption_insurance = amount * (Number(this.dataDefaultSettings.loan_redemption_insurance) / 100)
+				    			console.log("redemption_insurance", redemption_insurance)
+				    			
+				    		}
+
+				    		//Quincena
+				    		let principal_amort = ( amount / duration ) / 2
+				    		console.log("principal_amort", principal_amort)
+
+
+			    			this.evaluationForm.prepaid_interest = prepaid_interest
+			    			this.evaluationForm.service_charge_amount = service_charge
+			    			this.evaluationForm.saving_retention_amount = saving_retention
+			    			this.evaluationForm.redemption_insurance_amount = redemption_insurance
+
+			    			this.evaluationForm.principal_amortization_quincena = principal_amort
+			    		}
 
 		    		}
-
-		    		//Calculate Retention
-	    			if(this.evaluationForm.saving_retention){
-
-		    			this.evaluationForm.saving_retention_amount = amount * (Number(this.dataDefaultSettings.loan_refundable_retention) / 100)
-		    			
-		    		}
-
-		    		//Calculate Insurance
-	    			if(this.evaluationForm.redemption_insurance){
-
-		    			this.evaluationForm.redemption_insurance_amount = amount * (Number(this.dataDefaultSettings.loan_redemption_insurance) / 100)
-		    			
-		    		}
-	    		}
-
-    		}
-    		/*this.$refs.loanEvaluateForm.validate((valid) => {
-	          	if (valid) {
-	          		let data = {
-	          			member_id 			: this.memberDetails.id,
-	          			product_loan_id 	: this.evaluationForm.product_loan_id,
-	          			duration 			: this.evaluationForm.duration,
-	          			loan_amount 		: this.evaluationForm.loan_amount
-	          		}
-	          		this.$API.evaluateLoan(data)
-		    		.then(res => {
-
-					}).catch(err => {
-						console.log(err)
-					})
+		    	}
+	          	else {
+	            	return false;
 	          	}
-	        })*/
+    		})
     	},
     	newLoan(){
 
@@ -352,5 +389,6 @@ export default {
   			position: relative;
   		}
 
+		
 	}
 </style>

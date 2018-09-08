@@ -2,8 +2,37 @@
 
 namespace app\controllers;
 
+use Yii;
+use yii\filters\AccessControl;
+
 class LoanController extends \yii\web\Controller
 {
+
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['index'],
+                'rules' => [
+                    [
+                        'actions' => ['index'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_loan_account_","_view") ){
+                                    return true;
+                            }
+                        }
+                    ],
+                    [
+                        'allow' => false,
+                        'roles' => ['*'],
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public function actionIndex()
     {
     	$this->layout = 'main-vue';

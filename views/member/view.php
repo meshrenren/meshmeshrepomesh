@@ -20,5 +20,5 @@ $this->title = 'Member View';
     :data-member-family='<?= $memberFamily ?>'
     :data-member-address='<?= $memberAddress ?>'
     :base-url='<?= json_encode(Yii::$app->request->baseUrl) ?>'
-    :can-edit='<?= json_encode(Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view")) ?>'>
+    :can-edit='<?= json_encode(Yii::$app->user->identity->checkUserAccess("_member_profile_", "_edit")) ?>'>
 </member-view>

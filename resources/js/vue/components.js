@@ -20,6 +20,9 @@ Vue.component('permission-settings', PermissionSettings)
 import SavingsDepositForm from './components/Savings/SavingsDepositForm.vue'
 Vue.component('savings-deposit-form', SavingsDepositForm)
 
+import SavingsWithdrawForm from './components/Savings/SavingsWithdrawForm.vue'
+Vue.component('savings-withdraw-form', SavingsWithdrawForm)
+
 import SavingsAccountCreate from './components/Savings/SavingsAccountCreate.vue'
 Vue.component('savings-account-create', SavingsAccountCreate)
 

@@ -1,14 +1,14 @@
 <template>
-    <el-dialog title="Find Account" :visible.sync="dialogVisible"  width="55%" @close="closeModal">  
+    <el-dialog title="Find Account" :visible.sync="dialogVisible"  width="55%" top = "20px" @close="closeModal">  
         <el-form label-width="0" class="demo-dynamic" @submit.native.prevent>
             <el-form-item label="">
-                <el-input @keyup.enter.native="getAccount()" v-model="nameInput">
-                    <el-button slot="append" type = "primary" @click="getAccount()">Find Member</el-button>
+                <el-input v-model="nameInput" autofocus>
+                    <!-- <el-button slot="append" type = "primary" @click="getAccount()">Find Member</el-button> -->
                 </el-input>
             </el-form-item>
         </el-form>
 
-        <el-table :data="tableData" style="width: 100%" height="400" stripe border>
+        <el-table :data="savingsList" style="width: 100%" height="400" stripe border>
             <el-table-column label="ID" width="180">
                 <template slot-scope="scope">
                     <span style="margin-left: 10px">{{ scope.row.account_no }}</span>
@@ -71,6 +71,25 @@ export default {
                nameInput: "",
                dialogVisible : true
             }
+    },
+    created(){
+        this.getAccount()
+    },
+    computed: {
+        savingsList(){            
+            let datalist = this.tableData
+            let filterKey = this.nameInput
+
+            if (filterKey) {
+                if(datalist){
+                    datalist = datalist.filter(function (row) {
+                        return String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1
+                    })
+                }
+            }
+
+            return datalist
+        }
     },
     methods: {
         getAccount(){

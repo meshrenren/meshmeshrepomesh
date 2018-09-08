@@ -28,8 +28,8 @@ use yii\helpers\Html;
                     ],
                     [
                         'label'     => 'Profile',
-                        'url'       => '#', 
-                        'visible'   => \Yii::$app->user->identity->level_id <= 5
+                        'url'       => ['member/view/'.\Yii::$app->user->identity->member->id], 
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view") || $_GET['member_id'] == Yii::$app->user->identity->member->id
                     ],
                     [
                         'label'     => 'Member',
@@ -37,31 +37,72 @@ use yii\helpers\Html;
                             [
                                 'label'     => 'List', 
                                 'url'       => ['member/user/list'], 
-                                'visible'   => true
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view")
                             ],
                             [
                                 'label'     => 'Create', 
                                 'url'       => ['member/user/create'], 
-                                'visible'   => true
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_add")
                             ],
 
                         ],
-                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view")
                     ],
                     [
-                        'label'     => 'Accounts',
-                        'url'       => '#', 
-                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                        'label'     => 'Loan Account',
+                        'items'      => [
+                            [
+                                'label'     => 'Evaluation', 
+                                'url'       => ['loan/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_add")
+                            ],
+                            [
+                                'label'     => 'List', 
+                                'url'       => ['loan/list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
+                            ],
+
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
                     ],
                     [
-                        'label'     => 'Loan Products',
-                        'url'       => '#', 
-                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                        'label'     => 'Savings Account',
+                        'items'      => [
+                            [
+                                'label'     => 'New', 
+                                'url'       => ['savings/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
+                            ],
+                            [
+                                'label'     => 'Deposit', 
+                                'url'       => ['savings/deposit'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_edit")
+                            ],
+                            [
+                                'label'     => 'Wihthdraw', 
+                                'url'       => ['savings/withdraw'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_edit")
+                            ],
+
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_view")
+                    ],
+                    [
+                        'label'     => 'Time Deposit',
+                        'items'      => [
+                            [
+                                'label'     => 'New', 
+                                'url'       => ['savings/create'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_add")
+                            ],
+
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
                     ],
                     [
                         'label'     => 'Reports',
                         'url'       => '#', 
-                        'visible'   => \Yii::$app->user->identity->level_id == 1
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_reports_", "_view")
                     ],
                 ],
             ]

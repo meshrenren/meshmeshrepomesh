@@ -156,7 +156,19 @@ ul.material-pagination{
   .el-date-editor{
     width : 100%;
   }
+
+  .el-form-item__error{
+    position: relative;
+  }
 } 
+
+.el-input.is-disabled{
+
+  input{
+    color: #606266 !important;
+  }
+  
+}
 
 .box-content{
   word-wrap: break-word;

@@ -1,6 +1,6 @@
 <template>
 	<div class = "member-family">
-		<span class = "pull-right" style = "margin-bottom: 10px;"><button class = "btn btn-sm btn-primary" @click = "$refs.addFamilyModal.open(); dialogVisible = true;">Add</button></span>
+		<span class = "pull-right" style = "margin-bottom: 10px;"><button class = "btn btn-sm btn-primary" @click = "$refs.addFamilyModal.open(); dialogVisible = true;" v-if = "canEdit">Add</button></span>
 		<table class = "table table-bordered table-hover dataTable">
 			<thead>
 				<tr>

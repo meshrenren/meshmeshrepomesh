@@ -10,32 +10,79 @@ use app\models\SavingsAccount;
 
 class SavingsController extends \yii\web\Controller
 {
-    public function actionIndex()
-    {
-    	$this->layout = 'main-vue';
 
-    	$transaction = new \app\models\SavingsTransaction;
-    	$savingsTransaction = $transaction->attributes();
-    	
-        return $this->render('index', [ 'savingsTransaction' => $savingsTransaction]);
+
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['index', 'deposit', 'withdraw'],
+                'rules' => [
+                    [
+                        'actions' => ['index'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_savings_account_","_add") ){
+                                    return true;
+                            }
+                        }
+                    ],
+                    [
+                        'actions' => ['deposit', 'withdraw'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_savings_account_","_edit") ){
+                                    return true;
+                            }
+                        }
+                    ],
+                    [
+                        'allow' => false,
+                        'roles' => ['*'],
+                    ],
+                ],
+            ],
+        ];
     }
 
-    public function actionCreate()
+    public function actionIndex()
     {
-    	$this->layout = 'main-vue';
+        
+        $this->layout = 'main-vue';
 
-    	$savings = new \app\models\SavingsAccount;
-    	$savingsAccount = $savings->attributes();
+        $savings = new \app\models\SavingsAccount;
+        $savingsAccount = $savings->attributes();
 
-    	$savingsProduct  = \app\models\SavingsProduct::find()
-    		->where(['is_active' => 1])
-    		->select(['id as value', 'description as label'])
-    		->asArray()->all();
-    	
-        return $this->render('create', [
-        	'savingsProduct'	=> $savingsProduct,
-        	'savingsAccount'	=> $savingsAccount
+        $savingsProduct  = \app\models\SavingsProduct::find()
+            ->where(['is_active' => 1])
+            ->select(['id as value', 'description as label'])
+            ->asArray()->all();
+        
+        return $this->render('index', [
+            'savingsProduct'    => $savingsProduct,
+            'savingsAccount'    => $savingsAccount
         ]);
+    }
+
+    public function actionDeposit()
+    {
+        $this->layout = 'main-vue';
+
+        $transaction = new \app\models\SavingsTransaction;
+        $savingsTransaction = $transaction->attributes();
+        
+        return $this->render('deposit', [ 'savingsTransaction' => $savingsTransaction]);
+    }
+
+    public function actionWithdraw()
+    {
+        $this->layout = 'main-vue';
+
+        $transaction = new \app\models\SavingsTransaction;
+        $savingsTransaction = $transaction->attributes();
+        
+        return $this->render('withdraw', [ 'savingsTransaction' => $savingsTransaction]);
     }
 
     public function actionCreateAccount()
@@ -130,7 +177,12 @@ class SavingsController extends \yii\web\Controller
         	$model->attributes = $transaction;
 
         	$getSavingsAccount = \app\models\SavingsAccount::findOne($transaction['fk_savings_id']);
-        	$running_balance = $getSavingsAccount->balance + $transaction['amount'];
+            if($transaction['transaction_type'] == 'WITHDRWL'){
+                $running_balance = $getSavingsAccount->balance - $transaction['amount'];
+            }
+            else{
+                $running_balance = $getSavingsAccount->balance - $transaction['amount'];
+            }
 
         	$model->transaction_date = date('Y-m-d H:i:s');
 	        $model->transacted_by = \Yii::$app->user->identity->id;

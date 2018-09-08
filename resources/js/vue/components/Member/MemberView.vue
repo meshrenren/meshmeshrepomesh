@@ -5,7 +5,9 @@
 				<div class = "box box-primary" id = "content-left">
 					<div class = "box-body box-profile">
 						<div class = "image-container">
-							<div class="circle-avatar" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
+							<div v-if = "canEdit" class="circle-avatar" @click = "proPicVisible = true" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
+
+							<div v-else class="circle-avatar" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
 						</div>
 						<div class = "content-name">
 							
@@ -159,25 +161,55 @@
 					</div>
 				</div>
 			</div>
+			<div class = "col-md-12">
+				<div class = "nav-tabs-custom" id = "content-right">
+					<ul class = "nav nav-tabs">
+						<li class="active"><a href="#savingsaccount" data-toggle="tab">Savings Account</a></li>
+						<li><a href="#shareaccount" data-toggle="tab">Savings Account</a></li>
+						<li><a href="#tdaccount" data-toggle="tab">Time Deposit Acocunts</a></li>
+						<li><a href="#loanaccount" data-toggle="tab">Loan Account</a></li>
+					</ul>
+					<div class = "tab-content">
+						<div class = "active tab-pane" id = "savingsaccount">
+							<member-savings 
+								:member="member"
+								:can-edit = "canEdit"
+							></member-savings>
+						</div>
+						<div class = "tab-pane" id = "shareaccount">
+							<member-share 
+								:member="member"
+								:can-edit = "canEdit"
+							></member-share>
+						</div>
+						<div class = "tab-pane" id = "tdaccount">
+							<member-timedeposit 
+								:member="member"
+								:can-edit = "canEdit"
+							></member-timedeposit>
+						</div>
+						<div class = "tab-pane" id = "loanaccount">
+							<member-loan 
+								:member="member"
+								:can-edit = "canEdit"
+							></member-loan>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
+		<el-dialog ref = "showUploadDialog" title="Update Profile Picture" :visible.sync="proPicVisible" width="30%">
+		  	<el-upload class="avatar-uploader" action = "" ref = "image_upload"  :multiple = "false" :on-change="handleAvatarSuccess" :auto-upload="false" list-type="picture"  :show-file-list="false" name = "proImageUpdate">
+		  		<img v-if="uploadImageimageUrl" :src="uploadImageimageUrl" class="avatar">
+		  		<i v-else class="el-icon-plus avatar-uploader-icon"></i>
+			</el-upload>
+		  	<span slot="footer" class="dialog-footer">
+		    <el-button @click="proPicVisible = false"> Cancel </el-button>
+		    <el-button type="primary" @click="uploadProfileImage" v-if = "uploadImageimageUrl"> Upload </el-button>
+		  </span>
+		</el-dialog>
 	</div>
 </template>
-
-<style lang="scss">
-  	@import '../../assets/site.scss';
-  	@import '../../assets/member.scss';
-  	@import '~noty/src/noty.scss';
-
-.list-group-item{
-	.form-info{
-	    display: inline-block;
-	    float: right;
-	}
-	span{
-		float: right;
-	}
-}
-</style>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 <style src="vue-tabs-component/docs/resources/tabs-component.css"></style>
@@ -196,6 +228,11 @@
 	import MemberAddress from './ViewTab/MemberAddress'
 	import MemberFamily from './ViewTab/MemberFamily'
 
+	import MemberSavings from './ViewTab/MemberSavings'
+	import MemberShare from './ViewTab/MemberShare'
+	import MemberTimedeposit from './ViewTab/MemberTimedeposit'
+	import MemberLoan from './ViewTab/MemberLoan'
+
 export default {
 	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberFamily', 'dataMemberAddress', 'baseUrl', 'canEdit'],
 	data: function () {
@@ -207,27 +244,34 @@ export default {
 					{ value : "Separated", label : "Separated", column_name : 'civil_status'}]
 
 		return {
-			member 			: this.dataMember,
-			stationList 	: this.dataStationList,
-			divisionList 	: this.dataDivisionList,
-			typeList 		: this.dataTypeList,
-			memberFamily	: this.dataMemberFamily,
-			memberAddress	: this.dataMemberAddress,
-			genderList		: gender,
-			statusList		: status,
-  			stationVal 		: {value : this.dataMember.station_id, label : this.dataMember.station.name, column_name : 'station_id'},
-  			divisionVal 	: {value : this.dataMember.division_id, label : this.dataMember.division.name, column_name : 'division_id'},
-  			typeVal 		: {value : this.dataMember.member_type_id, label : this.dataMember.memberType.description, column_name : 'member_type_id'},
-  			genderVal 		: {value : this.dataMember.gender, label : this.dataMember.gender, column_name : 'gender'},
-  			statusVal 		: {value : this.dataMember.civil_status, label : this.dataMember.civil_status, column_name : 'civil_status'},
-			svg_update		: "<i class='fa fa-fw fa-pencil'></i>",
-			svg_delete		: "<i class='fa fa-fw fa-times'></i>",
+			member 				: this.dataMember,
+			stationList 		: this.dataStationList,
+			divisionList 		: this.dataDivisionList,
+			typeList 			: this.dataTypeList,
+			memberFamily		: this.dataMemberFamily,
+			memberAddress		: this.dataMemberAddress,
+			genderList			: gender,
+			statusList			: status,
+  			stationVal 			: {value : this.dataMember.station_id, label : this.dataMember.station.name, column_name : 'station_id'},
+  			divisionVal 		: {value : this.dataMember.division_id, label : this.dataMember.division.name, column_name : 'division_id'},
+  			typeVal 			: {value : this.dataMember.member_type_id, label : this.dataMember.memberType.description, column_name : 'member_type_id'},
+  			genderVal 			: {value : this.dataMember.gender, label : this.dataMember.gender, column_name : 'gender'},
+  			statusVal 			: {value : this.dataMember.civil_status, label : this.dataMember.civil_status, column_name : 'civil_status'},
+			svg_update			: "<i class='fa fa-fw fa-pencil'></i>",
+			svg_delete			: "<i class='fa fa-fw fa-times'></i>",
+			uploadImageimageUrl	: '',
+			proPicVisible 		: false,
+            maxFileUpload		: 2097152,
 		}
 	},
 	components: {
         FormInfo,
         MemberAddress,
-        MemberFamily
+        MemberFamily,
+        MemberSavings,
+        MemberShare,
+        MemberTimedeposit,
+        MemberLoan
     },
 	mounted: function ()
 	{  		
@@ -243,6 +287,22 @@ export default {
     	testupdate(data){
     		console.log(data)
     	},
+  		handleAvatarSuccess(file, filelist){
+  			let arr = new Array
+  			arr[0] = file
+  			this.$refs.image_upload.uploadFiles = arr
+  			console.log("filelist", filelist)
+  			this.uploadImageimageUrl = URL.createObjectURL(file.raw);
+  		},  
+        fileHandleExceed(files, fileList) {
+            new Noty({
+                theme: 'relax',
+                type: 'error',
+                layout: 'topRight',
+                text: 'File limit is '+ this.fileLimit +', you selected ' + files.length +' files this time.',
+                timeout: 3000
+            }).show();
+        },
         formatDate(date, format){
           	if(date){
             	return moment(date).format(format)
@@ -548,7 +608,77 @@ export default {
     			if(error.response.status == 403)
     				location.reload()
   			})
-    	}
+    	},    	
+  		uploadProfileImage(){
+
+            let imageFile = this.$refs.image_upload.uploadFiles
+            if(imageFile){
+            	let totalSize = imageFile[0].size
+            	console.log("totalSize", totalSize)
+            	if(totalSize > this.maxFileUpload){
+                    let totalMB = (totalSize/1024)/1024;
+                    totalMB = totalMB.toFixed(1);
+                    let maxSize = (this.maxFileUpload/1024)/1024;
+                    new Noty({
+                        theme: 'relax',
+                        type: 'error',
+                        layout: 'topRight',
+                        text: 'File is too big ('+totalMB+'mb). Max file size: ' + maxSize + 'mb',
+                        timeout: 1500
+                    }).show();
+                }
+                else{
+	            	console.log("imageFile", imageFile)
+		  			let data = new FormData()
+					data.set('member_id', this.member.id)
+					data.append('imagefile', imageFile[0].raw)
+
+		  			axios.post(this.baseUrl+'/member/profile-image-update', data, { headers: { 'Content-Type': 'multipart/form-data' }} ).then((result) => {
+		            	let res = result.data
+		            	console.log("Okay", res)
+
+		            	location.reload()    
+
+		            }).catch(function (error) {
+		    			new Noty({
+				            theme: 'relax',
+				            type: 'error',
+				            layout: 'topRight',
+				            text: 'An error occured. Please try again or contact administrator',
+				            timeout: 2500
+				        }).show()
+
+		    			if(error.response.status == 403)
+		    				location.reload()
+		  			})
+                	
+                }
+
+            }            
+
+  		},
     }
 }
 </script>
+<style lang="scss">
+  	@import '../../assets/site.scss';
+  	@import '../../assets/member.scss';
+  	@import '~noty/src/noty.scss';
+
+.member-view{
+	.el-upload{
+		img{
+			width: 100%;
+		}
+	}
+}
+.list-group-item{
+	.form-info{
+	    display: inline-block;
+	    float: right;
+	}
+	span{
+		float: right;
+	}
+}
+</style>

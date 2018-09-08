@@ -511,4 +511,26 @@ class MemberController extends \yii\web\Controller
         }
     }
 
+
+    public function actionProfileImageUpdate(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (isset($_POST)) {
+            $model = \app\models\Member::findOne($_POST['member_id']); 
+            $image = \yii\web\UploadedFile::getInstanceByName('imagefile');
+            
+            if (isset($image)){
+                $model->image_path = 'http://dilgempc.local/images/members/' . $model->id . '.jpg';
+                $image->saveAs('images/members/'. $model->id . '.jpg');
+                $imagepath = $model->image_path;
+                $model->save(false);
+            }            
+
+            return[
+                'success'   => true,
+            ];
+
+        }
+    }
+
 }
