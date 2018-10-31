@@ -29,9 +29,9 @@ class TimeDepositProduct extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['description', 'min_deposit', 'max_deposit', 'serial'], 'required'],
+            [['description', 'min_deposit', 'max_deposit', 'trans_serial'], 'required'],
             [['min_deposit', 'max_deposit'], 'number'],
-            [['serial'], 'integer'],
+            [['trans_serial'], 'integer'],
             [['description'], 'string', 'max' => 35],
         ];
     }
@@ -46,7 +46,7 @@ class TimeDepositProduct extends \yii\db\ActiveRecord
             'description' => 'Description',
             'min_deposit' => 'Min Deposit',
             'max_deposit' => 'Max Deposit',
-            'serial' => 'Serial',
+            'trans_serial' => 'Serial',
         ];
     }
 

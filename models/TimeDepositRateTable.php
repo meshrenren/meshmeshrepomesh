@@ -29,8 +29,8 @@ class TimeDepositRateTable extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fk_td_product', 'day_from', 'day_to', 'interest_rate'], 'required'],
-            [['fk_td_product', 'day_from', 'day_to'], 'integer'],
+            [['fk_td_product', 'days', 'interest_rate'], 'required'],
+            [['fk_td_product', 'days'], 'integer'],
             [['interest_rate'], 'number'],
         ];
     }
@@ -43,8 +43,7 @@ class TimeDepositRateTable extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'fk_td_product' => 'Fk Td Product',
-            'day_from' => 'Day From',
-            'day_to' => 'Day To',
+            'days' => 'Days',
             'interest_rate' => 'Interest Rate',
         ];
     }

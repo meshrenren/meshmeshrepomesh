@@ -29,6 +29,8 @@ Vue.component('savings-account-create', SavingsAccountCreate)
 //Time Deposit
 import TimeDepositCreate from './components/TimeDeposit/TimeDepositCreate.vue'
 Vue.component('time-deposit-create', TimeDepositCreate)
+import TimeDepositList from './components/TimeDeposit/TimeDepositList.vue'
+Vue.component('time-deposit-list', TimeDepositList)
 
 //Loan
 import LoanEvaluation from './components/Loan/LoanEvaluation.vue'

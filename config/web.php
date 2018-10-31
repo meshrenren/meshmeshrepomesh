@@ -57,8 +57,10 @@ $config = [
             'showScriptName' => false,
             'enableStrictParsing' => false,
             'rules' => require 'urls.php',
-        ],
-        
+        ],        
+        'view' => [
+             'class' => 'app\components\View',
+         ],
     ],
 	'modules' => [
        'gridview' =>  [

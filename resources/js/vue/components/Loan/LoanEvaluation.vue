@@ -161,7 +161,6 @@
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
-    import swal from 'sweetalert2/dist/sweetalert2.all.min.js'
     import cloneDeep from 'lodash/cloneDeep'
 
 export default {
@@ -226,7 +225,8 @@ export default {
     	populateField(data){
     		this.memberDetails = data
     		//this.getOtherAccounts(data.id)
-    		//this.$refs.newLoan.focus()
+    		/*console.log(this.$refs.newLoan)
+    		this.$refs.newLoan.focus()*/
     	},
     	selectLoanProduct(val){
     		console.log("Here", val)
@@ -336,7 +336,43 @@ export default {
 
 				    		//Quincena
 				    		let principal_amort = ( amount / duration ) / 2
+
+				    		principal_amort = principal_amort.toFixed(2)
 				    		console.log("principal_amort", principal_amort)
+
+				    		let prepaid_amort = 0;
+
+				    		if(getProduct.id == 1){
+				    			let pre_amort = 0
+				    			let preinterest = this.p_interest
+				    			let preMonth = 0
+				    			let preRemainingMonth = 0
+
+				    			if(Number(duration) == 12){
+				    				preMonth = 5
+				    				preRemainingMonth = 7
+				    			}
+
+				    			else if(Number(duration) == 18){
+				    				preMonth = 7.5
+				    				preRemainingMonth = 11.5
+				    			}
+
+				    			else if(Number(duration) == 24){
+				    				preMonth = 10
+				    				preRemainingMonth = 14
+				    			}
+
+				    			else if(Number(duration) == 36){
+				    				preMonth = 15
+				    				preRemainingMonth = 21
+				    			}
+
+				    			pre_amort = (amount * this.$nf(preinterest)) / preMonth
+			    				pre_amort = pre_amort * preRemainingMonth
+			    				pre_amort = pre_amort / (duration * 2)
+			    				prepaid_amort = pre_amort.toFixed2
+				    		}
 
 
 			    			this.evaluationForm.prepaid_interest = prepaid_interest
@@ -345,6 +381,7 @@ export default {
 			    			this.evaluationForm.redemption_insurance_amount = redemption_insurance
 
 			    			this.evaluationForm.principal_amortization_quincena = principal_amort
+			    			this.evaluationForm.prepaid_amortization_quincena = prepaid_amort
 			    		}
 
 		    		}
@@ -355,9 +392,19 @@ export default {
     		})
     	},
     	newLoan(){
-
-    		this.disabledBox = false
-    		this.$refs.product_loan_id.focus()  		
+    		if(this.memberDetails.id != null){
+    			this.disabledBox = false
+    			this.$refs.product_loan_id.focus() 
+    		} 
+    		else{
+    			new Noty({
+	                theme: 'relax',
+	                type: 'error' ,
+	                layout: 'topRight',
+	                text: 'Please select member first',
+	                timeout: 2500
+	            }).show();
+    		}	
     	}
 	}
 }

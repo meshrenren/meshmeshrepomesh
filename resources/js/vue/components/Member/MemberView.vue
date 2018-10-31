@@ -41,6 +41,7 @@
 						<li class="active"><a href="#general" data-toggle="tab">General Info</a></li>
 						<li><a href="#address" data-toggle="tab">Address</a></li>
 						<li><a href="#family" data-toggle="tab">Family</a></li>
+						<li><a href="#accounts" data-toggle="tab">Accounts</a></li>
 					</ul>
 					<div class = "tab-content">
 						<div class = "active tab-pane" id = "general">
@@ -158,41 +159,45 @@
 								:can-edit = "canEdit"
 							></member-family>
 						</div>
-					</div>
-				</div>
-			</div>
-			<div class = "col-md-12">
-				<div class = "nav-tabs-custom" id = "content-right">
-					<ul class = "nav nav-tabs">
-						<li class="active"><a href="#savingsaccount" data-toggle="tab">Savings Account</a></li>
-						<li><a href="#shareaccount" data-toggle="tab">Savings Account</a></li>
-						<li><a href="#tdaccount" data-toggle="tab">Time Deposit Acocunts</a></li>
-						<li><a href="#loanaccount" data-toggle="tab">Loan Account</a></li>
-					</ul>
-					<div class = "tab-content">
-						<div class = "active tab-pane" id = "savingsaccount">
-							<member-savings 
-								:member="member"
-								:can-edit = "canEdit"
-							></member-savings>
-						</div>
-						<div class = "tab-pane" id = "shareaccount">
-							<member-share 
-								:member="member"
-								:can-edit = "canEdit"
-							></member-share>
-						</div>
-						<div class = "tab-pane" id = "tdaccount">
-							<member-timedeposit 
-								:member="member"
-								:can-edit = "canEdit"
-							></member-timedeposit>
-						</div>
-						<div class = "tab-pane" id = "loanaccount">
-							<member-loan 
-								:member="member"
-								:can-edit = "canEdit"
-							></member-loan>
+						<div class = "tab-pane" id = "accounts">
+							<div class = "nav-tabs-custom" id = "content-right">
+								<ul class = "nav nav-tabs">
+									<li class="active"><a href="#savingsaccount" data-toggle="tab">Savings Account</a></li>
+									<li><a href="#shareaccount" data-toggle="tab">Share Account</a></li>
+									<li><a href="#loanaccount" data-toggle="tab">Loan Account</a></li>
+									<li><a href="#tdaccount" data-toggle="tab">Time Deposit Accounts</a></li>
+								</ul>
+								<div class = "tab-content">
+									<div class = "active tab-pane" id = "savingsaccount">
+										<member-savings 
+											:member="member"
+											:can-edit = "canEdit"
+											:data-accounts = "savingsAccounts"
+										></member-savings>
+									</div>
+									<div class = "tab-pane" id = "shareaccount">
+										<member-share 
+											:member="member"
+											:can-edit = "canEdit"
+											:data-accounts = "shareAccounts"
+										></member-share>
+									</div>
+									<div class = "tab-pane" id = "loanaccount">
+										<member-loan 
+											:member="member"
+											:can-edit = "canEdit"
+											:data-accounts = "loanAccounts"
+										></member-loan>
+									</div>
+									<div class = "tab-pane" id = "tdaccount">
+										<member-timedeposit 
+											:member="member"
+											:can-edit = "canEdit"
+											:data-accounts = "timedepositAccounts"
+										></member-timedeposit>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -221,7 +226,6 @@
 	import axios from 'axios'
     import Noty from 'noty'
     import DataTable from 'vue-materialize-datatable'
-    import swal from 'sweetalert2/dist/sweetalert2.all.min.js'
 
 
     import FormInfo from './FormInfo'
@@ -262,6 +266,10 @@ export default {
 			uploadImageimageUrl	: '',
 			proPicVisible 		: false,
             maxFileUpload		: 2097152,
+            savingsAccounts 	: null,
+            shareAccounts		: null,
+            timedepositAccounts	: null,
+            loanAccounts		: null
 		}
 	},
 	components: {
@@ -272,6 +280,9 @@ export default {
         MemberShare,
         MemberTimedeposit,
         MemberLoan
+    },
+    created(){
+    	this.getMemberAccounts()
     },
 	mounted: function ()
 	{  		
@@ -286,6 +297,33 @@ export default {
     methods: {  	
     	testupdate(data){
     		console.log(data)
+    	},
+    	getMemberAccounts(){
+
+    		let data = {
+    			member_id : this.member.id
+    		}
+    		axios.post(this.$baseUrl+'/member/get-accounts', data).then((result) => {
+            	let res = result.data
+            	console.log('res', res)
+            	this.savingsAccounts = res.savingsAccounts
+        		this.shareAccounts = res.shareAccounts
+        		this.timedepositAccounts = res.timedepositAccounts
+        		this.loanAccounts = res.loanAccounts
+	            
+            }).catch(function (error) {
+    			new Noty({
+		            theme: 'relax',
+		            type: 'error',
+		            layout: 'topRight',
+		            text: 'An error occured. Please try again or contact administrator',
+		            timeout: 2500
+		        }).show()
+
+    			if(error.response.status == 403)
+    				location.reload()
+  			})
+
     	},
   		handleAvatarSuccess(file, filelist){
   			let arr = new Array
@@ -383,7 +421,7 @@ export default {
     		data.set('family_id', JSON.stringify(family_id))
     		data.set('label', detail)
     		data.set('value', value)
-    		axios.post(this.baseUrl+'/member/update-family-member?da', data).then((result) => {
+    		axios.post(this.$baseUrl+'/member/update-family-member?da', data).then((result) => {
             	let res = result.data
             	let type = ""
             	let message = ""

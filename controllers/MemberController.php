@@ -174,6 +174,35 @@ class MemberController extends \yii\web\Controller
 
     }
 
+    public function actionGetAccounts(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $member_id = $post['member_id'];
+            $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product', 'member'])->where(['member_id' => $member_id])->asArray()->all();
+
+            $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product', 'member'])->where(['fk_memid' => $member_id])->asArray()->all();
+
+            $tdAcc = new \app\models\TimeDepositAccount;
+            $getTimedeposits = $tdAcc->getAccountListByMemberID($member_id);
+
+            $loanAcc = new \app\models\LoanAccount;
+            $getLoan = $loanAcc->getAccountListByMemberID($member_id);
+        
+            return [
+                'savingsAccounts'        => $getSavings,
+                'shareAccounts'          => $getShare,
+                'timedepositAccounts'    => $getTimedeposits,
+                'loanAccounts'           => $getLoan
+            ];
+            
+        }
+
+    }
+
     public function actionSaveMember(){
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;

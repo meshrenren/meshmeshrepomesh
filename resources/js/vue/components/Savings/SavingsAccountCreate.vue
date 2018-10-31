@@ -54,7 +54,6 @@
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
-    import swal from 'sweetalert2/dist/sweetalert2.all.min.js'
     import SearchMember from '../General/SearchMember.vue'    
     import cloneDeep from 'lodash/cloneDeep'
 
@@ -73,6 +72,7 @@ export default {
       	}
   	},
   	created(){
+  		this.showSearchModal = true
   		this.ruleAccount = {
   			saving_product_id : [{ required: true, message: 'Product cannot be blank.', trigger: 'change' },]
   		}
@@ -96,74 +96,74 @@ export default {
     		let vm = this	
     		this.$refs.savingAccountDetails.validate((valid) => {
 	          	if (valid) {
+	          		vm.$swal({
+		              	title: 'Create Savings Account?',
+		              	text: "Are you sure you want to save this account? This action cannot be undone.",
+		              	type: 'warning',
+		              	showCancelButton: true,
+		              	cancelButtonColor: '#d33',
+		              	confirmButtonText: 'Proceed',
+		              	focusConfirm: false,
+		              	focusCancel: true,
+		              	cancelButtonText: 'Cancel',
+		              	reverseButtons: true,
+		              	width: '400px',
+		            }).then(function(result) {
+		            	if (result.value) {
 
-	          		swal({
-	                  title: 'Create Savings Account?',
-	                  text: "Are you sure you want to save this account? This action cannot be undone.",
-	                  imageUrl: vm.baseUrl+'/images/attachment_icon_white.png',
-	                  showCancelButton: true,
-	                  confirmButtonText: 'Proceed',
-	                  confirmButtonColor: '#4087C5',
-	                  focusConfirm: false,
-	                  focusCancel: false,
-	                  cancelButtonText: 'Cancel',
-	                  reverseButtons: true,
-	                  background: '#ff3366',
-	                  width: '400px',
-	                  padding: 0
-		            }).then(function() {
-		            	let data = new FormData()
+			            	let data = new FormData()
 
-			    		data.set('account', JSON.stringify(vm.savingAccountDetails))
+				    		data.set('account', JSON.stringify(vm.savingAccountDetails))
 
-			            axios.post(vm.baseUrl+'/savings/create-account', data).then((result) => {
-			            	let res = result.data
-			            	let type = ""
-			            	let message = ""
-			            	if(res.success == true){
-			            		type = "success"
-			            		message = "New savings account successfully created."
-			            	}
-			            	else{
-			            		if(res.status == 'has-account'){
-			            			let getProduct = vm.dataSavingsProduct.findIndex(prod => prod.value == vm.savingAccountDetails.saving_product_id)
-			            			console.log(getProduct)
-				            		message = vm.memberDetails.fullname + " already has savings account with "+ vm.dataSavingsProduct[getProduct].label + " product."
+				            axios.post(vm.baseUrl+'/savings/create-account', data).then((result) => {
+				            	let res = result.data
+				            	let type = ""
+				            	let message = ""
+				            	if(res.success == true){
+				            		type = "success"
+				            		message = "New savings account successfully created."
+				            		location.reload()
+				            	}
+				            	else{
+				            		if(res.status == 'has-account'){
+				            			let getProduct = vm.dataSavingsProduct.findIndex(prod => prod.value == vm.savingAccountDetails.saving_product_id)
+				            			console.log(getProduct)
+					            		message = vm.memberDetails.fullname + " already has savings account with "+ vm.dataSavingsProduct[getProduct].label + " product."
 
-			            		}
-			            		else{
-				            		message = "Savings account not successfully created. Please try again or contact administrator."
-			            		}
-			            		type = "error"
-			            	}
+				            		}
+				            		else{
+					            		message = "Savings account not successfully created. Please try again or contact administrator."
+					            		location.reload()
+				            		}
+				            		type = "error"
+				            	}
 
-			            	new Noty({
-					            theme: 'relax',
-					            type: type,
-					            layout: 'topRight',
-					            text: message,
-					            timeout: 2500
-					        }).show()
+				            	new Noty({
+						            theme: 'relax',
+						            type: type,
+						            layout: 'topRight',
+						            text: message,
+						            timeout: 2500
+						        }).show()
 
-					        //vm.cancelForm()
-					        //location.reload()
-			            }).catch(error =>{
+						        //vm.cancelForm()
+						        //location.reload()
+				            }).catch(error =>{
 
-			            	console.log(error)
-			          		new Noty({
-					            theme: 'relax',
-					            type: "error",
-					            layout: 'topRight',
-					            text: 'An error occured. Please try again or contact administrator',
-					            timeout: 3000
-					        }).show()
+				            	console.log(error)
+				          		new Noty({
+						            theme: 'relax',
+						            type: "error",
+						            layout: 'topRight',
+						            text: 'An error occured. Please try again or contact administrator',
+						            timeout: 3000
+						        }).show()
 
-					        if(error.response && error.response.status == 403)
-			    				location.reload()
-			            })
-			        }, function(dismiss) {
-
-		            })
+						        if(error.response && error.response.status == 403)
+				    				location.reload()
+				            })
+				        }
+			        })
 	          	} else {
 	            	return false;
 	          	}
@@ -173,6 +173,9 @@ export default {
 }
 </script>
 <style lang="scss">
+	@import '../../assets/site.scss';
+	@import '~noty/src/noty.scss';
+
 	.savings-account-create{
 
 		.el-select{

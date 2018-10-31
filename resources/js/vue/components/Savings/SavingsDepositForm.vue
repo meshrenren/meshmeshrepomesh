@@ -76,6 +76,7 @@
 									</el-input>
 								</el-form-item>	
 								<el-button type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Save Deposit</el-button>
+								<el-button type = "primary" @click = "printTransaction" :disabled = "accountDetails.account_no == null">Print Deposit</el-button>
             				</el-form>
             			</div>
             		</el-col>
@@ -92,11 +93,10 @@
   	@import '../../assets/site.scss';
   	@import '~noty/src/noty.scss';
 </style>
-<script>
+<script> 
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
-    import swal from 'sweetalert2/dist/sweetalert2.all.min.js'
     import SearchSavingsAccount from '../General/SearchSavingsAccount.vue' 
 
 export default {
@@ -168,63 +168,93 @@ export default {
     		let vm = this	
     		this.$refs.savingTransactionForm.validate((valid) => {
 	          	if (valid) {
-	          		swal({
+	          		vm.$swal({
 	                  title: 'Save Savings Transaction?',
 	                  text: "Are you sure you want to save this transaction? This action cannot be undone.",
-	                  imageUrl: vm.baseUrl+'/images/attachment_icon_white.png',
+	                  type: 'warning',
 	                  showCancelButton: true,
+	                  cancelButtonColor: '#d33',
 	                  confirmButtonText: 'Proceed',
-	                  confirmButtonColor: '#4087C5',
 	                  focusConfirm: false,
-	                  focusCancel: false,
+	                  focusCancel: true,
 	                  cancelButtonText: 'Cancel',
 	                  reverseButtons: true,
-	                  background: '#ff3366',
-	                  width: '400px',
-	                  padding: 0
-		            }).then(function() {
+		            }).then(function(result) {
+		            	if (result.value) {
+		            		let data = new FormData()
+		            		if(vm.savingTransactionForm.transaction_type == "Cash")
+		            			vm.savingTransactionForm.transaction_type = "CASHDEP"
+		            		if(vm.savingTransactionForm.transaction_type == "Cheque")
+		            			vm.savingTransactionForm.transaction_type = "CHEQUEDEP"
 
-	            		let data = new FormData()
-	            		if(vm.savingTransactionForm.transaction_type == "Cash")
-	            			vm.savingTransactionForm.transaction_type = "CASHDEP"
-	            		if(vm.savingTransactionForm.transaction_type == "Cheque")
-	            			vm.savingTransactionForm.transaction_type = "CHEQUEDEP"
+			    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
 
-		    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
+			                axios.post(vm.$baseUrl+'/savings/save-transaction', data).then((result) => {
+				                let res = result.data
+				                let type = ""
+				                let message = ""
+				                console.log(res)
+				                if(res.success > 0 ){
+				                	id = res.data
+				                    console.log("success")
+				                    vm.$swal({
+					                  title: 'Print Form?',
+					                  type: 'warning',
+					                  showCancelButton: true,
+					                  cancelButtonColor: '#d33',
+					                  confirmButtonText: 'Print',
+					                  focusConfirm: false,
+					                  focusCancel: true,
+					                  cancelButtonText: 'Cancel',
+					                  reverseButtons: true,
+						            }).then(function(result) {
+						            	if (result.value) {
+						            		window.open(vm.$baseUrl+'/savings/pdf-print?tid=', '_blank');
+						            	}
+						            })
+				                }
+				                else{
+				                    console.log("no result")
+				                } 
+				                location.reload()
+				                  
+				            }).catch(function (error) {
+				            
+				                console.log(error);
 
-		                axios.post(vm.baseUrl+'/savings/save-transaction', data).then((result) => {
-			                let res = result.data
-			                let type = ""
-			                let message = ""
-			                console.log(res)
-			                if(res.length > 0 ){
-			                    console.log("success")
-			                }
-			                else{
-			                    console.log("no result")
-			                } 
-			                location.reload()
-			                  
-			            }).catch(function (error) {
-			            
-			                console.log(error);
+				                if(error.response.status == 403)
+				                    location.reload()
+				            })
+				        }
+				        else{
 
-			                if(error.response.status == 403)
-			                    location.reload()
-			            })
-		            }, function(dismiss) {
-
+				        }
 		            }) 
 	          	}
 	          	else {
 	            	return false;
 	          	}
 	        })
+    	},
+    	printTransaction(){
+    		axios.post(this.$baseUrl+'/savings/pdf', null).then((result) => {
+                console.log(result)
+            }).catch(function (error) {
+            
+                console.log(error);
+
+                if(error.response.status == 403)
+                    location.reload()
+            })
+
     	}
     }
 }
 </script>
 <style lang="scss">
+	@import '../../assets/site.scss';
+	@import '~noty/src/noty.scss';
+	
 	.savings-deposit-form{
 
 		.box{

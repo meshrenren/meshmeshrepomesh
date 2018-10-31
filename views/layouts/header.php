@@ -92,8 +92,18 @@ use yii\helpers\Html;
                         'items'      => [
                             [
                                 'label'     => 'New', 
-                                'url'       => ['savings/create'], 
+                                'url'       => ['time-deposit/create'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_add")
+                            ],
+                            [
+                                'label'     => 'All List', 
+                                'url'       => ['time-deposit/list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
+                            ],
+                            [
+                                'label'     => 'Matured List', 
+                                'url'       => ['time-deposit/matured-accounts'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
                             ],
 
                         ],
