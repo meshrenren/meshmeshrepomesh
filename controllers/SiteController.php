@@ -63,11 +63,26 @@ class SiteController extends Controller
         $member = new \app\models\Member();
         $countAll = $member->getMemberCount(0, 0, 'All');
         $countLastYear = $member->getMemberCount("2017-01-01", "2017-12-31");
+        
+        $connection = \Yii::$app->db;
+        $command = $connection->createCommand("select * from calendar c where c.date = CURDATE() and is_current=1 limit 1");
+        $result = $command->queryOne();
+        
+        
         return $this->render('index',[
             'countAll'      => $countAll,
-            'countLastYear' => $countLastYear
+            'countLastYear' => $countLastYear,
+        	'calendarDate' => $result
         ]);
+        
+        
+        
     }
+    
+    
+    
+   
+    
 
     /**
      * Login action.
