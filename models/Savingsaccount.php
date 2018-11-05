@@ -94,84 +94,40 @@ class SavingsAccount extends \yii\db\ActiveRecord
     	$command = $connection->createCommand($qry);
     	
     	$result = $command->queryAll();
-    	
+    	$currentDate = date('Y-m-d', strtotime($branch->currentdate));
     	
     	
     	
     	foreach($result as $rows)
     	{
-    		
-    		$lastMonthEnd = date('Y-m-d', strtotime($branch->last_monthend));
-    		$currentDate = date('Y-m-d', strtotime($branch->currentdate));
-    		$monthEnd = date("Y-m-t", strtotime($branch->currentdate));
     		$interest = 0;
-    		$pointerDate = date('Y-m-d', strtotime($lastMonthEnd. ' +1 day'));
-    		$averageBalance = 0;
-    		$totalBalance = 0;
+    		$interest = ($rows["balance"] / 30) * 0.05;
+    		$totalBalance = $rows["balance"] + $interest;
     		
     		
-    		while ($pointerDate<=$monthEnd) {
-    			//get the average balance of member
-    			$qry2 = "select ifnull((select ifnull(st.running_balance, 0) as running_balance from savings_transaction st where st.fk_savings_id='".$rows["account_no"]."' and st.transaction_date like '".$pointerDate."%' order by id desc limit 1),0)running_balance";
-    			$command = $connection->createCommand($qry2);
-    			
-    			$result3 = $command->queryOne();
-    			
-    			//var_dump($result3);
-    			
-    			if($result3['running_balance']==0)
-    				$averageBalance = $averageBalance + $averageBalance;
-    			else
-    				$averageBalance = $averageBalance + $result3['running_balance'];
     		
-    		
-    			
-    			$pointerDate = date('Y-m-d', strtotime($pointerDate. ' +1 day')); 
-    		}
-    		
-    		
-    		if($averageBalance>0)
+    		if($interest>0)
     		{
-    			$interest = ($averageBalance / 30) * 0.05;
-    			$totalBalance = $rows["balance"] + $interest;
+    			$mdlAccount = SavingsAccount::findOne(['account_no'=>$rows["account_no"]]);
+    			
+    			$mdlAccount->balance = $totalBalance;
+    			
+    			$mdlAccount->update();
+    			
+    			
+    			$mdlTrans = new SavingsTransaction();
+    			
+    			$mdlTrans->fk_savings_id = $rows["account_no"];
+    			$mdlTrans->amount = $interest;
+    			$mdlTrans->transaction_type = "INTEREST";
+    			$mdlTrans->transacted_by = 1;
+    			$mdlTrans->transaction_date = $currentDate;
+    			$mdlTrans->running_balance = $totalBalance;
+    			$mdlTrans->remarks = "IntPost.";
+    			
+    			
+    			$mdlTrans->save();
     		}
-    		
-    		else if($averageBalance==0)
-    		{
-    			$interest = ($result3['balance'] / 30) * 0.05;
-    			$totalBalance = $result3['balance'] + $interest;
-    		}
-    		
-    		
-    		
-    		
-    	if($interest>0)
-    	{
-    		$mdlAccount = SavingsAccount::findOne(['account_no'=>$rows["account_no"]]);
-    		
-    		$mdlAccount->balance = $totalBalance;
-    		
-    		$mdlAccount->update();
-    		
-    		
-    		$mdlTrans = new SavingsTransaction();
-    		
-    		$mdlTrans->fk_savings_id = $rows["account_no"];
-    		$mdlTrans->amount = $interest;
-    		$mdlTrans->transaction_type = "INTEREST";
-    		$mdlTrans->transacted_by = 1;
-    		$mdlTrans->transaction_date = $currentDate;
-    		$mdlTrans->running_balance = $totalBalance;
-    		$mdlTrans->remarks = "IntPost.";
-    		
-    		
-    		$mdlTrans->save();
-    	}
-    		
-    		
-    		
-    		
-    	
     		
     		
     		

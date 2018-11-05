@@ -11,14 +11,38 @@ $this->title = 'DILG XI - EMPC';
 
     <div class="box box-primary direct-chat direct-chat-primary">
         <div class="box-header with-border">
-            <h3 class="box-title">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEM</h3>
+            <h3 class="box-title">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMs  <?php echo $calendarDate['date'] ?></h3>
         </div>
         <div class="box-body">
-            <div class="alert alert-warning alert-dismissible">
+            
+            <?php 
+            if(empty($calendarDate['date']))
+            { ?>
+             <div class="alert alert-danger alert-dismissible">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                <h4><i class="icon fa fa-warning"></i> Reminder </h4>
-                Always make sure that the current System Date is updated.
+                <h4><i class="icon fa fa-warning"></i> Reminder!!! </h4>
+                System Date is not updated. Please update.
             </div>
+             	
+             	
+             	<?php 
+            }
+            
+            else
+            {
+            	?>
+              <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <h4><i class="icon fa fa-warning"></i> System is up-to-date! </h4>
+                You may now proceed to your transactions
+              </div>	
+            	
+            	
+            	<?php 
+            }
+            ?>
+            
+            
             <div class="row">
                 <div class="col-md-3">
                     <div class="info-box">

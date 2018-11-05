@@ -48,6 +48,22 @@ class Branch extends \yii\db\ActiveRecord
             'deleted_date' => 'Deleted Date',
         ];
     }
+    
+    
+    public function beginningOfDay()
+    {
+    	
+    }
+    
+    
+    public function changeDate()
+    {
+    	$currentDate = Calendar::findOne(['is_current'=>1]);
+    	
+    	
+    	
+    	
+    }
 
     /**
      * @return \yii\db\ActiveQuery
