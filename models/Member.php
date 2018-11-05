@@ -130,6 +130,11 @@ class Member extends \yii\db\ActiveRecord {
 				'member_id' => 'id' 
 		] );
 	}
+	public function getShareaccount() {
+		return $this->hasOne ( Shareaccount::className (), [ 
+				'fk_memid' => 'id' 
+		] );
+	}
 	public function getMemberType() {
 		return $this->hasOne ( MembershipType::className (), [ 
 				'id' => 'member_type_id' 
@@ -160,8 +165,12 @@ class Member extends \yii\db\ActiveRecord {
 				'id' => 'user_id' 
 		] );
 	}
-	public function getMemberList($name) {
-		$retval = $this->find()->innerJoinWith(['user', 'station'])->select(["member.*", "CONCAT(last_name,', ',first_name,' ',middle_name)fullname"])->where("CONCAT(last_name,', ',first_name,' ',middle_name) like '".$name."%'")->asArray()->all();
+	public function getMemberList($name, $joinWith=null) {
+		$retval = $this->find()->innerJoinWith(['user', 'station']);
+		if($joinWith != null){
+			$retval = $retval->joinWith($joinWith);
+		}
+		$retval = $retval->select(["member.*", "CONCAT(last_name,', ',first_name,' ',middle_name)fullname"])->where("CONCAT(last_name,', ',first_name,' ',middle_name) like '".$name."%'")->asArray()->all();
 		
 		return $retval;
 	}

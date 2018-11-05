@@ -41,6 +41,7 @@ class LoanController extends \yii\web\Controller
     		->asArray()->all();
         $default_setting = array();
 
+
         $settings  = new \app\models\DefaultSettings;
         $default_setting['loan_redemption_insurance'] = $settings->getValue('loan_redemption_insurance');
         $default_setting['loan_refundable_retention'] = $settings->getValue('loan_redemption_insurance');
@@ -59,9 +60,24 @@ class LoanController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
         	$member_id = $post['member_id'];
-        	$model = new \app\models\LoanAccount;
+            $query = new \yii\db\Query;
+            $query->select('DISTINCT(loan_id) as loan_id')
+                ->from('loanaccount la')
+                ->where('member_id = '. $member_id);
+            $loanAccounts = $query->all();
+            $accountList = array();
+            if(count($loanAccounts) > 1){
+                foreach ($loanAccounts as $loan) {
+                    $acc = \app\models\LoanAccount->find()
+                        ->innerJoinWith(['product'])
+                        ->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']])
+                        ->orderBy('release_date DESC')
+                        ->asArray()->one();
+                    array_push($accountList, $acc)
+                }
+            }
     	
-	    	$accountList = $model->getAccountListByMemberID($member_id);
+	    	//$accountList = $model->getAccountListByMemberID($member_id);
 	    	return $accountList;
         	
         }

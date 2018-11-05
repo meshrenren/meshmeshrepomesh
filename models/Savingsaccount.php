@@ -32,7 +32,7 @@ class SavingsAccount extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['account_no', 'saving_product_id', 'member_id', 'balance', 'is_active', 'date_created', 'transacted_date'], 'required'],
+            [['account_no', 'saving_product_id', 'balance', 'is_active', 'date_created', 'transacted_date'], 'required'],
             [['saving_product_id', 'member_id', 'is_active'], 'integer'],
             [['balance'], 'number'],
             [['date_created', 'deleted_date', 'transacted_date'], 'safe'],
@@ -67,7 +67,7 @@ class SavingsAccount extends \yii\db\ActiveRecord
     }
 
     public function getAccountList($name) {
-        $retval = $this->find()->innerJoinWith(['product', 'member'])->where("CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) like '".$name."%'")->asArray()->all();
+        $retval = $this->find()->joinWith(['product', 'member'])->asArray()->all();
         
         return $retval;
     }

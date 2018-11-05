@@ -75,7 +75,7 @@ class LoanAccount extends \yii\db\ActiveRecord
     }
 
     public function getAccountListByMemberID($member_id) {
-        $retval = $this->find()->innerJoinWith(['product', 'member'])->where(['member_id' => $member_id])->asArray()->all();
+        $retval = $this->find()->innerJoinWith(['product'])->where(['member_id' => $member_id])->asArray()->all();
         
         return $retval;
     }

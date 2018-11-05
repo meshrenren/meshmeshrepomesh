@@ -59,8 +59,11 @@ class SavingsController extends \yii\web\Controller
             ->where(['is_active' => 1])
             ->select(['id as value', 'description as label'])
             ->asArray()->all();
+
+        $accountList = $savings->getAccountList('');
         
         return $this->render('index', [
+            'accountList'       => $accountList,
             'savingsProduct'    => $savingsProduct,
             'savingsAccount'    => $savingsAccount
         ]);
@@ -90,32 +93,50 @@ class SavingsController extends \yii\web\Controller
     {
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        if(isset($_POST)){
-        	$accountDetails = json_decode($_POST['account']);
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+
+        	$accountDetails = $post['account'];
         	$accountDetails = (array)$accountDetails;
 
         	$hasAccount = null;
         	$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
 
-        	if($product->is_multiple == 0)
+        	if($product->is_multiple == 0 && $accountDetails['type'] == "Member")
         		$hasAccount = \app\models\SavingsAccount::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
 
     		if($hasAccount == null){
-    			$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
+    			//$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
 	        	$account = new \app\models\SavingsAccount;
 	        	$trans_serial = $product->trans_serial + 1;
 	        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 	        	$account->account_no = $product->id . "-" . $trans_serial_pad;
-	        	$account->member_id = $member->id;
+	        	$account->member_id = $accountDetails['member_id'];
 	        	$account->saving_product_id = $accountDetails['saving_product_id'];
 	        	$account->balance = 0;
 	        	$account->date_created = date('Y-m-d H:i:s');
 	        	$account->transacted_date = date('Y-m-d H:i:s');
+                $account->type = $accountDetails['type'];
+                if($accountDetails['type'] == "Group"){
+                    $account->account_name = $accountDetails['account_name'];
+                    $account->member_id = 0;
+                }
 	        	$account->is_active = 1;
 	        	if($account->save()){
 	        		$product->trans_serial = $trans_serial;
 	        		$product->save();
 	        		$getAccount = \app\models\SavingsAccount::find()->where(['account_no' => $account->account_no])->one();
+
+                    if($account->type == "Group" && isset($post['signatoryList'])){
+                        $signatories = $post['signatoryList'];
+                        foreach ($signatories as $sign) {
+                            $newSign = new \app\models\SaGroupSignatory;
+                            $newSign->savings_account = $account->account_no;
+                            $newSign->member_id = $sign['id'];
+                            $newSign->save();
+                        }
+                    }
 
 	        		return [
 				        'success' 	=> true,

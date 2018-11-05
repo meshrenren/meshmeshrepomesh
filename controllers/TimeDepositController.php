@@ -25,11 +25,15 @@ class TimeDepositController extends \yii\web\Controller
     	$transaction = new \app\models\TimeDepositTransaction;
     	$tdTransaction = $transaction->attributes();
 
+        $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member'])
+            ->asArray()->all();
+
     	$tdProduct  = \app\models\TimeDepositProduct::find()
     		->joinWith(['ratetable'])
     		->asArray()->all();
     	
         return $this->render('create', [
+            'tdlist'        => $tdlist,
         	'tdProduct'		=> $tdProduct,
         	'tdAccount'		=> $tdAccount,
         	'tdTransaction'	=> $tdTransaction
@@ -40,9 +44,12 @@ class TimeDepositController extends \yii\web\Controller
 
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        if(isset($_POST)){
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+
         	$today = date("Y-m-d");
-        	$tdaccount = json_decode($_POST['accountDetails']);
+        	$tdaccount = $post['accountDetails'];
         	$tdaccount = (array)$tdaccount;
         	$model = new \app\models\TimeDepositAccount;
         	$model->attributes = $tdaccount;
@@ -59,6 +66,11 @@ class TimeDepositController extends \yii\web\Controller
         	$model->date_created = date('Y-m-d H:i:s');
 	        $model->created_by = \Yii::$app->user->identity->id;
 	        $model->balance = $tdaccount['amount'];
+            $model->type = $tdaccount['type'];
+            if($tdaccount['type'] == "Group"){
+                $model->account_name = $tdaccount['account_name'];
+                $model->member_id = 0;
+            }
 	        //var_dump($model->attributes);
 	        if($model->save()){
                 $product->trans_serial = $trans_serial;
@@ -72,6 +84,16 @@ class TimeDepositController extends \yii\web\Controller
         		$tdTransaction->transaction_date = date('Y-m-d H:i:s');
         		$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
         		$tdTransaction->save();
+
+                if($model->type == "Group" && isset($post['signatoryList'])){
+                    $signatories = $post['signatoryList'];
+                    foreach ($signatories as $sign) {
+                        $newSign = new \app\models\SaGroupSignatory;
+                        $newSign->td_account = $model->accountnumber;
+                        $newSign->member_id = $sign['id'];
+                        $newSign->save();
+                    }
+                }
 
         		//var_dump($tdTransaction->getErrors());
         		return [
