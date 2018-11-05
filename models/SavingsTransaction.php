@@ -56,4 +56,10 @@ class SavingsTransaction extends \yii\db\ActiveRecord
             'remarks' => 'Remarks',
         ];
     }
+
+    public function getAccount() {
+
+        return $this->hasOne(SavingsAccount::className(), [ 'account_no' => 'fk_savings_id' ] );
+        
+    }
 }

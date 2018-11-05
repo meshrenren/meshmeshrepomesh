@@ -120,6 +120,11 @@ class Member extends \yii\db\ActiveRecord {
 				'deleted_date' => 'Deleted Date' 
 		];
 	}
+	public $fullname;
+
+	public function setFullname(){
+		return $this->last_name . ', ' . $this->first_name . ' ' . $this->middle_name;
+	}
 	public function getLoanaccount() {
 		return $this->hasOne ( Loanaccount::className (), [ 
 				'member_id' => 'id' 

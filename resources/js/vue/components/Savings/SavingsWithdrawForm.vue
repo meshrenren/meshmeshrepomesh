@@ -52,6 +52,7 @@
 						                </template>
 						            </el-table-column>
 						        </el-table>
+						        <el-button type = "primary"  @click="printForm()" v-if = "accountDetails.account_no">Print Form</el-button>
 						    </div>
 	            		</div>
             		</el-col>
@@ -90,7 +91,6 @@
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
-    import swal from 'sweetalert2/dist/sweetalert2.all.min.js'
     import SearchSavingsAccount from '../General/SearchSavingsAccount.vue' 
 
 export default {
@@ -120,6 +120,9 @@ export default {
       	SearchSavingsAccount
     },
     methods:{
+    	printForm(){
+    		window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
+    	},
     	populateField(data){
     		console.log(data)
     		this.accountDetails = data
@@ -162,49 +165,46 @@ export default {
     		let vm = this	
     		this.$refs.savingTransactionForm.validate((valid) => {
 	          	if (valid) {
-	          		swal({
-	                  title: 'Save Savings Transaction?',
-	                  text: "Are you sure you want to save this transaction? This action cannot be undone.",
-	                  imageUrl: vm.baseUrl+'/images/attachment_icon_white.png',
-	                  showCancelButton: true,
-	                  confirmButtonText: 'Proceed',
-	                  confirmButtonColor: '#4087C5',
-	                  focusConfirm: false,
-	                  focusCancel: false,
-	                  cancelButtonText: 'Cancel',
-	                  reverseButtons: true,
-	                  background: '#ff3366',
-	                  width: '400px',
-	                  padding: 0
-		            }).then(function() {
+	          		vm.$swal({
+		              	title: 'Save Savings Transaction?',
+		              	text: "Are you sure you want to save this transaction? This action cannot be undone.",
+		              	type: 'warning',
+		              	showCancelButton: true,
+		              	cancelButtonColor: '#d33',
+		              	confirmButtonText: 'Proceed',
+		              	focusConfirm: false,
+		              	focusCancel: true,
+		              	cancelButtonText: 'Cancel',
+		              	reverseButtons: true,
+		              	width: '400px',
+		            }).then(function(result) {
+		            	if (result.value) {
+		            		let data = new FormData()
+		            		vm.savingTransactionForm.transaction_type = "WITHDRWL"
 
-	            		let data = new FormData()
-	            		vm.savingTransactionForm.transaction_type = "WITHDRWL"
+			    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
 
-		    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
+			                axios.post(vm.baseUrl+'/savings/save-transaction', data).then((result) => {
+				                let res = result.data
+				                let type = ""
+				                let message = ""
+				                console.log(res)
+				                if(res.length > 0 ){
+				                    console.log("success")
+				                }
+				                else{
+				                    console.log("no result")
+				                } 
+				                location.reload()
+				                  
+				            }).catch(function (error) {
+				            
+				                console.log(error);
 
-		                axios.post(vm.baseUrl+'/savings/save-transaction', data).then((result) => {
-			                let res = result.data
-			                let type = ""
-			                let message = ""
-			                console.log(res)
-			                if(res.length > 0 ){
-			                    console.log("success")
-			                }
-			                else{
-			                    console.log("no result")
-			                } 
-			                location.reload()
-			                  
-			            }).catch(function (error) {
-			            
-			                console.log(error);
-
-			                if(error.response.status == 403)
-			                    location.reload()
-			            })
-		            }, function(dismiss) {
-
+				                if(error.response.status == 403)
+				                    location.reload()
+				            })
+				        }
 		            }) 
 	          	}
 	          	else {

@@ -69,11 +69,11 @@ class Shareaccount extends \yii\db\ActiveRecord
     	return ShareProduct::find()->asArray()->all();
     }
 
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getFkShareProduct()
-    {
-        return $this->hasOne(Shareproduct::className(), ['id' => 'fk_share_product']);
+    public function getMember() {
+        return $this->hasOne(Member::className(), [ 'id' => 'fk_memid' ] )->select(["member.*", "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname"]);
+    }
+
+    public function getProduct() {
+        return $this->hasOne(Shareproduct::className(), [ 'id' => 'fk_share_product' ] );
     }
 }

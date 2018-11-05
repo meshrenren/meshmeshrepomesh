@@ -69,7 +69,6 @@ window.noty = require('noty')
 
 import axios from 'axios'
 import Noty from 'noty'
-import Swal from 'sweetalert2'
 import FormInfo from '../FormInfo'
 
 export default {
@@ -219,67 +218,63 @@ export default {
     	},
     	deleteInfo(family_id){
     		let vm = this
-    		Swal({
-                title: 'Delete Family?',
-                text: "Are you sure you want to delete selected family? This action cannot be undone.",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonText: 'Proceed',
-                confirmButtonColor: '#d33',
-  				confirmButtonClass: 'btn btn-danger',
-                focusConfirm: false,
-                focusCancel: false,
-                cancelButtonText: 'Cancel',
-  				cancelButtonClass: 'btn',
-                reverseButtons: true,
-                background: '#fff',
-                width: '400px',
-                padding: 0
-            }).then(function() {
+    		vm.$swal({
+              	title: 'Delete Family?',
+              	text: "Are you sure you want to delete selected family? This action cannot be undone.",
+              	type: 'warning',
+              	showCancelButton: true,
+              	cancelButtonColor: '#d33',
+              	confirmButtonText: 'Proceed',
+              	focusConfirm: false,
+              	focusCancel: true,
+              	cancelButtonText: 'Cancel',
+              	reverseButtons: true,
+              	width: '400px',
+            }).then(function(result) {
+            	if (result.value) {
 
-	    		let data = new FormData()
-	    		data.set('family_id', family_id)
+		    		let data = new FormData()
+		    		data.set('family_id', family_id)
 
-	    		axios.post(vm.$parent.baseUrl+'/member/delete-member-family', data).then((result) => {
-		    		let res = result.data
-		    		let type = ""
-		    		let message = ""
-		    		if(res.success == true){
-		        		type = "success"
-		        		message = "Member family successfully deleted."
-                		let index = vm.memberFamilyList.findIndex(ci => {return ci.id == Number(res.data)})
-		        		
-		        		vm.memberFamilyList.splice(index, 1)
+		    		axios.post(vm.$parent.baseUrl+'/member/delete-member-family', data).then((result) => {
+			    		let res = result.data
+			    		let type = ""
+			    		let message = ""
+			    		if(res.success == true){
+			        		type = "success"
+			        		message = "Member family successfully deleted."
+	                		let index = vm.memberFamilyList.findIndex(ci => {return ci.id == Number(res.data)})
+			        		
+			        		vm.memberFamilyList.splice(index, 1)
 
-		    		}
-		        	else{
-		        		type = "error"
-			        	message = "Family not deleted. Please try again or contact administrator."
-		        	} 
+			    		}
+			        	else{
+			        		type = "error"
+				        	message = "Family not deleted. Please try again or contact administrator."
+			        	} 
 
 
-	    			new Noty({
-		                theme: 'relax',
-		                type: type ,
-		                layout: 'topRight',
-		                text: message,
-		                timeout: 2500
-		            }).show();           	
+		    			new Noty({
+			                theme: 'relax',
+			                type: type ,
+			                layout: 'topRight',
+			                text: message,
+			                timeout: 2500
+			            }).show();           	
 
-		    	}).catch(function (error) {
-					new Noty({
-			            theme: 'relax',
-			            type: 'error',
-			            layout: 'topRight',
-			            text: 'An error occured. Please try again or contact administrator',
-			            timeout: 2500
-			        }).show()
+			    	}).catch(function (error) {
+						new Noty({
+				            theme: 'relax',
+				            type: 'error',
+				            layout: 'topRight',
+				            text: 'An error occured. Please try again or contact administrator',
+				            timeout: 2500
+				        }).show()
 
-					if(error.response && error.response.status == 403)
-						location.reload()
-				})
-            }, function(dismiss) {
-
+						if(error.response && error.response.status == 403)
+							location.reload()
+					})
+			    }
             }) 
 
     		

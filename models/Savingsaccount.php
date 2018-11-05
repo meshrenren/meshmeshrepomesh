@@ -66,13 +66,19 @@ class SavingsAccount extends \yii\db\ActiveRecord
         return $this->hasOne(Member::className(), [ 'id' => 'member_id' ] )->select(["member.*", "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname"]);
     }
 
-
     public function getAccountList($name) {
         $retval = $this->find()->innerJoinWith(['product', 'member'])->where("CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) like '".$name."%'")->asArray()->all();
         
         return $retval;
     }
-    
+
+    public function getTransaction() {
+        return $this->hasMany(SavingsTransaction::className(), [ 'fk_savings_id' => 'account_no' ] )->orderBy('id DESC');
+    }
+
+    public function getLastTransaction() {
+        return $this->hasOne(SavingsTransaction::className(), [ 'fk_savings_id' => 'account_no' ] )->orderBy('id DESC');
+    }
     
     
     public function calculateSavingsInterest()

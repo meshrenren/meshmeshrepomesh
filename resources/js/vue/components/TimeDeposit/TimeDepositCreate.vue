@@ -26,7 +26,7 @@
 					<el-row :gutter = "20">
 	        			<el-col :span="12">
 						  	<el-form-item label="Product" prop = "fk_td_product">
-						    	<el-select v-model="tdAccountDetails.fk_td_product" placeholder="Select" @change = "productChange" ref = "fk_td_product">
+						    	<el-select v-model="tdAccountDetails.fk_td_product" placeholder="Select" @change = "productChange" ref = "fk_td_product" :disabled = "true">
 								    <el-option
 								      v-for="item in tdProductSelect"
 								      :key="item.value"
@@ -112,15 +112,21 @@ export default {
 		}
 	},
 	created(){
+		this.showSearchModal = true
 		let product = []
+		let defaultProduct = null
 		this.tdProduct.forEach(function(detail){
   			let pr = {
   				label : detail.description,
   				value : detail.id,
   			}
   			product.push(pr)
+  			defaultProduct = detail.id
   		})
 		this.tdProductSelect = product
+
+		this.tdAccountDetails.fk_td_product = defaultProduct
+
 
 		let validateRate = (rule, value, callback) => {
 			if ( value == null || value == '0' || value == 0) {
@@ -184,7 +190,7 @@ export default {
 				})
 				if(product){
 					let rate = product.ratetable.find(ci => {
-						return Number(term_count) >= Number(ci.day_from) && Number(term_count) <=  Number(ci.day_to) && Number(amount) >= Number(ci.min_amount) && Number(amount) <= Number(ci.max_amount) 
+						return Number(term_count) == Number(ci.days) && Number(amount) >= Number(ci.min_amount) && Number(amount) <= Number(ci.max_amount) 
 					})
 					if(rate){
 						this.tdAccountDetails.interest_rate = rate.interest_rate
@@ -220,20 +226,21 @@ export default {
     		let vm = this	
     		this.$refs.tdAccountDetails.validate((valid) => {
 	          	if (valid) {
-	          		this.$swal({
-	                  title: 'Save Time Deposit Account?',
-	                  text: "Are you sure you want to save this transaction? This action cannot be undone.",
-	                  type: "warning",
-				 	  confirmButtonColor: '#3085d6',
-				  	  cancelButtonColor: '#d33',
-	                  showCancelButton: true,
-	                  confirmButtonText: 'Proceed',
-	                  focusConfirm: true,
-	                  focusCancel: false,
-	                  cancelButtonText: 'Cancel',
-	                  reverseButtons: true,
-		            }).then(function (result) {
-					  	if (result.value) {
+	          		vm.$swal({
+		              	title: 'Save Time Deposit Account?',
+		              	text: "Are you sure you want to save this transaction? This action cannot be undone.",
+		              	type: 'warning',
+		              	showCancelButton: true,
+		              	cancelButtonColor: '#d33',
+		              	confirmButtonText: 'Proceed',
+		              	focusConfirm: false,
+		              	focusCancel: true,
+		              	cancelButtonText: 'Cancel',
+		              	reverseButtons: true,
+		              	width: '400px',
+		            }).then(function(result) {
+		            	if (result.value) {
+
 					    	let data = new FormData()
 		            		data.set('accountDetails', JSON.stringify(vm.tdAccountDetails))
 		            		axios.post(vm.baseUrl+'/time-deposit/save-td-account', data).then((result) => {
@@ -242,12 +249,22 @@ export default {
 				                let message = ""
 				                console.log(res)
 				                if(res.length > 0 ){
-				                    console.log("success")
+				                	type = "success"
+				                	message = "Time Deposit Account successfully created."
 				                }
 				                else{
+				                	type = "error"
+				                	message = "Savings account not successfully created. Please try again or contact administrator."
 				                    console.log("no result")
 				                } 
-				                //location.reload()
+				                new Noty({
+						            theme: 'relax',
+						            type: type,
+						            layout: 'topRight',
+						            text: message,
+						            timeout: 2500
+						        }).show()
+				                location.reload()
 				                  
 				            }).catch(function (error) {
 				            
@@ -256,9 +273,8 @@ export default {
 				                if(error.response && error.response.status == 403)
 				                    location.reload()
 				            })
-					  	} else {
-					   		console.log("Cancel")
-					  	}
+				        }
+
 					}) 
 		            
 	          	}

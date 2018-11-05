@@ -117,19 +117,6 @@ ul.material-pagination{
   list-style: none;
 }
 
-.sweet-modal{
-  
-  .sweet-title{
-    h2{
-      display: initial;
-    }
-  }
-
-  .sweet-content{
-    text-align: left !important;
-  }
-
-}
 
 .el-form{
 
@@ -177,4 +164,8 @@ ul.material-pagination{
   border: 1px solid rgba(0,0,0,.125);
   border-radius: .25rem;
   padding: 10px 15px;
+}
+
+.box{
+  min-height: 500px;
 }

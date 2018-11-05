@@ -2,6 +2,12 @@
 
 namespace app\controllers;
 
+use Yii;
+use yii\filters\AccessControl;
+use yii\web\Controller;
+use yii\filters\VerbFilter;
+use kartik\mpdf\Pdf; 
+
 class TimeDepositController extends \yii\web\Controller
 {
     public function actionIndex()
@@ -94,6 +100,35 @@ class TimeDepositController extends \yii\web\Controller
         }
     }
 
+    public function actionList(){
+        $this->layout = 'main-vue';
+        
+        $date = date("Y-m-d");
+        $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member'])
+            ->asArray()->all();
+        return $this->render('list', [
+            'tdAccounts'    => $tdlist,
+            'typeList'      => 'td_list',
+            'header'        => 'All Accounts'
+        ]);
+
+    }
+
+    public function actionMaturedAccounts(){
+        $this->layout = 'main-vue';
+
+        $date = date("Y-m-d");
+        $maturedtdlist = \app\models\TimeDepositAccount::find()->joinWith(['member'])
+            ->where("maturity_date <= '" .$date . "'")
+            ->asArray()->all();
+        return $this->render('list', [
+            'tdAccounts'    => $maturedtdlist,
+            'typeList'      => 'td_matured',
+            'header'        => 'Matured Accounts'
+        ]);
+
+    }
+
     public function actionGetMaturedAccounts(){
         $date = date("Y-m-d");
         $model = \app\models\TimeDepositAccount::find()->where(['maturity_date' => $date])->all();
@@ -101,6 +136,64 @@ class TimeDepositController extends \yii\web\Controller
             $totalInterest = $timedeposit->getMatureDays($timedeposit->maturity_date, $timedeposit->amount, $timedeposit->interest_rate, $timedeposit->term);
             $totalAmount = $timedeposit->amount + $totalInterest;
         }
+    }
+
+    public function actionCertificate($accountnumber){
+        $model = \app\models\TimeDepositAccount::find()->where(['accountnumber' => $accountnumber])->joinWith(['member'])->one();
+        if($model){
+            /*$transaction = \app\models\SavingsAccount::find()->where(['account_no' => $model->account_no])->one();
+            $account_no = $model->account_no;
+            $account_name = $model->member->fullname;
+            $last_transaction = "";
+            if($model->lastTransaction)
+                $last_transaction = date('M d, Y', strtotime($model->lastTransaction->transaction_date));
+            $balance = number_format($model->balance, 2, '.', ',');
+
+            $settings  = new \app\models\DefaultSettings;
+            $penalty = number_format($settings->getValue('savings_penalty'), 2, '.', ',');;*/
+            //$account_balance = $model->account->account_balance;
+
+            $template = Yii::$app->params['formTemplate']['timedeposit_certificate'];
+
+            /*$template = str_replace('[account_name]', $account_name, $template);
+            $template = str_replace('[account_number]', $account_no, $template);
+            $template = str_replace('[last_transaction]', $last_transaction , $template);
+            $template = str_replace('[balance]', $balance, $template);
+            $template = str_replace('[penalty]', $penalty, $template);*/
+
+            $pdf = new Pdf([
+                // set to use core fonts only
+                // 'mode' => Pdf::MODE_CORE, 
+                'mode' => Pdf::MODE_BLANK, 
+                // A4 paper format
+                'format' => Pdf::FORMAT_A4, 
+                // portrait orientation
+                'orientation' => Pdf::ORIENT_PORTRAIT, 
+                // stream to browser inline
+                'destination' => Pdf::DEST_BROWSER, 
+                // your html content input
+                'content' => $template,  
+                // format content from your own css file if needed or use the
+                // enhanced bootstrap css built by Krajee for mPDF formatting 
+                'cssFile' => '@vendor/kartik-v/yii2-mpdf/assets/kv-mpdf-bootstrap.min.css',
+                // any css to be embedded if required
+                'cssInline' => '.kv-heading-1{font-size:10px}', 
+                'defaultFontSize' => '10',
+                 // set mPDF properties on the fly
+                'options' => '',
+                 // call mPDF methods on the fly
+                'filename' => 'withdral.pdf'
+            ]);
+
+            //return $pdf;
+
+            //$topdf = Yii::$app->view->topdf($template, 'Savings', 'withdral.pdf');
+
+            //$topdf->getApi()->SetJS('this.print();');
+            // return the pdf output as per the destination setting
+            return $pdf->render();
+        }
+        
     }
 
 }

@@ -11,7 +11,8 @@ class SeedController extends Controller
     {
     	$oldmembers = \app\models\Membersold::find()->orderBy('IDNum ASC')->select(['id', 'CONCAT(first_name, )'])->all();
     	foreach ($oldmembers as $oldmember) {
-            $getMember = \app\models\Member::find()->where(['first_name' => $oldmember->FName, 'last_name' =>  $oldmember->SName, 'middle_name' =>  $oldmember->MName])->one();
+            //$getMember = \app\models\Member::find()->where(['first_name' => $oldmember->FName, 'last_name' =>  $oldmember->SName, 'middle_name' =>  $oldmember->MName])->one();
+            $getMember = \app\models\Member::find()->where(['old_db_idnum' => $oldmember->IDNum])->one();
             if($getMember == null){
             	$newMember = new \app\models\Member;
             	$getStation = \app\models\Station::find()->where(['name' => $oldmember->Station])->one();
@@ -53,6 +54,7 @@ class SeedController extends Controller
             	$newMember->civil_status = $oldmember->CivilStatus;
             	$newMember->gsis_no = $oldmember->GSISNum;
             	$newMember->telephone = $oldmember->ContactNum;
+                $newMember->old_db_idnum = $oldmember->ContactNum;
 
             	if($newMember->save()){
             		$newUser = new \app\models\User;
