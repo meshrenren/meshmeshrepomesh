@@ -150,6 +150,251 @@ class SeedController extends Controller
     	}
     }
 
+    /*public function actionSeedLoanLedgerMember(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loanledgermember llm');
+        $loanMember = $query->all();
+        foreach ($loanMember as $key => $llm) {
+            $getMember = \app\models\Member::find()->where(['old_db_idnum' => $llm['IDNum']])->one();
+            if($getMember){
+
+                $query2 = new \yii\db\Query;
+                $query2->select(['*']);
+                $query2->from('zold_loanledger ll')->where(['IDNum' => $llm['IDNum']])->andWhere("PrincipalLoan != ''");
+                $query2->groupBy(['LoanType']);
+                $loanLedgerMember = $query2->all();
+                $loans = "";
+                foreach ($loanLedgerMember as $key => $loan) {
+                    $loanType = strtoupper($loan['LoanType']);
+                    $loan_id = 0;
+                    if(strpos($loanType, "APPLIANCE")){
+                        $loan_id = 1;
+                    }
+                    else if(strpos( $loanType, "REGULAR")){
+                        $loan_id = 2;
+                    }
+                    else if(strpos($loanType, "EDUCATIONAL")){
+                        $loan_id = 3;
+                    }
+                    else if(strpos($loanType, "EMERGENCY")){
+                        $loan_id = 4;
+                    }
+                    else if(strpos($loanType, "HOSPITALIZATION")){
+                        $loan_id = 5;
+                    }
+                    else if(strpos($loanType, "HOUSE")){
+                        $loan_id = 6;
+                    }
+                    else if(strpos($loanType, "MEDICAL")){
+                        $loan_id = 7;
+                    }
+                    else if(strpos($loanType, "BUSINESS")){
+                        $loan_id = 8;
+                    }
+                    else if(strpos($loanType, "CELLPHONE")){
+                        $loan_id = 10;
+                    }
+                    else if(strpos($loanType, "CELLCARD")){
+                        $loan_id = 11;
+                    }
+                    else if(strpos($loanType, "BUY-OUT")){
+                        $loan_id = 12;
+                    }
+                    else if(strpos($loanType, "MEMORIAL")){
+                        $loan_id = 13;
+                    }
+                    else if(strpos($loanType, "GADGET")){
+                        $loan_id = 14;
+                    }
+                    else if(strpos($loanType, "DOMESTIC")){
+                        $loan_id = 15;
+                    }
+                    else if(strpos($loanType, "RADIATION")){
+                        $loan_id = 16;
+                    }
+                    else if(strpos($loanType, "CASSEROLE") || $loanType == "CASSEROLE"){
+                        $loan_id = 17;
+                    }
+                    else if(strpos($loanType, "KEYBOARD") || $loanType == "KEYBOARD"){
+                        $loan_id = 18;
+                    }
+                    if($loan_id == 0){
+                       $loans .= "No type: " . $loan['LoanType'] . ", "; 
+                    }
+                    else{
+                        //$loans .= "Loan ID: " . $loan_id . ", ";
+                        $product = \app\models\LoanProduct::find()->where(['id' => $loan_id])->one();
+                        $trans_serial = $product->trans_serial + 1;
+                        $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+                        $release_date = date("Y-m-d");
+                        if($loan['DateTransac'] != ""){
+                            $date = explode(" ", $loan['DateTransac']);
+                            $date = explode("/", $date[0]);
+                            $release_date = $date[2] . "-" . $date[1] . "-" . $date[0];
+                        }
+                        $addLoanAccount = new \app\models\LoanAccount;
+                        $addLoanAccount->account_no = $product->id . "-" . $trans_serial_pad;
+                        $addLoanAccount->loan_id = $loan_id;
+                        $addLoanAccount->member_id = $getMember->id;
+                        $addLoanAccount->principal = floatVal(str_replace(",", "", $loan['PrincipalLoan'])) ;
+                        $addLoanAccount->interest_balance = floatVal(str_replace(",", "", $loan['Interest']));
+                        $addLoanAccount->principal_balance = floatVal(str_replace(",", "", $loan['Balance']));
+                        $addLoanAccount->prepaid = floatVal(str_replace(",", "", $loan['Prepaid'])) ;
+                        $addLoanAccount->release_date = $release_date;
+                        $addLoanAccount->service_charge = 0;
+                        $addLoanAccount->prepaid_int = 0;
+                        $addLoanAccount->is_active = 1;
+                        $addLoanAccount->status = "Verified";
+                        if(!$addLoanAccount->save()){
+                            var_dump($addLoanAccount->getErrors());
+                        }
+                        else{
+                            $product->trans_serial = $trans_serial;
+                            $product->save();
+                        }
+                    }
+                    
+                    //var_dump($loan);
+                }
+
+                echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " Is Member \n\t Loans: " . $loans . "\n\n";
+                //break;
+            }
+            else{
+                echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
+            }
+        }
+    }*/
+
+    public function actionSeedLoanTransacMember(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loantransacmember llm');
+        $loanMember = $query->all();
+        foreach ($loanMember as $key => $llm) {
+            $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum']])->one();
+            if($getMember){
+
+                $query2 = new \yii\db\Query;
+                $query2->select(['*']);
+                $query2->from('zold_loantransac ll')->where(['IDNum' => $llm['IDNum']])->andWhere("PrincipalLoan != ''");
+                $query2->groupBy(['LoanType']);
+                $loanLedgerMember = $query2->all();
+                $loans = "";
+                foreach ($loanLedgerMember as $key => $loan) {
+                    $loanType = strtoupper($loan['LoanType']);
+                    $loan_id = 0;
+                    if(strpos($loanType, "APPLIANCE")){
+                        $loan_id = 1;
+                    }
+                    else if(strpos( $loanType, "REGULAR")){
+                        $loan_id = 2;
+                    }
+                    else if(strpos($loanType, "EDUCATIONAL")){
+                        $loan_id = 3;
+                    }
+                    else if(strpos($loanType, "EMERGENCY")){
+                        $loan_id = 4;
+                    }
+                    else if(strpos($loanType, "HOSPITALIZATION")){
+                        $loan_id = 5;
+                    }
+                    else if(strpos($loanType, "HOUSE")){
+                        $loan_id = 6;
+                    }
+                    else if(strpos($loanType, "MEDICAL")){
+                        $loan_id = 7;
+                    }
+                    else if(strpos($loanType, "BUSINESS")){
+                        $loan_id = 8;
+                    }
+                    else if(strpos($loanType, "CELLPHONE")){
+                        $loan_id = 10;
+                    }
+                    else if(strpos($loanType, "CELLCARD")){
+                        $loan_id = 11;
+                    }
+                    else if(strpos($loanType, "BUY-OUT")){
+                        $loan_id = 12;
+                    }
+                    else if(strpos($loanType, "MEMORIAL")){
+                        $loan_id = 13;
+                    }
+                    else if(strpos($loanType, "GADGET")){
+                        $loan_id = 14;
+                    }
+                    else if(strpos($loanType, "DOMESTIC")){
+                        $loan_id = 15;
+                    }
+                    else if(strpos($loanType, "RADIATION")){
+                        $loan_id = 16;
+                    }
+                    else if(strpos($loanType, "CASSEROLE") || $loanType == "CASSEROLE"){
+                        $loan_id = 17;
+                    }
+                    else if(strpos($loanType, "KEYBOARD") || $loanType == "KEYBOARD"){
+                        $loan_id = 18;
+                    }
+                    if($loan_id == 0){
+                       $loans .= "No type: " . $loan['LoanType'] . ", "; 
+                    }
+                    else{
+                        //$loans .= "Loan ID: " . $loan_id . ", ";
+                        $product = \app\models\LoanProduct::find()->where(['id' => $loan_id])->one();
+                        $trans_serial = $product->trans_serial + 1;
+                        $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+                        $release_date = date("Y-m-d");
+                        if($loan['DateTransac'] != ""){
+                            $date = explode(" ", $loan['DateTransac']);
+                            $date = explode("/", $date[0]);
+                            $release_date = $date[2] . "-" . $date[1] . "-" . $date[0];
+                        }
+                        /*echo $loan['DateTransac'] . "\n";
+                        echo $release_date . "\n";*/
+                        $addLoanAccount = new \app\models\LoanAccount;
+                        $addLoanAccount->account_no = $product->id . "-" . $trans_serial_pad;
+                        $addLoanAccount->loan_id = $loan_id;
+                        $addLoanAccount->member_id = $getMember->id;
+                        $addLoanAccount->principal = floatVal(str_replace(",", "", $loan['PrincipalLoan'])) ;
+                        //$addLoanAccount->interest_balance = floatVal(str_replace(",", "", $loan['Interest']));
+                        $addLoanAccount->principal_balance = floatVal(str_replace(",", "", $loan['Balance']));
+                        $addLoanAccount->term = floatVal(str_replace(",", "", $loan['Duration'])) ;
+                        $addLoanAccount->prepaid = floatVal(str_replace(",", "", $loan['PrePaidInt'])) ;
+                        $addLoanAccount->release_date = $release_date ;
+                        $addLoanAccount->service_charge = floatVal(str_replace(",", "", $loan['ServChrg'])) ;
+                        $addLoanAccount->prepaid_int = 0;
+                        $addLoanAccount->is_active = 1;
+                        $addLoanAccount->status = "Verified";
+                        $addLoanAccount->qiun_principal = floatVal(str_replace(",", "", $loan['QuinPrincipal']));
+                        $addLoanAccount->quin_prepaid = floatVal(str_replace(",", "", $loan['QuiPrepaid']));
+                        $addLoanAccount->interest_accum = floatVal(str_replace(",", "", $loan['InterestAccum']));
+                        $addLoanAccount->prepaid_accum = floatVal(str_replace(",", "", $loan['PrepaidAccum']));
+                        $addLoanAccount->olddb_transacnum = floatVal(str_replace(",", "", $loan['TransactNum']));
+                        if(!$addLoanAccount->save()){
+                            var_dump($addLoanAccount->getErrors());
+                        }
+                        else{
+                            $product->trans_serial = $trans_serial;
+                            $product->save();
+                        }
+                    }
+                    
+                    //var_dump($loan);
+                }
+
+                echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " Is Member \n\t Loans: " . $loans . "\n\n";
+                //echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " Is Member \n\n";
+                //break;
+            }
+            else{
+                echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
+            }
+        }
+    }
+
     public function actionSeedShareAccount(){
         $query = new \yii\db\Query;
         $query->select('*');
@@ -255,6 +500,23 @@ class SeedController extends Controller
                 echo $cs['IDNum'] . "->" . $cs['Name'] . " ".  $cs['SName'] . " Has No Account \tBalance->". $balance. "\n";
             }
             //echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " \tBalance->". $balance. "\n";
+        }
+    }
+
+    public function actionParticulars(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_particulars');
+        $particulars = $query->all();
+        foreach ($particulars as $key => $prt) {
+
+            $getAccount = \app\models\Particulars::find()->where(['name' => $prt['Particular'], 'acct_num' => $prt['AcctNum']])->one();
+            if($getAccount == null){
+                $product = new \app\models\Particulars;
+                $product->name = $prt['Particular'];
+                $product->acct_num = $prt['AcctNum'];
+                $product->save();
+            }
         }
     }
 }

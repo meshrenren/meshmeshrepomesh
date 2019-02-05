@@ -36,12 +36,12 @@ class LoanAccount extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['account_no', 'loan_id', 'member_id', 'principal', 'interest_balance', 'principal_balance', 'release_date', 'maturity_date', 'service_charge', 'prepaid_int', 'is_active'], 'required'],
+            [['account_no', 'loan_id', 'member_id', 'principal', 'principal_balance', 'release_date', 'service_charge', 'prepaid_int', 'is_active'], 'required'],
             [['loan_id', 'member_id', 'is_active'], 'integer'],
             [['principal', 'interest_balance', 'principal_balance', 'service_charge', 'prepaid_int'], 'number'],
             [['release_date', 'maturity_date', 'deleted_date'], 'safe'],
             [['account_no'], 'string', 'max' => 15],
-            [['member_id'], 'unique'],
+            //[['member_id'], 'unique'],
         ];
     }
 
@@ -68,6 +68,10 @@ class LoanAccount extends \yii\db\ActiveRecord
 
     public function getProduct() {
         return $this->hasOne(LoanProduct::className(), ['id' => 'loan_id'] );
+    }
+
+    public function getLoanTransaction() {
+        return $this->hasMany(LoanTransaction::className(), ['loan_account' => 'account_no'] );
     }
 
     public function getMember() {

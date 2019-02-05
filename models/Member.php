@@ -165,6 +165,7 @@ class Member extends \yii\db\ActiveRecord {
 				'id' => 'user_id' 
 		] );
 	}
+	
 	public function getMemberList($name, $joinWith=null) {
 		$retval = $this->find()->innerJoinWith(['user', 'station']);
 		if($joinWith != null){

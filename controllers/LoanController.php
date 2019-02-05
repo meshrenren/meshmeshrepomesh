@@ -41,7 +41,6 @@ class LoanController extends \yii\web\Controller
     		->asArray()->all();
         $default_setting = array();
 
-
         $settings  = new \app\models\DefaultSettings;
         $default_setting['loan_redemption_insurance'] = $settings->getValue('loan_redemption_insurance');
         $default_setting['loan_refundable_retention'] = $settings->getValue('loan_redemption_insurance');
@@ -52,7 +51,7 @@ class LoanController extends \yii\web\Controller
         ]);
     }
 
-    public function actionGetLoanAccountInfo(){
+    public function actionGetAccountLoanInfo(){
 
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
@@ -68,12 +67,12 @@ class LoanController extends \yii\web\Controller
             $accountList = array();
             if(count($loanAccounts) > 1){
                 foreach ($loanAccounts as $loan) {
-                    $acc = \app\models\LoanAccount->find()
+                    $acc = \app\models\LoanAccount::find()
                         ->innerJoinWith(['product'])
                         ->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']])
                         ->orderBy('release_date DESC')
                         ->asArray()->one();
-                    array_push($accountList, $acc)
+                    array_push($accountList, $acc);
                 }
             }
     	
@@ -82,6 +81,30 @@ class LoanController extends \yii\web\Controller
         	
         }
 
+    }
+
+    public function actionGetLatestInfo(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $member_id = $post['member_id'];
+            $loan_id = $post['loan_id'];
+            $acc = array();
+            $acc = \app\models\LoanAccount::find()
+                ->innerJoinWith(['product'])
+                ->joinWith(['loanTransaction'])
+                ->where(['member_id' => $member_id, 'loan_id' => $loan_id])
+                ->orderBy('release_date DESC')
+                ->asArray()->one();
+            $res = [
+                'success' => true,
+                'data' => $acc
+            ];
+
+            return $res;
+        }
     }
 
     public function actionEvaluateLoan(){

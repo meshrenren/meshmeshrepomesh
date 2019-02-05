@@ -1,6 +1,6 @@
 <template>
 	<div class = "loan-evaluation">
-		<div class="box box-info">
+		<div class="box box-info" v-loading = "isLoading">
             <div class="box-header with-border">
               	<h3 class="box-title">Loan Evaluation</h3>
             </div>
@@ -45,14 +45,19 @@
 						                    <span style="margin-left: 10px">{{ scope.row.release_date }}</span>
 						                </template>
 						            </el-table-column>
+						            <el-table-column label="Type">
+						                <template slot-scope="scope">
+						                    <span style="margin-left: 10px">{{ scope.row.product.product_name }}</span>
+						                </template>
+						            </el-table-column>
 						            <el-table-column label="Principal Loan">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.principal }}</span>
+						                    <span style="margin-left: 10px">{{ parseFloat(scope.row.principal).toFixed(2) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Balance">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.principal_balance }}</span>
+						                    <span style="margin-left: 10px">{{ parseFloat(scope.row.principal_balance).toFixed(2)  }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Duration">
@@ -270,7 +275,7 @@
 export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	data: function () {
-		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null}
+		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true}
 		return {
 			evaluationForm 			: form,
 			loanProduct 			: this.dataLoanProduct,
@@ -281,7 +286,8 @@ export default {
 			formRule 				: [],
 			minTerm 				: 1,
 			maxTerm					: 12,
-			disabledBox 			: true
+			disabledBox 			: true,
+			isLoading				: false
 		}
 	},
 	created(){
@@ -334,7 +340,7 @@ export default {
     		}
     		this.disabledBox = false
     		this.$refs.product_loan_id.focus() 
-    		//this.getOtherAccounts(data.id)
+    		this.getAccounLoanInfo(this.memberDetails.id)
     		/*console.log(this.$refs.newLoan)
     		this.$refs.newLoan.focus()*/
     	},
@@ -347,10 +353,11 @@ export default {
     		this.$refs.amount.focus()
     	},
     	getAccounLoanInfo(member_id){
-
-    		this.$API.getAccounLoanInfo(member_id)
+    		console.log()
+    		this.$API.Loan.getAccounLoanInfo(member_id)
     		.then(result => {
     			let res = result.data
+    			console.log("res", res)
     			this.accountLoanList = res
 			}).catch(err => {
 				console.log(err)
@@ -377,6 +384,16 @@ export default {
     	resetEvaluationForm(){
 
     	},
+    	getLatestLoan(loan_id, member_id){
+    		console.log("Here")
+    		this.$API.Loan.getLatestLoan(loan_id, member_id)
+    		.then(result => {
+    			let res = result.data
+    			console.log("res", res)
+			}).catch(err => {
+				console.log(err)
+			})
+    	},
     	enterLoanAmount(){
     		console.log("Eva")
     		this.$refs.evaluationForm.validateField('amount', valid => {
@@ -392,8 +409,6 @@ export default {
     	},
     	evaluateLoan(){    		
     		let vm = this	
-    		let retention = this.dataDefaultSettings.loan_refundable_retention
-    		let insurance = this.dataDefaultSettings.loan_redemption_insurance
 
     		this.$refs.evaluationForm.validate((valid) => {
     			if (valid) {
@@ -408,93 +423,19 @@ export default {
 
 
 		    			console.log("getProduct", getProduct)
+		    			this.isLoading = true
 		    			if(getProduct){
-			    			let p_interest = getProduct.prepaid_interest
-			    			let prepaid_interest = 0
-			    			let service_charge = 0
-			    			let saving_retention = 0
-			    			let redemption_insurance = 0
+		    				this.$API.Loan.getLatestLoan(getProduct.id, this.memberDetails.id)
+				    		.then(result => {
+				    			let res = result.data
 
-			    			if(p_interest){
-			    				 prepaid_interest = amount * (Number(p_interest) / 100)
-			    				console.log("prepaid_interest", prepaid_interest)
-			    			}
-
-			    			//Calculate Service Charge
-			    			if(this.evaluationForm.service_charge){
-
-				    			let getServiceFee = getProduct.serviceCharge.find(sc => { return Number(sc.month_term) == Number(duration) && amount < Number(sc.max_amount) && amount > Number(sc.min_amount)})
-				    			if(getServiceFee){
-				    				service_charge = amount * (Number(getServiceFee.percentage) / 100)
-				    				console.log("service_charge", service_charge)
-				    			}
-
-				    		}
-
-				    		//Calculate Retention
-			    			if(this.evaluationForm.saving_retention){
-
-				    			saving_retention = amount * (Number(this.dataDefaultSettings.loan_refundable_retention) / 100)
-				    			console.log("saving_retention", saving_retention)
-				    			
-				    		}
-
-				    		//Calculate Insurance
-			    			if(this.evaluationForm.redemption_insurance){
-
-				    			redemption_insurance = amount * (Number(this.dataDefaultSettings.loan_redemption_insurance) / 100)
-				    			console.log("redemption_insurance", redemption_insurance)
-				    			
-				    		}
-
-				    		//Quincena
-				    		let principal_amort = ( amount / duration ) / 2
-
-				    		principal_amort = principal_amort.toFixed(2)
-				    		console.log("principal_amort", principal_amort)
-
-				    		let prepaid_amort = 0;
-
-				    		if(getProduct.id == 1){
-				    			let pre_amort = 0
-				    			let preinterest = this.p_interest
-				    			let preMonth = 0
-				    			let preRemainingMonth = 0
-
-				    			if(Number(duration) == 12){
-				    				preMonth = 5
-				    				preRemainingMonth = 7
-				    			}
-
-				    			else if(Number(duration) == 18){
-				    				preMonth = 7.5
-				    				preRemainingMonth = 11.5
-				    			}
-
-				    			else if(Number(duration) == 24){
-				    				preMonth = 10
-				    				preRemainingMonth = 14
-				    			}
-
-				    			else if(Number(duration) == 36){
-				    				preMonth = 15
-				    				preRemainingMonth = 21
-				    			}
-
-				    			pre_amort = (amount * this.$nf.numberFixed(preinterest, 2)) / preMonth
-			    				pre_amort = pre_amort * preRemainingMonth
-			    				pre_amort = pre_amort / (duration * 2)
-			    				prepaid_amort = pre_amort.toFixed2
-				    		}
-
-
-			    			this.evaluationForm.prepaid_interest = prepaid_interest
-			    			this.evaluationForm.service_charge_amount = service_charge
-			    			this.evaluationForm.saving_retention_amount = saving_retention
-			    			this.evaluationForm.redemption_insurance_amount = redemption_insurance
-
-			    			this.evaluationForm.principal_amortization_quincena = principal_amort
-			    			this.evaluationForm.prepaid_amortization_quincena = prepaid_amort
+				    			this.calculateLoan(getProduct, res.data)
+				    			console.log("res", res)
+				    			//this.isLoading = false
+							}).catch(err => {
+								console.log(err)
+							})
+			    			
 			    		}
 
 		    		}
@@ -503,6 +444,105 @@ export default {
 	            	return false;
 	          	}
     		})
+    	},
+    	calculateLoan(getProduct, latestLoan){
+    		console.log("getProduct", getProduct)
+    		console.log("latestLoan", latestLoan)
+    		let evalForm = cloneDeep(this.evaluationForm)
+    		//To calculate redemption insurance (redemp * year)
+    		let redemptionInsurance = parseFloat(this.dataDefaultSettings.loan_redemption_insurance) * (parseInt(evalForm.term)/12)
+    		console.log(redemptionInsurance)
+
+    		//Set Amount
+    		this.evaluationForm.debit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
+    		this.evaluationForm.credit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
+
+    		let p_interest = getProduct.prepaid_interest
+			let prepaid_interest = 0
+			let service_charge = 0
+			let saving_retention = 0
+			let redemption_insurance = 0
+
+			if(p_interest){
+				 prepaid_interest = amount * (Number(p_interest) / 100)
+				console.log("prepaid_interest", prepaid_interest)
+			}
+
+			//Calculate Service Charge
+			if(evalForm.service_charge){
+
+    			let getServiceFee = getProduct.serviceCharge.find(sc => { return Number(sc.month_term) == Number(duration) && amount < Number(sc.max_amount) && amount > Number(sc.min_amount)})
+    			if(getServiceFee){
+    				service_charge = amount * (Number(getServiceFee.percentage) / 100)
+    				console.log("service_charge", service_charge)
+    			}
+
+    		}
+
+    		/*//Calculate Retention
+			if(evalForm.saving_retention){
+
+    			saving_retention = amount * (Number(this.dataDefaultSettings.loan_refundable_retention) / 100)
+    			console.log("saving_retention", saving_retention)
+    			
+    		}*/
+
+    		//Calculate Insurance
+			if(getProduct.redemption_insurance){
+
+    			redemption_insurance = amount * (Number(redemptionInsurance) / 100)
+    			console.log("redemption_insurance", redemption_insurance)
+    			
+    		}
+
+    		//Quincena
+    		let principal_amort = ( amount / duration ) / 2
+
+    		principal_amort = principal_amort.toFixed(2)
+    		console.log("principal_amort", principal_amort)
+
+    		let prepaid_amort = 0;
+
+    		if(getProduct.id == 2){
+    			let pre_amort = 0
+    			let preinterest = this.p_interest
+    			let preMonth = 0
+    			let preRemainingMonth = 0
+
+    			if(Number(duration) == 12){
+    				preMonth = 5
+    				preRemainingMonth = 7
+    			}
+
+    			else if(Number(duration) == 18){
+    				preMonth = 7.5
+    				preRemainingMonth = 11.5
+    			}
+
+    			else if(Number(duration) == 24){
+    				preMonth = 10
+    				preRemainingMonth = 14
+    			}
+
+    			else if(Number(duration) == 36){
+    				preMonth = 15
+    				preRemainingMonth = 21
+    			}
+
+    			pre_amort = (amount * this.$nf.numberFixed(preinterest, 2)) / preMonth
+				pre_amort = pre_amort * preRemainingMonth
+				pre_amort = pre_amort / (duration * 2)
+				prepaid_amort = pre_amort.toFixed2
+    		}
+
+
+			this.evaluationForm.prepaid_amortization_quincena = prepaid_interest/2
+			this.evaluationForm.service_charge_amount = service_charge
+			//this.evaluationForm.saving_retention_amount = saving_retention
+			this.evaluationForm.redemption_insurance_amount = redemption_insurance
+
+			this.evaluationForm.principal_amortization_quincena = principal_amort
+			this.evaluationForm.prepaid_amortization_quincena = prepaid_amort
     	},
     	newLoan(){
     		if(this.memberDetails.id != null){

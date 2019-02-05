@@ -35,3 +35,9 @@ Vue.component('time-deposit-list', TimeDepositList)
 //Loan
 import LoanEvaluation from './components/Loan/LoanEvaluation.vue'
 Vue.component('loan-evaluation', LoanEvaluation)
+
+//General Voucher
+import VoucherCreate from './components/Voucher/VoucherCreate.vue'
+Vue.component('voucher-create', VoucherCreate)
+import VoucherView from './components/Voucher/VoucherView.vue'
+Vue.component('voucher-view', VoucherView)
