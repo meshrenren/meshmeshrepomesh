@@ -91,4 +91,71 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
         return $interestAmount;
 
     }
+    
+    public function checkMaturity()
+    {
+    	$today = date("Y-m-d");
+    	//get td to check maturity
+    	$timeDeposits = TimeDepositAccount::find()
+    	->where(["AND", "maturity_date<='".$today."'", "account_status='ACTIVE'"])
+    	->all();
+    	
+    	
+    	foreach ($timeDeposits as $tdrow)
+    	{
+   
+    		try {
+    			
+    			//add to td transaction
+    			$tdTransaction = new TimeDepositTransaction();
+    			$tdTransaction->fk_account_number = $tdrow['accountnumber'];
+    			$tdTransaction->transaction_type = "TDINTEREST";
+    			$tdTransaction->amount = $tdrow['amount'] * ($tdrow['interest_rate']/100);
+    			$tdTransaction->balance = $tdTransaction->amount + $tdrow['amount'];
+    			$tdTransaction->transaction_date = date('Y-m-d H:i:s');
+    			$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
+    			
+    			if(!$tdTransaction->save())
+    			{
+    				echo $tdTransaction->errors;
+    				break;
+    			}
+    			
+    			//deduct to td transaction
+    			$tdTransaction2 = new TimeDepositTransaction();
+    			$tdTransaction2->fk_account_number = $tdrow['accountnumber'];
+    			$tdTransaction2->transaction_type = "TDTRANSFER";
+    			$tdTransaction2->amount = $tdTransaction->balance;
+    			$tdTransaction2->balance = 0;
+    			$tdTransaction2->transaction_date = date('Y-m-d H:i:s');
+    			$tdTransaction2->transacted_by = \Yii::$app->user->identity->id;
+    			
+    			if(!$tdTransaction2->save())
+    			{
+    				echo $tdTransaction2->errors;
+    				break;
+    			}
+    			
+    			$theTDAccount = TimeDepositAccount::findOne($tdrow['accountnumber']);
+    			$theTDAccount->balance = 0;
+    			$theTDAccount->account_status='MATURED';
+    			
+    			if(!$theTDAccount->save())
+    			{
+    				echo $theTDAccount->errors;
+    				break;
+    			}
+    			
+    			
+    			
+    		} catch (\Exception $e) {
+    			
+    			echo $e;
+    		}
+    		
+    		
+    	}
+    	
+    	
+    }
 }

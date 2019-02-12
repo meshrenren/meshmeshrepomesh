@@ -7,6 +7,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use kartik\mpdf\Pdf; 
+use app\models\TimeDepositAccount;
 
 class TimeDepositController extends \yii\web\Controller
 {
@@ -35,6 +36,12 @@ class TimeDepositController extends \yii\web\Controller
         	'tdTransaction'	=> $tdTransaction
         ]);
     }
+    
+    public function actionShowtd()
+    {
+    	$model = new TimeDepositAccount();
+    	$model->checkMaturity();
+    }
 
     public function actionSaveTdAccount(){
 
@@ -57,6 +64,7 @@ class TimeDepositController extends \yii\web\Controller
 
         	$model->maturity_date = $mature_days;
         	$model->date_created = date('Y-m-d H:i:s');
+        	$model->account_status = 'ACTIVE';
 	        $model->created_by = \Yii::$app->user->identity->id;
 	        $model->balance = $tdaccount['amount'];
 	        //var_dump($model->attributes);
