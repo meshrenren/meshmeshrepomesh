@@ -95,8 +95,11 @@ class MemberController extends \yii\web\Controller
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     	$model = new Member();
     	
-    	
-    	return $model->getMemberList($_POST['nameInput']);
+    	$post = \Yii::$app->getRequest()->getBodyParams();
+        if(count($post['joinWith']) > 0)
+            return $model->getMemberList($post['nameInput'], $post['joinWith']);
+        else
+            return $model->getMemberList($post['nameInput']);
     	
     }
     

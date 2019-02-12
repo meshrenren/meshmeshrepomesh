@@ -15,13 +15,12 @@
             </el-table-column>
             <el-table-column label="Name" >
                 <template slot-scope="scope">
-                    <el-popover trigger="hover" placement="top">
-                        <p>Name: {{ scope.row.fullname }}</p>
-                    
-                        <div slot="reference" class="name-wrapper">
-                            <el-tag size="medium">{{ scope.row.fullname }}</el-tag>
-                        </div>
-                    </el-popover>
+                    <p><b>{{ scope.row.fullname }}</b></p>
+                </template>
+            </el-table-column>
+            <el-table-column label="Station" >
+                <template slot-scope="scope">
+                    <span style="margin-left: 10px">{{ scope.row.station.name }}</span>
                 </template>
             </el-table-column>
             <el-table-column label="Action" width="100">
@@ -52,14 +51,18 @@ window.noty = require('noty');
 
 
 export default {
-    props: [],
+    props: ["showModal", 'dataIncludes'],
  
     data: function () {
+        let inc = new Array
+        if(this.dataIncludes)
+            inc = this.dataIncludes
         return {
             tableData       : null,
             nameInput       : "",
-            dialogVisible   : true,
-            isGettingMember : true
+            dialogVisible   : this.showModal,
+            isGettingMember : true,
+            includes        : inc
         }
     },
     created(){
@@ -84,8 +87,10 @@ export default {
     methods: {
         getMember(){
             //start
-            let data = new FormData()
-            data.set('nameInput', this.nameInput)
+            let data = {
+                nameInput   : this.nameInput,
+                joinWith    : this.includes
+            }
             
             axios.post(this.$baseUrl+'/member/get-member', data).then((result) => {
                 let res = result.data
@@ -108,6 +113,11 @@ export default {
     },
 
     mixins: [dialogComponent],
+    watch: {
+        showModal : function(val){     
+            this.dialogVisible = val
+        }
+    }
   
 }
 </script>

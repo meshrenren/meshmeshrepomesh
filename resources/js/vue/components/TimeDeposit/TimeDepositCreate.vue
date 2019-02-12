@@ -5,26 +5,46 @@
               	<h3 class="box-title">Time Deposit Account</h3>
             </div>
 	        <div class = "box-body">
-	        	<el-form label-position="right" label-width="180px" :model="memberDetails">
-	        		<el-row :gutter = "20">
-	        			<el-col :span="18">
-						  	<el-form-item label="Member ID">
-						    	<el-input v-model="memberDetails.id" :disabled = "true"></el-input>
+	        	<el-row :gutter = "20">			
+					<el-col :span="12">
+						<el-input v-model="accountFilter" autofocus placeholder = "Search Account">
+		                </el-input>
+						<el-table :data="accountListData"  height="450" stripe border style = "margin-top:10px;">
+				            <el-table-column label="Account Number">
+				                <template slot-scope="scope">
+				                    <span style="margin-left: 10px">{{ scope.row.accountnumber }}</span>
+				                </template>
+				            </el-table-column>
+				            <el-table-column label="Account Name">
+				                <template slot-scope="scope">
+				                    <span  style="margin-left: 10px">{{ scope.row.account_name }}</span>
+				                </template>
+				            </el-table-column>
+				            <el-table-column label="Amount">
+				                <template slot-scope="scope">
+				                    <span style="margin-left: 10px">{{ $nf.numberFixed(scope.row.amount, 2) }}</span>
+				                </template>
+				            </el-table-column>
+				            <el-table-column label="Maturity Date">
+				                <template slot-scope="scope">
+				                    <span style="margin-left: 10px">{{ $df.formatDate(scope.row.maturity_date, "MMM DD, YYYY") }}</span>
+				                </template>
+				            </el-table-column>
+				        </el-table>
+					</el-col>
+        			<el-col :span="12">
+						<el-form label-position="right" label-width="180px" :model="tdAccountDetails" :rules = "ruleAccount" ref = "tdAccountDetails">
+	        				<el-form-item label="Type" prop = "type">
+								<el-select v-model="tdAccountDetails.type" placeholder="Select type" @change = "selectType">
+								    <el-option abel="Member" value="Member"></el-option>
+								    <el-option abel="Group" value="Group"></el-option>
+								</el-select>
 						  	</el-form-item>
-						</el-col>
-	        			<el-col :span="18">
-						  	<el-form-item label="Member Name">
-						    	<el-input v-model="memberDetails.fullname" :disabled = "true"></el-input>
-						  	</el-form-item>
-						</el-col>
-	        			<el-col :span="6">
-						  	<el-button type = "info" @click="showSearchModal = true">Search Member</el-button>
-						</el-col>
-					</el-row>
-				</el-form>
-				<el-form label-position="right" label-width="180px" :model="tdAccountDetails" :rules = "ruleAccount" ref = "tdAccountDetails">
-					<el-row :gutter = "20">
-	        			<el-col :span="12">
+						  	<el-form-item label="Name" prop = "account_name">
+				                <el-input v-model="tdAccountDetails.account_name" :disabled = "tdAccountDetails.type == 'Member' ? true:false">
+				                    <el-button slot="append" type = "primary" @click="getMember()" v-if = "tdAccountDetails.type == 'Member'">Find Member</el-button>
+				                </el-input>
+				            </el-form-item>
 						  	<el-form-item label="Product" prop = "fk_td_product">
 						    	<el-select v-model="tdAccountDetails.fk_td_product" placeholder="Select" @change = "productChange" ref = "fk_td_product" :disabled = "true">
 								    <el-option
@@ -39,45 +59,54 @@
 						    	<el-input-number v-model="tdAccountDetails.amount" controls-position="right" :min="1" @change = "amountChange"></el-input-number>
 						  	</el-form-item>
 						  	<el-form-item label="Term (Days)" prop = "term">
-						    	<el-input-number v-model="tdAccountDetails.term" controls-position="right" :min="1" @change = "termChange"></el-input-number>
+						  		<el-select v-model="tdAccountDetails.term" placeholder="Select" @change = "termChange" ref = "term" >
+								    <el-option
+								      v-for="(item, ind) in termList"
+								      :key="ind"
+								      :label="item"
+								      :value="item">
+								    </el-option>
+								</el-select>
 						  	</el-form-item>
 						  	<el-form-item label="Interest Rate" prop = "interest_rate">
-						    	<el-input-number v-model="tdAccountDetails.interest_rate" controls-position="right" :disabled = "true"></el-input-number>
+						    	<el-input v-model="tdAccountDetails.interest_rate" :disabled = "true">
+						    		<span slot="append">%</span>
+						    	</el-input>
+						    	<!-- <el-input-number v-model="tdAccountDetails.interest_rate" controls-position="right" :disabled = "true">
+						    		<span slot="append">%</span>
+						    	</el-input-number> -->
 						  	</el-form-item>
 						  	<a class = "click-class" @click="viewRateModal" >View rate list of the selected product here.</a>
-						  	<span class = "pull-right"><el-button type = "primary" @click = "saveTDAccount" :disabled = "memberDetails.id == null">Save Time Deposit</el-button></span>
-						</el-col>
-						<el-col :span = "12">
-							<h4>Member's Time Deposit List</h4>
-							<el-table :data="accountTDList" style="width: 100%" stripe border>
-					            <el-table-column label="Product">
-					                <template slot-scope="scope">
-					                    <span style="margin-left: 10px">{{ scope.row.product.description }}</span>
-					                </template>
-					            </el-table-column>
-					            <el-table-column label="Amount">
-					                <template slot-scope="scope">
-					                    <span style="margin-left: 10px">{{ scope.row.amount }}</span>
-					                </template>
-					            </el-table-column>
-					            <el-table-column label="Term">
-					                <template slot-scope="scope">
-					                    <span style="margin-left: 10px">{{ scope.row.term }}</span>
-					                </template>
-					            </el-table-column>
-					            <el-table-column label="Maturity Date">
-					                <template slot-scope="scope">
-					                    <span style="margin-left: 10px">{{ scope.row.maturity_date }}</span>
-					                </template>
-					            </el-table-column>
-		       				</el-table>
-						</el-col>
-					</el-row>
-				</el-form>
+
+						  	<div class = "signatory" v-if = "tdAccountDetails.type == 'Group'">
+								<el-button type = "info" @click="getSignatory()">Add Signatory</el-button>
+								<el-table :data="signatoryList" style="width: auto; margin-top:10px;" stripe border>
+						            <el-table-column label="Member Signatory">
+						                <template slot-scope="scope">
+						                    <span style="margin-left: 10px">{{ scope.row.fullname }}</span>
+						                </template>
+						            </el-table-column>
+						            <el-table-column label="Action">
+						                <template slot-scope="scope">
+						                    <el-button type = "danger" @click="removeSignatory(scope.row)">Remove</el-button>
+						                </template>
+						            </el-table-column>
+						        </el-table>
+							</div>
+
+						 	<div style="margin-top: 10px;">
+								<span class = "pull-right">
+									<!-- <el-button @click="cancelForm">Cancel</el-button> -->
+									<el-button type = "primary" @click = "saveTDAccount">Save Time Deposit</el-button>
+								</span>
+							</div>
+						</el-form>
+					</el-col>
+				</el-row>
 			</div>
         </div>
-        <search-member :base-url="baseUrl" v-if = "showSearchModal" @select="populateField" @close = "showSearchModal = false" >
-	  	</search-member>
+        <search-member :base-url="baseUrl" :show-modal = "showSearchModal" @select="populateField" @close = "showSearchModal = false" >
+	  		</search-member>
         <view-rate-list :product-detail="selectedProduct" v-if = "showRateList" @close = "showRateList = false" >
 	  	</view-rate-list>
     </div>
@@ -90,9 +119,10 @@
 
     import SearchMember from '../General/SearchMember.vue'  
     import ViewRateList from '../General/ViewRateList.vue'  
+    import _forEach from 'lodash/forEach'
 
 export default {
-	props: ['dataTimeDepositAccount', 'dataTimeDepositTransaction', 'dataTimeDepositProduct', 'baseUrl'],
+	props: ['dataTimeDepositAccount', 'dataTimeDepositTransaction', 'dataTimeDepositProduct', 'dataTimeDepositList', 'baseUrl'],
 	data: function () {
 
     	let account  = {}
@@ -108,11 +138,15 @@ export default {
       		accountTDList 			: [],
       		tdProductSelect 		: [],
       		tdProduct 				: this.dataTimeDepositProduct,
-      		selectedProduct 		: null
+      		selectedProduct 		: null,
+      		accountList 			: this.dataTimeDepositList,
+      		accountFilter 			: "",
+      		isGet 					: "",
+      		signatoryList			: [],
 		}
 	},
 	created(){
-		this.showSearchModal = true
+		//this.showSearchModal = true
 		let product = []
 		let defaultProduct = null
 		this.tdProduct.forEach(function(detail){
@@ -126,6 +160,7 @@ export default {
 		this.tdProductSelect = product
 
 		this.tdAccountDetails.fk_td_product = defaultProduct
+		this.tdAccountDetails.type = "Member"
 
 
 		let validateRate = (rule, value, callback) => {
@@ -139,6 +174,7 @@ export default {
 
 		this.ruleAccount = {
   			fk_td_product : [{ required: true, message: 'Product cannot be blank.', trigger: 'change' },],
+  			account_name : [{ required: true, message: 'Name cannot be blank.', trigger: 'change' },],
   			amount : [{ required: true, message: 'Amount type cannot be blank.', trigger: 'change' },],
   			term : [{ required: true, message: 'Term type cannot be blank.', trigger: 'change' },],
   			interest_rate : [{ validator: validateRate, trigger: 'blur' },],
@@ -148,6 +184,44 @@ export default {
     components: {
       	SearchMember,
       	ViewRateList
+    },
+    computed:{
+    	accountListData(){
+    		let datalist = this.accountList
+            let filterKey = this.accountFilter
+
+            _forEach(datalist, function(element, index) {
+            	if(element.type == "Member" && element.member){
+            		element.account_name = element.member.fullname
+            	}
+            	
+            })
+
+            if (filterKey) {
+                if(datalist){
+                    datalist = datalist.filter(function (row) {
+                    	return  String(row.account_name).toLowerCase().indexOf(filterKey) > -1
+                    })
+                }
+            }
+
+            return datalist
+    	},
+    	termList(){
+    		let product = this.tdProduct.find(ci => { return Number(ci.id) == this.tdAccountDetails.fk_td_product})
+    		let ratelist = cloneDeep(product.ratetable)
+    		let list = []
+
+    		_forEach(ratelist, function(element, index) {
+    			let getInd = list.findIndex(ci => { return Number(ci) == Number(element.days)})
+            	if(getInd < 0){
+            		list.push(element.days)
+            	}
+            	
+            })
+
+            return list
+    	}
     },
     methods: {
     	viewRateModal(){
@@ -164,13 +238,54 @@ export default {
                 }).show();
     		}
     	},
-    	populateField(data){
+    	selectType(val){
+    		if(val == "Member"){
+    			if(!this.tdAccountDetails.account_name){
+    				this.isGet = "AccountMember"
+    				this.showSearchModal = true
+    			}
+    		}
+    		else if(val == "Group"){
+    			this.tdAccountDetails.account_name = ""
+    			this.tdAccountDetails.member_id = null
+    		}
+    	},  
+    	getSignatory(){
+    		this.isGet = "AccountSignatory"
+    		this.showSearchModal = true
+    	},
+    	removeSignatory(data){
+    		let index = this.signatoryList.findIndex(ci => {return Number(ci.id) == Number(data.id)})		
+			if (index >= 0){ 
+				this.signatoryList.splice(index, 1)
+			}
+    	},  	
+    	getMember(){
+    		this.isGet = "AccountMember"
+    		this.showSearchModal = true
+    	},
+    	/*populateField(data){
     		this.memberDetails = data
     		this.tdAccountDetails.member_id = data.id
     		this.getOtherAccounts(data.id)
 
 
     		this.$refs.fk_td_product.focus()
+    	},*/
+    	populateField(data){
+    		if(this.isGet == "AccountMember"){
+    			console.log("data", data)
+    			this.tdAccountDetails.account_name = data.fullname
+    			this.tdAccountDetails.member_id = data.id
+    		}
+    		else if(this.isGet == "AccountSignatory"){
+    			let getInd = this.signatoryList.findIndex(mem => Number(mem.id) == Number(data.id))
+    			if(getInd < 0){
+    				this.signatoryList.push(data)
+    			}
+    		}
+    		//this.memberDetails = data
+    		
     	},
     	productChange(val){
     		this.getRate(val, this.tdAccountDetails.term, this.tdAccountDetails.amount)
@@ -222,8 +337,21 @@ export default {
             })
     		
     	},
-    	saveTDAccount(){    	
+    	saveTDAccount(){   
     		let vm = this	
+    		if(this.tdAccountDetails.type == "Group" && this.signatoryList.length == 0)
+    		{
+    			new Noty({
+		            theme: 'relax',
+		            type: "error",
+		            layout: 'topRight',
+		            text: 'Please add signatory member for group Time Deposit account.',
+		            timeout: 2500
+		        }).show()
+
+		        return false
+    		}
+
     		this.$refs.tdAccountDetails.validate((valid) => {
 	          	if (valid) {
 	          		vm.$swal({
@@ -241,14 +369,19 @@ export default {
 		            }).then(function(result) {
 		            	if (result.value) {
 
-					    	let data = new FormData()
-		            		data.set('accountDetails', JSON.stringify(vm.tdAccountDetails))
+		            		let data = {
+			            		accountDetails : vm.tdAccountDetails,
+			            		signatoryList : vm.signatoryList
+			            	}
+
+					    	/*let data = new FormData()
+		            		data.set('accountDetails', JSON.stringify(vm.tdAccountDetails))*/
 		            		axios.post(vm.baseUrl+'/time-deposit/save-td-account', data).then((result) => {
 				                let res = result.data
 				                let type = ""
 				                let message = ""
 				                console.log(res)
-				                if(res.length > 0 ){
+				                if(res.success){
 				                	type = "success"
 				                	message = "Time Deposit Account successfully created."
 				                }

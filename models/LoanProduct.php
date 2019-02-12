@@ -37,7 +37,7 @@ class LoanProduct extends \yii\db\ActiveRecord
             [['int_rate', 'prepaid_interest'], 'number'],
             [['max_amount', 'min_amount', 'interest_type_id'], 'integer'],
             [['product_name'], 'string', 'max' => 75],
-            [['interest_type_id'], 'exist', 'skipOnError' => true, 'targetClass' => LoanInterestType::className(), 'targetAttribute' => ['interest_type_id' => 'id']],
+            //[['interest_type_id'], 'exist', 'skipOnError' => true, 'targetClass' => LoanInterestType::className(), 'targetAttribute' => ['interest_type_id' => 'id']],
         ];
     }
 

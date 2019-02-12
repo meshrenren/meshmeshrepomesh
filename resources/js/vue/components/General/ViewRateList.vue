@@ -13,7 +13,7 @@
             </el-table-column>
             <el-table-column label="Term (Days)">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.day_from }}</span>
+                    <span style="margin-left: 10px">{{ scope.row.days }}</span>
                 </template>
             </el-table-column>
             <el-table-column label="Interest Rate">
