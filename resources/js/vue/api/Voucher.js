@@ -9,9 +9,11 @@ export default {
 		return axios.post('/general-voucher/get-name', params)
 	},
 
-	saveVoucherEntries(voucherList){	
+	saveVoucherEntries(voucherList, gvNumber, forceAdd){	
 		let params = {
-			voucherList : 'voucherList'
+			voucherList : voucherList,
+			gvNumber : gvNumber,
+			forceAdd : forceAdd
 		}
 		return axios.post('/general-voucher/save-voucher-entries', params)
 	},

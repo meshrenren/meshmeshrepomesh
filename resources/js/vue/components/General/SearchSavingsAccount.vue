@@ -16,7 +16,7 @@
             </el-table-column>
             <el-table-column label="Name"  width="180">
                 <template slot-scope="scope">
-                    <el-popover trigger="hover" placement="top">
+                    <el-popover trigger="hover" placement="top" v-if = "scope.row.member">
                         <p>Name: {{ scope.row.member.fullname }}</p>
                     
                         <div slot="reference" class="name-wrapper">

@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\helpers\particulars\ParticularHelper;
+
 class GeneralVoucherController extends \yii\web\Controller
 {
     public function actionIndex()
@@ -10,7 +12,7 @@ class GeneralVoucherController extends \yii\web\Controller
     	$voucher = new \app\models\GeneralVoucher;
         $voucherModel = $voucher->attributes();
 
-        $getParticular = \app\models\Particulars::find()->asArray()->all();
+        $getParticular = ParticularHelper::getParticulars();
 
         return $this->render('index', [
         	'model'         => $voucherModel,
@@ -44,22 +46,40 @@ class GeneralVoucherController extends \yii\web\Controller
 
             $post = \Yii::$app->getRequest()->getBodyParams();
             $entryList = $post['voucherList'];
+            $gvNumber = $post['gvNumber'];
+            $forceAdd = $post['forceAdd'];
             $voucherIds = [];
             $hasError = false;
+            if(!$forceAdd){
+                $getVoucher  = \app\models\GeneralVoucher::find()->where(['gv_num' => $gvNumber])->one();
+                if($getVoucher){
+                     return [
+                        'error'     => 'has_gvnum',
+                        'hasError'  => true
+                    ];
+                }
+               
+            }
+            $error = [];
             foreach ($entryList as $entry) {
                 $createEntry  = new \app\models\GeneralVoucher;
+                if(isset($entry['name_id'])){
+                    unset($entry['name_id']);
+                }
                 $createEntry->attributes = $entry;
                 if($createEntry->save()){
                     array_push($voucherIds, $createEntry->id);
                 }
                 else{
+                    array_push($error, $createEntry->getErrors()) ;
                     $hasError = true;
                 }
             }
 
             return [
-                'voucherIds' => $voucherIds,
-                'hasError' => $hasError
+                'voucherIds'    => $voucherIds,
+                'hasError'      => $hasError,
+                'error'         => $error
             ];
         }
     }

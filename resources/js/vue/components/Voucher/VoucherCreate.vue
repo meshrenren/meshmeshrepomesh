@@ -4,15 +4,16 @@
             <el-col :span="17">
                 <el-form :model="voucherModel" :rules="rulesVoucher" ref="voucherForm" label-width="160px" class="demo-ruleForm" label-position = "top">
                     <el-row :gutter="20">
-                        <el-col :span="5">
+                        <el-col :span="4">
                             <el-form-item label="Number" prop="gv_num" ref="gv_num">
                                 <el-input type="text" v-model="voucherModel.gv_num" :disabled = "disabledVoucher"></el-input>
                             </el-form-item>
                         </el-col>
 
-                        <el-col :span="9">
+                        <el-col :span="7">
                             <el-form-item label="Name" prop="name_id" ref="name_id">
                                 <el-select
+                                    @change = "changeName"
                                     v-model="voucherModel.name_id"
                                     filterable
                                     remote allow-create
@@ -28,6 +29,12 @@
                                       :value="item.value">
                                     </el-option>
                                 </el-select>
+                            </el-form-item>
+                        </el-col>
+                        <el-col :span = "3">
+                            <el-form-item label="" prop="type" ref="type">
+                                <span><el-radio v-model="voucherModel.type" label="Individual">Individual</el-radio></span>
+                                <span><el-radio v-model="voucherModel.type" label="Group">Group</el-radio></span>
                             </el-form-item>
                         </el-col>
 
@@ -46,11 +53,11 @@
                     </el-row>        
                 </el-form>
                 
-                <el-form :model="rulesParticulars" :rules="rulesParticulars" ref="particularsForm" label-width="160px" class="demo-ruleForm" label-position = "top">
+                <el-form :model="particularsModel" :rules="rulesParticulars" ref="particularsForm" label-width="160px" class="demo-ruleForm" label-position = "top">
                     <el-row :gutter="20">
                         <el-col :span="11">
-                            <el-form-item label="description" prop="description_id" ref="description_id">
-                                <el-select v-model="particularsModel.description" :disabled = "disabledParticular" filterable placeholder="Select">
+                            <el-form-item label="Description" prop="description_id">
+                                <el-select v-model="particularsModel.description_id" :disabled = "disabledParticular" filterable placeholder="Select"  ref="description_id">
                                     <el-option
                                         v-for="item in dataParticularList"
                                         :key="parseInt(item.id)"
@@ -62,14 +69,14 @@
                         </el-col>
 
                         <el-col :span="5">
-                            <el-form-item label="Debit" prop="debit" ref="debit">
-                                <el-input type="number" v-model="particularsModel.debit" :disabled = "disabledParticular"></el-input>
+                            <el-form-item label="Debit" prop="debit">
+                                <el-input type="number" v-model="particularsModel.debit" :disabled = "disabledParticular" @keyup.enter.native = "addEntry" ref="debit"></el-input>
                             </el-form-item>
                         </el-col>
 
                         <el-col :span="5">
-                            <el-form-item label="Credit" prop="credit" ref="credit">
-                                <el-input type="number" v-model="particularsModel.credit" :disabled = "disabledParticular"></el-input>
+                            <el-form-item label="Credit" prop="credit">
+                                <el-input type="number" v-model="particularsModel.credit" :disabled = "disabledParticular" @keyup.enter.native = "addEntry" ref="credit"></el-input>
                             </el-form-item>
                         </el-col>
 
@@ -79,12 +86,32 @@
                             </el-form-item>
                         </el-col>
 
+                        <el-col :span="11">
+                            <p></p>
+                        </el-col>
+
+                        <el-col :span="5">
+                            <el-form-item label="Total Debit">
+                                <el-input type="number" v-model="totalDebit" disabled></el-input>
+                            </el-form-item>
+                        </el-col>
+
+                        <el-col :span="5">
+                            <el-form-item label="Total Credit">
+                                <el-input type="number" v-model="totalCredit" disabled></el-input>
+                            </el-form-item>
+                        </el-col>
+
+                        <el-col :span="3">  
+                            <p></p>
+                        </el-col>
+
                     </el-row>
                 </el-form>
-                
+
                 <el-row :gutter="20">
                     <el-col :span="3">
-                        <el-button type = "success" @click = "saveVoucherEntries">Finish</el-button>
+                        <el-button type = "success" @click = "createVoucher(false)">Finish</el-button>
                     </el-col>
                     <el-col :span="3">
                         <el-button type = "danger" @click = "cancelVoucher">Cancel</el-button>
@@ -158,7 +185,11 @@
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
 
+
+    import {getNameList} from '../../mixins/getNameList.js'
+
 export default {
+    mixins: [getNameList],
     props: ['dataModel', 'dataParticularList'],
     data: function () {    	
     	let voucher  = {}
@@ -178,13 +209,14 @@ export default {
             disabledParticular      : true,
             nameList                : [],
             loading                 : false,
-            allNameList             : [],
-            entryList               : []
+            entryList               : [],
+            totalDebit              : 0,
+            totalCredit             : 0
       	}
   	},
     created(){
         this.rulesVoucher = {
-            gv_num: [ { required: true, message: 'Number cannot be blank.', trigger: 'blur' }
+            gv_num: [ { required: true, message: 'GV Number cannot be blank.', trigger: 'blur' }
             ],
             name_id: [ { required: true, message: 'Name cannot be blank.', trigger: 'blur' }
             ],
@@ -201,58 +233,74 @@ export default {
     },
     methods:{
         getVoucherName(nameId){
-            console.log("nameId", nameId)
             let selectName = this.allNameList.find(rt => {
                 return rt.value == nameId
             })
-            console.log("selectName", selectName)
             if(selectName){
                 return selectName.label
             }
-            return "" 
+            return nameId
         },
         getDescription(descId){
-            console.log("descId", descId)
             let selectDesc = this.dataParticularList.find(rt => {
                 return rt.id == descId
             })
-            console.log("selectDesc", selectDesc)
             if(selectDesc){
                 return selectDesc.name
             }
             return "" 
         },
         saveVoucherMain(){
-            console.log("Save Voucher")
             this.$refs.voucherForm.validate((valid) => {
                 if (valid){
                     this.disabledVoucher = true
                     this.disabledParticular = false
+
+                    this.$refs.description_id.focus()
                 }
             })
         },
+        changeName(val){
+            //get type and type id
+            let nameSplit = val
+            nameSplit = nameSplit.split("-")
+            this.voucherModel.type = "Individual"
+            this.voucherModel.type_id = null
+            if(nameSplit.length > 1){
+                if(nameSplit[0] == 'station' || nameSplit[0] == 'division'){
+                    this.voucherModel.type = "Group"
+                }
+                if(nameSplit[0] == 'station' || nameSplit[0] == 'division' || nameSplit[0] == 'member'){
+                    this.voucherModel.type_id = nameSplit[1]
+                }
+            }
+        },
         addEntry(){
-            console.log("Add entry")
             this.$refs.particularsForm.validate((valid) => {
                 if (valid){
-                    let arr = this.voucherModel
-                    arr['description_id'] = this.particularsModel.description_id
+                    let arr = cloneDeep(this.voucherModel)
+                    let particulars = cloneDeep(this.particularsModel)
+
+                    arr['description_id'] = particulars.description_id
                     arr['debit'] = ""
-                    if(this.particularsModel.debit)
-                        arr['debit'] = Number(this.particularsModel.debit).toFixed(2)
+                    if(particulars.debit){
+                        arr['debit'] = Number(particulars.debit).toFixed(2)
+                    }
 
                     arr['credit'] = ""
-                    if(this.particularsModel.credit)
-                        arr['credit'] = Number(this.particularsModel.credit).toFixed(2)
+                    if(particulars.credit){
+                        arr['credit'] = Number(particulars.credit).toFixed(2)
+                    }
 
                     this.entryList.push(arr)
 
                     this.$refs.particularsForm.resetFields()
+
+                    this.$refs.description_id.focus()
                 }
             })
         },
         remoteMethod(query){
-            console.log("query", query)
             if (query && query !== '') {
                 this.loading = true;
                 setTimeout(() => {
@@ -265,42 +313,10 @@ export default {
               this.nameList = [];
             }
         },
-        mergeAll(member, division, station){
-            let list = []
-            _forEach(member, rs =>{
-                let arr = {
-                    value : 'member-' + rs.id,
-                    label   : rs.first_name + " " + rs.middle_name + " " + rs.last_name
-                }
-
-                list.push(arr)
-            })
-
-            _forEach(station, rs =>{
-                let arr = {
-                    value : 'station-' + rs.id,
-                    label   : rs.name
-                }
-
-                list.push(arr)
-            })
-
-            _forEach(division, rs =>{
-                let arr = {
-                    value : 'division-' + rs.id,
-                    label   : rs.name
-                }
-
-                list.push(arr)
-            })
-
-            this.allNameList = list
-        },
         getName(){
             this.$API.Voucher.getVoucherName()
             .then(result => {
                 var res = result.data
-                console.log(res)
                 this.mergeAll(res.member, res.division, res.station)
             })
             .catch(err => {
@@ -312,14 +328,43 @@ export default {
         
         },
         handleRemove(index, row){
-            console.log(index, row)
             this.entryList.splice(index, 1)
         },
-        saveVoucherEntries(){
+        validateEntries(){
+            let text = ""
+            let type = "error"
+            let hasError = false
+            if(this.totalDebit != this.totalCredit){
+                hasError = true
+                text = "Total Credit and Total Debit is not match."
+            }
+            if(hasError){
+                new Noty({
+                    theme: 'relax',
+                    type: type,
+                    layout: 'topRight',
+                    text: text,
+                    timeout: 3000
+                }).show();
+            }
+            
+            return hasError
+
+        },
+        createVoucher(isForceAdd){
             let vm = this
+
+            if(this.validateEntries()){
+                return
+            }
+            let title = 'Add Entries?'
+            let text = "Are you sure you want to add entries in general voucher?"
+            if(isForceAdd){
+                text = "GV Number already exist. Are you sure you want to add entries in general voucher?"
+            }
             vm.$swal({
-                title: 'Add Entries?',
-                text: "Are you sure you want to add entries in general voucher.",
+                title: title,
+                text: text,
                 type: 'warning',
                 showCancelButton: true,
                 cancelButtonColor: '#d33',
@@ -332,30 +377,45 @@ export default {
             }).then(function(result) {
                 if (result.value) {
                     let generalVoucherList = []
-                    _forEach(vm.entryList, el=>{
-                        el['name'] = getVoucherName(el.name_id)
-
+                    let list = cloneDeep(vm.entryList)
+                    _forEach(list, el=>{
+                        el['name'] = vm.getVoucherName(el.name_id)
                         el['description_id'] = el.description_id
-                        el['description'] = getDescription(el.description_id)
+                        el['description'] = vm.getDescription(el.description_id)
+                        el['date_transact'] = vm.$df.formatDate(el.date_transact, "YYYY-MM-DD")
                         generalVoucherList.push(el)
 
                     })
-                    console.log("generalVoucherList", generalVoucherList)
-                    vm.$API.Voucher.saveVoucherEntries(generalVoucherList)
-                    .then(result => {
-                        var res = result.data
-                        console.log(res)
-                        //this.mergeAll(res.member, res.division, res.station)
-                        vm.resetAll()
-                    })
-                    .catch(err => {
-                        console.log(err)
-                    })
-                    .then(_ => { 
-                        main_preloader.style.display = 'none'
-                    })
-                    
+                    vm.saveVoucherEntries(generalVoucherList, vm.voucherModel.gv_num, isForceAdd)
                 }
+            })
+        },
+        saveVoucherEntries(generalVoucherList, gvNumber, isForceAdd){
+            this.$API.Voucher.saveVoucherEntries(generalVoucherList, gvNumber, isForceAdd)
+            .then(result => {
+                var res = result.data
+                if(res.hasError){
+                    if(res.error == 'has_gvnum'){
+                        this.createVoucher(true)
+                    }
+                }
+                else{
+                    new Noty({
+                        theme: 'relax',
+                        type: 'success',
+                        layout: 'topRight',
+                        text: 'Voucher entries successfully added.',
+                        timeout: 3000
+                    }).show();
+                    this.resetAll()
+                }
+                //this.mergeAll(res.member, res.division, res.station)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                main_preloader.style.display = 'none'
             })
         },
         cancelVoucher(){
@@ -384,11 +444,36 @@ export default {
             this.disabledVoucher = false
             this.$refs.particularsForm.resetFields()
             this.disabledParticular = true
+            this.entryList = []
+            this.totalCredit = 0
+            this.totalDebit = 0
+        }
+    },
+    watch:{
+        'entryList': function(val){
+            let totalD = 0
+            let totalC = 0
+            if(val.length > 0){
+                _forEach(val, vl =>{
+                    if(vl.debit){
+                        totalD = parseFloat(totalD) + parseFloat(vl.debit)
+                    }
+
+                    if(vl.credit){
+                        totalC = parseFloat(totalC) + parseFloat(vl.credit)
+                    }
+                })
+            }
+
+            this.totalCredit = totalC
+            this.totalDebit = totalD
         }
     }
   }
 </script>
 <style lang="scss">
+    
+    @import '~noty/src/noty.scss';
     .general-voucher{
         .el-form{
             .el-button{

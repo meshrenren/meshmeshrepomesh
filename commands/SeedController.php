@@ -519,6 +519,22 @@ class SeedController extends Controller
             }
         }
     }
+
+    public function actionPayrollParticulars(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_payrollparticular');
+        $particulars = $query->all();
+        foreach ($particulars as $key => $prt) {
+
+            $getAccount = \app\models\PayrollParticulars::find()->where(['name' => $prt['Particular']])->one();
+            if($getAccount == null){
+                $product = new \app\models\PayrollParticulars;
+                $product->name = $prt['Particular'];
+                $product->save();
+            }
+        }
+    }
 }
 
 

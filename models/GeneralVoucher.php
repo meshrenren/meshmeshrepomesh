@@ -40,7 +40,7 @@ class GeneralVoucher extends \yii\db\ActiveRecord
             [['description', 'type'], 'string'],
             [['debit', 'credit'], 'number'],
             [['type_id', 'created_by', 'description_id'], 'integer'],
-            [['description', 'name'], 'requires'],
+            [['description', 'name'], 'required'],
             [['gv_num', 'name', 'posting_code'], 'string', 'max' => 1000],
         ];
     }
@@ -64,5 +64,13 @@ class GeneralVoucher extends \yii\db\ActiveRecord
             'created_date' => 'Created Date',
             'created_by' => 'Created By',
         ];
+    }
+
+
+    /*
+    * get particular relationship
+    */
+    public function getParticular(){
+        return $this->hasOne(Particular::className(), ['id' => 'description_id']);
     }
 }

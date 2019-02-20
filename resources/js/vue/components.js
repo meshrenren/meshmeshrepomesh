@@ -41,3 +41,9 @@ import VoucherCreate from './components/Voucher/VoucherCreate.vue'
 Vue.component('voucher-create', VoucherCreate)
 import VoucherView from './components/Voucher/VoucherView.vue'
 Vue.component('voucher-view', VoucherView)
+
+//Payment Record
+import PaymentRecord from './components/Payment/PaymentRecord.vue'
+Vue.component('payment-record', PaymentRecord)
+import PaymentPayroll from './components/Payment/PaymentPayroll.vue'
+Vue.component('payment-payroll', PaymentPayroll)
