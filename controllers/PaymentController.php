@@ -80,10 +80,13 @@ class PaymentController extends \yii\web\Controller
 
         $getParticular = ParticularHelper::getPayrollParticulars();
 
+        $members = \app\models\Member::find()->all();
+
         return $this->render('payroll-payment', [
             'paymentModel'          => $paymentModel,
             'pytPayrollModel'       => $pytPayrollModel,
-            'pytPayrollListModel'   => $pytPayrollListModel
+            'pytPayrollListModel'   => $pytPayrollListModel,
+            'memberList'            => $members
         ]);
     }
 

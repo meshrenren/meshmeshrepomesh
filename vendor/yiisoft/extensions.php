@@ -309,15 +309,6 @@ return array (
       '@kartik/export' => $vendorDir . '/kartik-v/yii2-export',
     ),
   ),
-  'kartik-v/yii2-mpdf' => 
-  array (
-    'name' => 'kartik-v/yii2-mpdf',
-    'version' => '1.0.1.0',
-    'alias' => 
-    array (
-      '@kartik/mpdf' => $vendorDir . '/kartik-v/yii2-mpdf',
-    ),
-  ),
   'kartik-v/yii2-helpers' => 
   array (
     'name' => 'kartik-v/yii2-helpers',

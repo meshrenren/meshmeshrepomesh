@@ -52,7 +52,7 @@
 						                </template>
 						            </el-table-column>
 						        </el-table>
-						        <el-button type = "primary"  @click="printForm()" v-if = "accountDetails.account_no">Print Form</el-button>
+						        <el-button type = "primary"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
 						    </div>
 	            		</div>
             		</el-col>
@@ -88,12 +88,15 @@
   	@import '~noty/src/noty.scss';
 </style>
 <script>
+	import fileExport from '../../mixins/fileExport'
+
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
     import SearchSavingsAccount from '../General/SearchSavingsAccount.vue' 
 
 export default {
+	mixins: [fileExport],
 	props: ['dataTransaction', 'baseUrl'],
 	data: function () {
     	let transaction  = {}
@@ -106,7 +109,8 @@ export default {
 			savingTransactionForm 	: transaction,
 			ruleTransaction 		: {},
 			showSearchModal			: false,
-			accountTransactionList	: null
+			accountTransactionList	: null,
+			dataLoad				: false
 		}
 	},
 	created(){
@@ -120,8 +124,21 @@ export default {
       	SearchSavingsAccount
     },
     methods:{
-    	printForm(){
-    		window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
+    	printForm(type){			
+			this.$API.Savings.getFormPDF(this.accountDetails.account_no, type)
+			.then(result => {
+				let res = result.data
+				if(type == 'pdf'){
+					this.exporter(type, 'Savings Withdraw', res)
+				}
+				else if(type == 'print'){
+					this.winPrint(res.data, 'Savings Withdraw')
+				}
+			})
+			.catch(err => { console.log(err)})
+			.then(_ => { this.dataLoad = false })
+
+    		//window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
     	},
     	populateField(data){
     		console.log(data)

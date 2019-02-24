@@ -22,9 +22,10 @@
         "kartik-v/yii2-widgets": "*",
         "kartik-v/yii2-editable": "@dev",
         "kartik-v/yii2-export": "@dev",
-        "kartik-v/yii2-mpdf": "*",
         "kartik-v/yii2-builder": "@dev",
-        "kartik-v/yii2-field-range": "*"
+        "kartik-v/yii2-field-range": "*",
+        "phpoffice/phpspreadsheet": "^1.6",
+        "mpdf/mpdf": "^7.1"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

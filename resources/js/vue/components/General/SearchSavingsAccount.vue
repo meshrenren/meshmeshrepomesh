@@ -8,7 +8,7 @@
             </el-form-item>
         </el-form>
 
-        <el-table :data="savingsList" style="width: 100%" height="400" stripe border>
+        <el-table :data="savingsList" style="width: 100%" height="400" stripe border v-loading = "loadingTable">
             <el-table-column label="ID" width="180">
                 <template slot-scope="scope">
                     <span style="margin-left: 10px">{{ scope.row.account_no }}</span>
@@ -69,7 +69,8 @@ export default {
       return {               
                tableData: null,
                nameInput: "",
-               dialogVisible : true
+               dialogVisible : true,
+               loadingTable : false,
             }
     },
     created(){
@@ -83,7 +84,7 @@ export default {
             if (filterKey) {
                 if(datalist){
                     datalist = datalist.filter(function (row) {
-                        return String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1
+                        return row.member && String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1
                     })
                 }
             }
@@ -95,6 +96,7 @@ export default {
         getAccount(){
             let data = new FormData()
             data.set('nameInput', this.nameInput)
+            this.loadingTable = true
             
             axios.post(this.baseUrl+'/savings/get-account', data).then((result) => {
                 let res = result.data
@@ -110,6 +112,8 @@ export default {
 
                 if(error.response.status == 403)
                     location.reload()
+            }).then(_ => { 
+                this.loadingTable = false
             })
         },
 

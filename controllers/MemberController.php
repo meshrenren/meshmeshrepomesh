@@ -8,6 +8,8 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\Member;
 
+use app\helpers\accounts\LoanHelper;
+
 class MemberController extends \yii\web\Controller
 {
 
@@ -177,6 +179,51 @@ class MemberController extends \yii\web\Controller
 
     }
 
+
+    public function actionGetAllAccounts(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $id = $post['id'];
+            $type = $post['type'];
+            $name = $post['name'];
+
+            $getSavings = [];
+            $getShare = [];
+            $getTimedeposits = [];
+            $getLoan = [];
+
+
+            if($type == "Individual"){
+                $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['member_id' => $id])->asArray()->all();
+
+                $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['fk_memid' => $id])->asArray()->all();
+
+                $tdAcc = new \app\models\TimeDepositAccount;
+                $getTimedeposits = $tdAcc->getAccountListByMemberID($id);
+
+                $getLoan = LoanHelper::getAccountLoanInfo($id);
+            }
+            else{
+                $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->where(['account_name' => $name, 'type' => 'Group'])->asArray()->all();
+                $getTimedeposits = \app\models\TimeDepositAccount::find()->innerJoinWith(['product'])->where(['account_name' => $name, 'type' => 'Group'])->asArray()->all();
+            }
+        
+            return [
+                'savingsAccounts'        => $getSavings,
+                'shareAccounts'          => $getShare,
+                'timedepositAccounts'    => $getTimedeposits,
+                'loanAccounts'           => $getLoan
+            ];
+            
+        }
+
+    }
+
+
     public function actionGetAccounts(){
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -185,9 +232,9 @@ class MemberController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
             $member_id = $post['member_id'];
-            $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product', 'member'])->where(['member_id' => $member_id])->asArray()->all();
+            $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['member_id' => $member_id])->asArray()->all();
 
-            $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product', 'member'])->where(['fk_memid' => $member_id])->asArray()->all();
+            $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['fk_memid' => $member_id])->asArray()->all();
 
             $tdAcc = new \app\models\TimeDepositAccount;
             $getTimedeposits = $tdAcc->getAccountListByMemberID($member_id);

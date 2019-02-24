@@ -1,7 +1,7 @@
 <template>
 	<div class="general-voucher">
-        <el-row :gutter="20">
-            <el-col :span="17">
+        <el-row :gutter="40">
+            <el-col :span="16">
                 <el-form :model="voucherModel" :rules="rulesVoucher" ref="voucherForm" label-width="160px" class="demo-ruleForm" label-position = "top">
                     <el-row :gutter="20">
                         <el-col :span="4">
@@ -171,8 +171,96 @@
                     </el-table>
                 </div>
             </el-col>
-            <el-col :span="7">
-
+            <el-col :span="8">
+                <h4>Savings Account</h4>
+                <el-table
+                    :data="memberAccounts.savings"
+                    border striped
+                    style="width: 100%"
+                    min-height = "100px"
+                    v-loading = "loadingTable">
+                    <el-table-column
+                        prop="product.description"
+                        label="Loan Type">
+                        <template slot-scope="scope">
+                            {{ scope.row.product.description}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="balance"
+                        label="Balance">
+                         <template slot-scope="scope">
+                            {{ Number(scope.row.balance).toFixed(2) }}
+                        </template>                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="account_no"
+                        label="Account #">                        
+                    </el-table-column>
+                </el-table>
+                <hr>
+                <h4>Share Account</h4>
+                <el-table
+                    :data="memberAccounts.share"
+                    border striped
+                    style="width: 100%"
+                    min-height = "100px"
+                    v-loading = "loadingTable">
+                    <el-table-column
+                        prop="product.name"
+                        label="Loan Type">
+                        <template slot-scope="scope">
+                            {{ scope.row.product.name}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="balance"
+                        label="Balance">
+                         <template slot-scope="scope">
+                            {{ Number(scope.row.balance).toFixed(2) }}
+                        </template>                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="accountnumber"
+                        label="Account #">                        
+                    </el-table-column>
+                </el-table>
+                <hr>
+                <h4>Time Deposit Accounr</h4>
+                <el-table
+                    :data="memberAccounts.time_deposit"
+                    border striped
+                    style="width: 100%"
+                    min-height = "100px"
+                    v-loading = "loadingTable">
+                    <el-table-column
+                        prop="product.description"
+                        label="Loan Type">
+                        <template slot-scope="scope">
+                            {{ scope.row.product.description}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="balance"
+                        label="Amount">
+                         <template slot-scope="scope">
+                            {{ Number(scope.row.amount).toFixed(2) }}
+                        </template>                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="term"
+                        label="Term">                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="maturity_date"
+                        label="Maturity Date">                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="accountnumber"
+                        label="Account #">                        
+                    </el-table-column>
+                </el-table>
+                <hr>
             </el-col>
         </el-row>
 	</div>
@@ -211,7 +299,9 @@ export default {
             loading                 : false,
             entryList               : [],
             totalDebit              : 0,
-            totalCredit             : 0
+            totalCredit             : 0,
+            memberAccounts          : {savings : [], share: [], time_deposit : []},
+            loadingTable            : false
       	}
   	},
     created(){
@@ -260,20 +350,51 @@ export default {
                 }
             })
         },
+        resetAccount(){
+            this.memberAccounts.loans = []
+            this.memberAccounts.savings = []
+            this.memberAccounts.share = []
+            this.memberAccounts.time_deposit = []
+        },
         changeName(val){
             //get type and type id
             let nameSplit = val
             nameSplit = nameSplit.split("-")
             this.voucherModel.type = "Individual"
             this.voucherModel.type_id = null
+            let id = null
             if(nameSplit.length > 1){
                 if(nameSplit[0] == 'station' || nameSplit[0] == 'division'){
                     this.voucherModel.type = "Group"
                 }
+                if(nameSplit[0] == 'member'){
+                    id = nameSplit[1]
+                }
+
                 if(nameSplit[0] == 'station' || nameSplit[0] == 'division' || nameSplit[0] == 'member'){
                     this.voucherModel.type_id = nameSplit[1]
                 }
             }
+
+            let name = this.getVoucherName(val)
+            this.resetAccount()
+            this.loadingTable = true
+
+            this.$API.Member.getAccounts(this.voucherModel.type, id, name)
+            .then(result => {
+                var res = result.data
+                console.log(res)
+                this.memberAccounts.loans = res.loanAccounts
+                this.memberAccounts.savings = res.savingsAccounts
+                this.memberAccounts.share = res.shareAccounts
+                this.memberAccounts.time_deposit = res.timedepositAccounts
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.loadingTable = false
+            })
         },
         addEntry(){
             this.$refs.particularsForm.validate((valid) => {

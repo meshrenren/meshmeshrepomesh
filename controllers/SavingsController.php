@@ -9,6 +9,8 @@ use yii\filters\VerbFilter;
 use app\models\SavingsAccount;
 use kartik\mpdf\Pdf; 
 
+use \Mpdf\Mpdf;
+
 class SavingsController extends \yii\web\Controller
 {
 
@@ -257,60 +259,59 @@ class SavingsController extends \yii\web\Controller
         return $topdf->render();
     }
 
-    public function actionPrintWithdraw($account_no){
-        $model = \app\models\SavingsAccount::find()->where(['savingsaccount.account_no' => $account_no])->joinWith(['member'])->one();
-        if($model){
-            $transaction = \app\models\SavingsAccount::find()->where(['account_no' => $model->account_no])->one();
-            $account_no = $model->account_no;
-            $account_name = $model->member->fullname;
-            $last_transaction = "";
-            if($model->lastTransaction)
-                $last_transaction = date('M d, Y', strtotime($model->lastTransaction->transaction_date));
-            $balance = number_format($model->balance, 2, '.', ',');
+    public function actionPrintWithdraw(){
 
-            $settings  = new \app\models\DefaultSettings;
-            $penalty = number_format($settings->getValue('savings_penalty'), 2, '.', ',');;
-            //$account_balance = $model->account->account_balance;
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-            $template = Yii::$app->params['formTemplate']['savings_withdraw'];
+        if(\Yii::$app->getRequest()->getBodyParams()){
 
-            $template = str_replace('[account_name]', $account_name, $template);
-            $template = str_replace('[account_number]', $account_no, $template);
-            $template = str_replace('[last_transaction]', $last_transaction , $template);
-            $template = str_replace('[balance]', $balance, $template);
-            $template = str_replace('[penalty]', $penalty, $template);
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            $account_no = $postData['account_no'];
+            $type = $postData['type'];
+            $model = \app\models\SavingsAccount::find()->where(['savingsaccount.account_no' => $account_no])->joinWith(['member'])->one();
+            if($model){
+                $transaction = \app\models\SavingsAccount::find()->where(['account_no' => $model->account_no])->one();
+                $account_no = $model->account_no;
+                $account_name = $model->member->fullname;
+                $last_transaction = "";
+                if($model->lastTransaction)
+                    $last_transaction = date('M d, Y', strtotime($model->lastTransaction->transaction_date));
+                $balance = number_format($model->balance, 2, '.', ',');
 
-            $pdf = new Pdf([
-                // set to use core fonts only
-                // 'mode' => Pdf::MODE_CORE, 
-                'mode' => Pdf::MODE_BLANK, 
-                // A4 paper format
-                'format' => Pdf::FORMAT_A4, 
-                // portrait orientation
-                'orientation' => Pdf::ORIENT_PORTRAIT, 
-                // stream to browser inline
-                'destination' => Pdf::DEST_BROWSER, 
-                // your html content input
-                'content' => $template,  
-                // format content from your own css file if needed or use the
-                // enhanced bootstrap css built by Krajee for mPDF formatting 
-                'cssFile' => '@vendor/kartik-v/yii2-mpdf/assets/kv-mpdf-bootstrap.min.css',
-                // any css to be embedded if required
-                'cssInline' => '.kv-heading-1{font-size:10px}', 
-                'defaultFontSize' => '10',
-                 // set mPDF properties on the fly
-                'options' => '',
-                 // call mPDF methods on the fly
-                'filename' => 'withdral.pdf'
-            ]);
+                $settings  = new \app\models\DefaultSettings;
+                $penalty = number_format($settings->getValue('savings_penalty'), 2, '.', ',');;
+                //$account_balance = $model->account->account_balance;
 
-            //return $pdf;
+                $template = Yii::$app->params['formTemplate']['savings_withdraw'];
 
-            //$topdf = Yii::$app->view->topdf($template, 'Savings', 'withdral.pdf');
+                $template = str_replace('[account_name]', $account_name, $template);
+                $template = str_replace('[account_number]', $account_no, $template);
+                $template = str_replace('[last_transaction]', $last_transaction , $template);
+                $template = str_replace('[balance]', $balance, $template);
+                $template = str_replace('[penalty]', $penalty, $template);
 
-            //$topdf->getApi()->SetJS('this.print();');
-            // return the pdf output as per the destination setting
-            return $pdf->render();
+
+                if($type == "pdf"){
+                    // Set up MPDF configuration
+                    $config = [
+                        'mode' => '+utf-8', 
+                        "allowCJKoverflow" => true, 
+                        "autoScriptToLang" => true,
+                        "allow_charset_conversion" => false,
+                        "autoLangToFont" => true,
+                    ];
+                    $mpdf = new Mpdf($config);
+                    $mpdf->WriteHTML($template);
+
+                    // Download the PDF file
+                    $mpdf->Output();
+                    exit();
+                }
+                else{
+                    return [ 'data' => $template];
+                }
+                
+            }
         }
         
     }

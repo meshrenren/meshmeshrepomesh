@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use yii\filters\AccessControl;
+use app\helpers\accounts\LoanHelper;
 
 class LoanController extends \yii\web\Controller
 {
