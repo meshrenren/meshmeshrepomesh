@@ -3,7 +3,7 @@ export default {
 		getSwalAlert(type, title, text) {
 			this.$swal({
                 title: title,
-                text: text,
+                html: text,
                 type: type,
                 showCancelButton: false,
                 cancelButtonColor: '#d33',

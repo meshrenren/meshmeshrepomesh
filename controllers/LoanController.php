@@ -168,7 +168,7 @@ class LoanController extends \yii\web\Controller
             }
             else{
                 //Save Loan transaction here
-                $saveTransaction = true;
+                $saveTransaction = false;
 
 
                 //After loan transaction is saved, Save General Voucher and Entries
@@ -188,7 +188,7 @@ class LoanController extends \yii\web\Controller
 
                 }
                 else{
-                    $error = 'ERROR_TRANSACTION';
+                    $error = 'ERROR_GV';
                 }
             }
             return [
