@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\helpers\particulars\ParticularHelper;
+use app\helpers\voucher\VoucherHelper;
 
 class GeneralVoucherController extends \yii\web\Controller
 {
@@ -12,7 +13,8 @@ class GeneralVoucherController extends \yii\web\Controller
     	$voucher = new \app\models\GeneralVoucher;
         $voucherModel = $voucher->attributes();
 
-        $getParticular = ParticularHelper::getParticulars();
+        $filter  = ['category' => ['savings', 'share', 'time_deposit', 'others']];
+        $getParticular = ParticularHelper::getParticulars($filter);
 
         return $this->render('index', [
         	'model'         => $voucherModel,
@@ -87,10 +89,10 @@ class GeneralVoucherController extends \yii\web\Controller
 
     public function actionView(){
         $this->layout = 'main-vue';
-        $voucherList = $this->getVoucherList(null, 100);
+        //$voucherList = $this->getVoucherList(null, 100);
 
         return $this->render('view', [
-            'voucherList'   => $voucherList
+            'voucherList'   => []
         ]);
     }
 
@@ -101,37 +103,30 @@ class GeneralVoucherController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
             $filter = $post['filter'];
-            $voucherList = $this->getVoucherList($filter, null);
+            $getVoucher  = \app\models\GeneralVoucher::find()->where(['gv_num' => $filter['gv_num']])->asArray()->one();
+            $voucherList = [];
+            $success = false;
+            if($getVoucher){
+                $listFilter = ['voucher_id' => $getVoucher['id']];
+                $voucherList = VoucherHelper::getVoucherList($listFilter, null);
+                $success = true;
+            }
 
             return [
-                'data' => $voucherList
+                'success'   => $success,
+                'voucher'   => $getVoucher,
+                'list'      => $voucherList
             ];
         }
     }
 
-    public function getVoucherList($filter = null, $limit = null){
+    public function actionGetAllVoucher(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $voucherList = \app\models\GeneralVoucher::find();
-
-        if($filter &&is_array($filter)){
-            $where = [];
-            foreach ($filter as $key => $value) {
-                $where[$key] = $value;
-            }
-
-            if(count($shere) > 0){
-                $voucherList = $voucherList->where($where);
-            }
-        }
-
-        if($limit){
-            $voucherList = $voucherList->limit(100);
-        }
-
-        $voucherList = $voucherList->orderBy('id DESC')->asArray()->all();
-
-        return $voucherList;
-
+        $getVouchers  = \app\models\GeneralVoucher::find()->asArray()->all();
+        return [
+            'data' => $getVouchers
+        ];
     }
 
 }

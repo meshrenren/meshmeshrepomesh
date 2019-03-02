@@ -5,6 +5,9 @@ namespace app\controllers;
 use Yii;
 use yii\filters\AccessControl;
 use app\helpers\accounts\LoanHelper;
+use app\helpers\particulars\ParticularHelper;
+use app\helpers\voucher\VoucherHelper;
+
 
 class LoanController extends \yii\web\Controller
 {
@@ -120,6 +123,79 @@ class LoanController extends \yii\web\Controller
 	    	$accountList = $model->getAccountListByMemberID($member_id);
 	    	return $accountList;
         	
+        }
+    }
+
+    public function actionReleaseVoucher(){
+        $this->layout = 'main-vue';
+
+        $voucher = new \app\models\GeneralVoucher;
+        $voucherModel = $voucher->attributes();
+
+        $details = new \app\models\VoucherDetails;
+        $detailsModel = $details->attributes();
+
+        $filter  = ['category' => ['LOAN', 'OTHERS']];
+        $getParticular = ParticularHelper::getParticulars($filter);
+
+        return $this->render('loan-voucher', [
+            'voucherModel'      => $voucherModel,
+            'detailsModel'      => $detailsModel,
+            'particularList'    => $getParticular
+        ]);
+    }
+
+    public function actionSaveReleaseLoan(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $voucherModel = $post['voucherModel'];
+            $entryList = $post['entryList'];
+            $success = false;
+            $error = '';
+            $data = null;
+
+            //Check GV Number if exist
+            $gv_num = $voucherModel['gv_num'];
+            $getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
+            if($getGV){
+                return [
+                    'success'   => false,
+                    'error'     => 'ERROR_HASGV'
+                ];
+            }
+            else{
+                //Save Loan transaction here
+                $saveTransaction = true;
+
+
+                //After loan transaction is saved, Save General Voucher and Entries
+
+                if($saveTransaction){
+                    //Save gv and entries
+                    $saveGV = VoucherHelper::saveVoucher($voucherModel);
+                    if($saveGV){
+                        //Entries
+                        VoucherHelper::insertEntries($entryList,$saveGV->id, 'LOAN');
+                        $success = true;
+                    }
+                    else{
+                        $error = 'ERROR_GV';
+                    }
+
+
+                }
+                else{
+                    $error = 'ERROR_TRANSACTION';
+                }
+            }
+            return [
+                'success'   => $success,
+                'error'     => $error,
+                'data'      => $data
+            ];
         }
     }
 }

@@ -20,8 +20,12 @@ export default {
 
 	getVoucher(filter){
 		let params = {
-			filter : 'filter'
+			filter : filter
 		}
 		return axios.post('/general-voucher/get-voucher', params)
+	},
+
+	getAllVouchers(){
+		return axios.post('/general-voucher/get-all-voucher')
 	}
 }
