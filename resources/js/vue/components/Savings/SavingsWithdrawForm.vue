@@ -7,7 +7,7 @@
             <div class = "box-body">
             	<el-row :gutter="20">
 
-            		<el-col :span="12">
+            		<el-col :span="11">
             			<div class = "box-content">
 	            			<el-form label-position="right" label-width="180px" :model="accountDetails">
 	            				<el-form-item label="Member" prop="memberName">
@@ -57,7 +57,7 @@
 	            		</div>
             		</el-col>
 
-            		<el-col :span="12">
+            		<el-col :span="13">
             			<div class = "box-content">
             				<el-form :model="savingTransactionForm" :rules="ruleTransaction" ref="savingTransactionForm" label-width="180px" >
             					<el-form-item label="Current Balance" prop="current_balance">
@@ -65,20 +65,38 @@
 								</el-form-item>
 								<el-form-item label="Withdraw Amount" prop="amount">
 									<el-input-number v-model="savingTransactionForm.amount" controls-position="right" :min="1" :max = "savingTransactionForm.current_balance"></el-input-number>
-								</el-form-item>	
+								</el-form-item>
+								<el-form-item label="Reference Number (GV Number)" prop="reference_number">
+									<el-input type = "text" v-model="savingTransactionForm.reference_number"></el-input>
+								</el-form-item>		
 								<el-form-item label="Remarks" prop="remarks">
 									<el-input type = "textarea" v-model="savingTransactionForm.remarks">
 									</el-input>
+								</el-form-item>		
+								<el-form-item label="Includes Voucher?" prop="includes_voucher">
+									<el-checkbox v-model="savingTransactionForm.includes_voucher" ></el-checkbox>
 								</el-form-item>	
 								<el-button type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Save Withdraw</el-button>
             				</el-form>
+            			</div>
+
+            			<div class = "box-content" style="margin-top: 10px;" v-if = "savingTransactionForm.includes_voucher">
+            				<voucher-form
+			                    :data-model = "dataModel" 
+			                    :data-details-model = "dataDetailsModel" 
+			                    :data-particular-list = "dataParticularList"
+			                    :data-default = "voucherDetails"
+			                    :data-entry-list = "entryList"
+			                    :allow-create-name = 'false'
+			                    :show-buttons = 'false'>
+			                </voucher-form>
             			</div>
             		</el-col>
 
             	</el-row>
 	        	
             </div>
-        	<search-savings-account :base-url="baseUrl" v-if = "showSearchModal" @select="populateField" @close = "showSearchModal = false" >
+        	<search-savings-account :base-url="baseUrl" :show-modal = "showSearchModal" @select="populateField" @close = "showSearchModal = false" >
 	  		</search-savings-account>
         </div>
     </div>
@@ -94,23 +112,27 @@
     import axios from 'axios'
     import Noty from 'noty'
     import SearchSavingsAccount from '../General/SearchSavingsAccount.vue' 
+    import VoucherForm from '../Voucher/VoucherForm.vue' 
 
 export default {
 	mixins: [fileExport],
-	props: ['dataTransaction', 'baseUrl'],
+	props: ['dataTransaction', 'dataModel', 'dataDetailsModel', 'dataParticularList', 'baseUrl'],
 	data: function () {
     	let transaction  = {}
   		this.dataTransaction.forEach(function(detail){
   			transaction[detail] = null
   		})
   		transaction['transaction_type'] = "Cash"
+  		transaction['includes_voucher'] = true
 		return{
 			accountDetails			: {product : {description : null}, 'member' : {fullname : null}},
 			savingTransactionForm 	: transaction,
 			ruleTransaction 		: {},
 			showSearchModal			: false,
 			accountTransactionList	: null,
-			dataLoad				: false
+			dataLoad				: false,
+			voucherDetails			: {},
+			entryList 	 			: [],
 		}
 	},
 	created(){
@@ -121,7 +143,8 @@ export default {
 		}
 	},
     components: {
-      	SearchSavingsAccount
+      	SearchSavingsAccount,
+      	VoucherForm
     },
     methods:{
     	printForm(type){			

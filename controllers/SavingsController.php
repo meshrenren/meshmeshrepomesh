@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\SavingsAccount;
 use kartik\mpdf\Pdf; 
+use app\helpers\particulars\ParticularHelper;
 
 use \Mpdf\Mpdf;
 
@@ -87,8 +88,23 @@ class SavingsController extends \yii\web\Controller
 
         $transaction = new \app\models\SavingsTransaction;
         $savingsTransaction = $transaction->attributes();
+
+        //Voucher Models
+        $voucher = new \app\models\GeneralVoucher;
+        $voucherModel = $voucher->attributes();
+
+        $details = new \app\models\VoucherDetails;
+        $detailsModel = $details->attributes();
+
+        $filter  = ['category' => ['SAVINGS', 'OTHERS']];
+        $getParticular = ParticularHelper::getParticulars($filter);
         
-        return $this->render('withdraw', [ 'savingsTransaction' => $savingsTransaction]);
+        return $this->render('withdraw', [ 
+            'savingsTransaction' => $savingsTransaction,
+            'voucherModel'      => $voucherModel,
+            'detailsModel'      => $detailsModel,
+            'particularList'    => $getParticular
+        ]);
     }
 
     public function actionCreateAccount()

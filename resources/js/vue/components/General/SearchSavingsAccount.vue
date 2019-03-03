@@ -63,7 +63,7 @@ window.noty = require('noty');
 
 
 export default {
-    props: ['baseUrl'],
+    props: ['baseUrl', 'showModal'],
  
     data: function () {
       return {               
@@ -122,7 +122,11 @@ export default {
             this.dialogVisible = false
         }
     },
-
+    watch: {
+        showModal : function(val){     
+            this.dialogVisible = val
+        }
+    },
     mixins: [dialogComponent],
   
 }

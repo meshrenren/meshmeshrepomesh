@@ -84,7 +84,7 @@
             	</el-row>
 	        	
             </div>
-        	<search-savings-account :base-url="baseUrl" v-if = "showSearchModal" @select="populateField" @close = "showSearchModal = false" >
+        	<search-savings-account :base-url="baseUrl" :show-modal = "showSearchModal" @select="populateField" @close = "showSearchModal = false" >
 	  		</search-savings-account>
         </div>
     </div>

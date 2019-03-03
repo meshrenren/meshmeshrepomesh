@@ -6,7 +6,9 @@
             <el-col :span="16">
                 <voucher-form
                     :data-model = "voucherModel" 
+                    :data-details-model = "detailsModel" 
                     :data-particular-list = "particularList"
+                    :allow-create-name = 'true'
                     @finishvoucher = "createVoucher">
                 </voucher-form>
             </el-col>
@@ -100,6 +102,44 @@
                     </el-table-column>
                 </el-table>
                 <hr>
+                <h4>Loan Account</h4>
+                <el-table
+                    :data="memberAccounts.loans"
+                    border striped
+                    style="width: 100%"
+                    height = "500px"
+                    v-loading = "loadingTable">
+                    <el-table-column
+                        prop="product.product_name"
+                        label="Loan Type"
+                        width = "150px">
+                        <template slot-scope="scope">
+                            {{ scope.row.product.product_name}}
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="principal"
+                        label="Principal">
+                         <template slot-scope="scope">
+                            {{ Number(scope.row.principal).toFixed(2) }}
+                        </template>                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="principal_balance"
+                        label="Balance">
+                         <template slot-scope="scope">
+                            {{ Number(scope.row.principal_balance).toFixed(2) }}
+                        </template>                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="term"
+                        label="Term">                       
+                    </el-table-column>
+                    <el-table-column
+                        prop="account_no"
+                        label="Account #">                        
+                    </el-table-column>
+                </el-table>
             </el-col>
         </el-row>
 	</div>
@@ -116,13 +156,14 @@
 
 export default {
     components: { VoucherForm },
-    props: ['dataModel', 'dataParticularList'],
+    props: ['dataModel', 'dataDetailsModel', 'dataParticularList'],
     data: function () {    	
 
       	return {
-      		voucherModel			: this.dataModel,
+            voucherModel            : this.dataModel,
+            detailsModel            : this.dataDetailsModel,
             particularList          : this.dataParticularList,
-            memberAccounts          : {savings : [], share: [], time_deposit : []},
+            memberAccounts          : {loans: [], savings : [], share: [], time_deposit : []},
             loadingTable            : false
       	}
   	},
@@ -156,33 +197,13 @@ export default {
                 this.loadingTable = false
             })
         },
-        validateEntries(){
-            let text = ""
-            let type = "error"
-            let hasError = false
-            if(this.totalDebit != this.totalCredit){
-                hasError = true
-                text = "Total Credit and Total Debit is not match."
-            }
-            if(hasError){
-                new Noty({
-                    theme: 'relax',
-                    type: type,
-                    layout: 'topRight',
-                    text: text,
-                    timeout: 3000
-                }).show();
-            }
-            
-            return hasError
-
-        },
         createVoucher(data){
             let vm = this
             console.log("data", data)
+            let voucher = data.data
 
-            let title = 'Add Entries?'
-            let text = "Are you sure you want to add entries in general voucher?"
+            let title = 'Save Voucher?'
+            let text = "Are you sure you want to save this general voucher?"
             vm.$swal({
                 title: title,
                 text: text,
@@ -197,17 +218,7 @@ export default {
                 width: '400px',
             }).then(function(result) {
                 if (result.value) {
-                    let generalVoucherList = []
-                   /* let list = cloneDeep(vm.entryList)
-                    _forEach(list, el=>{
-                        el['name'] = vm.getVoucherName(el.name_id)
-                        el['description_id'] = el.description_id
-                        el['description'] = vm.getDescription(el.description_id)
-                        el['date_transact'] = vm.$df.formatDate(el.date_transact, "YYYY-MM-DD")
-                        generalVoucherList.push(el)
-
-                    })
-                    vm.saveVoucherEntries(generalVoucherList, vm.voucherModel.gv_num)*/
+                    vm.saveVoucherEntries(voucher.voucherModel, voucher.entryList)
                 }
             })
         },
@@ -215,22 +226,28 @@ export default {
             this.$API.Voucher.saveVoucherEntries(generalVoucherList, gvNumber, isForceAdd)
             .then(result => {
                 var res = result.data
-                if(res.hasError){
-                    if(res.error == 'has_gvnum'){
-                        this.createVoucher(true)
-                    }
-                }
-                else{
+                if(res.success){
                     new Noty({
                         theme: 'relax',
                         type: 'success',
                         layout: 'topRight',
-                        text: 'Voucher entries successfully added.',
+                        text: 'Voucher successfully saved.',
                         timeout: 3000
                     }).show();
-                    this.resetAll()
+                    this.$EventDispatcher.fire('RESET_DATA', [])
                 }
-                //this.mergeAll(res.member, res.division, res.station)
+                else{
+                    let title = "Error: Not Saved"
+                    let type = 'warning'
+                    let text = "Voucher not successfully saved. Please try again or contact administrator."
+                    if(res.error == 'ERROR_HASGV'){
+                        title = 'Error: GV Number Exist'
+                        text = "GV Number " + voucherModel.gv_num + " already exist. Please check in the list and reverse."
+                        type = "error"
+                    }
+
+                    this.getSwalAlert(type, title, text)
+                }
             })
             .catch(err => {
                 console.log(err)

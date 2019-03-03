@@ -108,34 +108,13 @@ export default {
                 this.loadingTable = false
             })
         },
-        validateEntries(){
-            let text = ""
-            let type = "error"
-            let hasError = false
-            if(this.totalDebit != this.totalCredit){
-                hasError = true
-                text = "Total Credit and Total Debit is not match."
-            }
-            if(hasError){
-                new Noty({
-                    theme: 'relax',
-                    type: type,
-                    layout: 'topRight',
-                    text: text,
-                    timeout: 3000
-                }).show();
-            }
-            
-            return hasError
-
-        },
         createVoucher(data){
             let vm = this
             console.log("data", data)
             let voucher = data.data
 
-            let title = 'Add Entries?'
-            let text = "Are you sure you want to add entries in general voucher?"
+            let title = 'Save transaction?'
+            let text = "Are you sure you want to save loan transaction?"
             vm.$swal({
                 title: title,
                 text: text,

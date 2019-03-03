@@ -1,7 +1,7 @@
 <template>
 	<div class="voucher-form">
         <el-form :model="voucherModel" :rules="rulesVoucher" ref="voucherForm" label-width="160px" class="demo-ruleForm" label-position = "top">
-            <el-row :gutter="20">
+            <el-row :gutter="20" v-if = "dataDefault == null">
                 <el-col :span="4">
                     <el-form-item label="Number" prop="gv_num" ref="gv_num">
                         <el-input type="text" v-model="voucherModel.gv_num" :disabled = "disabledVoucher"></el-input>
@@ -57,7 +57,7 @@
                     <el-form-item label="Description" prop="particular_id">
                         <el-select v-model="particularsModel.particular_id" :disabled = "disabledParticular" filterable placeholder="Select"  ref="particular_id">
                             <el-option
-                                v-for="item in dataParticularList"
+                                v-for="item in particularList"
                                 :key="parseInt(item.id)"
                                 :label="item.name"
                                 :value="parseInt(item.id)">
@@ -107,7 +107,7 @@
             </el-row>
         </el-form>
 
-        <el-row :gutter="20">
+        <el-row :gutter="20" v-if = "showButtons">
             <el-col :span="3">
                 <el-button type = "success" size = "large" @click = "createVoucher(false)" :disabled = "btnDisable">Finish</el-button>
             </el-col>
@@ -122,7 +122,7 @@
                 :data="entryList"
                 border striped
                 style="width: 100%"
-                height = "400px">
+                height = "350px">
                 <el-table-column
                     prop="date_transact"
                     label="Date">
@@ -137,7 +137,7 @@
                     <template slot-scope="scope">
                         <el-select v-model="scope.row.particular_id" filterable placeholder="Select">
                             <el-option
-                                v-for="item in dataParticularList"
+                                v-for="item in particularList"
                                 :key="parseInt(item.id)"
                                 :label="item.name"
                                 :value="parseInt(item.id)">
@@ -185,9 +185,45 @@
 
 export default {
     mixins: [getNameList],
-    props: ['dataModel', 'dataDetailsModel', 'dataParticularList', 'allowCreateName'],
+    props: {
+        allowCreateName : {
+            type: Boolean,
+            default : true
+        },
+        dataModel: {
+            type: Array,
+            default : [],
+            required: true
+        },
+        dataDetailsModel: {
+            type: Array,
+            default : [],
+            required: true
+        },
+        dataParticularList: {
+            type: Array,
+            default : [],
+            required: true
+        },
+        dataEntryList: {
+            type: Array,
+            default : [],
+            required: false
+        },
+        showButtons: {
+            type: Boolean,
+            default : true,
+            required: false
+        },
+        dataDefault: {
+            type: Object,
+            default : null,
+            required: false
+        }
+    },
     data: function () {    	
     	let formVoucher  = {}
+
   		this.dataModel.forEach(function(detail){
   			formVoucher[detail] = null
   		})
@@ -202,18 +238,24 @@ export default {
       	return {
       		voucherModel			: formVoucher,
             particularsModel        : formParticulars,
+            particularList          : this.dataParticularList,
             rulesVoucher            : {},
             rulesParticulars        : {},
             disabledVoucher         : false,
             disabledParticular      : true,
             nameList                : [],
             loading                 : false,
-            entryList               : [],
+            entryList               : this.dataEntryList,
             loadingTable            : false,
             btnDisable              : true
       	}
   	},
     created(){
+        if(this.dataDefault){
+            _forEach(this.dataDefault, (key, value) =>{
+                console.log("dataDefault", key, value)
+            })
+        }
         this.rulesVoucher = {
             gv_num: [ { required: true, message: 'GV Number cannot be blank.', trigger: 'blur' }
             ],
@@ -323,8 +365,7 @@ export default {
                     let vModel = cloneDeep(this.voucherModel)
                     let arr = cloneDeep(this.particularsModel)
 
-                    this.$set(arr, 'member_id', vModel.member_id)
-
+                    this.$set(arr, 'member_id', vModel.member_id)  
                     this.$set(arr, 'debit', 0)
                     this.$set(arr, 'credit', 0)
 

@@ -10,15 +10,18 @@ class GeneralVoucherController extends \yii\web\Controller
     public function actionIndex()
     {
     	$this->layout = 'main-vue';
-    	$voucher = new \app\models\GeneralVoucher;
+        $voucher = new \app\models\GeneralVoucher;
         $voucherModel = $voucher->attributes();
 
-        $filter  = ['category' => ['savings', 'share', 'time_deposit', 'others']];
-        $getParticular = ParticularHelper::getParticulars($filter);
+        $details = new \app\models\VoucherDetails;
+        $detailsModel = $details->attributes();
+
+        $getParticular = ParticularHelper::getParticulars();
 
         return $this->render('index', [
-        	'model'         => $voucherModel,
-            'particularList'   => $getParticular
+        	'voucherModel'      => $voucherModel,
+            'detailsModel'      => $detailsModel,
+            'particularList'    => $getParticular
         ]);
     }
 
@@ -45,43 +48,34 @@ class GeneralVoucherController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-
             $post = \Yii::$app->getRequest()->getBodyParams();
-            $entryList = $post['voucherList'];
-            $gvNumber = $post['gvNumber'];
-            $forceAdd = $post['forceAdd'];
-            $voucherIds = [];
-            $hasError = false;
-            if(!$forceAdd){
-                $getVoucher  = \app\models\GeneralVoucher::find()->where(['gv_num' => $gvNumber])->one();
-                if($getVoucher){
-                     return [
-                        'error'     => 'has_gvnum',
-                        'hasError'  => true
-                    ];
-                }
-               
-            }
-            $error = [];
-            foreach ($entryList as $entry) {
-                $createEntry  = new \app\models\GeneralVoucher;
-                if(isset($entry['name_id'])){
-                    unset($entry['name_id']);
-                }
-                $createEntry->attributes = $entry;
-                if($createEntry->save()){
-                    array_push($voucherIds, $createEntry->id);
-                }
-                else{
-                    array_push($error, $createEntry->getErrors()) ;
-                    $hasError = true;
-                }
-            }
+            $voucherModel = $post['voucherModel'];
+            $entryList = $post['entryList'];
+            $success = false;
+            $error = '';
+            $data = null;
 
+            //Check GV Number if exist
+            $gv_num = $voucherModel['gv_num'];
+            $getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
+            if($getGV){
+                return [
+                    'success'   => false,
+                    'error'     => 'ERROR_HASGV'
+                ];
+            }
+            else{
+                $saveGV = VoucherHelper::saveVoucher($voucherModel);
+                if($saveGV){
+                    //Entries
+                    VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
+                    $success = true;
+                }
+            }
             return [
-                'voucherIds'    => $voucherIds,
-                'hasError'      => $hasError,
-                'error'         => $error
+                'success'   => $success,
+                'error'     => $error,
+                'data'      => $data
             ];
         }
     }
