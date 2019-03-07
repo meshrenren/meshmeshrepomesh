@@ -1,7 +1,7 @@
 <template>
 	<div class="payment-record">
 		<el-row :gutter="20">
-            <el-col :span="17">
+            <el-col :span="16">
                 <el-form :model="paymentModel" :rules="rulesPayment" ref="paymentForm" label-width="160px" class="demo-ruleForm" label-position = "top">
                     <el-row :gutter="20">
                         <el-col :span="10">
@@ -83,59 +83,77 @@
                     </el-row>
                 </el-form>
                 <el-row :gutter="20">
-                    <el-col :span="3">
-                        <el-button type = "primary" @click = "addEntry()">Add Entry</el-button>
-                    </el-col>
-                    <el-col :span="3">
-                        <el-button type = "success" @click = "finishPayment(false)">Finish</el-button>
-                    </el-col>
-                    <el-col :span="3">
-                        <el-button type = "danger" @click = "cancelVoucher">Cancel</el-button>
-                    </el-col>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Accounts</h3>
+                        </div>
+                        <div class="box-body">
+                             <el-select
+                                v-model="accountSelected.name"
+                                filterable
+                                remote allow-create
+                                reserve-keyword
+                                placeholder="Select member"
+                                :remote-method="remoteMethod"
+                                :loading="loading">
+                                <el-option
+                                  v-for="item in nameList"
+                                  :key="item.value"
+                                  :label="item.label"
+                                  :value="item.value">
+                                </el-option>
+                            </el-select>
+                            <table class="table table-bordered">
+                                <tbody>
+                                <tr>
+                                    <th> Account Type</th>
+                                    <th> Balance</th>
+                                    <th> Amount </th>
+                                </tr>
+                                <tr v-for="item in accountSelected.list" :key="item.no">
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.balanace }}</td>
+                                    <td>
+                                        <el-input type="number" :min = "0" v-model="item.amount" @keyup.enter.native = "addEntry" ref="debit"></el-input>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <el-button type = "primary" @click = "addAccounts">ADD</el-button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                   
                 </el-row>
 
+                
+            </el-col>
+            <el-col :span="8">
                 <div class = "psyment-entry-list">
-                    <h3>Description List</h3>
                     <el-table
-                        :data="entryList"
+                        :data="totalAccounts"
                         border striped
                         style="width: 100%"
                         height = "400px">
                         <el-table-column
-                            prop="date_transact"
-                            label="Date">
-                            <template slot-scope="scope">
-                                {{ $df.formatDate(scope.row.date_transact, "YYYY-MM-DD")}}
-                            </template>
-                            
+                            prop="account_name"
+                            label="Account">                            
                         </el-table-column>
                         <el-table-column
-                            prop="particular_id"
-                            label="Description">
-                            <template slot-scope="scope">
-                                {{ getDescription(scope.row.particular_id)}}
-                            </template>
+                            prop="account_type"
+                            label="Type"> 
                         </el-table-column>
                         <el-table-column
                             prop="amount_paid"
                             label="Amount">
                         </el-table-column>
-                        <el-table-column
-                            label="Action">
-                            <template slot-scope="scope">
-                                <el-button
-                                  size="mini"
-                                  type="warning"
-                                  @click="handleRemove(scope.$index, scope.row)">Remove</el-button>
-                            </template>
-                        </el-table-column>
                     </el-table>
                 </div>
             </el-col>
-        </el-row>
-       
-
-        
+        </el-row>        
 	</div>
 </template>
 
@@ -166,7 +184,8 @@ export default {
             totalAmount         : 0,
             stationName         : '',
             loading             : false,
-            entryList           : []
+            entryList           : [],
+            accountSelected     : {name : null, list : []}
     	}
     },
     created(){
@@ -255,28 +274,8 @@ export default {
                 this.stationName = getVal.station_name
             }
         },
-        addEntry(){
-            this.$refs.paymentForm.validate((valid) => {
-                if (valid){
-                    let form = cloneDeep(this.paymentModel)
-                    let arr = form
+        addAccounts(){
 
-                    arr['name'] = this.getPaymentName(form.name_id)
-                    arr['particular_id'] = form.particular_id
-                    arr['amount_paid'] = Number(form.amount_paid).toFixed(2)
-
-                    this.entryList.push(arr)
-
-                    this.paymentModel.particular_id = null
-                    this.paymentModel.amount_paid = 0
-
-                    this.$refs.particular_id.focus()
-                }
-            })
-
-            if(this.entryList.length == 1){
-                this.disableForm = true
-            }
         },
         handleRemove(index, row){
             this.entryList.splice(index, 1)
