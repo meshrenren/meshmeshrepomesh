@@ -150,4 +150,18 @@ class SiteController extends Controller
     {
         return $this->render('about');
     }
+
+
+     /**
+     * Error page.
+     *
+     * @return string
+     */
+    public function actionError()
+    {
+        $exception = Yii::$app->errorHandler->exception;
+        if ($exception !== null) {
+            return $this->render('error', ['exception' => $exception]);
+        }
+    }
 }

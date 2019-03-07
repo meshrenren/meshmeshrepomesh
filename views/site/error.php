@@ -27,6 +27,10 @@ $this->title = $name;
                 Meanwhile, you may <a href='<?= Yii::$app->homeUrl ?>'>return to dashboard</a> or try using the search
                 form.
             </p>
+            <p>
+                <?php var_dump($exception); ?>
+            </p>
+            
 
             <form class='search-form'>
                 <div class='input-group'>
