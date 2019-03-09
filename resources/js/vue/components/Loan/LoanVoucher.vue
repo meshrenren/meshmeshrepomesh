@@ -1,6 +1,6 @@
 <template>
-	<div class="general-voucher">
-        <h3>Create General Voucher</h3>
+	<div class="general-voucher" v-loading = 'loading'>
+        <h3>Create Loan Voucher</h3>
         <hr>
         <el-row :gutter="40">
             <el-col :span="16">
@@ -8,100 +8,11 @@
                     :data-model = "voucherModel" 
                     :data-details-model = "detailsModel" 
                     :data-particular-list = "particularList"
-                    :allow-create-name = 'true'
+                    :allow-create-name = 'false'
                     @finishvoucher = "createVoucher">
                 </voucher-form>
             </el-col>
             <el-col :span="8">
-                <h4>Savings Account</h4>
-                <el-table
-                    :data="memberAccounts.savings"
-                    border striped
-                    style="width: 100%"
-                    min-height = "100px"
-                    v-loading = "loadingTable">
-                    <el-table-column
-                        prop="product.description"
-                        label="Loan Type">
-                        <template slot-scope="scope">
-                            {{ scope.row.product.description}}
-                        </template>
-                    </el-table-column>
-                    <el-table-column
-                        prop="balance"
-                        label="Balance">
-                         <template slot-scope="scope">
-                            {{ Number(scope.row.balance).toFixed(2) }}
-                        </template>                        
-                    </el-table-column>
-                    <el-table-column
-                        prop="account_no"
-                        label="Account #">                        
-                    </el-table-column>
-                </el-table>
-                <hr>
-                <h4>Share Account</h4>
-                <el-table
-                    :data="memberAccounts.share"
-                    border striped
-                    style="width: 100%"
-                    min-height = "100px"
-                    v-loading = "loadingTable">
-                    <el-table-column
-                        prop="product.name"
-                        label="Loan Type">
-                        <template slot-scope="scope">
-                            {{ scope.row.product.name}}
-                        </template>
-                    </el-table-column>
-                    <el-table-column
-                        prop="balance"
-                        label="Balance">
-                         <template slot-scope="scope">
-                            {{ Number(scope.row.balance).toFixed(2) }}
-                        </template>                        
-                    </el-table-column>
-                    <el-table-column
-                        prop="accountnumber"
-                        label="Account #">                        
-                    </el-table-column>
-                </el-table>
-                <hr>
-                <h4>Time Deposit Accounr</h4>
-                <el-table
-                    :data="memberAccounts.time_deposit"
-                    border striped
-                    style="width: 100%"
-                    min-height = "100px"
-                    v-loading = "loadingTable">
-                    <el-table-column
-                        prop="product.description"
-                        label="Loan Type">
-                        <template slot-scope="scope">
-                            {{ scope.row.product.description}}
-                        </template>
-                    </el-table-column>
-                    <el-table-column
-                        prop="balance"
-                        label="Amount">
-                         <template slot-scope="scope">
-                            {{ Number(scope.row.amount).toFixed(2) }}
-                        </template>                        
-                    </el-table-column>
-                    <el-table-column
-                        prop="term"
-                        label="Term">                        
-                    </el-table-column>
-                    <el-table-column
-                        prop="maturity_date"
-                        label="Maturity Date">                        
-                    </el-table-column>
-                    <el-table-column
-                        prop="accountnumber"
-                        label="Account #">                        
-                    </el-table-column>
-                </el-table>
-                <hr>
                 <h4>Loan Account</h4>
                 <el-table
                     :data="memberAccounts.loans"
@@ -152,19 +63,23 @@
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
 
-    import VoucherForm from './VoucherForm.vue' 
+    import VoucherForm from '../Voucher/VoucherForm.vue' 
+
+    import swalAlert from '../../mixins/swalAlert.js' 
 
 export default {
+    mixins: [swalAlert],
     components: { VoucherForm },
     props: ['dataModel', 'dataDetailsModel', 'dataParticularList'],
     data: function () {    	
 
       	return {
-            voucherModel            : this.dataModel,
+      		voucherModel			: this.dataModel,
             detailsModel            : this.dataDetailsModel,
             particularList          : this.dataParticularList,
-            memberAccounts          : {loans: [], savings : [], share: [], time_deposit : []},
-            loadingTable            : false
+            memberAccounts          : {loans : []},
+            loadingTable            : false,
+            loading                 : false
       	}
   	},
     created(){
@@ -174,9 +89,7 @@ export default {
     },
     methods:{
         resetAccount(){
-            this.memberAccounts.savings = []
-            this.memberAccounts.share = []
-            this.memberAccounts.time_deposit = []
+            this.memberAccounts.loans = []
         },
         changeName(data){
             //get type and type id
@@ -186,9 +99,7 @@ export default {
             this.$API.Member.getAccounts(data.type, data.id, data.name)
             .then(result => {
                 var res = result.data
-                this.memberAccounts.savings = res.savingsAccounts
-                this.memberAccounts.share = res.shareAccounts
-                this.memberAccounts.time_deposit = res.timedepositAccounts
+                this.memberAccounts.loans = res.loanAccounts
             })
             .catch(err => {
                 console.log(err)
@@ -202,8 +113,8 @@ export default {
             console.log("data", data)
             let voucher = data.data
 
-            let title = 'Save Voucher?'
-            let text = "Are you sure you want to save this general voucher?"
+            let title = 'Save transaction?'
+            let text = "Are you sure you want to save loan transaction?"
             vm.$swal({
                 title: title,
                 text: text,
@@ -222,8 +133,9 @@ export default {
                 }
             })
         },
-        saveVoucherEntries(generalVoucherList, gvNumber){
-            this.$API.Voucher.saveVoucherEntries(generalVoucherList, gvNumber, isForceAdd)
+        saveVoucherEntries(voucherModel, entryList){
+            this.loading = true
+            this.$API.Loan.releaseLoanVoucher(voucherModel, entryList)
             .then(result => {
                 var res = result.data
                 if(res.success){
@@ -231,18 +143,29 @@ export default {
                         theme: 'relax',
                         type: 'success',
                         layout: 'topRight',
-                        text: 'Voucher successfully saved.',
+                        text: 'Loan Release successfully saved..',
                         timeout: 3000
                     }).show();
                     this.$EventDispatcher.fire('RESET_DATA', [])
+                    //this.resetAll()
                 }
                 else{
                     let title = "Error: Not Saved"
                     let type = 'warning'
-                    let text = "Voucher not successfully saved. Please try again or contact administrator."
+                    let text = "Loan Voucher not successfully saved. Please try again or contact administrator."
                     if(res.error == 'ERROR_HASGV'){
                         title = 'Error: GV Number Exist'
                         text = "GV Number " + voucherModel.gv_num + " already exist. Please check in the list and reverse."
+                        type = "error"
+                    }
+                    else if(res.error == 'ERROR_TRANSACTION'){
+                        title = 'Error: Loan Transaction'
+                        text = "There is an error saving in loan transaction. Please try again or contact administrator."
+                        type = "error"
+                    }
+                    else if(res.error == 'ERROR_GV'){
+                        title = 'Error: General Voucher not saved'
+                        text = "Loan release transaction successfully posted but General Voucher not saved. Please add General Voucher manually in the link menu 'General Voucher' -> <a href = '/general-voucher/' target = '_blank'>'Create'</a>. Please contact administrator and developer too."
                         type = "error"
                     }
 
@@ -253,7 +176,7 @@ export default {
                 console.log(err)
             })
             .then(_ => { 
-                main_preloader.style.display = 'none'
+                this.loading = false
             })
         },
     },

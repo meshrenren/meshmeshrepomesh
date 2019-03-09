@@ -16,5 +16,12 @@ export default {
 			action: 'getPaymentRecord'
 		}
 		return axios.post('/payment/get-payment-record', params)
+	},
+
+	getMemberAccount(member_id){
+		let params = {
+			member_id: member_id
+		}
+		return axios.post('/payment/get-member-accounts', params)
 	}
 }

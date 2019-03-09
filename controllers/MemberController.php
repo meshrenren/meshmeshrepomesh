@@ -8,6 +8,11 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\Member;
 
+use app\helpers\accounts\LoanHelper;
+use app\helpers\accounts\SavingsHelper;
+use app\helpers\accounts\ShareHelper;
+use app\helpers\accounts\TimeDepositHelper;
+
 class MemberController extends \yii\web\Controller
 {
 
@@ -177,6 +182,41 @@ class MemberController extends \yii\web\Controller
 
     }
 
+
+    public function actionGetAllAccounts(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $id = $post['id'];
+            $name = $post['name'];
+
+            $getSavings = [];
+            $getShare = [];
+            $getTimedeposits = [];
+            $getLoan = [];
+
+            $filter = ['member_id' => $id];
+
+            $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
+            $getShare = SavingsHelper::getAccountShareInfo($filter);
+            $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
+            $getLoan = LoanHelper::getAccountLoanInfo($id);
+        
+            return [
+                'savingsAccounts'        => $getSavings,
+                'shareAccounts'          => $getShare,
+                'timedepositAccounts'    => $getTimedeposits,
+                'loanAccounts'           => $getLoan
+            ];
+            
+        }
+
+    }
+
+
     public function actionGetAccounts(){
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -185,9 +225,9 @@ class MemberController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
             $member_id = $post['member_id'];
-            $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product', 'member'])->where(['member_id' => $member_id])->asArray()->all();
+            $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['member_id' => $member_id])->asArray()->all();
 
-            $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product', 'member'])->where(['fk_memid' => $member_id])->asArray()->all();
+            $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['fk_memid' => $member_id])->asArray()->all();
 
             $tdAcc = new \app\models\TimeDepositAccount;
             $getTimedeposits = $tdAcc->getAccountListByMemberID($member_id);

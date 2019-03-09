@@ -43,6 +43,7 @@
                 </el-form>
                 <el-row :gutter="20">
                     <el-col :span="8">
+                        <h2>Payment List</h2>
 	                	<el-table
 	                        :data="selectedPayments"
 	                        border striped
@@ -52,6 +53,10 @@
 	                            prop="particular.name"
 	                            label="Description">
 	                        </el-table-column>
+                            <el-table-column
+                                prop="amount_paid"
+                                label="Amount">
+                            </el-table-column>
 	                    </el-table>
 	                </el-col>
                 </el-row>
@@ -68,7 +73,7 @@
 
 
 export default {
-    props: ['dataPaymentModel', 'dataPayrollModel', 'dataPayrollListModel'],
+    props: ['dataPaymentModel', 'dataPayrollModel', 'dataPayrollListModel', 'dataMember'],
     data: function () {  
     	let formPayment  = {}
         this.dataPaymentModel.forEach(function(detail){

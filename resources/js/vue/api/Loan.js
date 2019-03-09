@@ -23,6 +23,12 @@ export default {
 	applyLoan(params)
 	{
 		return axios.post('loan/apply-loan', params)
-
+	}
+	releaseLoanVoucher(voucherModel, entryList){
+		let params = {
+			voucherModel : voucherModel,
+			entryList : entryList
+		}	
+		return axios.post('/loan/save-release-loan', params)
 	}
 }

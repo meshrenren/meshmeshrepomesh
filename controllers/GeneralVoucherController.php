@@ -3,20 +3,25 @@
 namespace app\controllers;
 
 use app\helpers\particulars\ParticularHelper;
+use app\helpers\voucher\VoucherHelper;
 
 class GeneralVoucherController extends \yii\web\Controller
 {
     public function actionIndex()
     {
     	$this->layout = 'main-vue';
-    	$voucher = new \app\models\GeneralVoucher;
+        $voucher = new \app\models\GeneralVoucher;
         $voucherModel = $voucher->attributes();
+
+        $details = new \app\models\VoucherDetails;
+        $detailsModel = $details->attributes();
 
         $getParticular = ParticularHelper::getParticulars();
 
         return $this->render('index', [
-        	'model'         => $voucherModel,
-            'particularList'   => $getParticular
+        	'voucherModel'      => $voucherModel,
+            'detailsModel'      => $detailsModel,
+            'particularList'    => $getParticular
         ]);
     }
 
@@ -43,43 +48,34 @@ class GeneralVoucherController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-
             $post = \Yii::$app->getRequest()->getBodyParams();
-            $entryList = $post['voucherList'];
-            $gvNumber = $post['gvNumber'];
-            $forceAdd = $post['forceAdd'];
-            $voucherIds = [];
-            $hasError = false;
-            if(!$forceAdd){
-                $getVoucher  = \app\models\GeneralVoucher::find()->where(['gv_num' => $gvNumber])->one();
-                if($getVoucher){
-                     return [
-                        'error'     => 'has_gvnum',
-                        'hasError'  => true
-                    ];
-                }
-               
-            }
-            $error = [];
-            foreach ($entryList as $entry) {
-                $createEntry  = new \app\models\GeneralVoucher;
-                if(isset($entry['name_id'])){
-                    unset($entry['name_id']);
-                }
-                $createEntry->attributes = $entry;
-                if($createEntry->save()){
-                    array_push($voucherIds, $createEntry->id);
-                }
-                else{
-                    array_push($error, $createEntry->getErrors()) ;
-                    $hasError = true;
-                }
-            }
+            $voucherModel = $post['voucherModel'];
+            $entryList = $post['entryList'];
+            $success = false;
+            $error = '';
+            $data = null;
 
+            //Check GV Number if exist
+            $gv_num = $voucherModel['gv_num'];
+            $getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
+            if($getGV){
+                return [
+                    'success'   => false,
+                    'error'     => 'ERROR_HASGV'
+                ];
+            }
+            else{
+                $saveGV = VoucherHelper::saveVoucher($voucherModel);
+                if($saveGV){
+                    //Entries
+                    VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
+                    $success = true;
+                }
+            }
             return [
-                'voucherIds'    => $voucherIds,
-                'hasError'      => $hasError,
-                'error'         => $error
+                'success'   => $success,
+                'error'     => $error,
+                'data'      => $data
             ];
         }
     }
@@ -87,10 +83,10 @@ class GeneralVoucherController extends \yii\web\Controller
 
     public function actionView(){
         $this->layout = 'main-vue';
-        $voucherList = $this->getVoucherList(null, 100);
+        //$voucherList = $this->getVoucherList(null, 100);
 
         return $this->render('view', [
-            'voucherList'   => $voucherList
+            'voucherList'   => []
         ]);
     }
 
@@ -101,37 +97,30 @@ class GeneralVoucherController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
             $filter = $post['filter'];
-            $voucherList = $this->getVoucherList($filter, null);
+            $getVoucher  = \app\models\GeneralVoucher::find()->where(['gv_num' => $filter['gv_num']])->asArray()->one();
+            $voucherList = [];
+            $success = false;
+            if($getVoucher){
+                $listFilter = ['voucher_id' => $getVoucher['id']];
+                $voucherList = VoucherHelper::getVoucherList($listFilter, null);
+                $success = true;
+            }
 
             return [
-                'data' => $voucherList
+                'success'   => $success,
+                'voucher'   => $getVoucher,
+                'list'      => $voucherList
             ];
         }
     }
 
-    public function getVoucherList($filter = null, $limit = null){
+    public function actionGetAllVoucher(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $voucherList = \app\models\GeneralVoucher::find();
-
-        if($filter &&is_array($filter)){
-            $where = [];
-            foreach ($filter as $key => $value) {
-                $where[$key] = $value;
-            }
-
-            if(count($shere) > 0){
-                $voucherList = $voucherList->where($where);
-            }
-        }
-
-        if($limit){
-            $voucherList = $voucherList->limit(100);
-        }
-
-        $voucherList = $voucherList->orderBy('id DESC')->asArray()->all();
-
-        return $voucherList;
-
+        $getVouchers  = \app\models\GeneralVoucher::find()->asArray()->all();
+        return [
+            'data' => $getVouchers
+        ];
     }
 
 }
