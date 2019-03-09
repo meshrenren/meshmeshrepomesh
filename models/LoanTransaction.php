@@ -15,6 +15,12 @@ use Yii;
  * @property string $transaction_date
  * @property double $running_balance
  * @property string $remarks
+ * @property double $prepaid_intpaid
+ * @property double $interest_paid
+ * @property string $OR_no
+ * @property double $principal_paid
+ * @property double $arrears_paid
+ * @property string $date_posted
  *
  * @property Loanaccount $loanAccount
  */
@@ -34,10 +40,11 @@ class LoanTransaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['id', 'transacted_by'], 'integer'],
-            [['amount', 'running_balance'], 'number'],
-            [['transaction_date'], 'safe'],
-            [['loan_account'], 'string', 'max' => 25],
+            [['amount', 'running_balance', 'prepaid_intpaid', 'interest_paid', 'principal_paid', 'arrears_paid'], 'number'],
+            [['transacted_by'], 'integer'],
+            [['transaction_date', 'date_posted'], 'safe'],
+            [['prepaid_intpaid', 'interest_paid', 'OR_no', 'principal_paid', 'arrears_paid', 'date_posted'], 'required'],
+            [['loan_account', 'OR_no'], 'string', 'max' => 15],
             [['transaction_type'], 'string', 'max' => 30],
             [['remarks'], 'string', 'max' => 1000],
             [['loan_account'], 'exist', 'skipOnError' => true, 'targetClass' => Loanaccount::className(), 'targetAttribute' => ['loan_account' => 'account_no']],
@@ -58,6 +65,12 @@ class LoanTransaction extends \yii\db\ActiveRecord
             'transaction_date' => 'Transaction Date',
             'running_balance' => 'Running Balance',
             'remarks' => 'Remarks',
+            'prepaid_intpaid' => 'Prepaid Intpaid',
+            'interest_paid' => 'Interest Paid',
+            'OR_no' => 'Or No',
+            'principal_paid' => 'Principal Paid',
+            'arrears_paid' => 'Arrears Paid',
+            'date_posted' => 'Date Posted',
         ];
     }
 

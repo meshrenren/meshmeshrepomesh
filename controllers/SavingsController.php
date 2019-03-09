@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\SavingsAccount;
 use kartik\mpdf\Pdf; 
+use app\helpers\particulars\ParticularHelper;
 
 class SavingsController extends \yii\web\Controller
 {
@@ -168,9 +169,8 @@ class SavingsController extends \yii\web\Controller
     
     public function actionBeginningofday()
     {
-    	$model = new SavingsAccount();
+    	$helper = ParticularHelper::processBeginning();
     	
-    	return $model->calculateSavingsInterest();
     }
 
     public function actionGetAccount(){
@@ -203,25 +203,37 @@ class SavingsController extends \yii\web\Controller
                 $running_balance = $getSavingsAccount->balance - $transaction['amount'];
             }
             else{
-                $running_balance = $getSavingsAccount->balance - $transaction['amount'];
+                $running_balance = $getSavingsAccount->balance + $transaction['amount'];
             }
 
         	$model->transaction_date = date('Y-m-d H:i:s');
 	        $model->transacted_by = \Yii::$app->user->identity->id;
 	        $model->running_balance = $running_balance;
-
-	        if($model->save()){
-	        	$getSavingsAccount->balance = $running_balance;
-	        	$getSavingsAccount->save();
-	        	return [
-	        		'success'	=> true,
-                    'data'      => $model->id
-	        	];
+			
+	        if($running_balance>=0)
+	        {
+	        	if($model->save()){
+	        		$getSavingsAccount->balance = $running_balance;
+	        		$getSavingsAccount->save();
+	        		return [
+	        				'success'	=> true,
+	        				'data'      => $model->id
+	        		];
+	        	}
+	        	else{
+	        		//var_dump($model->getErrors());
+	        		return [
+	        				'success'	=> false
+	        		];
+	        	}
+	        	
 	        }
-	        else{
-	        	//var_dump($model->getErrors());
+	        
+	        else
+	        {
 	        	return [
-	        		'success'	=> false
+	        			'success'	=> false,
+	        			'data' => 'savings cannot be negative',
 	        	];
 	        }
 

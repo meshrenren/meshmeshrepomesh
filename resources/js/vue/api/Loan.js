@@ -18,5 +18,11 @@ export default {
 
 	evaluateLoan(params){
 		return axios.post('/loan/evaluate-loan', params)
+	},
+
+	applyLoan(params)
+	{
+		return axios.post('loan/apply-loan', params)
+
 	}
 }
