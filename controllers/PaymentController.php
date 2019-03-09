@@ -3,6 +3,10 @@
 namespace app\controllers;
 
 use app\helpers\particulars\ParticularHelper;
+use app\helpers\accounts\LoanHelper;
+use app\helpers\accounts\SavingsHelper;
+use app\helpers\accounts\ShareHelper;
+use app\helpers\accounts\TimeDepositHelper;
 
 class PaymentController extends \yii\web\Controller
 {
@@ -12,7 +16,8 @@ class PaymentController extends \yii\web\Controller
     	$paymentModel = new \app\models\PaymentRecord;
         $paymentModel = $paymentModel->attributes();
 
-        $getParticular = ParticularHelper::getPayrollParticulars();
+        $filter  = ['category' => ['OTHERS']];
+        $getParticular = ParticularHelper::getParticulars($filter);
 
         return $this->render('index', [
         	'model'         	=> $paymentModel,
@@ -101,6 +106,31 @@ class PaymentController extends \yii\web\Controller
                 'data' => $paymentRecord,
             ];
         }
+    }
+
+    public function actionGetMemberAccounts(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $id = $post['member_id'];
+
+            $filter = ['member_id' => $id];
+
+            $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
+            $getShare = ShareHelper::getAccountShareInfo($filter);
+            $getLoan = LoanHelper::getAccountLoanInfo($id);
+        
+            return [
+                'savingsAccounts'        => $getSavings,
+                'shareAccounts'          => $getShare,
+                'loanAccounts'           => $getLoan
+            ];
+            
+        }
+
     }
 
 }

@@ -9,6 +9,9 @@ use yii\filters\VerbFilter;
 use app\models\Member;
 
 use app\helpers\accounts\LoanHelper;
+use app\helpers\accounts\SavingsHelper;
+use app\helpers\accounts\ShareHelper;
+use app\helpers\accounts\TimeDepositHelper;
 
 class MemberController extends \yii\web\Controller
 {
@@ -188,7 +191,6 @@ class MemberController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
             $id = $post['id'];
-            $type = $post['type'];
             $name = $post['name'];
 
             $getSavings = [];
@@ -196,21 +198,12 @@ class MemberController extends \yii\web\Controller
             $getTimedeposits = [];
             $getLoan = [];
 
+            $filter = ['member_id' => $id];
 
-            if($type == "Individual"){
-                $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['member_id' => $id])->asArray()->all();
-
-                $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['fk_memid' => $id])->asArray()->all();
-
-                $tdAcc = new \app\models\TimeDepositAccount;
-                $getTimedeposits = $tdAcc->getAccountListByMemberID($id);
-
-                $getLoan = LoanHelper::getAccountLoanInfo($id);
-            }
-            else{
-                $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->where(['account_name' => $name, 'type' => 'Group'])->asArray()->all();
-                $getTimedeposits = \app\models\TimeDepositAccount::find()->innerJoinWith(['product'])->where(['account_name' => $name, 'type' => 'Group'])->asArray()->all();
-            }
+            $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
+            $getShare = SavingsHelper::getAccountShareInfo($filter);
+            $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
+            $getLoan = LoanHelper::getAccountLoanInfo($id);
         
             return [
                 'savingsAccounts'        => $getSavings,

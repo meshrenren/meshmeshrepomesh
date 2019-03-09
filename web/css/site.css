@@ -259,3 +259,120 @@ a.desc:after {
     background-image: url(../images/user.png);
     background-color: #DCDCDC;
 }
+
+.auto-width{ width: auto !important; }
+.full-width{ width: 100% !important;  }
+.w300-width{ width: 300px !important;  }
+
+/**
+    Spacing for reusabilty and to avoid redundancy :(
+*/
+    /* Margin All */
+.m-5 { margin: 5px !important; }
+.m-10 { margin: 10px !important; }
+.m-15 { margin: 15px !important; }
+.m-20 { margin: 20px !important; }
+.m-25 { margin: 25px !important; }
+.m-30 { margin: 30px !important; }
+.m-40 { margin: 40px !important; }
+.m-50 { margin: 50px !important; }
+.m-100 { margin: 100px !important; }
+
+/* Margin Top */
+.mt-5 { margin-top: 5px !important; }
+.mt-10 { margin-top: 10px !important; }
+.mt-15 { margin-top: 15px !important; }
+.mt-20 { margin-top: 20px !important; }
+.mt-25 { margin-top: 25px !important; }
+.mt-30 { margin-top: 30px !important; }
+.mt-40 { margin-top: 40px !important; }
+.mt-50 { margin-top: 50px !important; }
+.mt-100 { margin-top: 100px !important; }
+
+/* Margin Left */
+.ml-5 { margin-left: 5px !important; }
+.ml-10 { margin-left: 10px !important; }
+.ml-15 { margin-left: 15px !important; }
+.ml-20 { margin-left: 20px !important; }
+.ml-25 { margin-left: 25px !important; }
+.ml-30 { margin-left: 30px !important; }
+.ml-40 { margin-left: 40px !important; }
+.ml-50 { margin-left: 50px !important; }
+.ml-100 { margin-left: 100px !important; }
+
+/* Margin Right */
+.mr-5 { margin-right: 5px !important; }
+.mr-10 { margin-right: 10px !important; }
+.mr-15 { margin-right: 15px !important; }
+.mr-20 { margin-right: 20px !important; }
+.mr-25 { margin-right: 25px !important; }
+.mr-30 { margin-right: 30px !important; }
+.mr-40 { margin-right: 40px !important; }
+.mr-50 { margin-right: 50px !important; }
+.mr-100 { margin-right: 100px !important; }
+
+/* Margin Bottom */
+.mb-5 { margin-bottom: 5px !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-15 { margin-bottom: 15px !important; }
+.mb-20 { margin-bottom: 20px !important; }
+.mb-25 { margin-bottom: 25px !important; }
+.mb-30 { margin-bottom: 30px !important; }
+.mb-40 { margin-bottom: 40px !important; }
+.mb-50 { margin-bottom: 50px !important; }
+.mb-100 { margin-bottom: 100px !important; }
+
+/* Padding All */
+.p-5 { padding: 5px !important; }
+.p-10 { padding: 10px !important; }
+.p-15 { padding: 15px !important; }
+.p-20 { padding: 20px !important; }
+.p-25 { padding: 25px !important; }
+.p-30 { padding: 30px !important; }
+.p-40 { padding: 40px !important; }
+.p-50 { padding: 50px !important; }
+.p-100 { padding: 100px !important; }
+
+/* Padding Top */
+.pt-5 { padding-top: 5px !important; }
+.pt-10 { padding-top: 10px !important; }
+.pt-15 { padding-top: 15px !important; }
+.pt-20 { padding-top: 20px !important; }
+.pt-25 { padding-top: 25px !important; }
+.pt-30 { padding-top: 30px !important; }
+.pt-40 { padding-top: 40px !important; }
+.pt-50 { padding-top: 50px !important; }
+.pt-100 { padding-top: 100px !important; }
+
+/* Padding Left */
+.pl-5 { padding-left: 5px !important; }
+.pl-10 { padding-left: 10px !important; }
+.pl-15 { padding-left: 15px !important; }
+.pl-20 { padding-left: 20px !important; }
+.pl-25 { padding-left: 25px !important; }
+.pl-30 { padding-left: 30px !important; }
+.pl-40 { padding-left: 40px !important; }
+.pl-50 { padding-left: 50px !important; }
+.pl-100 { padding-left: 100px !important; }
+
+/* Padding Right */
+.pr-5 { padding-right: 5px !important; }
+.pr-10 { padding-right: 10px !important; }
+.pr-15 { padding-right: 15px !important; }
+.pr-20 { padding-right: 20px !important; }
+.pr-25 { padding-right: 25px !important; }
+.pr-30 { padding-right: 30px !important; }
+.pr-40 { padding-right: 40px !important; }
+.pr-50 { padding-right: 50px !important; }
+.pr-100 { padding-right: 100px !important; }
+
+/* Padding Bottom */
+.pd-5 { padding-bottom: 5px !important; }
+.pd-10 { padding-bottom: 10px !important; }
+.pd-15 { padding-bottom: 15px !important; }
+.pd-20 { padding-bottom: 20px !important; }
+.pd-25 { padding-bottom: 25px !important; }
+.pd-30 { padding-bottom: 30px !important; }
+.pd-40 { padding-bottom: 40px !important; }
+.pd-50 { padding-bottom: 50px !important; }
+.pd-100 { padding-bottom: 100px !important; }

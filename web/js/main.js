@@ -54722,54 +54722,73 @@ module.exports = baseEach;
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getNameList; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_forEach__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash_forEach__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_cloneDeep__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash_cloneDeep___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash_cloneDeep__);
+
 
 
 
 var getNameList = {
     data: function data() {
         return {
-            allNameList: []
+            allNameList: [],
+            memberList: [],
+            stationList: [],
+            divisionList: []
         };
     },
 
     methods: {
-        mergeAll: function mergeAll(member, division, station) {
+        mergeAll: function mergeAll() {
+            var member = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+            var _this = this;
+
+            var division = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+            var station = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
             var list = [];
-            __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default()(member, function (rs) {
-                var stationName = "";
-                var getStation = station.find(function (st) {
-                    return Number(st.id) == Number(rs.station_id);
+            if (member && member.length > 0) {
+                __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default()(member, function (rs) {
+                    var stationName = "";
+                    var getStation = _this.stationList.find(function (st) {
+                        return Number(st.id) == Number(rs.station_id);
+                    });
+                    if (getStation) {
+                        stationName = getStation.name;
+                    }
+
+                    var arr = {
+                        value: 'member-' + rs.id,
+                        label: rs.first_name + " " + rs.middle_name + " " + rs.last_name,
+                        station_name: stationName
+                    };
+
+                    list.push(arr);
                 });
-                if (getStation) {
-                    stationName = getStation.name;
-                }
+            }
 
-                var arr = {
-                    value: 'member-' + rs.id,
-                    label: rs.first_name + " " + rs.middle_name + " " + rs.last_name,
-                    station_name: stationName
-                };
+            if (station && station.length > 0) {
+                __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default()(station, function (rs) {
+                    var arr = {
+                        value: 'station-' + rs.id,
+                        label: rs.name
+                    };
 
-                list.push(arr);
-            });
+                    list.push(arr);
+                });
+            }
 
-            __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default()(station, function (rs) {
-                var arr = {
-                    value: 'station-' + rs.id,
-                    label: rs.name
-                };
+            if (division && division.length > 0) {
+                __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default()(division, function (rs) {
+                    var arr = {
+                        value: 'division-' + rs.id,
+                        label: rs.name
+                    };
 
-                list.push(arr);
-            });
-
-            __WEBPACK_IMPORTED_MODULE_0_lodash_forEach___default()(division, function (rs) {
-                var arr = {
-                    value: 'division-' + rs.id,
-                    label: rs.name
-                };
-
-                list.push(arr);
-            });
+                    list.push(arr);
+                });
+            }
 
             this.allNameList = list;
         }
@@ -90212,7 +90231,7 @@ exports = module.exports = __webpack_require__(1)(false);
 
 
 // module
-exports.push([module.i, "\n.noty_layout_mixin, #noty_layout__top, #noty_layout__topLeft, #noty_layout__topCenter, #noty_layout__topRight, #noty_layout__bottom, #noty_layout__bottomLeft, #noty_layout__bottomCenter, #noty_layout__bottomRight, #noty_layout__center, #noty_layout__centerLeft, #noty_layout__centerRight {\n  position: fixed;\n  margin: 0;\n  padding: 0;\n  z-index: 9999999;\n  transform: translateZ(0) scale(1, 1);\n  backface-visibility: hidden;\n  -webkit-font-smoothing: subpixel-antialiased;\n  filter: blur(0);\n  -webkit-filter: blur(0);\n  max-width: 90%;\n}\n#noty_layout__top {\n  top: 0;\n  left: 5%;\n  width: 90%;\n}\n#noty_layout__topLeft {\n  top: 20px;\n  left: 20px;\n  width: 325px;\n}\n#noty_layout__topCenter {\n  top: 5%;\n  left: 50%;\n  width: 325px;\n  transform: translate(calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__topRight {\n  top: 20px;\n  right: 20px;\n  width: 325px;\n}\n#noty_layout__bottom {\n  bottom: 0;\n  left: 5%;\n  width: 90%;\n}\n#noty_layout__bottomLeft {\n  bottom: 20px;\n  left: 20px;\n  width: 325px;\n}\n#noty_layout__bottomCenter {\n  bottom: 5%;\n  left: 50%;\n  width: 325px;\n  transform: translate(calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__bottomRight {\n  bottom: 20px;\n  right: 20px;\n  width: 325px;\n}\n#noty_layout__center {\n  top: 50%;\n  left: 50%;\n  width: 325px;\n  transform: translate(calc(-50% - .5px), calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__centerLeft {\n  top: 50%;\n  left: 20px;\n  width: 325px;\n  transform: translate(0, calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__centerRight {\n  top: 50%;\n  right: 20px;\n  width: 325px;\n  transform: translate(0, calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n.noty_progressbar {\n  display: none;\n}\n.noty_has_timeout.noty_has_progressbar .noty_progressbar {\n  display: block;\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  height: 3px;\n  width: 100%;\n  background-color: #646464;\n  opacity: 0.2;\n  filter: alpha(opacity=10);\n}\n.noty_bar {\n  -webkit-backface-visibility: hidden;\n  -webkit-transform: translate(0, 0) translateZ(0) scale(1, 1);\n  transform: translate(0, 0) scale(1, 1);\n  -webkit-font-smoothing: subpixel-antialiased;\n  overflow: hidden;\n}\n.noty_effects_open {\n  opacity: 0;\n  transform: translate(50%);\n  animation: noty_anim_in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);\n  animation-fill-mode: forwards;\n}\n.noty_effects_close {\n  animation: noty_anim_out 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);\n  animation-fill-mode: forwards;\n}\n.noty_fix_effects_height {\n  animation: noty_anim_height 75ms ease-out;\n}\n.noty_close_with_click {\n  cursor: pointer;\n}\n.noty_close_button {\n  position: absolute;\n  top: 2px;\n  right: 2px;\n  font-weight: bold;\n  width: 20px;\n  height: 20px;\n  text-align: center;\n  line-height: 20px;\n  background-color: rgba(0, 0, 0, 0.05);\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all .2s ease-out;\n}\n.noty_close_button:hover {\n  background-color: rgba(0, 0, 0, 0.1);\n}\n.noty_modal {\n  position: fixed;\n  width: 100%;\n  height: 100%;\n  background-color: #000;\n  z-index: 10000;\n  opacity: .3;\n  left: 0;\n  top: 0;\n}\n.noty_modal.noty_modal_open {\n  opacity: 0;\n  animation: noty_modal_in .3s ease-out;\n}\n.noty_modal.noty_modal_close {\n  animation: noty_modal_out .3s ease-out;\n  animation-fill-mode: forwards;\n}\n@keyframes noty_modal_in {\n100% {\n    opacity: .3;\n}\n}\n@keyframes noty_modal_out {\n100% {\n    opacity: 0;\n}\n}\n@keyframes noty_modal_out {\n100% {\n    opacity: 0;\n}\n}\n@keyframes noty_anim_in {\n100% {\n    transform: translate(0);\n    opacity: 1;\n}\n}\n@keyframes noty_anim_out {\n100% {\n    transform: translate(50%);\n    opacity: 0;\n}\n}\n@keyframes noty_anim_height {\n100% {\n    height: 0;\n}\n}\n.noty_theme__relax.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__relax.noty_bar .noty_body {\n    padding: 10px;\n}\n.noty_theme__relax.noty_bar .noty_buttons {\n    border-top: 1px solid #e7e7e7;\n    padding: 5px 10px;\n}\n.noty_theme__relax.noty_type__alert,\n.noty_theme__relax.noty_type__notification {\n  background-color: #fff;\n  border: 1px solid #dedede;\n  color: #444;\n}\n.noty_theme__relax.noty_type__warning {\n  background-color: #FFEAA8;\n  border: 1px solid #FFC237;\n  color: #826200;\n}\n.noty_theme__relax.noty_type__warning .noty_buttons {\n    border-color: #dfaa30;\n}\n.noty_theme__relax.noty_type__error {\n  background-color: #FF8181;\n  border: 1px solid #e25353;\n  color: #FFF;\n}\n.noty_theme__relax.noty_type__error .noty_buttons {\n    border-color: darkred;\n}\n.noty_theme__relax.noty_type__info,\n.noty_theme__relax.noty_type__information {\n  background-color: #78C5E7;\n  border: 1px solid #3badd6;\n  color: #FFF;\n}\n.noty_theme__relax.noty_type__info .noty_buttons,\n  .noty_theme__relax.noty_type__information .noty_buttons {\n    border-color: #0B90C4;\n}\n.noty_theme__relax.noty_type__success {\n  background-color: #BCF5BC;\n  border: 1px solid #7cdd77;\n  color: darkgreen;\n}\n.noty_theme__relax.noty_type__success .noty_buttons {\n    border-color: #50C24E;\n}\n.noty_theme__metroui.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  box-shadow: rgba(0, 0, 0, 0.298039) 0 0 5px 0;\n}\n.noty_theme__metroui.noty_bar .noty_progressbar {\n    position: absolute;\n    left: 0;\n    bottom: 0;\n    height: 3px;\n    width: 100%;\n    background-color: #000;\n    opacity: 0.2;\n    filter: alpha(opacity=20);\n}\n.noty_theme__metroui.noty_bar .noty_body {\n    padding: 1.25em;\n    font-size: 14px;\n}\n.noty_theme__metroui.noty_bar .noty_buttons {\n    padding: 0 10px .5em 10px;\n}\n.noty_theme__metroui.noty_type__alert,\n.noty_theme__metroui.noty_type__notification {\n  background-color: #fff;\n  color: #1d1d1d;\n}\n.noty_theme__metroui.noty_type__warning {\n  background-color: #FA6800;\n  color: #fff;\n}\n.noty_theme__metroui.noty_type__error {\n  background-color: #CE352C;\n  color: #FFF;\n}\n.noty_theme__metroui.noty_type__info,\n.noty_theme__metroui.noty_type__information {\n  background-color: #1BA1E2;\n  color: #FFF;\n}\n.noty_theme__metroui.noty_type__success {\n  background-color: #60A917;\n  color: #fff;\n}\n.noty_theme__mint.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__mint.noty_bar .noty_body {\n    padding: 10px;\n    font-size: 14px;\n}\n.noty_theme__mint.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__mint.noty_type__alert,\n.noty_theme__mint.noty_type__notification {\n  background-color: #fff;\n  border-bottom: 1px solid #D1D1D1;\n  color: #2F2F2F;\n}\n.noty_theme__mint.noty_type__warning {\n  background-color: #FFAE42;\n  border-bottom: 1px solid #E89F3C;\n  color: #fff;\n}\n.noty_theme__mint.noty_type__error {\n  background-color: #DE636F;\n  border-bottom: 1px solid #CA5A65;\n  color: #fff;\n}\n.noty_theme__mint.noty_type__info,\n.noty_theme__mint.noty_type__information {\n  background-color: #7F7EFF;\n  border-bottom: 1px solid #7473E8;\n  color: #fff;\n}\n.noty_theme__mint.noty_type__success {\n  background-color: #AFC765;\n  border-bottom: 1px solid #A0B55C;\n  color: #fff;\n}\n.noty_theme__sunset.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__sunset.noty_bar .noty_body {\n    padding: 10px;\n    font-size: 14px;\n    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);\n}\n.noty_theme__sunset.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__sunset.noty_type__alert,\n.noty_theme__sunset.noty_type__notification {\n  background-color: #073B4C;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__alert .noty_progressbar,\n  .noty_theme__sunset.noty_type__notification .noty_progressbar {\n    background-color: #fff;\n}\n.noty_theme__sunset.noty_type__warning {\n  background-color: #FFD166;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__error {\n  background-color: #EF476F;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__error .noty_progressbar {\n    opacity: .4;\n}\n.noty_theme__sunset.noty_type__info,\n.noty_theme__sunset.noty_type__information {\n  background-color: #118AB2;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__info .noty_progressbar,\n  .noty_theme__sunset.noty_type__information .noty_progressbar {\n    opacity: .6;\n}\n.noty_theme__sunset.noty_type__success {\n  background-color: #06D6A0;\n  color: #fff;\n}\n.noty_theme__bootstrap-v3.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  border: 1px solid transparent;\n  border-radius: 4px;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_body {\n    padding: 15px;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_close_button {\n    font-size: 21px;\n    font-weight: 700;\n    line-height: 1;\n    color: #000;\n    text-shadow: 0 1px 0 #fff;\n    filter: alpha(opacity=20);\n    opacity: .2;\n    background: transparent;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_close_button:hover {\n    background: transparent;\n    text-decoration: none;\n    cursor: pointer;\n    filter: alpha(opacity=50);\n    opacity: .5;\n}\n.noty_theme__bootstrap-v3.noty_type__alert,\n.noty_theme__bootstrap-v3.noty_type__notification {\n  background-color: #fff;\n  color: inherit;\n}\n.noty_theme__bootstrap-v3.noty_type__warning {\n  background-color: #fcf8e3;\n  color: #8a6d3b;\n  border-color: #faebcc;\n}\n.noty_theme__bootstrap-v3.noty_type__error {\n  background-color: #f2dede;\n  color: #a94442;\n  border-color: #ebccd1;\n}\n.noty_theme__bootstrap-v3.noty_type__info,\n.noty_theme__bootstrap-v3.noty_type__information {\n  background-color: #d9edf7;\n  color: #31708f;\n  border-color: #bce8f1;\n}\n.noty_theme__bootstrap-v3.noty_type__success {\n  background-color: #dff0d8;\n  color: #3c763d;\n  border-color: #d6e9c6;\n}\n.noty_theme__bootstrap-v4.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  border: 1px solid transparent;\n  border-radius: .25rem;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_body {\n    padding: .75rem 1.25rem;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_close_button {\n    font-size: 1.5rem;\n    font-weight: 700;\n    line-height: 1;\n    color: #000;\n    text-shadow: 0 1px 0 #fff;\n    filter: alpha(opacity=20);\n    opacity: .5;\n    background: transparent;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_close_button:hover {\n    background: transparent;\n    text-decoration: none;\n    cursor: pointer;\n    filter: alpha(opacity=50);\n    opacity: .75;\n}\n.noty_theme__bootstrap-v4.noty_type__alert,\n.noty_theme__bootstrap-v4.noty_type__notification {\n  background-color: #fff;\n  color: inherit;\n}\n.noty_theme__bootstrap-v4.noty_type__warning {\n  background-color: #fcf8e3;\n  color: #8a6d3b;\n  border-color: #faebcc;\n}\n.noty_theme__bootstrap-v4.noty_type__error {\n  background-color: #f2dede;\n  color: #a94442;\n  border-color: #ebccd1;\n}\n.noty_theme__bootstrap-v4.noty_type__info,\n.noty_theme__bootstrap-v4.noty_type__information {\n  background-color: #d9edf7;\n  color: #31708f;\n  border-color: #bce8f1;\n}\n.noty_theme__bootstrap-v4.noty_type__success {\n  background-color: #dff0d8;\n  color: #3c763d;\n  border-color: #d6e9c6;\n}\n.noty_theme__semanticui.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  border: 1px solid transparent;\n  font-size: 1em;\n  border-radius: .28571429rem;\n  box-shadow: 0 0 0 1px rgba(34, 36, 38, 0.22) inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_bar .noty_body {\n    padding: 1em 1.5em;\n    line-height: 1.4285em;\n}\n.noty_theme__semanticui.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__semanticui.noty_type__alert,\n.noty_theme__semanticui.noty_type__notification {\n  background-color: #f8f8f9;\n  color: rgba(0, 0, 0, 0.87);\n}\n.noty_theme__semanticui.noty_type__warning {\n  background-color: #fffaf3;\n  color: #573a08;\n  box-shadow: 0 0 0 1px #c9ba9b inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_type__error {\n  background-color: #fff6f6;\n  color: #9f3a38;\n  box-shadow: 0 0 0 1px #e0b4b4 inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_type__info,\n.noty_theme__semanticui.noty_type__information {\n  background-color: #f8ffff;\n  color: #276f86;\n  box-shadow: 0 0 0 1px #a9d5de inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_type__success {\n  background-color: #fcfff5;\n  color: #2c662d;\n  box-shadow: 0 0 0 1px #a3c293 inset, 0 0 0 0 transparent;\n}\n.noty_theme__nest.noty_bar {\n  margin: 0 0 15px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n  box-shadow: rgba(0, 0, 0, 0.098039) 5px 4px 10px 0;\n}\n.noty_theme__nest.noty_bar .noty_body {\n    padding: 10px;\n    font-size: 14px;\n    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);\n}\n.noty_theme__nest.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_layout .noty_theme__nest.noty_bar {\n  z-index: 5;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(2) {\n  position: absolute;\n  top: 0;\n  margin-top: 4px;\n  margin-right: -4px;\n  margin-left: 4px;\n  z-index: 4;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(3) {\n  position: absolute;\n  top: 0;\n  margin-top: 8px;\n  margin-right: -8px;\n  margin-left: 8px;\n  z-index: 3;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(4) {\n  position: absolute;\n  top: 0;\n  margin-top: 12px;\n  margin-right: -12px;\n  margin-left: 12px;\n  z-index: 2;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(5) {\n  position: absolute;\n  top: 0;\n  margin-top: 16px;\n  margin-right: -16px;\n  margin-left: 16px;\n  z-index: 1;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(n+6) {\n  position: absolute;\n  top: 0;\n  margin-top: 20px;\n  margin-right: -20px;\n  margin-left: 20px;\n  z-index: -1;\n  width: 100%;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(2),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(2) {\n  margin-top: 4px;\n  margin-left: -4px;\n  margin-right: 4px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(3),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(3) {\n  margin-top: 8px;\n  margin-left: -8px;\n  margin-right: 8px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(4),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(4) {\n  margin-top: 12px;\n  margin-left: -12px;\n  margin-right: 12px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(5),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(5) {\n  margin-top: 16px;\n  margin-left: -16px;\n  margin-right: 16px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(n+6),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(n+6) {\n  margin-top: 20px;\n  margin-left: -20px;\n  margin-right: 20px;\n}\n.noty_theme__nest.noty_type__alert,\n.noty_theme__nest.noty_type__notification {\n  background-color: #073B4C;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__alert .noty_progressbar,\n  .noty_theme__nest.noty_type__notification .noty_progressbar {\n    background-color: #fff;\n}\n.noty_theme__nest.noty_type__warning {\n  background-color: #FFD166;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__error {\n  background-color: #EF476F;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__error .noty_progressbar {\n    opacity: .4;\n}\n.noty_theme__nest.noty_type__info,\n.noty_theme__nest.noty_type__information {\n  background-color: #118AB2;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__info .noty_progressbar,\n  .noty_theme__nest.noty_type__information .noty_progressbar {\n    opacity: .6;\n}\n.noty_theme__nest.noty_type__success {\n  background-color: #06D6A0;\n  color: #fff;\n}\n.noty_theme__light.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__light.noty_bar .noty_body {\n    padding: 10px;\n}\n.noty_theme__light.noty_bar .noty_buttons {\n    border-top: 1px solid #e7e7e7;\n    padding: 5px 10px;\n}\n.noty_theme__light.noty_type__alert,\n.noty_theme__light.noty_type__notification {\n  background-color: #fff;\n  border: 1px solid #dedede;\n  color: #444;\n}\n.noty_theme__light.noty_type__warning {\n  background-color: #FFEAA8;\n  border: 1px solid #FFC237;\n  color: #826200;\n}\n.noty_theme__light.noty_type__warning .noty_buttons {\n    border-color: #dfaa30;\n}\n.noty_theme__light.noty_type__error {\n  background-color: #ED7000;\n  border: 1px solid #e25353;\n  color: #FFF;\n}\n.noty_theme__light.noty_type__error .noty_buttons {\n    border-color: darkred;\n}\n.noty_theme__light.noty_type__info,\n.noty_theme__light.noty_type__information {\n  background-color: #78C5E7;\n  border: 1px solid #3badd6;\n  color: #FFF;\n}\n.noty_theme__light.noty_type__info .noty_buttons,\n  .noty_theme__light.noty_type__information .noty_buttons {\n    border-color: #0B90C4;\n}\n.noty_theme__light.noty_type__success {\n  background-color: #57C880;\n  border: 1px solid #7cdd77;\n  color: darkgreen;\n}\n.noty_theme__light.noty_type__success .noty_buttons {\n    border-color: #50C24E;\n}\n.payment-record .el-form .el-button {\n  width: 100%;\n}\n.payment-record .el-form-item .el-form-item__label {\n  line-height: 10px;\n  padding: 0 0 0px;\n}\n.payment-record .el-select {\n  width: 100%;\n}\n.payment-record .el-date-editor {\n  width: 100%;\n}\n.payment-record .el-button {\n  width: 100%;\n}\n.payment-record hr {\n  border-top: 1px solid #d6d6d6;\n  margin-top: 10px;\n  margin-bottom: 10px;\n}\n", ""]);
+exports.push([module.i, "\n.noty_layout_mixin, #noty_layout__top, #noty_layout__topLeft, #noty_layout__topCenter, #noty_layout__topRight, #noty_layout__bottom, #noty_layout__bottomLeft, #noty_layout__bottomCenter, #noty_layout__bottomRight, #noty_layout__center, #noty_layout__centerLeft, #noty_layout__centerRight {\n  position: fixed;\n  margin: 0;\n  padding: 0;\n  z-index: 9999999;\n  transform: translateZ(0) scale(1, 1);\n  backface-visibility: hidden;\n  -webkit-font-smoothing: subpixel-antialiased;\n  filter: blur(0);\n  -webkit-filter: blur(0);\n  max-width: 90%;\n}\n#noty_layout__top {\n  top: 0;\n  left: 5%;\n  width: 90%;\n}\n#noty_layout__topLeft {\n  top: 20px;\n  left: 20px;\n  width: 325px;\n}\n#noty_layout__topCenter {\n  top: 5%;\n  left: 50%;\n  width: 325px;\n  transform: translate(calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__topRight {\n  top: 20px;\n  right: 20px;\n  width: 325px;\n}\n#noty_layout__bottom {\n  bottom: 0;\n  left: 5%;\n  width: 90%;\n}\n#noty_layout__bottomLeft {\n  bottom: 20px;\n  left: 20px;\n  width: 325px;\n}\n#noty_layout__bottomCenter {\n  bottom: 5%;\n  left: 50%;\n  width: 325px;\n  transform: translate(calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__bottomRight {\n  bottom: 20px;\n  right: 20px;\n  width: 325px;\n}\n#noty_layout__center {\n  top: 50%;\n  left: 50%;\n  width: 325px;\n  transform: translate(calc(-50% - .5px), calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__centerLeft {\n  top: 50%;\n  left: 20px;\n  width: 325px;\n  transform: translate(0, calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n#noty_layout__centerRight {\n  top: 50%;\n  right: 20px;\n  width: 325px;\n  transform: translate(0, calc(-50% - .5px)) translateZ(0) scale(1, 1);\n}\n.noty_progressbar {\n  display: none;\n}\n.noty_has_timeout.noty_has_progressbar .noty_progressbar {\n  display: block;\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  height: 3px;\n  width: 100%;\n  background-color: #646464;\n  opacity: 0.2;\n  filter: alpha(opacity=10);\n}\n.noty_bar {\n  -webkit-backface-visibility: hidden;\n  -webkit-transform: translate(0, 0) translateZ(0) scale(1, 1);\n  transform: translate(0, 0) scale(1, 1);\n  -webkit-font-smoothing: subpixel-antialiased;\n  overflow: hidden;\n}\n.noty_effects_open {\n  opacity: 0;\n  transform: translate(50%);\n  animation: noty_anim_in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);\n  animation-fill-mode: forwards;\n}\n.noty_effects_close {\n  animation: noty_anim_out 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);\n  animation-fill-mode: forwards;\n}\n.noty_fix_effects_height {\n  animation: noty_anim_height 75ms ease-out;\n}\n.noty_close_with_click {\n  cursor: pointer;\n}\n.noty_close_button {\n  position: absolute;\n  top: 2px;\n  right: 2px;\n  font-weight: bold;\n  width: 20px;\n  height: 20px;\n  text-align: center;\n  line-height: 20px;\n  background-color: rgba(0, 0, 0, 0.05);\n  border-radius: 2px;\n  cursor: pointer;\n  transition: all .2s ease-out;\n}\n.noty_close_button:hover {\n  background-color: rgba(0, 0, 0, 0.1);\n}\n.noty_modal {\n  position: fixed;\n  width: 100%;\n  height: 100%;\n  background-color: #000;\n  z-index: 10000;\n  opacity: .3;\n  left: 0;\n  top: 0;\n}\n.noty_modal.noty_modal_open {\n  opacity: 0;\n  animation: noty_modal_in .3s ease-out;\n}\n.noty_modal.noty_modal_close {\n  animation: noty_modal_out .3s ease-out;\n  animation-fill-mode: forwards;\n}\n@keyframes noty_modal_in {\n100% {\n    opacity: .3;\n}\n}\n@keyframes noty_modal_out {\n100% {\n    opacity: 0;\n}\n}\n@keyframes noty_modal_out {\n100% {\n    opacity: 0;\n}\n}\n@keyframes noty_anim_in {\n100% {\n    transform: translate(0);\n    opacity: 1;\n}\n}\n@keyframes noty_anim_out {\n100% {\n    transform: translate(50%);\n    opacity: 0;\n}\n}\n@keyframes noty_anim_height {\n100% {\n    height: 0;\n}\n}\n.noty_theme__relax.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__relax.noty_bar .noty_body {\n    padding: 10px;\n}\n.noty_theme__relax.noty_bar .noty_buttons {\n    border-top: 1px solid #e7e7e7;\n    padding: 5px 10px;\n}\n.noty_theme__relax.noty_type__alert,\n.noty_theme__relax.noty_type__notification {\n  background-color: #fff;\n  border: 1px solid #dedede;\n  color: #444;\n}\n.noty_theme__relax.noty_type__warning {\n  background-color: #FFEAA8;\n  border: 1px solid #FFC237;\n  color: #826200;\n}\n.noty_theme__relax.noty_type__warning .noty_buttons {\n    border-color: #dfaa30;\n}\n.noty_theme__relax.noty_type__error {\n  background-color: #FF8181;\n  border: 1px solid #e25353;\n  color: #FFF;\n}\n.noty_theme__relax.noty_type__error .noty_buttons {\n    border-color: darkred;\n}\n.noty_theme__relax.noty_type__info,\n.noty_theme__relax.noty_type__information {\n  background-color: #78C5E7;\n  border: 1px solid #3badd6;\n  color: #FFF;\n}\n.noty_theme__relax.noty_type__info .noty_buttons,\n  .noty_theme__relax.noty_type__information .noty_buttons {\n    border-color: #0B90C4;\n}\n.noty_theme__relax.noty_type__success {\n  background-color: #BCF5BC;\n  border: 1px solid #7cdd77;\n  color: darkgreen;\n}\n.noty_theme__relax.noty_type__success .noty_buttons {\n    border-color: #50C24E;\n}\n.noty_theme__metroui.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  box-shadow: rgba(0, 0, 0, 0.298039) 0 0 5px 0;\n}\n.noty_theme__metroui.noty_bar .noty_progressbar {\n    position: absolute;\n    left: 0;\n    bottom: 0;\n    height: 3px;\n    width: 100%;\n    background-color: #000;\n    opacity: 0.2;\n    filter: alpha(opacity=20);\n}\n.noty_theme__metroui.noty_bar .noty_body {\n    padding: 1.25em;\n    font-size: 14px;\n}\n.noty_theme__metroui.noty_bar .noty_buttons {\n    padding: 0 10px .5em 10px;\n}\n.noty_theme__metroui.noty_type__alert,\n.noty_theme__metroui.noty_type__notification {\n  background-color: #fff;\n  color: #1d1d1d;\n}\n.noty_theme__metroui.noty_type__warning {\n  background-color: #FA6800;\n  color: #fff;\n}\n.noty_theme__metroui.noty_type__error {\n  background-color: #CE352C;\n  color: #FFF;\n}\n.noty_theme__metroui.noty_type__info,\n.noty_theme__metroui.noty_type__information {\n  background-color: #1BA1E2;\n  color: #FFF;\n}\n.noty_theme__metroui.noty_type__success {\n  background-color: #60A917;\n  color: #fff;\n}\n.noty_theme__mint.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__mint.noty_bar .noty_body {\n    padding: 10px;\n    font-size: 14px;\n}\n.noty_theme__mint.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__mint.noty_type__alert,\n.noty_theme__mint.noty_type__notification {\n  background-color: #fff;\n  border-bottom: 1px solid #D1D1D1;\n  color: #2F2F2F;\n}\n.noty_theme__mint.noty_type__warning {\n  background-color: #FFAE42;\n  border-bottom: 1px solid #E89F3C;\n  color: #fff;\n}\n.noty_theme__mint.noty_type__error {\n  background-color: #DE636F;\n  border-bottom: 1px solid #CA5A65;\n  color: #fff;\n}\n.noty_theme__mint.noty_type__info,\n.noty_theme__mint.noty_type__information {\n  background-color: #7F7EFF;\n  border-bottom: 1px solid #7473E8;\n  color: #fff;\n}\n.noty_theme__mint.noty_type__success {\n  background-color: #AFC765;\n  border-bottom: 1px solid #A0B55C;\n  color: #fff;\n}\n.noty_theme__sunset.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__sunset.noty_bar .noty_body {\n    padding: 10px;\n    font-size: 14px;\n    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);\n}\n.noty_theme__sunset.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__sunset.noty_type__alert,\n.noty_theme__sunset.noty_type__notification {\n  background-color: #073B4C;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__alert .noty_progressbar,\n  .noty_theme__sunset.noty_type__notification .noty_progressbar {\n    background-color: #fff;\n}\n.noty_theme__sunset.noty_type__warning {\n  background-color: #FFD166;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__error {\n  background-color: #EF476F;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__error .noty_progressbar {\n    opacity: .4;\n}\n.noty_theme__sunset.noty_type__info,\n.noty_theme__sunset.noty_type__information {\n  background-color: #118AB2;\n  color: #fff;\n}\n.noty_theme__sunset.noty_type__info .noty_progressbar,\n  .noty_theme__sunset.noty_type__information .noty_progressbar {\n    opacity: .6;\n}\n.noty_theme__sunset.noty_type__success {\n  background-color: #06D6A0;\n  color: #fff;\n}\n.noty_theme__bootstrap-v3.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  border: 1px solid transparent;\n  border-radius: 4px;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_body {\n    padding: 15px;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_close_button {\n    font-size: 21px;\n    font-weight: 700;\n    line-height: 1;\n    color: #000;\n    text-shadow: 0 1px 0 #fff;\n    filter: alpha(opacity=20);\n    opacity: .2;\n    background: transparent;\n}\n.noty_theme__bootstrap-v3.noty_bar .noty_close_button:hover {\n    background: transparent;\n    text-decoration: none;\n    cursor: pointer;\n    filter: alpha(opacity=50);\n    opacity: .5;\n}\n.noty_theme__bootstrap-v3.noty_type__alert,\n.noty_theme__bootstrap-v3.noty_type__notification {\n  background-color: #fff;\n  color: inherit;\n}\n.noty_theme__bootstrap-v3.noty_type__warning {\n  background-color: #fcf8e3;\n  color: #8a6d3b;\n  border-color: #faebcc;\n}\n.noty_theme__bootstrap-v3.noty_type__error {\n  background-color: #f2dede;\n  color: #a94442;\n  border-color: #ebccd1;\n}\n.noty_theme__bootstrap-v3.noty_type__info,\n.noty_theme__bootstrap-v3.noty_type__information {\n  background-color: #d9edf7;\n  color: #31708f;\n  border-color: #bce8f1;\n}\n.noty_theme__bootstrap-v3.noty_type__success {\n  background-color: #dff0d8;\n  color: #3c763d;\n  border-color: #d6e9c6;\n}\n.noty_theme__bootstrap-v4.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  border: 1px solid transparent;\n  border-radius: .25rem;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_body {\n    padding: .75rem 1.25rem;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_close_button {\n    font-size: 1.5rem;\n    font-weight: 700;\n    line-height: 1;\n    color: #000;\n    text-shadow: 0 1px 0 #fff;\n    filter: alpha(opacity=20);\n    opacity: .5;\n    background: transparent;\n}\n.noty_theme__bootstrap-v4.noty_bar .noty_close_button:hover {\n    background: transparent;\n    text-decoration: none;\n    cursor: pointer;\n    filter: alpha(opacity=50);\n    opacity: .75;\n}\n.noty_theme__bootstrap-v4.noty_type__alert,\n.noty_theme__bootstrap-v4.noty_type__notification {\n  background-color: #fff;\n  color: inherit;\n}\n.noty_theme__bootstrap-v4.noty_type__warning {\n  background-color: #fcf8e3;\n  color: #8a6d3b;\n  border-color: #faebcc;\n}\n.noty_theme__bootstrap-v4.noty_type__error {\n  background-color: #f2dede;\n  color: #a94442;\n  border-color: #ebccd1;\n}\n.noty_theme__bootstrap-v4.noty_type__info,\n.noty_theme__bootstrap-v4.noty_type__information {\n  background-color: #d9edf7;\n  color: #31708f;\n  border-color: #bce8f1;\n}\n.noty_theme__bootstrap-v4.noty_type__success {\n  background-color: #dff0d8;\n  color: #3c763d;\n  border-color: #d6e9c6;\n}\n.noty_theme__semanticui.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  position: relative;\n  border: 1px solid transparent;\n  font-size: 1em;\n  border-radius: .28571429rem;\n  box-shadow: 0 0 0 1px rgba(34, 36, 38, 0.22) inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_bar .noty_body {\n    padding: 1em 1.5em;\n    line-height: 1.4285em;\n}\n.noty_theme__semanticui.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_theme__semanticui.noty_type__alert,\n.noty_theme__semanticui.noty_type__notification {\n  background-color: #f8f8f9;\n  color: rgba(0, 0, 0, 0.87);\n}\n.noty_theme__semanticui.noty_type__warning {\n  background-color: #fffaf3;\n  color: #573a08;\n  box-shadow: 0 0 0 1px #c9ba9b inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_type__error {\n  background-color: #fff6f6;\n  color: #9f3a38;\n  box-shadow: 0 0 0 1px #e0b4b4 inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_type__info,\n.noty_theme__semanticui.noty_type__information {\n  background-color: #f8ffff;\n  color: #276f86;\n  box-shadow: 0 0 0 1px #a9d5de inset, 0 0 0 0 transparent;\n}\n.noty_theme__semanticui.noty_type__success {\n  background-color: #fcfff5;\n  color: #2c662d;\n  box-shadow: 0 0 0 1px #a3c293 inset, 0 0 0 0 transparent;\n}\n.noty_theme__nest.noty_bar {\n  margin: 0 0 15px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n  box-shadow: rgba(0, 0, 0, 0.098039) 5px 4px 10px 0;\n}\n.noty_theme__nest.noty_bar .noty_body {\n    padding: 10px;\n    font-size: 14px;\n    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);\n}\n.noty_theme__nest.noty_bar .noty_buttons {\n    padding: 10px;\n}\n.noty_layout .noty_theme__nest.noty_bar {\n  z-index: 5;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(2) {\n  position: absolute;\n  top: 0;\n  margin-top: 4px;\n  margin-right: -4px;\n  margin-left: 4px;\n  z-index: 4;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(3) {\n  position: absolute;\n  top: 0;\n  margin-top: 8px;\n  margin-right: -8px;\n  margin-left: 8px;\n  z-index: 3;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(4) {\n  position: absolute;\n  top: 0;\n  margin-top: 12px;\n  margin-right: -12px;\n  margin-left: 12px;\n  z-index: 2;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(5) {\n  position: absolute;\n  top: 0;\n  margin-top: 16px;\n  margin-right: -16px;\n  margin-left: 16px;\n  z-index: 1;\n  width: 100%;\n}\n.noty_layout .noty_theme__nest.noty_bar:nth-child(n+6) {\n  position: absolute;\n  top: 0;\n  margin-top: 20px;\n  margin-right: -20px;\n  margin-left: 20px;\n  z-index: -1;\n  width: 100%;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(2),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(2) {\n  margin-top: 4px;\n  margin-left: -4px;\n  margin-right: 4px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(3),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(3) {\n  margin-top: 8px;\n  margin-left: -8px;\n  margin-right: 8px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(4),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(4) {\n  margin-top: 12px;\n  margin-left: -12px;\n  margin-right: 12px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(5),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(5) {\n  margin-top: 16px;\n  margin-left: -16px;\n  margin-right: 16px;\n}\n#noty_layout__bottomLeft .noty_theme__nest.noty_bar:nth-child(n+6),\n#noty_layout__topLeft .noty_theme__nest.noty_bar:nth-child(n+6) {\n  margin-top: 20px;\n  margin-left: -20px;\n  margin-right: 20px;\n}\n.noty_theme__nest.noty_type__alert,\n.noty_theme__nest.noty_type__notification {\n  background-color: #073B4C;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__alert .noty_progressbar,\n  .noty_theme__nest.noty_type__notification .noty_progressbar {\n    background-color: #fff;\n}\n.noty_theme__nest.noty_type__warning {\n  background-color: #FFD166;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__error {\n  background-color: #EF476F;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__error .noty_progressbar {\n    opacity: .4;\n}\n.noty_theme__nest.noty_type__info,\n.noty_theme__nest.noty_type__information {\n  background-color: #118AB2;\n  color: #fff;\n}\n.noty_theme__nest.noty_type__info .noty_progressbar,\n  .noty_theme__nest.noty_type__information .noty_progressbar {\n    opacity: .6;\n}\n.noty_theme__nest.noty_type__success {\n  background-color: #06D6A0;\n  color: #fff;\n}\n.noty_theme__light.noty_bar {\n  margin: 4px 0;\n  overflow: hidden;\n  border-radius: 2px;\n  position: relative;\n}\n.noty_theme__light.noty_bar .noty_body {\n    padding: 10px;\n}\n.noty_theme__light.noty_bar .noty_buttons {\n    border-top: 1px solid #e7e7e7;\n    padding: 5px 10px;\n}\n.noty_theme__light.noty_type__alert,\n.noty_theme__light.noty_type__notification {\n  background-color: #fff;\n  border: 1px solid #dedede;\n  color: #444;\n}\n.noty_theme__light.noty_type__warning {\n  background-color: #FFEAA8;\n  border: 1px solid #FFC237;\n  color: #826200;\n}\n.noty_theme__light.noty_type__warning .noty_buttons {\n    border-color: #dfaa30;\n}\n.noty_theme__light.noty_type__error {\n  background-color: #ED7000;\n  border: 1px solid #e25353;\n  color: #FFF;\n}\n.noty_theme__light.noty_type__error .noty_buttons {\n    border-color: darkred;\n}\n.noty_theme__light.noty_type__info,\n.noty_theme__light.noty_type__information {\n  background-color: #78C5E7;\n  border: 1px solid #3badd6;\n  color: #FFF;\n}\n.noty_theme__light.noty_type__info .noty_buttons,\n  .noty_theme__light.noty_type__information .noty_buttons {\n    border-color: #0B90C4;\n}\n.noty_theme__light.noty_type__success {\n  background-color: #57C880;\n  border: 1px solid #7cdd77;\n  color: darkgreen;\n}\n.noty_theme__light.noty_type__success .noty_buttons {\n    border-color: #50C24E;\n}\n.payment-record .el-form .el-button {\n  width: 100%;\n}\n.payment-record .el-form--label-top .el-form-item .el-form-item__label {\n  line-height: 10px;\n  padding: 0 0 0px;\n}\n.payment-record .el-select {\n  width: 100%;\n}\n.payment-record .el-date-editor {\n  width: 100%;\n}\n.payment-record .el-button {\n  width: 100%;\n}\n.payment-record hr {\n  border-top: 1px solid #d6d6d6;\n  margin-top: 10px;\n  margin-bottom: 10px;\n}\n", ""]);
 
 // exports
 
@@ -90392,6 +90411,92 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 window.noty = __webpack_require__(0);
 
@@ -90410,6 +90515,9 @@ window.noty = __webpack_require__(0);
             formPayment[detail] = null;
         });
         formPayment['name_id'] = null;
+        formPayment['member_id'] = null;
+
+        var accountModel = { key: null, member_id: null, account_no: null, product_id: null, product_name: "", type: null, balance: 0, amount: 0, entry_type: null };
         return {
             paymentModel: formPayment,
             disableForm: false,
@@ -90419,12 +90527,17 @@ window.noty = __webpack_require__(0);
             stationName: '',
             loading: false,
             entryList: [],
-            accountSelected: { name: null, list: [] }
+            accountSelected: { member_id: null, list: [] },
+            allTotalAccount: [],
+            disableAccountName: false,
+            accountModel: accountModel,
+            otherModel: { member_id: null, particular_id: null, amount: 0, entry_type: null },
+            rulesOther: {},
+            loadingPage: false,
+            memberSelectList: []
         };
     },
     created: function created() {
-
-        console.log("this.$API.Payroll", this.$API.Payroll);
 
         this.getName();
 
@@ -90435,8 +90548,40 @@ window.noty = __webpack_require__(0);
             particular_id: [{ required: true, message: 'Description cannot be blank.', trigger: 'blur' }],
             amount_paid: [{ required: true, message: 'Amount cannot be blank.', trigger: 'blur' }]
         };
+
+        this.rulesOther = {
+            particular_id: [{ required: true, message: 'Particular cannot be blank.', trigger: 'blur' }],
+            amount: [{ required: true, message: 'Amount cannot be blank.', trigger: 'blur' }],
+            entry_type: [{ required: true, message: 'Please select entry type.', trigger: 'blur' }]
+        };
     },
 
+    computed: {
+        totalAccounts: function totalAccounts() {
+            var list = this.allTotalAccount;
+            var account = [];
+
+            __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(list, function (rs) {
+                var acct = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(rs);
+
+                var getInd = account.findIndex(function (rs) {
+                    return rs.type == acct.type && rs.product_id == acct.product_id;
+                });
+                if (getInd >= 0) {
+                    var amt = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(Number(account[getInd].amount)) + Number(acct.amount);
+                    account[getInd].amount = amt;
+                } else {
+                    account.push(acct);
+                }
+            });
+
+            __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(account, function (rs) {
+                rs.amount = Number(rs.amount).toFixed(2);
+            });
+
+            return account;
+        }
+    },
     methods: {
         getPaymentName: function getPaymentName(nameId) {
             var selectName = this.allNameList.find(function (rt) {
@@ -90461,7 +90606,9 @@ window.noty = __webpack_require__(0);
 
             this.$API.Voucher.getVoucherName().then(function (result) {
                 var res = result.data;
-                _this.mergeAll(res.member, res.division, res.station);
+                _this.memberList = res.member;
+                _this.stationList = res.station;
+                _this.mergeAll(res.member);
             }).catch(function (err) {
                 console.log(err);
             }).then(function (_) {
@@ -90483,53 +90630,214 @@ window.noty = __webpack_require__(0);
                 this.nameList = [];
             }
         },
+        memberRemoteMethod: function memberRemoteMethod(query) {
+            var _this3 = this;
+
+            if (query && query !== '') {
+                setTimeout(function () {
+                    _this3.memberSelectList = _this3.memberList.filter(function (item) {
+                        var fullname = item.first_name + " " + item.middle_name + " " + item.last_name;
+                        return fullname.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    });
+                }, 200);
+            } else {
+                this.memberSelectList = [];
+            }
+        },
+        resetAccounts: function resetAccounts() {
+            this.disableAccountName = false;
+            this.$refs.otherModel.resetFields();
+            this.accountSelected.name = null;
+            this.accountSelected.list = [];
+        },
         changeName: function changeName(val) {
             //get type and type id
             var nameSplit = val;
             nameSplit = nameSplit.split("-");
-            this.paymentModel.type = "Individual";
-            this.paymentModel.type_id = null;
+            this.paymentModel.type = "Group";
+            this.paymentModel.member_id = null;
+            this.stationName = "";
             if (nameSplit.length > 1) {
-                if (nameSplit[0] == 'station' || nameSplit[0] == 'division') {
-                    this.paymentModel.type = "Group";
-                }
-                if (nameSplit[0] == 'station' || nameSplit[0] == 'division' || nameSplit[0] == 'member') {
-                    this.paymentModel.type_id = nameSplit[1];
+                if (nameSplit[0] == 'member') {
+                    this.paymentModel.type = "Individual";
+                    this.paymentModel.member_id = nameSplit[1];
+                    var getName = this.getPaymentName(val);
+                    if (getName && getName.station_name) {
+                        this.stationName = getName.station_name;
+                    }
                 }
             }
 
-            this.stationName = "";
-            var getVal = this.allNameList.find(function (rs) {
-                return val == rs.value;
-            });
-            if (getVal) {
-                this.stationName = getVal.station_name;
+            this.resetAccounts();
+
+            if (this.paymentModel.member_id) {
+                this.otherModel.member_id = this.paymentModel.member_id;
+                this.accountSelected.member_id = this.paymentModel.member_id;
+                this.disableAccountName = true;
+                this.getMemberAccount(this.paymentModel.member_id);
             }
         },
-        addEntry: function addEntry() {
-            var _this3 = this;
+        changeAccountName: function changeAccountName(val) {
+            this.getMemberAccount(val);
+        },
+        getMemberAccount: function getMemberAccount(member_id) {
+            var _this4 = this;
 
-            this.$refs.paymentForm.validate(function (valid) {
-                if (valid) {
-                    var form = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(_this3.paymentModel);
-                    var arr = form;
+            this.loadingPage = true;
+            this.$API.Payment.getMemberAccount(member_id).then(function (result) {
+                var res = result.data;
+                _this4.mergeAccount(res.loanAccounts, res.savingsAccounts, res.shareAccounts);
+            }).catch(function (err) {
+                console.log(err);
+            }).then(function (_) {
+                _this4.loadingPage = false;
+            });
+        },
+        mergeAccount: function mergeAccount() {
+            var loans = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-                    arr['name'] = _this3.getPaymentName(form.name_id);
-                    arr['particular_id'] = form.particular_id;
-                    arr['amount_paid'] = Number(form.amount_paid).toFixed(2);
+            var _this5 = this;
 
-                    _this3.entryList.push(arr);
+            var savings = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+            var shares = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
-                    _this3.paymentModel.particular_id = null;
-                    _this3.paymentModel.amount_paid = 0;
+            var allAccounts = [];
+            if (loans && loans.length > 0) {
+                __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(loans, function (rs) {
 
-                    _this3.$refs.particular_id.focus();
+                    var arr = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(_this5.accountModel);
+                    arr.member_id = rs.member_id;
+                    arr.key = "LOAN_" + rs.account_no;
+                    arr.account_no = rs.account_no;
+                    arr.product_id = rs.loan_id;
+                    arr.product_name = rs.product.product_name;
+                    arr.type = "LOAN";
+                    arr.balance = parseFloat(rs.principal_balance).toFixed(2);
+
+                    var amount = _this5.getAmount(arr.key);
+                    arr.amount = amount;
+
+                    allAccounts.push(arr);
+                });
+            }
+
+            if (savings && savings.length > 0) {
+                __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(savings, function (rs) {
+
+                    var arr = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(_this5.accountModel);
+                    arr.member_id = rs.member_id;
+                    arr.key = "SAVINGS_" + rs.account_no;
+                    arr.account_no = rs.account_no;
+                    arr.product_id = rs.saving_product_id;
+                    arr.product_name = rs.product.description;
+                    arr.type = "SAVINGS";
+                    arr.balance = parseFloat(rs.balance).toFixed(2);
+
+                    var amount = _this5.getAmount(arr.key);
+                    arr.amount = amount;
+
+                    allAccounts.push(arr);
+                });
+            }
+
+            if (shares && shares.length > 0) {
+                __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(shares, function (rs) {
+
+                    var arr = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(_this5.accountModel);
+                    arr.member_id = rs.fk_memid;
+                    arr.key = "SHARE_" + rs.accountnumber;
+                    arr.account_no = rs.accountnumber;
+                    arr.product_id = rs.fk_share_product;
+                    arr.product_name = rs.product.name;
+                    arr.type = "SHARE";
+                    arr.balance = parseFloat(rs.balance).toFixed(2);
+
+                    var amount = _this5.getAmount(arr.key);
+                    arr.amount = amount;
+
+                    allAccounts.push(arr);
+                });
+            }
+
+            this.accountSelected.list = allAccounts;
+        },
+        getAmount: function getAmount(key) {
+            var getInd = this.allTotalAccount.findIndex(function (rs) {
+                return rs.key == key;
+            });
+            if (getInd >= 0) {
+                return Number(this.allTotalAccount[getInd].amount);
+            }
+            return 0;
+        },
+        getInAllAccount: function getInAllAccount(key) {
+            var getInd = this.allTotalAccount.findIndex(function (rs) {
+                return rs.key == key;
+            });
+            return getInd;
+        },
+        addAccounts: function addAccounts() {
+            var vm = this;
+            vm.$swal({
+                title: "Pay Accounts",
+                text: "Are you sure you want to pay accounts listed?",
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Proceed',
+                focusConfirm: false,
+                focusCancel: true,
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                width: '400px'
+            }).then(function (result) {
+                if (result.value) {
+                    vm.loadingPage = true;
+                    __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(vm.accountSelected.list, function (rs) {
+                        var acct = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(rs);
+                        if (rs.amount && Number(rs.amount) > 0) {
+                            //Check for existinga account with same account number
+                            var getInd = vm.getInAllAccount(rs.key);
+                            if (getInd >= 0) {
+                                vm.allTotalAccount[getInd].amount = Number(rs.amount);
+                            } else {
+                                //Push to  allaccount
+                                vm.allTotalAccount.push(acct);
+                            }
+                        }
+                    });
+                    vm.loadingPage = false;
+                    vm.accountSelected.member_id = null;
+                    vm.accountSelected.list = [];
                 }
             });
+        },
+        getParticular: function getParticular(particular_id) {
+            return this.dataParticularList.find(function (rs) {
+                return rs.id == particular_id;
+            });
+        },
+        changeOtherParticular: function changeOtherParticular(val) {
+            var amount = this.getAmount(val);
+            this.otherModel.amount = amount;
+        },
+        addOtherAccounts: function addOtherAccounts() {
+            this.loadingPage = true;
+            var mdl = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(this.otherModel);
+            var getParticular = this.getParticular(mdl.particular_id);
+            if (getParticular) {
+                var arr = __WEBPACK_IMPORTED_MODULE_2_lodash_cloneDeep___default()(this.accountModel);
+                arr.member_id = mdl.member_id;
+                arr.key = "OTHERS_" + mdl.particular_id;
+                arr.account_no = null;
+                arr.product_id = mdl.particular_id; // Particular
+                arr.product_name = getParticular.name;
+                arr.type = "OTHERS";
+                arr.amount = Number(mdl.amount);
 
-            if (this.entryList.length == 1) {
-                this.disableForm = true;
+                this.allTotalAccount.push(arr);
             }
+            this.loadingPage = false;
         },
         handleRemove: function handleRemove(index, row) {
             this.entryList.splice(index, 1);
@@ -90554,7 +90862,7 @@ window.noty = __webpack_require__(0);
 
             return hasError;
         },
-        finishPayment: function finishPayment(isForceAdd) {
+        finishPayment: function finishPayment() {
             var vm = this;
 
             if (this.validateList()) {
@@ -90583,18 +90891,18 @@ window.noty = __webpack_require__(0);
                     __WEBPACK_IMPORTED_MODULE_3_lodash_forEach___default()(list, function (el) {
                         el['date_transact'] = vm.$df.formatDate(el.date_transact, "YYYY-MM-DD");
                     });
-                    vm.savePaymentList(list, vm.paymentModel.or_num, isForceAdd);
+                    //vm.savePaymentList(list, vm.paymentModel.or_num, isForceAdd)
                 }
             });
         },
         savePaymentList: function savePaymentList(list, orNum, isForceAdd) {
-            var _this4 = this;
+            var _this6 = this;
 
             this.$API.Payment.savePaymentList(list, orNum, isForceAdd).then(function (result) {
                 var res = result.data;
                 if (res.hasError) {
                     if (res.error == 'has_ornum') {
-                        _this4.createVoucher(true);
+                        _this6.createVoucher(true);
                     } else {
                         new __WEBPACK_IMPORTED_MODULE_1_noty___default.a({
                             theme: 'relax',
@@ -90603,7 +90911,7 @@ window.noty = __webpack_require__(0);
                             text: 'Some payment list not successfully saved.',
                             timeout: 3000
                         }).show();
-                        _this4.resetAll();
+                        _this6.resetAll();
                     }
                 } else {
                     new __WEBPACK_IMPORTED_MODULE_1_noty___default.a({
@@ -90613,7 +90921,7 @@ window.noty = __webpack_require__(0);
                         text: 'Payment list successfully saved.',
                         timeout: 3000
                     }).show();
-                    _this4.resetAll();
+                    _this6.resetAll();
                 }
             }).catch(function (err) {
                 console.log(err);
@@ -90621,11 +90929,11 @@ window.noty = __webpack_require__(0);
                 main_preloader.style.display = 'none';
             });
         },
-        cancelVoucher: function cancelVoucher() {
+        cancelPayment: function cancelPayment() {
             var vm = this;
             vm.$swal({
-                title: 'Cancel Inputs?',
-                text: "Are you sure you want to cancel all entries.",
+                title: 'Cancel All Data?',
+                text: "Are you sure you want to cancel all data.",
                 type: 'warning',
                 showCancelButton: true,
                 cancelButtonColor: '#d33',
@@ -90643,10 +90951,8 @@ window.noty = __webpack_require__(0);
         },
         resetAll: function resetAll() {
             this.$refs.paymentForm.resetFields();
-            this.entryList = [];
-            this.totalAmount = 0;
-            this.stationName = 0;
-            this.disableForm = false;
+            this.resetAccounts();
+            this.allTotalAccount = [];
         }
     },
     watch: {
@@ -90677,15 +90983,25 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    { staticClass: "payment-record" },
+    {
+      directives: [
+        {
+          name: "loading",
+          rawName: "v-loading",
+          value: _vm.loadingPage,
+          expression: "loadingPage"
+        }
+      ],
+      staticClass: "payment-record"
+    },
     [
       _c(
         "el-row",
-        { attrs: { gutter: 20 } },
+        { attrs: { gutter: 30 } },
         [
           _c(
             "el-col",
-            { attrs: { span: 17 } },
+            { attrs: { span: 16 } },
             [
               _c(
                 "el-form",
@@ -90954,128 +91270,7 @@ var render = function() {
                         1
                       ),
                       _vm._v(" "),
-                      _c("el-col", { attrs: { span: 24 } }, [_c("hr")]),
-                      _vm._v(" "),
-                      _c(
-                        "el-col",
-                        { attrs: { span: 12 } },
-                        [
-                          _c(
-                            "el-form-item",
-                            {
-                              attrs: {
-                                label: "Description",
-                                prop: "particular_id"
-                              }
-                            },
-                            [
-                              _c(
-                                "el-select",
-                                {
-                                  ref: "particular_id",
-                                  attrs: {
-                                    filterable: "",
-                                    placeholder: "Select"
-                                  },
-                                  model: {
-                                    value: _vm.paymentModel.particular_id,
-                                    callback: function($$v) {
-                                      _vm.$set(
-                                        _vm.paymentModel,
-                                        "particular_id",
-                                        $$v
-                                      )
-                                    },
-                                    expression: "paymentModel.particular_id"
-                                  }
-                                },
-                                _vm._l(_vm.dataParticularList, function(item) {
-                                  return _c("el-option", {
-                                    key: parseInt(item.id),
-                                    attrs: {
-                                      label: item.name,
-                                      value: parseInt(item.id)
-                                    }
-                                  })
-                                })
-                              )
-                            ],
-                            1
-                          )
-                        ],
-                        1
-                      ),
-                      _vm._v(" "),
-                      _c(
-                        "el-col",
-                        { attrs: { span: 6 } },
-                        [
-                          _c(
-                            "el-form-item",
-                            { attrs: { label: "Amount", prop: "amount_paid" } },
-                            [
-                              _c("el-input", {
-                                ref: "debit",
-                                attrs: { type: "number", min: 0 },
-                                nativeOn: {
-                                  keyup: function($event) {
-                                    if (
-                                      !("button" in $event) &&
-                                      _vm._k(
-                                        $event.keyCode,
-                                        "enter",
-                                        13,
-                                        $event.key
-                                      )
-                                    ) {
-                                      return null
-                                    }
-                                    _vm.addEntry($event)
-                                  }
-                                },
-                                model: {
-                                  value: _vm.paymentModel.amount_paid,
-                                  callback: function($$v) {
-                                    _vm.$set(
-                                      _vm.paymentModel,
-                                      "amount_paid",
-                                      $$v
-                                    )
-                                  },
-                                  expression: "paymentModel.amount_paid"
-                                }
-                              })
-                            ],
-                            1
-                          )
-                        ],
-                        1
-                      ),
-                      _vm._v(" "),
-                      _c(
-                        "el-col",
-                        { attrs: { span: 6 } },
-                        [
-                          _c(
-                            "el-form-item",
-                            { attrs: { label: "Total" } },
-                            [
-                              _c("el-input", {
-                                attrs: { type: "number", disabled: true },
-                                model: {
-                                  value: _vm.totalAmount,
-                                  callback: function($$v) {
-                                    _vm.totalAmount = $$v
-                                  },
-                                  expression: "totalAmount"
-                                }
-                              })
-                            ],
-                            1
-                          )
-                        ],
-                        1
-                      )
+                      _c("el-col", { attrs: { span: 24 } }, [_c("hr")])
                     ],
                     1
                   )
@@ -91083,163 +91278,585 @@ var render = function() {
                 1
               ),
               _vm._v(" "),
-              _c("el-row", { attrs: { gutter: 20 } }, [
-                _c("div", { staticClass: "box box-primary" }, [
-                  _c("div", { staticClass: "box-header with-border" }, [
-                    _c("h3", { staticClass: "box-title" }, [_vm._v("Accounts")])
-                  ]),
-                  _vm._v(" "),
-                  _c(
-                    "div",
-                    { staticClass: "box-body" },
-                    [
-                      _c(
-                        "el-select",
-                        {
-                          attrs: {
-                            filterable: "",
-                            remote: "",
-                            "allow-create": "",
-                            "reserve-keyword": "",
-                            placeholder: "Select member",
-                            "remote-method": _vm.remoteMethod,
-                            loading: _vm.loading
-                          },
-                          model: {
-                            value: _vm.accountSelected.name,
-                            callback: function($$v) {
-                              _vm.$set(_vm.accountSelected, "name", $$v)
-                            },
-                            expression: "accountSelected.name"
-                          }
-                        },
-                        _vm._l(_vm.nameList, function(item) {
-                          return _c("el-option", {
-                            key: item.value,
-                            attrs: { label: item.label, value: item.value }
-                          })
-                        })
-                      ),
+              _c(
+                "el-row",
+                { attrs: { gutter: 20 } },
+                [
+                  _c("el-col", { attrs: { span: 8 } }, [
+                    _c("div", { staticClass: "box box-default" }, [
+                      _c("div", { staticClass: "box-header with-border" }, [
+                        _c("h3", { staticClass: "box-title" }, [
+                          _vm._v("Others")
+                        ])
+                      ]),
                       _vm._v(" "),
-                      _c("table", { staticClass: "table table-bordered" }, [
-                        _c(
-                          "tbody",
-                          [
-                            _c("tr", [
-                              _c("th", [_vm._v(" Account Type")]),
-                              _vm._v(" "),
-                              _c("th", [_vm._v(" Balance")]),
-                              _vm._v(" "),
-                              _c("th", [_vm._v(" Amount ")])
-                            ]),
-                            _vm._v(" "),
-                            _vm._l(_vm.accountSelected.list, function(item) {
-                              return _c("tr", { key: item.no }, [
-                                _c("td", [_vm._v(_vm._s(item.name))]),
-                                _vm._v(" "),
-                                _c("td", [_vm._v(_vm._s(item.balanace))]),
-                                _vm._v(" "),
-                                _c(
-                                  "td",
-                                  [
-                                    _c("el-input", {
-                                      ref: "debit",
-                                      refInFor: true,
-                                      attrs: { type: "number", min: 0 },
-                                      nativeOn: {
-                                        keyup: function($event) {
-                                          if (
-                                            !("button" in $event) &&
-                                            _vm._k(
-                                              $event.keyCode,
-                                              "enter",
-                                              13,
-                                              $event.key
-                                            )
-                                          ) {
-                                            return null
-                                          }
-                                          _vm.addEntry($event)
-                                        }
-                                      },
-                                      model: {
-                                        value: item.amount,
-                                        callback: function($$v) {
-                                          _vm.$set(item, "amount", $$v)
-                                        },
-                                        expression: "item.amount"
-                                      }
-                                    })
-                                  ],
-                                  1
-                                )
-                              ])
-                            }),
-                            _vm._v(" "),
-                            _c("tr", [
+                      _c(
+                        "div",
+                        { staticClass: "box-body" },
+                        [
+                          _c(
+                            "el-form",
+                            {
+                              ref: "otherModel",
+                              attrs: {
+                                model: _vm.otherModel,
+                                rules: _vm.rulesOther,
+                                "label-width": "100px",
+                                "label-position": "top"
+                              }
+                            },
+                            [
                               _c(
-                                "td",
-                                { attrs: { colspan: "3" } },
+                                "el-row",
+                                { attrs: { gutter: 20 } },
                                 [
                                   _c(
-                                    "el-button",
-                                    {
-                                      attrs: { type: "primary" },
-                                      on: { click: _vm.addAccounts }
-                                    },
-                                    [_vm._v("ADD")]
+                                    "el-col",
+                                    { attrs: { span: 24 } },
+                                    [
+                                      _c(
+                                        "el-form-item",
+                                        {
+                                          attrs: {
+                                            label: "Name",
+                                            prop: "member_id"
+                                          }
+                                        },
+                                        [
+                                          _c(
+                                            "el-select",
+                                            {
+                                              attrs: {
+                                                filterable: "",
+                                                remote: "",
+                                                "allow-create": "",
+                                                "reserve-keyword": "",
+                                                placeholder: "Select member",
+                                                "remote-method":
+                                                  _vm.memberRemoteMethod,
+                                                disabled: _vm.disableAccountName
+                                              },
+                                              model: {
+                                                value: _vm.otherModel.member_id,
+                                                callback: function($$v) {
+                                                  _vm.$set(
+                                                    _vm.otherModel,
+                                                    "member_id",
+                                                    $$v
+                                                  )
+                                                },
+                                                expression:
+                                                  "otherModel.member_id"
+                                              }
+                                            },
+                                            _vm._l(
+                                              _vm.memberSelectList,
+                                              function(item) {
+                                                return _c("el-option", {
+                                                  key: item.id,
+                                                  attrs: {
+                                                    label:
+                                                      item.first_name +
+                                                      " " +
+                                                      item.middle_name +
+                                                      " " +
+                                                      item.last_name,
+                                                    value: item.id
+                                                  }
+                                                })
+                                              }
+                                            )
+                                          )
+                                        ],
+                                        1
+                                      ),
+                                      _vm._v(" "),
+                                      _c(
+                                        "el-form-item",
+                                        {
+                                          attrs: {
+                                            label: "Particular",
+                                            prop: "particular_id"
+                                          }
+                                        },
+                                        [
+                                          _c(
+                                            "el-select",
+                                            {
+                                              ref: "particular_id",
+                                              attrs: {
+                                                filterable: "",
+                                                placeholder: "Select"
+                                              },
+                                              on: {
+                                                change:
+                                                  _vm.changeOtherParticular
+                                              },
+                                              model: {
+                                                value:
+                                                  _vm.otherModel.particular_id,
+                                                callback: function($$v) {
+                                                  _vm.$set(
+                                                    _vm.otherModel,
+                                                    "particular_id",
+                                                    $$v
+                                                  )
+                                                },
+                                                expression:
+                                                  "otherModel.particular_id"
+                                              }
+                                            },
+                                            _vm._l(
+                                              _vm.dataParticularList,
+                                              function(item) {
+                                                return _c("el-option", {
+                                                  key: parseInt(item.id),
+                                                  attrs: {
+                                                    label: item.name,
+                                                    value: parseInt(item.id)
+                                                  }
+                                                })
+                                              }
+                                            )
+                                          )
+                                        ],
+                                        1
+                                      )
+                                    ],
+                                    1
+                                  ),
+                                  _vm._v(" "),
+                                  _c(
+                                    "el-col",
+                                    { attrs: { span: 24 } },
+                                    [
+                                      _c(
+                                        "el-form-item",
+                                        {
+                                          attrs: {
+                                            label: "Amount",
+                                            prop: "amount"
+                                          }
+                                        },
+                                        [
+                                          _c("el-input", {
+                                            attrs: {
+                                              type: "number",
+                                              size: "small",
+                                              min: 0
+                                            },
+                                            model: {
+                                              value: _vm.otherModel.amount,
+                                              callback: function($$v) {
+                                                _vm.$set(
+                                                  _vm.otherModel,
+                                                  "amount",
+                                                  $$v
+                                                )
+                                              },
+                                              expression: "otherModel.amount"
+                                            }
+                                          })
+                                        ],
+                                        1
+                                      ),
+                                      _vm._v(" "),
+                                      _c(
+                                        "el-form-item",
+                                        {
+                                          attrs: {
+                                            label: " ",
+                                            prop: "entry_type"
+                                          }
+                                        },
+                                        [
+                                          _c(
+                                            "el-radio",
+                                            {
+                                              attrs: { label: "CREDIT" },
+                                              model: {
+                                                value:
+                                                  _vm.otherModel.entry_type,
+                                                callback: function($$v) {
+                                                  _vm.$set(
+                                                    _vm.otherModel,
+                                                    "entry_type",
+                                                    $$v
+                                                  )
+                                                },
+                                                expression:
+                                                  "otherModel.entry_type"
+                                              }
+                                            },
+                                            [_vm._v("CREDIT")]
+                                          ),
+                                          _vm._v(" "),
+                                          _c(
+                                            "el-radio",
+                                            {
+                                              attrs: { label: "DEBIT" },
+                                              model: {
+                                                value:
+                                                  _vm.otherModel.entry_type,
+                                                callback: function($$v) {
+                                                  _vm.$set(
+                                                    _vm.otherModel,
+                                                    "entry_type",
+                                                    $$v
+                                                  )
+                                                },
+                                                expression:
+                                                  "otherModel.entry_type"
+                                              }
+                                            },
+                                            [_vm._v("DEBIT")]
+                                          )
+                                        ],
+                                        1
+                                      )
+                                    ],
+                                    1
                                   )
                                 ],
                                 1
                               )
-                            ])
-                          ],
-                          2
-                        )
-                      ])
-                    ],
-                    1
-                  )
-                ])
-              ])
+                            ],
+                            1
+                          )
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "box-footer clearfix" },
+                        [
+                          _c(
+                            "el-button",
+                            {
+                              staticClass: "auto-width pull-right",
+                              attrs: { type: "primary" },
+                              on: { click: _vm.addOtherAccounts }
+                            },
+                            [_vm._v("ADD")]
+                          )
+                        ],
+                        1
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("el-col", { attrs: { span: 16 } }, [
+                    _c("div", { staticClass: "box box-info" }, [
+                      _c("div", { staticClass: "box-header with-border" }, [
+                        _c("h3", { staticClass: "box-title" }, [
+                          _vm._v("Accounts")
+                        ])
+                      ]),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "box-body" },
+                        [
+                          _c(
+                            "el-row",
+                            { attrs: { gutter: 20 } },
+                            [
+                              _c(
+                                "el-col",
+                                { staticClass: "mb-10", attrs: { span: 24 } },
+                                [
+                                  _c("label", [_vm._v("Account Name: ")]),
+                                  _vm._v(" "),
+                                  _c(
+                                    "el-select",
+                                    {
+                                      staticClass: "w300-width",
+                                      attrs: {
+                                        filterable: "",
+                                        remote: "",
+                                        "allow-create": false,
+                                        "reserve-keyword": "",
+                                        placeholder: "Select member",
+                                        "remote-method": _vm.memberRemoteMethod,
+                                        disabled: _vm.disableAccountName
+                                      },
+                                      on: { change: _vm.changeAccountName },
+                                      model: {
+                                        value: _vm.accountSelected.member_id,
+                                        callback: function($$v) {
+                                          _vm.$set(
+                                            _vm.accountSelected,
+                                            "member_id",
+                                            $$v
+                                          )
+                                        },
+                                        expression: "accountSelected.member_id"
+                                      }
+                                    },
+                                    _vm._l(_vm.memberSelectList, function(
+                                      item
+                                    ) {
+                                      return _c("el-option", {
+                                        key: item.id,
+                                        attrs: {
+                                          label:
+                                            item.first_name +
+                                            "" +
+                                            item.middle_name +
+                                            " " +
+                                            item.last_name,
+                                          value: item.id
+                                        }
+                                      })
+                                    })
+                                  )
+                                ],
+                                1
+                              ),
+                              _vm._v(" "),
+                              _c(
+                                "el-col",
+                                { attrs: { span: 24 } },
+                                [
+                                  _c(
+                                    "el-table",
+                                    {
+                                      staticStyle: { width: "100%" },
+                                      attrs: {
+                                        data: _vm.accountSelected.list,
+                                        border: "",
+                                        height: "230"
+                                      }
+                                    },
+                                    [
+                                      _c("el-table-column", {
+                                        attrs: {
+                                          prop: "product_name",
+                                          label: "Account Type",
+                                          width: "180"
+                                        }
+                                      }),
+                                      _vm._v(" "),
+                                      _c("el-table-column", {
+                                        attrs: {
+                                          prop: "balance",
+                                          label: "Balance",
+                                          width: "150"
+                                        }
+                                      }),
+                                      _vm._v(" "),
+                                      _c("el-table-column", {
+                                        attrs: { label: "Amount" },
+                                        scopedSlots: _vm._u([
+                                          {
+                                            key: "default",
+                                            fn: function(scope) {
+                                              return [
+                                                _c("el-input", {
+                                                  attrs: {
+                                                    type: "number",
+                                                    min: 0,
+                                                    disabled:
+                                                      Number(
+                                                        scope.row.balance
+                                                      ) <= 0
+                                                  },
+                                                  nativeOn: {
+                                                    keyup: function($event) {
+                                                      if (
+                                                        !("button" in $event) &&
+                                                        _vm._k(
+                                                          $event.keyCode,
+                                                          "enter",
+                                                          13,
+                                                          $event.key
+                                                        )
+                                                      ) {
+                                                        return null
+                                                      }
+                                                      _vm.addEntry($event)
+                                                    }
+                                                  },
+                                                  model: {
+                                                    value: scope.row.amount,
+                                                    callback: function($$v) {
+                                                      _vm.$set(
+                                                        scope.row,
+                                                        "amount",
+                                                        $$v
+                                                      )
+                                                    },
+                                                    expression:
+                                                      "scope.row.amount"
+                                                  }
+                                                })
+                                              ]
+                                            }
+                                          }
+                                        ])
+                                      })
+                                    ],
+                                    1
+                                  )
+                                ],
+                                1
+                              )
+                            ],
+                            1
+                          )
+                        ],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        { staticClass: "box-footer clearfix" },
+                        [
+                          _c(
+                            "el-button",
+                            {
+                              staticClass: "auto-width pull-right",
+                              attrs: { type: "primary" },
+                              on: { click: _vm.addAccounts }
+                            },
+                            [_vm._v("ADD")]
+                          )
+                        ],
+                        1
+                      )
+                    ])
+                  ])
+                ],
+                1
+              )
             ],
             1
           ),
           _vm._v(" "),
-          _c("el-col", { attrs: { span: 7 } }, [
-            _c(
-              "div",
-              { staticClass: "psyment-entry-list" },
-              [
+          _c("el-col", { attrs: { span: 8 } }, [
+            _c("div", { staticClass: "box box-primary" }, [
+              _c("div", { staticClass: "box-header" }, [
+                _c("h3", { staticClass: "box-title" }, [_vm._v("TOTAL")])
+              ]),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "box-body psyment-entry-list" },
+                [
+                  _c(
+                    "el-table",
+                    {
+                      staticStyle: { width: "100%" },
+                      attrs: {
+                        data: _vm.totalAccounts,
+                        border: "",
+                        striped: "",
+                        height: "480px"
+                      }
+                    },
+                    [
+                      _c("el-table-column", {
+                        attrs: { prop: "product_name", label: "Account" }
+                      }),
+                      _vm._v(" "),
+                      _c("el-table-column", {
+                        attrs: { prop: "type", label: "Type" }
+                      }),
+                      _vm._v(" "),
+                      _c("el-table-column", {
+                        attrs: { prop: "amount", label: "Amount" }
+                      })
+                    ],
+                    1
+                  )
+                ],
+                1
+              )
+            ])
+          ]),
+          _vm._v(" "),
+          _c("el-col", { attrs: { span: 24 } }, [
+            _c("div", { staticClass: "box box-primary" }, [
+              _c("div", { staticClass: "box-header with-border" }, [
+                _c("h3", { staticClass: "box-title" }, [
+                  _vm._v("ALL ACCOUNTS")
+                ]),
+                _vm._v(" "),
                 _c(
-                  "el-table",
-                  {
-                    staticStyle: { width: "100%" },
-                    attrs: {
-                      data: _vm.totalAccounts,
-                      border: "",
-                      striped: "",
-                      height: "400px"
-                    }
-                  },
+                  "div",
+                  { staticClass: "box-tools pull-right" },
                   [
-                    _c("el-table-column", {
-                      attrs: { prop: "account_name", label: "Account" }
-                    }),
+                    _c(
+                      "el-button",
+                      {
+                        staticClass: "auto-width pull-right",
+                        attrs: { size: "medium", type: "primary" },
+                        on: {
+                          click: function($event) {
+                            _vm.finishPayment()
+                          }
+                        }
+                      },
+                      [_vm._v("SAVE")]
+                    ),
                     _vm._v(" "),
-                    _c("el-table-column", {
-                      attrs: { prop: "account_type", label: "Type" }
-                    }),
-                    _vm._v(" "),
-                    _c("el-table-column", {
-                      attrs: { prop: "amount_paid", label: "Amount" }
-                    })
+                    _c(
+                      "el-button",
+                      {
+                        staticClass: "auto-width pull-right",
+                        attrs: { size: "medium", type: "danger" },
+                        on: {
+                          click: function($event) {
+                            _vm.finishPayment()
+                          }
+                        }
+                      },
+                      [_vm._v("CANCEL")]
+                    )
                   ],
                   1
                 )
-              ],
-              1
-            )
+              ]),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "box-body psyment-entry-list" },
+                [
+                  _c(
+                    "el-table",
+                    {
+                      staticStyle: { width: "100%" },
+                      attrs: {
+                        data: _vm.allTotalAccount,
+                        border: "",
+                        striped: "",
+                        "max-height": "480px"
+                      }
+                    },
+                    [
+                      _c("el-table-column", {
+                        attrs: { prop: "member_id", label: "Member" }
+                      }),
+                      _vm._v(" "),
+                      _c("el-table-column", {
+                        attrs: { prop: "product_name", label: "Account" }
+                      }),
+                      _vm._v(" "),
+                      _c("el-table-column", {
+                        attrs: { prop: "amount", label: "Amount" }
+                      }),
+                      _vm._v(" "),
+                      _c("el-table-column", {
+                        attrs: { prop: "type", label: "Type" }
+                      })
+                    ],
+                    1
+                  )
+                ],
+                1
+              )
+            ])
           ])
         ],
         1
@@ -91921,6 +92538,12 @@ if (false) {
 			action: 'getPaymentRecord'
 		};
 		return __WEBPACK_IMPORTED_MODULE_0_axios___default.a.post('/payment/get-payment-record', params);
+	},
+	getMemberAccount: function getMemberAccount(member_id) {
+		var params = {
+			member_id: member_id
+		};
+		return __WEBPACK_IMPORTED_MODULE_0_axios___default.a.post('/payment/get-member-accounts', params);
 	}
 });
 
