@@ -2,11 +2,10 @@ import axios from 'axios'
 
 export default {
 
-	savePaymentList(paymentList, orNum, forceAdd){	
+	savePaymentList(paymentModel, allAccounts){	
 		let params = {
-			paymentList : paymentList,
-			orNum : orNum,
-			forceAdd : forceAdd
+			paymentModel : paymentModel,
+			allAccounts : allAccounts
 		}
 		return axios.post('/payment/save-payment-list', params)
 	},

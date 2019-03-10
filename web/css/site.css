@@ -192,14 +192,14 @@ a.desc:after {
 }
 
 .box-header{
-    padding: 15px !important;}
+    padding: 7px 15px !important;}
     .box-header>.box-tools{
         right: 15px !important;
         top: 10px !important;
     }
 
 .box-body{
-    padding: 15px !important;
+    padding: 7px 15px !important;
 }
 
 .main-preloader {

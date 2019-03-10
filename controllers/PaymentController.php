@@ -8,6 +8,8 @@ use app\helpers\accounts\SavingsHelper;
 use app\helpers\accounts\ShareHelper;
 use app\helpers\accounts\TimeDepositHelper;
 
+use app\helpers\payment\PaymentHelper;
+
 class PaymentController extends \yii\web\Controller
 {
     public function actionIndex()
@@ -30,42 +32,63 @@ class PaymentController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
+            $success = false;
+            $error = '';
+            $data = null;
 
-            $post = \Yii::$app->getRequest()->getBodyParams();
-            $paymentList = $post['paymentList'];
-            $orNum = $post['orNum'];
-            $forceAdd = $post['forceAdd'];
-            $paymentIds = [];
-            $hasError = false;
-            if(!$forceAdd){
-                $getVoucher  = \app\models\PaymentRecord::find()->where(['or_num' => $orNum])->one();
-                if($getVoucher){
-                     return [
-                        'error'     => 'has_ornum',
-                        'hasError'  => true
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $post = \Yii::$app->getRequest()->getBodyParams();
+                $paymentModel = $post['paymentModel'];
+                $allAccounts = $post['allAccounts'];
+
+                //Check GV Number if exist
+                $or_num = $paymentModel['or_num'];
+                $getOR = \app\models\PaymentRecord::find()->where(['or_num' => $or_num])->one();
+                if($getOR){
+                    return [
+                        'success'   => false,
+                        'error'     => 'ERROR_HASOR'
                     ];
                 }
-               
-            }
-            $error = [];
-            foreach ($paymentList as $entry) {
-                $createEntry  = new \app\models\PaymentRecord;
-                if(isset($entry['name_id'])){
-                    unset($entry['name_id']);
-                }
-                $createEntry->attributes = $entry;
-                if($createEntry->save()){
-                    array_push($paymentIds, $createEntry->id);
-                }
                 else{
-                    array_push($error, $createEntry->getErrors()) ;
-                    $hasError = true;
+
+                    //Save Loan payment here
+                    $saveTransaction = true;
+
+
+                    //After loan transaction is saved, Save General Voucher and Entries
+                    if($saveTransaction){
+                        //Save gv and entries
+                        $saveOR = PaymentHelper::savePayment($paymentModel);
+                        if($saveOR){
+                            //Entries
+                            $insertSuccess = PaymentHelper::insertAccount($allAccounts, $saveOR->id);
+                            if(!$insertSuccess){
+                                $success = false;
+                            }
+                            else{
+                                $success = true;
+                            }
+                        }
+
+                    }
                 }
+
+                if($success){
+                    $transaction->commit();
+                }
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
             }
 
             return [
-                'data'      => $paymentIds,
-                'hasError'  => $hasError,
+                'success'   => $success,
+                'data'      => $data,
                 'error'     => $error
             ];
         }
