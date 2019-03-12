@@ -155,7 +155,7 @@ class ParticularHelper
 			$dayfirst = strtotime($dayfirst);
 			$daylast = strtotime($daylast);
 			$daycount = 1;
-			while($dayfirst <= $daylast)
+			while($dayfirst < $daylast)
 			{
 				$dateselect = "2019-".date("m", strtotime($nextday['date']))."-".str_pad($daycount, 2, "0", STR_PAD_LEFT);
 				//echo "2019-".date("m", strtotime($nextDay['date']))."-".str_pad($daycount, 2, "0", STR_PAD_LEFT)." <br/>";
@@ -174,9 +174,10 @@ class ParticularHelper
 				
 				if($result)
 					$personalBalance = $personalBalance + $result["totaltran"];
-				else $personalBalance = $personalBalance + $rows["balance"];
+				else $personalBalance = $personalBalance + $rows["last_interest_balance"];
 				
 			}
+			echo "personal balance of ".$rows['account_no'].": ".$personalBalance." | daytotal: ".$daycount." <br/>";
 			
 			$personalBalance = $personalBalance/$daycount;
 			
@@ -186,8 +187,8 @@ class ParticularHelper
 			
 			
 			$interest = 0;
-			$interest = ($personalBalance/ $daycount) * 0.005;
-			$totalBalance = $rows["balance"] + round($interest, 2);
+			$interest = $personalBalance * 0.005;
+			$totalBalance = $rows["last_interest_balance"] + round($interest, 2);
 			
 			
 			
@@ -196,7 +197,7 @@ class ParticularHelper
 				$mdlAccount = SavingsAccount::findOne(['account_no'=>$rows["account_no"]]);
 				
 				$mdlAccount->balance = $totalBalance;
-				
+				$mdlAccount->last_interest_balance = $totalBalance;
 				$mdlAccount->update();
 				
 				
