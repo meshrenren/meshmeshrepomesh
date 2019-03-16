@@ -83,6 +83,7 @@ class SavingsAccount extends \yii\db\ActiveRecord
     
     public function calculateSavingsInterest()
     {
+    	
     	//get the necessary savings accounts;
     	
     	$qry = "SELECT * FROM savingsaccount sa inner join savingsproduct sp on sa.saving_product_id = sp.id where sa.balance >= sp.deposit_to_interest and sa.is_active=1";
