@@ -108,7 +108,7 @@ use yii\helpers\Html;
                             ['label' => 'Share Accounts', 'options' => ['class' => 'header ft-bold']],
                             [
                                 'label'     => 'New', 
-                                'url'       => ['savings/'], 
+                                'url'       => ['shareaccount/'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
                             ],
                             ['label' => '', 'options' => ['class' => 'divider']],
