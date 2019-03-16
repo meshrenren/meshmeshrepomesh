@@ -1,0 +1,12 @@
+/* Global CSS for all pages */
+.el-row-csm-flex{
+	display: flex;
+
+	> .el-col{
+    	flex-direction: column;
+
+    	.box{
+    		height: 100%;
+    	}
+	}
+}

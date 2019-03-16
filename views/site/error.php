@@ -28,7 +28,7 @@ $this->title = $name;
                 form.
             </p>
             <p>
-                <?php var_dump($exception); ?>
+                <?php //var_dump($exception); ?>
             </p>
             
 

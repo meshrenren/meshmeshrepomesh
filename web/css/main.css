@@ -1,0 +1,19 @@
+/* Global CSS for all pages */
+
+.el-row-csm-flex {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.el-row-csm-flex > .el-col {
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+.el-row-csm-flex > .el-col .box {
+  height: 100%;
+}
+

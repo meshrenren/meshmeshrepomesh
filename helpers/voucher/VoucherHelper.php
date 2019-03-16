@@ -27,17 +27,20 @@ class VoucherHelper
     }
 
 	public static function insertEntries($list, $voucher_id, $category_type){
+        $success = true;
         foreach ($list as $key => $value) {
             $voucher = new VoucherDetails;
             $voucher->voucher_id = $voucher_id;
-            $voucher->category_type = $category_type;
             $voucher->member_id = $value['member_id'];
             $voucher->particular_id = $value['particular_id'];
             $voucher->debit = $value['debit'];
             $voucher->credit = $value['credit'];
 
-            $voucher->save();
+            if(!$voucher->save()){
+                $success = false;
+            }
         }
+        return $success;
 	}
 
     public static function getVoucherList($filter = null, $limit = null){

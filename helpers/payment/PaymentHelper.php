@@ -8,6 +8,7 @@ use app\models\PaymentRecordList;
 
 class PaymentHelper 
 {
+	public $entry_type = ['SAVINGS' => 'CREDIT', 'SHARE' => 'CREDIT', 'OTHERS' => 'DEBIT',  'LOAN' => 'DEBIT', 'TIME_DEPOSIT' => 'DEBIT'];
 	public static function savePayment($data){
         $payment = new PaymentRecord;
         $payment->date_transact = $data['date_transact'];

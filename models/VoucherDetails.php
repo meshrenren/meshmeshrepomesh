@@ -10,7 +10,6 @@ use Yii;
  * @property integer $id
  * @property integer $voucher_id
  * @property integer $member_id
- * @property string $category_type
  * @property double $amount
  * @property double $debit
  * @property double $credit
@@ -36,8 +35,8 @@ class VoucherDetails extends \yii\db\ActiveRecord
     {
         return [
             [['voucher_id', 'member_id', 'particular_id'], 'integer'],
-            [['category_type', 'entry_type'], 'string'],
             [['amount', 'debit', 'credit'], 'number'],
+            [['entry_type'], 'string'],
             [['voucher_id'], 'exist', 'skipOnError' => true, 'targetClass' => GeneralVoucher::className(), 'targetAttribute' => ['voucher_id' => 'id']],
         ];
     }
@@ -51,7 +50,6 @@ class VoucherDetails extends \yii\db\ActiveRecord
             'id' => 'ID',
             'voucher_id' => 'Voucher ID',
             'member_id' => 'Member ID',
-            'category_type' => 'Category Type',
             'amount' => 'Amount',
             'debit' => 'Debit',
             'credit' => 'Credit',
@@ -66,10 +64,5 @@ class VoucherDetails extends \yii\db\ActiveRecord
     public function getVoucher()
     {
         return $this->hasOne(GeneralVoucher::className(), ['id' => 'voucher_id']);
-    }
-
-    public function getParticular()
-    {
-        return $this->hasOne(AccountParticulars::className(), ['id' => 'particular_id']);
     }
 }

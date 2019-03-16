@@ -201,7 +201,7 @@ class MemberController extends \yii\web\Controller
             $filter = ['member_id' => $id];
 
             $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
-            $getShare = SavingsHelper::getAccountShareInfo($filter);
+            $getShare = ShareHelper::getAccountShareInfo($filter);
             $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
             $getLoan = LoanHelper::getAccountLoanInfo($id);
         

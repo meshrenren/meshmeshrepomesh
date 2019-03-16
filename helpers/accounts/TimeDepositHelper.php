@@ -8,7 +8,7 @@ use app\models\TimeDepositTransaction;
 
 class TimeDepositHelper 
 {
-    public function getAccountTDInfo($member_id) {
+    public static function getAccountTDInfo($member_id) {
         
         $accountList = TimeDepositAccount::find()->innerJoinWith(['product']);
         if(isset($filter['member_id'])){
