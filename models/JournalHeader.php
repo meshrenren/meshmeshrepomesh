@@ -13,7 +13,7 @@ use Yii;
  * @property string $trans_type
  * @property string $remarks
  * @property string $transacted_date
- * @property integer $transated_by
+ * @property integer $transacted_by
  *
  * @property JournalDetails[] $journalDetails
  */
@@ -37,7 +37,7 @@ class JournalHeader extends \yii\db\ActiveRecord
             [['posting_date', 'transacted_date'], 'safe'],
             [['total_amount'], 'number'],
             [['trans_type', 'remarks'], 'string'],
-            [['transated_by'], 'integer'],
+            [['transacted_by'], 'integer'],
             [['reference_no'], 'string', 'max' => 100],
         ];
     }
@@ -54,7 +54,7 @@ class JournalHeader extends \yii\db\ActiveRecord
             'trans_type' => 'Trans Type',
             'remarks' => 'Remarks',
             'transacted_date' => 'Transacted Date',
-            'transated_by' => 'Transated By',
+            'transacted_by' => 'Transacted By',
         ];
     }
 

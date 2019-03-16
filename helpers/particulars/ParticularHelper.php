@@ -53,7 +53,7 @@ class ParticularHelper
 
 	public static function getParticular($filter, $asArray = false){
 		$getParticular = AccountParticulars::find()->where($filter);
-		if($arArray){
+		if($asArray){
 			$getParticular = $getParticular->asArray;
 		}
 		$getParticular = $getParticular->one();

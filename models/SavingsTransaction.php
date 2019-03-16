@@ -8,13 +8,14 @@ use Yii;
  * This is the model class for table "savings_transaction".
  *
  * @property integer $id
- * @property integer $fk_savings_id
+ * @property string $fk_savings_id
  * @property double $amount
  * @property string $transaction_type
  * @property integer $transacted_by
  * @property string $transaction_date
  * @property double $running_balance
  * @property string $remarks
+ * @property string $reference_number
  */
 class SavingsTransaction extends \yii\db\ActiveRecord
 {
@@ -32,11 +33,14 @@ class SavingsTransaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fk_savings_id', 'amount', 'transaction_type', 'transacted_by', 'transaction_date', 'running_balance'], 'required'],
-            [['transacted_by'], 'integer'],
+            [['fk_savings_id', 'amount', 'transaction_type', 'transacted_by', 'transaction_date', 'running_balance', 'reference_number'], 'required'],
             [['amount', 'running_balance'], 'number'],
+            [['transacted_by'], 'integer'],
             [['transaction_date'], 'safe'],
-            [['transaction_type', 'remarks'], 'string'],
+            [['fk_savings_id'], 'string', 'max' => 25],
+            [['transaction_type'], 'string', 'max' => 30],
+            [['remarks'], 'string', 'max' => 120],
+            [['reference_number'], 'string', 'max' => 100],
         ];
     }
 
@@ -54,12 +58,7 @@ class SavingsTransaction extends \yii\db\ActiveRecord
             'transaction_date' => 'Transaction Date',
             'running_balance' => 'Running Balance',
             'remarks' => 'Remarks',
+            'reference_number' => 'Reference Number',
         ];
-    }
-
-    public function getAccount() {
-
-        return $this->hasOne(SavingsAccount::className(), [ 'account_no' => 'fk_savings_id' ] );
-        
     }
 }

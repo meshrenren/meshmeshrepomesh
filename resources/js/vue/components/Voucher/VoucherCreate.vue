@@ -249,8 +249,8 @@ export default {
                 }
             })
         },
-        saveVoucherEntries(generalVoucherList, gvNumber){
-            this.$API.Voucher.saveVoucherEntries(generalVoucherList, gvNumber, isForceAdd)
+        saveVoucherEntries(voucherModel, entryList){
+            this.$API.Voucher.saveVoucherEntries(voucherModel, entryList)
             .then(result => {
                 var res = result.data
                 if(res.success){
@@ -269,7 +269,7 @@ export default {
                     let text = "Voucher not successfully saved. Please try again or contact administrator."
                     if(res.error == 'ERROR_HASGV'){
                         title = 'Error: GV Number Exist'
-                        text = "GV Number " + voucherModel.gv_num + " already exist. Please check in the list and reverse."
+                        text = "GV Number " + voucherModel.gv_num + " already exist."
                         type = "error"
                     }
 

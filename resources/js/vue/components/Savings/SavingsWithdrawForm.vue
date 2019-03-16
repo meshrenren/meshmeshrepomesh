@@ -1,5 +1,5 @@
 <template>
-	<div class="savings-deposit-form">
+	<div class="savings-deposit-form" v-loading = "pageLoading">
 		<div class="box box-info">
             <div class="box-header with-border">
               	<h3 class="box-title">Withdraw Savings Account</h3>
@@ -7,7 +7,7 @@
             <div class = "box-body">
             	<el-row :gutter="20">
 
-            		<el-col :span="11">
+            		<el-col :span="12">
             			<div class = "box-content">
 	            			<el-form label-position="right" label-width="180px" :model="accountDetails">
 	            				<el-form-item label="Member" prop="memberName">
@@ -36,6 +36,11 @@
 						                    <span style="margin-left: 10px">{{ scope.row.amount }}</span>
 						                </template>
 						            </el-table-column>
+						            <el-table-column label="Reference No">
+						                <template slot-scope="scope">
+						                    <span style="margin-left: 10px">{{ scope.row.reference_number }}</span>
+						                </template>
+						            </el-table-column>
 						            <el-table-column label="Transaction Type">
 						                <template slot-scope="scope">
 						                    <span style="margin-left: 10px">{{ scope.row.transaction_type }}</span>
@@ -52,44 +57,31 @@
 						                </template>
 						            </el-table-column>
 						        </el-table>
-						        <el-button type = "primary"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
+						        <el-button class = "mt-10" type = "default"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
 						    </div>
 	            		</div>
             		</el-col>
 
-            		<el-col :span="13">
+            		<el-col :span="12">
             			<div class = "box-content">
-            				<el-form :model="savingTransactionForm" :rules="ruleTransaction" ref="savingTransactionForm" label-width="180px" >
+            				<el-form :model="savingTransactionForm" :rules="ruleTransaction" ref="savingTransactionForm" label-width="200px" >
             					<el-form-item label="Current Balance" prop="current_balance">
 									<el-input-number v-model="savingTransactionForm.current_balance" controls-position="right" :disabled = "true"></el-input-number>
 								</el-form-item>
 								<el-form-item label="Withdraw Amount" prop="amount">
 									<el-input-number v-model="savingTransactionForm.amount" controls-position="right" :min="1" :max = "savingTransactionForm.current_balance"></el-input-number>
 								</el-form-item>
-								<el-form-item label="Reference Number (GV Number)" prop="reference_number">
+								<el-form-item label="Reference No. (GV No.)" prop="reference_number">
 									<el-input type = "text" v-model="savingTransactionForm.reference_number"></el-input>
 								</el-form-item>		
 								<el-form-item label="Remarks" prop="remarks">
-									<el-input type = "textarea" v-model="savingTransactionForm.remarks">
+									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
 									</el-input>
-								</el-form-item>		
-								<el-form-item label="Includes Voucher?" prop="includes_voucher">
-									<el-checkbox v-model="savingTransactionForm.includes_voucher" ></el-checkbox>
 								</el-form-item>	
-								<el-button type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Save Withdraw</el-button>
+								<el-form-item>
+									<el-button class = "pull-right" type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Process</el-button>
+								</el-form-item>
             				</el-form>
-            			</div>
-
-            			<div class = "box-content" style="margin-top: 10px;" v-if = "savingTransactionForm.includes_voucher">
-            				<voucher-form
-			                    :data-model = "dataModel" 
-			                    :data-details-model = "dataDetailsModel" 
-			                    :data-particular-list = "dataParticularList"
-			                    :data-default = "voucherDetails"
-			                    :data-entry-list = "entryList"
-			                    :allow-create-name = 'false'
-			                    :show-buttons = 'false'>
-			                </voucher-form>
             			</div>
             		</el-col>
 
@@ -106,24 +98,24 @@
   	@import '~noty/src/noty.scss';
 </style>
 <script>
-	import fileExport from '../../mixins/fileExport'
 
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
+    import cloneDeep from 'lodash/cloneDeep'  
+
     import SearchSavingsAccount from '../General/SearchSavingsAccount.vue' 
     import VoucherForm from '../Voucher/VoucherForm.vue' 
 
+	import fileExport from '../../mixins/fileExport'
+    import swalAlert from '../../mixins/swalAlert.js'
+
 export default {
-	mixins: [fileExport],
-	props: ['dataTransaction', 'dataModel', 'dataDetailsModel', 'dataParticularList', 'baseUrl'],
+	mixins: [fileExport, swalAlert],
+	props: ['dataTransaction', 'baseUrl'],
 	data: function () {
-    	let transaction  = {}
-  		this.dataTransaction.forEach(function(detail){
-  			transaction[detail] = null
-  		})
-  		transaction['transaction_type'] = "Cash"
-  		transaction['includes_voucher'] = true
+    	let transaction  = cloneDeep(this.dataTransaction)
+  		transaction['type'] = "Cash"
 		return{
 			accountDetails			: {product : {description : null}, 'member' : {fullname : null}},
 			savingTransactionForm 	: transaction,
@@ -131,8 +123,7 @@ export default {
 			showSearchModal			: false,
 			accountTransactionList	: null,
 			dataLoad				: false,
-			voucherDetails			: {},
-			entryList 	 			: [],
+			pageLoading 			: false
 		}
 	},
 	created(){
@@ -140,6 +131,7 @@ export default {
 		this.ruleTransaction = {
   			amount : [{ required: true, message: 'Amount cannot be blank.', trigger: 'change' },],
   			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
+  			reference_number : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
 		}
 	},
     components: {
@@ -178,27 +170,20 @@ export default {
 	  		})
     	},
     	getTransaction(){
-            let data = new FormData()
-            data.set('account_no', this.accountDetails.account_no)
+            this.pageLoading = true
 
-    		axios.post(this.baseUrl+'/savings/get-transaction', data).then((result) => {
-			    let res = result.data
-                let type = ""
-                let message = ""
-                console.log(res)
+            this.$API.Savings.getTransaction(this.accountDetails.account_no)
+            .then(result => {
+                var res = result.data
                 if(res.length > 0 ){
                     this.accountTransactionList = res
-                    console.log("success")
                 }
-                else{
-                    console.log("no result")
-                } 
-			}).catch(function (error) {
-            
-                console.log(error);
-
-                if(error.response.status == 403)
-                    location.reload()
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.pageLoading = false
             })
     	},
     	saveTransaction(){    	
@@ -219,30 +204,49 @@ export default {
 		              	width: '400px',
 		            }).then(function(result) {
 		            	if (result.value) {
-		            		let data = new FormData()
-		            		vm.savingTransactionForm.transaction_type = "WITHDRWL"
+		            		vm.pageLoading = true
 
-			    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
+		            		let accountTransaction = cloneDeep(vm.savingTransactionForm)
+		            		accountTransaction.transaction_type = "WITHDRWL"
 
-			                axios.post(vm.baseUrl+'/savings/save-transaction', data).then((result) => {
-				                let res = result.data
-				                let type = ""
-				                let message = ""
-				                console.log(res)
-				                if(res.length > 0 ){
-				                    console.log("success")
+							let params = {
+								accountTransaction : accountTransaction,
+								product : vm.accountDetails.product
+							}
+
+			    			vm.$API.Savings.saveTransaction(params)
+				            .then(result => {
+				                var res = result.data
+				                if(res.success){
+				                    new Noty({
+				                        theme: 'relax',
+				                        type: 'success',
+				                        layout: 'topRight',
+				                        text: 'Savings Deposit successfully processed.',
+				                        timeout: 3000
+				                    }).show();
+				                    
+				                    location.reload()
 				                }
 				                else{
-				                    console.log("no result")
-				                } 
-				                location.reload()
-				                  
-				            }).catch(function (error) {
-				            
-				                console.log(error);
 
-				                if(error.response.status == 403)
-				                    location.reload()
+				                    let title = "Error: Not Saved"
+				                    let type = 'warning'
+				                    let text = res.errorMessage
+				                    if(res.error == 'ERROR_HASRN'){
+				                        title = 'Error: Reference Number Exist'
+				                        text = "Reference Number " + accountTransaction.reference_number + " already exist."
+				                        type = "error"
+				                    }
+
+				                    vm.getSwalAlert(type, title, text)
+				                }
+				            })
+				            .catch(err => {
+				                console.log(err)
+				            })
+				            .then(_ => { 
+				                vm.pageLoading = false
 				            })
 				        }
 		            }) 

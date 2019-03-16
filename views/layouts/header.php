@@ -225,12 +225,11 @@ use yii\helpers\Html;
                                 <?php echo  \Yii::$app->user->identity->member->first_name . " " . \Yii::$app->user->identity->member->last_name; ?> - <?php echo  \Yii::$app->user->identity->member->memberType->description ?>
                                 <small>Member since <?php echo date("M d, Y", strtotime(\Yii::$app->user->identity->member->mem_date)); ?></small>
                             </p>
-                            <a class = ""
                         </li>
                         <!-- Menu Footer-->
                         <li class="user-footer">
                             <div class="pull-left">
-                                <a href="<?php echo yii\helpers\Url::toRoute(['member/view' . \Yii::$app->user->identity->member->id]); ?>" class="btn btn-default btn-flat">Profile</a>
+                                <a href="<?php echo yii\helpers\Url::toRoute(['member/view/' . \Yii::$app->user->identity->member->id]); ?>" class="btn btn-default btn-flat">Profile</a>
                             </div>
                             <div class="pull-right">
                                 <?= Html::a(

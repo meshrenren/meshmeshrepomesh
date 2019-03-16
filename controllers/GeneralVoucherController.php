@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\voucher\VoucherHelper;
 use app\helpers\payment\PaymentHelper;
+use app\helpers\journal\JournalHelper;
 
 class GeneralVoucherController extends \yii\web\Controller
 {
@@ -66,7 +67,7 @@ class GeneralVoucherController extends \yii\web\Controller
 
                 //Check GV Number if exist
                 $gv_num = $voucherModel['gv_num'];
-                $getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
+                $getGV = \app\models\JournalHeader::find()->where(['reference_no' => $gv_num])->one();
                 if($getGV){
                     return [
                         'success'   => false,
@@ -77,18 +78,17 @@ class GeneralVoucherController extends \yii\web\Controller
                     $saveGV = VoucherHelper::saveVoucher($voucherModel);
                     if($saveGV){
                         //Entries
-                        VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
-                        if(!$insertSuccess){
-                            $success = false;
-                            $transaction->rollBack();
+                        $insertSuccess = VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
+                        if($insertSuccess){
+                            $success = true;
                         }
                         else{
-                            $success = true;
+                            $success = false;
                             $transaction->rollBack();
                         }
                     }
                     else{
-                        $success = true;
+                        $success = false;
                         $transaction->rollBack();
                     }
 
@@ -96,7 +96,7 @@ class GeneralVoucherController extends \yii\web\Controller
                         $journalHeader = new \app\models\JournalHeader;
                         $journalHeaderData = $journalHeader->getAttributes();
                         $journalHeaderData['reference_no'] = $saveGV->gv_num;
-                        $journalHeaderData['posting_date'] = $saveOR->date_transact;
+                        $journalHeaderData['posting_date'] = $saveGV->date_transact;
                         $journalHeaderData['total_amount'] = 0;
                         $journalHeaderData['trans_type'] = 'GeneralVoucher';
                         $journalHeaderData['remarks'] = '';
@@ -105,21 +105,21 @@ class GeneralVoucherController extends \yii\web\Controller
                         if($saveJournal){
                             //Entries
 
-                            $journalList = new \app\models\JournalHeader;
+                            $journalList = new \app\models\JournalDetails;
                             $journalListAttr = $journalList->getAttributes();
                             $lists = array();
                             $totalAmount = 0;
                             $totalCredit = 0;
                             $totalDebit = 0;
-                            foreach ($allAccounts as $acct) {
-                                if($acct['credit'] && (float)$acct['debit'] > 0){
+                            foreach ($entryList as $acct) {
+                                if($acct['debit'] && (float)$acct['debit'] > 0){
                                     $arr = $journalListAttr;
                                     $arr['amount'] = $acct['debit'];
                                     $arr['particular_id'] = $acct['particular_id'];
                                     $arr['entry_type'] = "DEBIT";
                                     array_push($lists, $arr);
 
-                                    $totalAmount += $acct['amount'];
+                                    $totalAmount += $acct['debit'];
                                 }
 
                                 if($acct['credit'] && (float)$acct['credit'] > 0){
@@ -132,7 +132,7 @@ class GeneralVoucherController extends \yii\web\Controller
                                 
                             }
 
-                            $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->id);
+                            $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
                             if($insertSuccess){
                                 $saveJournal->total_amount = $totalAmount;
                                 $saveJournal->save();

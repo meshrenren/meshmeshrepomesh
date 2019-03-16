@@ -1,38 +1,27 @@
 <?php
 
 use yii\helpers\Html;
-use yii\grid\GridView;
+
 
 /* @var $this yii\web\View */
-/* @var $searchModel app\models\ShareaccountSearch */
-/* @var $dataProvider yii\data\ActiveDataProvider */
+/* @var $model app\models\Shareaccount */
 
-$this->title = 'Shareaccounts';
+
+$this->title = 'Create Shareaccount';
+$this->params['breadcrumbs'][] = ['label' => 'Shareaccounts', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
+
+$share = yii\helpers\Html::encode(json_encode($shareProducts, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+$shareAcct = yii\helpers\Html::encode(json_encode($shareAcct, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+$accountList = yii\helpers\Html::encode(json_encode($accountList, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
 ?>
-<div class="shareaccount-index">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <p>
-        <?= Html::a('Create Shareaccount', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'accountnumber',
-            'fk_memid',
-            'NoOfShares',
-            'totalSubscription',
-            'balance',
-            // 'dateCreated',
-            // 'status',
-
-            ['class' => 'yii\grid\ActionColumn'],
-        ],
-    ]); ?>
-</div>
+    <share-account-form
+    :base-url='<?= json_encode(Yii::$app->request->baseUrl) ?>'
+    :share-product='<?= $share ?>'
+    :share-account-details='<?= $shareAcct?>'
+    :share-account-list='<?= $accountList?>'
+    >
+    
+    
+    </share-account-form>

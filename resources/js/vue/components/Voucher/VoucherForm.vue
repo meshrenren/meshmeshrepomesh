@@ -111,7 +111,7 @@
             <div class="box-header">
                 <h3 class="box-title">VOUCHER</h3>
                 <div class="box-tools pull-right">
-                    <el-button class = "auto-width ml-5" type = "success" size = "large" @click = "createVoucher(false)" :disabled = "btnDisable">Finish</el-button>
+                    <el-button class = "auto-width ml-5" type = "success" size = "large" @click = "createVoucher()" :disabled = "btnDisable">Finish</el-button>
                     <el-button class = "auto-width ml-5" type = "danger"size = "large"  @click = "cancelVoucher" :disabled = "btnDisable">Cancel</el-button>
                 </div>
             </div>
@@ -349,7 +349,7 @@ export default {
             let name = this.getVoucherName(val)
             this.voucherModel.name = name
 
-            let data = {type : this.voucherModel.type, name : name, id : id}
+            let data = {type : null, name : name, id : id}
             this.$EventDispatcher.fire('CHANGE_NAME', data)
         },
         addEntry(){
@@ -430,7 +430,7 @@ export default {
             return hasError
 
         },
-        createVoucher(isForceAdd){
+        createVoucher(){
             let vm = this
 
             if(this.validateEntries()){

@@ -7,9 +7,15 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\SavingsAccount;
+use \app\models\JournalHeader;
+use \app\models\JournalDetails;
 use kartik\mpdf\Pdf; 
-use app\helpers\particulars\ParticularHelper;
 use \Mpdf\Mpdf;
+
+use app\helpers\particulars\ParticularHelper;
+use app\helpers\accounts\SavingsHelper;
+use app\helpers\journal\JournalHelper;
+
 
 class SavingsController extends \yii\web\Controller
 {
@@ -55,14 +61,14 @@ class SavingsController extends \yii\web\Controller
         $this->layout = 'main-vue';
 
         $savings = new \app\models\SavingsAccount;
-        $savingsAccount = $savings->attributes();
+        $savingsAccount = $savings->getAttributes();
 
         $savingsProduct  = \app\models\SavingsProduct::find()
             ->where(['is_active' => 1])
             ->select(['id as value', 'description as label'])
             ->asArray()->all();
 
-        $accountList = $savings->getAccountList('');
+        $accountList = SavingsHelper::getAccountSavingsInfo();
         
         return $this->render('index', [
             'accountList'       => $accountList,
@@ -76,7 +82,7 @@ class SavingsController extends \yii\web\Controller
         $this->layout = 'main-vue';
 
         $transaction = new \app\models\SavingsTransaction;
-        $savingsTransaction = $transaction->attributes();
+        $savingsTransaction = $transaction->getAttributes();
         
         return $this->render('deposit', [ 'savingsTransaction' => $savingsTransaction]);
     }
@@ -86,23 +92,10 @@ class SavingsController extends \yii\web\Controller
         $this->layout = 'main-vue';
 
         $transaction = new \app\models\SavingsTransaction;
-        $savingsTransaction = $transaction->attributes();
-
-        //Voucher Models
-        $voucher = new \app\models\GeneralVoucher;
-        $voucherModel = $voucher->attributes();
-
-        $details = new \app\models\VoucherDetails;
-        $detailsModel = $details->attributes();
-
-        $filter  = ['category' => ['SAVINGS', 'OTHERS']];
-        $getParticular = ParticularHelper::getParticulars($filter);
+        $savingsTransaction = $transaction->getAttributes();
         
         return $this->render('withdraw', [ 
-            'savingsTransaction' => $savingsTransaction,
-            'voucherModel'      => $voucherModel,
-            'detailsModel'      => $detailsModel,
-            'particularList'    => $getParticular
+            'savingsTransaction' => $savingsTransaction
         ]);
     }
 
@@ -125,7 +118,7 @@ class SavingsController extends \yii\web\Controller
 
     		if($hasAccount == null){
     			//$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
-	        	$account = new \app\models\SavingsAccount;
+	        	$account = new SavingsAccount;
 	        	$trans_serial = $product->trans_serial + 1;
 	        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 	        	$account->account_no = $product->id . "-" . $trans_serial_pad;
@@ -143,7 +136,7 @@ class SavingsController extends \yii\web\Controller
 	        	if($account->save()){
 	        		$product->trans_serial = $trans_serial;
 	        		$product->save();
-	        		$getAccount = \app\models\SavingsAccount::find()->where(['account_no' => $account->account_no])->one();
+	        		$getAccount = SavingsAccount::find()->where(['account_no' => $account->account_no])->one();
 
                     if($account->type == "Group" && isset($post['signatoryList'])){
                         $signatories = $post['signatoryList'];
@@ -198,60 +191,163 @@ class SavingsController extends \yii\web\Controller
     }
 
     public function actionGetTransaction(){
-    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    	$model = \app\models\SavingsTransaction::find()->where(['fk_savings_id' => $_POST['account_no']])->asArray()->all();
-    	
-    	return $model;
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $post = \Yii::$app->getRequest()->getBodyParams();
+        $fk_savings_id = $post['fk_savings_id'];
+        
+        $accountList = SavingsHelper::getTransaction($fk_savings_id);
+        return $accountList;
     }
 
     public function actionSaveTransaction(){
 
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        if(isset($_POST)){
-        	$transaction = json_decode($_POST['accountTransaction']);
-        	$transaction = (array)$transaction;
-        	$model = new \app\models\SavingsTransaction;
-        	$model->attributes = $transaction;
+        if(\Yii::$app->getRequest()->getBodyParams()){
+            $success = false;
+            $error = '';
+            $errorMessage = '';
+            $data = null;
 
-        	$getSavingsAccount = \app\models\SavingsAccount::findOne($transaction['fk_savings_id']);
-            if($transaction['transaction_type'] == 'WITHDRWL'){
-                $running_balance = $getSavingsAccount->balance - $transaction['amount'];
-            }
-            else{
-                $running_balance = $getSavingsAccount->balance + $transaction['amount'];
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $post = \Yii::$app->getRequest()->getBodyParams();
+            	$acct_transaction = $post['accountTransaction'];
+                $product = $post['product'];
+                $product_particularid = $product['particular_id'];
+
+                //Check Reference Number if exist
+                $reference_no = $acct_transaction['reference_number'];
+                $getJH = JournalHeader::find()->where(['reference_no' => $reference_no])->one();
+                if($getJH){
+                    return [
+                        'success'   => false,
+                        'error'     => 'ERROR_HASRN',
+                        'errorMessage' => 'Error processing the transaction. Please try again'
+                    ];
+                }
+
+
+            	$getSavingsAccount = SavingsAccount::findOne($acct_transaction['fk_savings_id']);
+
+                $trans_type = "";
+                $coh_entrytype = ""; // entry_type for Cash On Hand
+                $acct_entrytype = ""; // entry_type for the Account
+                if($acct_transaction['transaction_type'] == 'WITHDRWL'){
+                    //Withdrawal Transaction
+                    $running_balance = $getSavingsAccount->balance - $acct_transaction['amount'];
+                    $trans_type = "GeneralVoucher";
+                    $coh_entrytype = "CREDIT"; 
+                    $acct_entrytype = "DEBIT";
+                }
+                else{
+                    //Deposit Transaction
+                    $running_balance = $getSavingsAccount->balance + $acct_transaction['amount'];
+                    $trans_type = "Payment";
+                    $coh_entrytype = "DEBIT";
+                    $acct_entrytype = "CREDIT";
+                }
+    	        $acct_transaction['running_balance'] = $running_balance;
+    			
+    	        if($running_balance >= 0)
+    	        {
+                    $saveSD = SavingsHelper::saveSavingsTransaction($acct_transaction);
+    	        	if($saveSD){
+    	        		$getSavingsAccount->balance = $running_balance;
+    	        		$getSavingsAccount->save();
+
+                        $success = true;
+                        $data = $saveSD->id;
+
+    	        	}
+    	        	else{
+    	        		//var_dump($model->getErrors());
+    	        		$success = false;
+                        $error = "SD_ERROR";
+                        $errorMessage = 'Error processing the transaction. Please try again';
+                        $transaction->rollBack();
+    	        	}
+
+                    //Save to Journal
+                    if($success && $saveSD){
+                        $journalHeader = new JournalHeader;
+                        $journalHeaderData = $journalHeader->getAttributes();
+                        $journalHeaderData['reference_no'] = $saveSD->reference_number;
+                        $journalHeaderData['posting_date'] = $saveSD->transaction_date;
+                        $journalHeaderData['total_amount'] = $saveSD->amount;
+                        $journalHeaderData['trans_type'] = $trans_type;
+                        $journalHeaderData['remarks'] = $saveSD->remarks;
+
+                        $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+                        if($saveJournal){
+                            //Entries
+
+                            $journalList = new JournalDetails;
+                            $journalListAttr = $journalList->getAttributes();
+                            $lists = array();
+
+                            $coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);//Cash on Hand particular id
+                            // Account
+                            $arr = $journalListAttr;
+                            $arr['amount'] = $saveSD->amount;
+                            $arr['particular_id'] = $product['particular_id'];
+                            $arr['entry_type'] = $acct_entrytype;
+                            array_push($lists, $arr);
+
+                            // Cash On Hand                            
+                            $arr = $journalListAttr;
+                            $arr['amount'] = $saveSD->amount;
+                            $arr['particular_id'] = $coh_id->id;
+                            $arr['entry_type'] = $coh_entrytype;
+                            array_push($lists, $arr);
+
+
+                            $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
+                            if($insertSuccess){                                
+                                $success = true;
+                            }
+                            else{
+                                $success = false;
+                                $error = "SD_ERROR";
+                                $errorMessage = 'Error processing the transaction in Journal List. Please try again';
+                                $transaction->rollBack();
+                            }
+                        }
+                        else{
+                            $success = false;
+                            $error = "SD_ERROR";
+                            $errorMessage = 'Error processing the transaction in Journal Header. Please try again';
+                            $transaction->rollBack();
+                        }
+                    }
+    	        	
+    	        }
+    	        else
+    	        {
+                    $success = false;
+                    $error = "SD_NEGATIVE";
+                    $errorMessage = 'Savings Deposit cannot be negative';
+                    $transaction->rollBack();
+    	        }
+
+                if($success){
+                    $transaction->commit();
+                }
+
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
             }
 
-        	$model->transaction_date = date('Y-m-d H:i:s');
-	        $model->transacted_by = \Yii::$app->user->identity->id;
-	        $model->running_balance = $running_balance;
-			
-	        if($running_balance>=0)
-	        {
-	        	if($model->save()){
-	        		$getSavingsAccount->balance = $running_balance;
-	        		$getSavingsAccount->save();
-	        		return [
-	        				'success'	=> true,
-	        				'data'      => $model->id
-	        		];
-	        	}
-	        	else{
-	        		//var_dump($model->getErrors());
-	        		return [
-	        				'success'	=> false
-	        		];
-	        	}
-	        	
-	        }
-	        
-	        else
-	        {
-	        	return [
-	        			'success'	=> false,
-	        			'data' => 'savings cannot be negative',
-	        	];
-	        }
+            return [
+                'success'       => $success,
+                'error'         => $error,
+                'errorMessage'  => $errorMessage,
+                'data'          => $data,
+            ];
 
         	
         }
@@ -308,7 +404,7 @@ class SavingsController extends \yii\web\Controller
                 $balance = number_format($model->balance, 2, '.', ',');
 
                 $settings  = new \app\models\DefaultSettings;
-                $penalty = number_format($settings->getValue('savings_penalty'), 2, '.', ',');;
+                //$penalty = number_format($settings->getValue('savings_penalty'), 2, '.', ',');;
                 //$account_balance = $model->account->account_balance;
 
                 $template = Yii::$app->params['formTemplate']['savings_withdraw'];
@@ -317,7 +413,7 @@ class SavingsController extends \yii\web\Controller
                 $template = str_replace('[account_number]', $account_no, $template);
                 $template = str_replace('[last_transaction]', $last_transaction , $template);
                 $template = str_replace('[balance]', $balance, $template);
-                $template = str_replace('[penalty]', $penalty, $template);
+                $template = str_replace('[penalty]', "", $template);
 
 
                 if($type == "pdf"){

@@ -57,7 +57,7 @@ class PaymentController extends \yii\web\Controller
 
                 //Check GV Number if exist
                 $or_num = $paymentModel['or_num'];
-                $getOR = \app\models\PaymentRecord::find()->where(['or_num' => $or_num])->one();
+                $getOR = \app\models\JournalHeader::find()->where(['reference_no' => $or_num])->one();
                 if($getOR){
                     return [
                         'success'   => false,
@@ -98,14 +98,14 @@ class PaymentController extends \yii\web\Controller
                         $journalHeaderData['reference_no'] = $saveOR->or_num;
                         $journalHeaderData['posting_date'] = $saveOR->date_transact;
                         $journalHeaderData['total_amount'] = 0;
-                        $journalHeaderData['trans_type'] = 'GeneralVoucher';
+                        $journalHeaderData['trans_type'] = 'Payment';
                         $journalHeaderData['remarks'] = '';
 
                         $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
                         if($saveJournal){
                             //Entries
 
-                            $journalList = new \app\models\JournalHeader;
+                            $journalList = new \app\models\JournalDetails;
                             $journalListAttr = $journalList->getAttributes();
                             $lists = array();
                             $totalAmount = 0;
@@ -129,7 +129,7 @@ class PaymentController extends \yii\web\Controller
                             }
 
                             // Set total credit and total debit as Cash On Hand
-                            $coh_id= ParticularHelper::getParticular('Cash On Hand');
+                            $coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);
                             if($totalCredit > 0){
                                 $arr = $journalListAttr;
                                 $arr['amount'] = $totalCredit;

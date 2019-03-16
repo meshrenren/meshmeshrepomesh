@@ -1,5 +1,5 @@
 <template>
-	<div class="savings-deposit-form">
+	<div class="savings-deposit-form" v-loading = "pageLoading">
 		<div class="box box-info">
             <div class="box-header with-border">
               	<h3 class="box-title">Deposit Savings Account</h3>
@@ -36,6 +36,11 @@
 						                    <span style="margin-left: 10px">{{ scope.row.amount }}</span>
 						                </template>
 						            </el-table-column>
+						            <el-table-column label="Reference No">
+						                <template slot-scope="scope">
+						                    <span style="margin-left: 10px">{{ scope.row.reference_number }}</span>
+						                </template>
+						            </el-table-column>
 						            <el-table-column label="Transaction Type">
 						                <template slot-scope="scope">
 						                    <span style="margin-left: 10px">{{ scope.row.transaction_type }}</span>
@@ -58,25 +63,31 @@
 
             		<el-col :span="12">
             			<div class = "box-content">
-            				<el-form :model="savingTransactionForm" :rules="ruleTransaction" ref="savingTransactionForm" label-width="180px" >
+            				<el-form :model="savingTransactionForm" :rules="ruleTransaction" ref="savingTransactionForm" label-width="200px" >
             					<el-form-item label="Current Balance" prop="current_balance">
 									<el-input-number v-model="savingTransactionForm.current_balance" controls-position="right" :disabled = "true"></el-input-number>
 								</el-form-item>
 								<el-form-item label="Deposit Amount" prop="amount">
 									<el-input-number v-model="savingTransactionForm.amount" controls-position="right" :min="1"></el-input-number>
 								</el-form-item>	
-								<el-form-item label="" prop="transaction_type">
-								    <el-radio-group v-model="savingTransactionForm.transaction_type">
+								<el-form-item label="" prop="type">
+								    <el-radio-group v-model="savingTransactionForm.type">
 								      	<el-radio label="Cash"></el-radio>
-								      	<el-radio label="Cheque"></el-radio>
+								      	<!-- <el-radio label="Cheque"></el-radio> -->
 								    </el-radio-group>
 								</el-form-item>
+								<el-form-item label="Reference No. (OR Number)" prop="reference_number">
+									<el-input type = "text" v-model="savingTransactionForm.reference_number"></el-input>
+								</el-form-item>	
 								<el-form-item label="Remarks" prop="remarks">
 									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
 									</el-input>
 								</el-form-item>	
-								<el-button type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Save Deposit</el-button>
-								<el-button type = "primary" @click = "printTransaction" :disabled = "accountDetails.account_no == null">Print Deposit</el-button>
+								<el-form-item>
+									<el-button class = "pull-right" type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Process</el-button>
+								</el-form-item>
+								
+								<!-- <el-button type = "primary" @click = "printTransaction" :disabled = "accountDetails.account_no == null">Print Deposit</el-button> -->
             				</el-form>
             			</div>
             		</el-col>
@@ -97,22 +108,25 @@
 	window.noty = require('noty');
     import axios from 'axios'
     import Noty from 'noty'
+    import cloneDeep from 'lodash/cloneDeep'  
     import SearchSavingsAccount from '../General/SearchSavingsAccount.vue' 
 
+    import swalAlert from '../../mixins/swalAlert.js'
+
 export default {
+    mixins: [swalAlert],
 	props: ['dataTransaction', 'baseUrl'],
 	data: function () {
-    	let transaction  = {}
-  		this.dataTransaction.forEach(function(detail){
-  			transaction[detail] = null
-  		})
-  		transaction['transaction_type'] = "Cash"
+    	let transaction  = cloneDeep(this.dataTransaction)
+  		transaction['type'] = "Cash"
+
 		return{
 			accountDetails			: {product : {description : null}, 'member' : {fullname : null}},
 			savingTransactionForm 	: transaction,
 			ruleTransaction 		: {},
 			showSearchModal			: false,
-			accountTransactionList	: null
+			accountTransactionList	: null,
+			pageLoading 			: false
 		}
 	},
 	created(){
@@ -120,6 +134,7 @@ export default {
 		this.ruleTransaction = {
   			amount : [{ required: true, message: 'Amount cannot be blank.', trigger: 'change' },],
   			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
+  			reference_number : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
 		}
 	},
     components: {
@@ -141,27 +156,20 @@ export default {
 	  		})
     	},
     	getTransaction(){
-            let data = new FormData()
-            data.set('account_no', this.accountDetails.account_no)
+    		this.pageLoading = true
 
-    		axios.post(this.baseUrl+'/savings/get-transaction', data).then((result) => {
-			    let res = result.data
-                let type = ""
-                let message = ""
-                console.log(res)
+            this.$API.Savings.getTransaction(this.accountDetails.account_no)
+            .then(result => {
+                var res = result.data
                 if(res.length > 0 ){
                     this.accountTransactionList = res
-                    console.log("success")
                 }
-                else{
-                    console.log("no result")
-                } 
-			}).catch(function (error) {
-            
-                console.log(error);
-
-                if(error.response.status == 403)
-                    location.reload()
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.pageLoading = false
             })
     	},
     	saveTransaction(){    	
@@ -181,49 +189,52 @@ export default {
 	                  reverseButtons: true,
 		            }).then(function(result) {
 		            	if (result.value) {
-		            		let data = new FormData()
-		            		if(vm.savingTransactionForm.transaction_type == "Cash")
-		            			vm.savingTransactionForm.transaction_type = "CASHDEP"
-		            		if(vm.savingTransactionForm.transaction_type == "Cheque")
-		            			vm.savingTransactionForm.transaction_type = "CHEQUEDEP"
+		            		vm.pageLoading = true
 
-			    			data.set('accountTransaction', JSON.stringify(vm.savingTransactionForm))
+		            		let accountTransaction = cloneDeep(vm.savingTransactionForm)
+		            		if(accountTransaction.type == "Cash")
+		            			accountTransaction.transaction_type = "CASHDEP"
+		            		if(accountTransaction.type == "Cheque")
+		            			accountTransaction.transaction_type = "CHEQUEDEP"
 
-			                axios.post(vm.$baseUrl+'/savings/save-transaction', data).then((result) => {
-				                let res = result.data
-				                let type = ""
-				                let message = ""
-				                console.log(res)
-				                if(res.success > 0 ){
-				                	id = res.data
-				                    console.log("success")
-				                    vm.$swal({
-					                  title: 'Print Form?',
-					                  type: 'warning',
-					                  showCancelButton: true,
-					                  cancelButtonColor: '#d33',
-					                  confirmButtonText: 'Print',
-					                  focusConfirm: false,
-					                  focusCancel: true,
-					                  cancelButtonText: 'Cancel',
-					                  reverseButtons: true,
-						            }).then(function(result) {
-						            	if (result.value) {
-						            		window.open(vm.$baseUrl+'/savings/pdf-print?tid=', '_blank');
-						            	}
-						            })
+							let params = {
+								accountTransaction : accountTransaction,
+								product : vm.accountDetails.product
+							}
+
+			    			vm.$API.Savings.saveTransaction(params)
+				            .then(result => {
+				                var res = result.data
+				                if(res.success){
+				                    new Noty({
+				                        theme: 'relax',
+				                        type: 'success',
+				                        layout: 'topRight',
+				                        text: 'Savings Deposit successfully processed.',
+				                        timeout: 3000
+				                    }).show();
+				                    
+				                    location.reload()
 				                }
 				                else{
-				                    console.log("no result")
-				                } 
-				                location.reload()
-				                  
-				            }).catch(function (error) {
-				            
-				                console.log(error);
 
-				                if(error.response.status == 403)
-				                    location.reload()
+				                    let title = "Error: Not Saved"
+				                    let type = 'warning'
+				                    let text = res.errorMessage
+				                    if(res.error == 'ERROR_HASRN'){
+				                        title = 'Error: Reference Number Exist'
+				                        text = "Reference Number " + accountTransaction.reference_number + " already exist."
+				                        type = "error"
+				                    }
+
+				                    vm.getSwalAlert(type, title, text)
+				                }
+				            })
+				            .catch(err => {
+				                console.log(err)
+				            })
+				            .then(_ => { 
+				                vm.pageLoading = false
 				            })
 				        }
 				        else{

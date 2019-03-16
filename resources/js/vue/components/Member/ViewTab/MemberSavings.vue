@@ -1,45 +1,62 @@
 <template>
 	<div class = "member-savings">
-		<el-table :data="dataAccounts" style="width: 100%" stripe border>
-            <el-table-column label="Account Number">
-                <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.account_no }}</span>
-                </template>
+		<el-table :data="dataAccounts" style="width: 100%" stripe border v-loading = "loadingTable">
+
+            <el-table-column label="Account Number" 
+                prop = "account_no">
             </el-table-column>
+
             <el-table-column label="Account Name">
                 <template slot-scope="scope">
-                    <span>{{ scope.row.member.fullname }}</span>
+                    <span v-if = "scope.row.type == 'Group'">{{ scope.row.account_name }}</span>
+                    <span v-else>{{ memberData.last_name }}, {{ memberData.first_name }} {{ memberData.middle_name }}</span>
                 </template>
             </el-table-column>
-            <el-table-column label="Savings Product">
-                <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.product.description }}</span>
-                </template>
+
+            <el-table-column label="Savings Product" 
+                prop = "product.description">
             </el-table-column>
+
             <el-table-column label="Balance">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ $nf.numberFixed(scope.row.balance, 2) }}</span>
+                    <span>{{ $nf.numberFixed(scope.row.balance, 2) }}</span>
                 </template>
             </el-table-column>
+
         </el-table>
-        <span v-if = "dataAccounts == null || dataAccounts.length == 0">No savings accounts.</span>
 	</div>
 </template>
 <script>
 
 
 export default {
-	props: ['member', 'canEdit', 'dataAccounts'],
+	props: ['member', 'canEdit'],
 	data: function () {
 		return{
-			memberData : this.member
+			memberData      : this.member,
+            dataAccounts    : [],
+            loadingTable     : false
 		}
 	},
+    created(){
+        this.getAccount()
+    },
 	methods:{
-		getBalance(balance){
-			console.log(balance)
-			let num = Number(balance).toFixed(2) 
-			return num
+		getAccount(balance){
+            this.loadingTable = true
+
+            let type = ['SAVINGS']
+			this.$API.Member.getAccounts(type, this.memberData.id, "")
+            .then(result => {
+                var res = result.data
+                this.dataAccounts = res.savingsAccounts
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.loadingTable = false
+            })
 		}
 	}
 }
