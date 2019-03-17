@@ -57,7 +57,7 @@
                         </el-col>
                     </el-row>
                 </el-form>
-                <el-row :gutter="20">
+                <el-row :gutter="20" class = "el-row-csm-flex">
                     <el-col :span="8">
                         <div class="box box-default">
                             <div class="box-header with-border">
@@ -95,22 +95,18 @@
                                                 </el-option>
                                             </el-select>
                                         </el-form-item>
-                                    </el-col>
-
-                                    <el-col :span="24">
                                         <el-form-item label="Amount" prop="amount">
                                             <el-input type="number" size = "small" :min = "0" v-model="otherModel.amount"></el-input>
                                         </el-form-item>
-                                        <el-form-item label=" " prop="entry_type">
-                                            <el-radio v-model="otherModel.entry_type" label="CREDIT">CREDIT</el-radio>
-                                            <el-radio v-model="otherModel.entry_type" label="DEBIT">DEBIT</el-radio>
+                                        <el-form-item label="Remarks" prop="remarks">
+                                            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="Please input" v-model="textarea2"> </el-input>
                                         </el-form-item>
                                     </el-col>
                                 </el-row>
                                 </el-form>
                             </div>
                             <div class="box-footer clearfix">
-                                <el-button class = "auto-width pull-right" :size = "mini"  type = "primary" @click = "addOtherAccounts">ADD</el-button>
+                                <el-button class = "auto-width pull-right" size = "mini"  type = "primary" @click = "addOtherAccounts">ADD</el-button>
                             </div>
                         </div>
                     </el-col>
@@ -171,7 +167,7 @@
                                 </el-row>
                             </div>
                             <div class="box-footer clearfix">
-                                <el-button class = "auto-width pull-right" :size = "mini" type = "primary" @click = "addAccounts">ADD</el-button>
+                                <el-button class = "auto-width pull-right" size = "mini" type = "primary" @click = "addAccounts">ADD</el-button>
                             </div>
                         </div>
                     </el-col>
@@ -182,7 +178,7 @@
                     <div class="box-header">
                         <h3 class="box-title">TOTAL</h3>
                     </div>
-                    <div class="box-body psyment-entry-list">
+                    <div class="box-body payment-entry-list">
                         <el-table
                             :data="totalAccounts"
                             border striped
@@ -204,7 +200,7 @@
                     </div>
                 </div>
             </el-col>
-            <el-col :span="24">
+            <el-col :span="24" class = "mt-10">
                 <div class="box box-primary">
                     <div class="box-header">
                         <h3 class="box-title">ALL ACCOUNTS</h3>
@@ -259,10 +255,7 @@ export default {
     mixins: [getNameList, swalAlert],
     props: ['dataModel', 'dataParticularList'],
     data: function () {  
-        let formPayment  = {}
-        this.dataModel.forEach(function(detail){
-            formPayment[detail] = null
-        })
+        let formPayment  = cloneDeep(this.dataModel)
         formPayment['name_id'] = null
         formPayment['member_id'] = null
 
@@ -476,6 +469,7 @@ export default {
                     arr.product_name = rs.product.product_name
                     arr.type = "LOAN"
                     arr.balance = parseFloat(rs.principal_balance).toFixed(2)
+                    arr.particular_id = rs.product.particular_id
 
                     let amount = this.getAmount(arr.key)
                     arr.amount = amount
@@ -496,6 +490,7 @@ export default {
                     arr.product_name = rs.product.description
                     arr.type = "SAVINGS"
                     arr.balance = parseFloat(rs.balance).toFixed(2)
+                    arr.particular_id = rs.product.particular_id
 
                     let amount = this.getAmount(arr.key)
                     arr.amount = amount
@@ -516,6 +511,7 @@ export default {
                     arr.product_name = rs.product.name
                     arr.type = "SHARE"
                     arr.balance = parseFloat(rs.balance).toFixed(2)
+                    arr.particular_id = rs.product.particular_id
 
                     let amount = this.getAmount(arr.key)
                     arr.amount = amount

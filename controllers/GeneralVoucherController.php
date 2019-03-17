@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\voucher\VoucherHelper;
+use app\helpers\payment\PaymentHelper;
+use app\helpers\journal\JournalHelper;
 
 class GeneralVoucherController extends \yii\web\Controller
 {
@@ -11,12 +13,14 @@ class GeneralVoucherController extends \yii\web\Controller
     {
     	$this->layout = 'main-vue';
         $voucher = new \app\models\GeneralVoucher;
-        $voucherModel = $voucher->attributes();
+        $voucherModel = $voucher->getAttributes();
 
         $details = new \app\models\VoucherDetails;
-        $detailsModel = $details->attributes();
+        $detailsModel = $details->getAttributes();
 
-        $getParticular = ParticularHelper::getParticulars();
+        $filter  = ['category' => ['OTHERS', 'SAVINGS', 'SHARE', 'LOAN', 'TIME_DEPOSIT']];
+        $orderBy = [new \yii\db\Expression('FIELD (category,"OTHERS","LOAN","SAVINGS","SHARE","TIME_DEPOSIT"), name ASC')];
+        $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
 
         return $this->render('index', [
         	'voucherModel'      => $voucherModel,
@@ -48,30 +52,116 @@ class GeneralVoucherController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-            $post = \Yii::$app->getRequest()->getBodyParams();
-            $voucherModel = $post['voucherModel'];
-            $entryList = $post['entryList'];
             $success = false;
             $error = '';
             $data = null;
 
-            //Check GV Number if exist
-            $gv_num = $voucherModel['gv_num'];
-            $getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
-            if($getGV){
-                return [
-                    'success'   => false,
-                    'error'     => 'ERROR_HASGV'
-                ];
-            }
-            else{
-                $saveGV = VoucherHelper::saveVoucher($voucherModel);
-                if($saveGV){
-                    //Entries
-                    VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
-                    $success = true;
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $post = \Yii::$app->getRequest()->getBodyParams();
+                $voucherModel = $post['voucherModel'];
+                $entryList = $post['entryList'];
+                $success = false;
+                $error = '';
+                $data = null;
+
+                //Check GV Number if exist
+                $gv_num = $voucherModel['gv_num'];
+                $getGV = \app\models\JournalHeader::find()->where(['reference_no' => $gv_num])->one();
+                if($getGV){
+                    return [
+                        'success'   => false,
+                        'error'     => 'ERROR_HASGV'
+                    ];
                 }
+                else{
+                    $saveGV = VoucherHelper::saveVoucher($voucherModel);
+                    if($saveGV){
+                        //Entries
+                        $insertSuccess = VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
+                        if($insertSuccess){
+                            $success = true;
+                        }
+                        else{
+                            $success = false;
+                            $transaction->rollBack();
+                        }
+                    }
+                    else{
+                        $success = false;
+                        $transaction->rollBack();
+                    }
+
+                     if($success && $saveGV){
+                        $journalHeader = new \app\models\JournalHeader;
+                        $journalHeaderData = $journalHeader->getAttributes();
+                        $journalHeaderData['reference_no'] = $saveGV->gv_num;
+                        $journalHeaderData['posting_date'] = $saveGV->date_transact;
+                        $journalHeaderData['total_amount'] = 0;
+                        $journalHeaderData['trans_type'] = 'GeneralVoucher';
+                        $journalHeaderData['remarks'] = '';
+
+                        $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+                        if($saveJournal){
+                            //Entries
+
+                            $journalList = new \app\models\JournalDetails;
+                            $journalListAttr = $journalList->getAttributes();
+                            $lists = array();
+                            $totalAmount = 0;
+                            $totalCredit = 0;
+                            $totalDebit = 0;
+                            foreach ($entryList as $acct) {
+                                if($acct['debit'] && (float)$acct['debit'] > 0){
+                                    $arr = $journalListAttr;
+                                    $arr['amount'] = $acct['debit'];
+                                    $arr['particular_id'] = $acct['particular_id'];
+                                    $arr['entry_type'] = "DEBIT";
+                                    array_push($lists, $arr);
+
+                                    $totalAmount += $acct['debit'];
+                                }
+
+                                if($acct['credit'] && (float)$acct['credit'] > 0){
+                                    $arr = $journalListAttr;
+                                    $arr['amount'] = $acct['credit'];
+                                    $arr['particular_id'] = $acct['particular_id'];
+                                    $arr['entry_type'] = "CREDIT";
+                                    array_push($lists, $arr);
+                                }
+                                
+                            }
+
+                            $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
+                            if($insertSuccess){
+                                $saveJournal->total_amount = $totalAmount;
+                                $saveJournal->save();
+                                
+                                $success = true;
+                            }
+                            else{
+                                $success = false;
+                                $transaction->rollBack();
+                            }
+                        }
+                        else{
+                            $success = false;
+                            $transaction->rollBack();
+                        }
+                    }
+                }
+
+                if($success){
+                    $transaction->commit();
+                }
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
             }
+            
             return [
                 'success'   => $success,
                 'error'     => $error,

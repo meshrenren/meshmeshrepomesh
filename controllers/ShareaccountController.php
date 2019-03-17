@@ -10,6 +10,9 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use app\models\ShareProduct;
 
+use app\helpers\journal\JournalHelper;
+use app\helpers\accounts\ShareHelper;
+
 /**
  * ShareaccountController implements the CRUD actions for Shareaccount model.
  */
@@ -36,12 +39,20 @@ class ShareaccountController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new ShareaccountSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        $this->layout = 'main-vue';
+
+        $model = new Shareaccount();
+        $shareAcct = $model->getAttributes();
+
+        $shareProducts = $model->getShareProducts();
+
+        $accountList = ShareHelper::getAccountShareInfo();
+        
         return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+            'accountList'   => $accountList,
+            'shareProducts' => $shareProducts,
+            'shareAcct'     => $shareAcct
         ]);
     }
     

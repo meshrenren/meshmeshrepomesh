@@ -16,7 +16,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'fk_memid')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'NoOfShares')->textInput() ?>
+    <?= $form->field($model, 'no_of_shares')->textInput() ?>
 
     <?= $form->field($model, 'totalSubscription')->textInput() ?>
 

@@ -18,9 +18,10 @@ class ShareaccountSearch extends Shareaccount
     public function rules()
     {
         return [
-            [['accountnumber', 'status'], 'safe'],
-            [['fk_memid', 'NoOfShares', 'totalSubscription', 'dateCreated'], 'integer'],
-            [['balance'], 'number'],
+            [['accountnumber', 'fk_memid', 'date_created', 'is_active', 'no_of_shares', 'totalSubscription', 'balance', 'status', 'fk_share_product'], 'required'],
+            [['fk_memid', 'is_active', 'no_of_shares', 'fk_share_product'], 'integer'],
+            [['date_created'], 'safe'],
+            [['totalSubscription', 'balance'], 'number'],
         ];
     }
 
@@ -61,7 +62,7 @@ class ShareaccountSearch extends Shareaccount
         // grid filtering conditions
         $query->andFilterWhere([
             'fk_memid' => $this->fk_memid,
-            'NoOfShares' => $this->NoOfShares,
+            'no_of_shares' => $this->no_of_shares,
             'totalSubscription' => $this->totalSubscription,
             'balance' => $this->balance,
             'dateCreated' => $this->dateCreated,

@@ -9,11 +9,11 @@ use Yii;
  *
  * @property string $reference_no
  * @property string $posting_date
- * @property string $created_date
- * @property integer $transated_by
- * @property string $remarks
  * @property double $total_amount
  * @property string $trans_type
+ * @property string $remarks
+ * @property string $transacted_date
+ * @property integer $transacted_by
  *
  * @property JournalDetails[] $journalDetails
  */
@@ -34,10 +34,10 @@ class JournalHeader extends \yii\db\ActiveRecord
     {
         return [
             [['reference_no'], 'required'],
-            [['posting_date', 'created_date'], 'safe'],
-            [['transated_by'], 'integer'],
-            [['remarks', 'trans_type'], 'string'],
+            [['posting_date', 'transacted_date'], 'safe'],
             [['total_amount'], 'number'],
+            [['trans_type', 'remarks'], 'string'],
+            [['transacted_by'], 'integer'],
             [['reference_no'], 'string', 'max' => 100],
         ];
     }
@@ -50,11 +50,11 @@ class JournalHeader extends \yii\db\ActiveRecord
         return [
             'reference_no' => 'Reference No',
             'posting_date' => 'Posting Date',
-            'created_date' => 'Created Date',
-            'transated_by' => 'Transated By',
-            'remarks' => 'Remarks',
             'total_amount' => 'Total Amount',
             'trans_type' => 'Trans Type',
+            'remarks' => 'Remarks',
+            'transacted_date' => 'Transacted Date',
+            'transacted_by' => 'Transacted By',
         ];
     }
 

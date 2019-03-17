@@ -3,9 +3,6 @@
 		<div class="box box-info">
 	        <div class="box-header with-border">
 	            <h3 class="box-title">Savings Account</h3>
-	            <span class = "pull-right">
-	            	<el-button type = "primary" @click="createNewAccount">Add Account</el-button>
-	            </span>
 	        </div>
 	        <div class = "box-body">
 	        	<el-row :gutter = "20">			
@@ -19,11 +16,11 @@
 				                    <span style="margin-left: 10px">{{ scope.row.account_no }}</span>
 				                </template>
 				            </el-table-column>
-				            <el-table-column label="Account Name">
-				                <template slot-scope="scope">
-				                    <span  style="margin-left: 10px">{{ scope.row.account_name }}</span>
-				                </template>
-				            </el-table-column>
+                            <el-table-column label="Account Name">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.account_name }}</span>
+                                </template>
+                            </el-table-column>
 				            <el-table-column label="Balance">
 				                <template slot-scope="scope">
 				                    <span style="margin-left: 10px">{{ $nf.numberFixed(scope.row.balance, 2) }}</span>
@@ -98,10 +95,7 @@
 export default {
     props: ['baseUrl', 'dataSavingsProduct', 'dataAccountList', 'dataSavingsAccount'],
     data: function () {    	
-    	let account  = {}
-  		this.dataSavingsAccount.forEach(function(detail){
-  			account[detail] = null
-  		})
+    	let account  = cloneDeep(this.dataSavingsAccount)
       	return {
       		memberDetails			: {id : null, fullname : null},
       		showSearchModal			: false,
@@ -134,7 +128,7 @@ export default {
 
             _forEach(datalist, function(element, index) {
             	if(element.type == "Member" && element.member){
-            		element.account_name = element.member.fullname
+            		element.account_name = element.member.last_name + ', ' + element.member.first_name + ' ' + element.member.middle_name
             	}
             	
             })
@@ -151,9 +145,6 @@ export default {
     	}
     },
     methods: {
-    	createNewAccount(){
-
-    	},
     	selectType(val){
     		if(val == "Member"){
     			if(!this.savingAccountDetails.account_name){

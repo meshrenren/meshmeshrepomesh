@@ -18,7 +18,7 @@ use app\models\TdTransaction;
 class ParticularHelper 
 {
 
-	public static function getParticulars($filter = null){
+	public static function getParticulars($filter = null, $orderBy = null){
 		$getParticular = AccountParticulars::find();
 		if(isset($filter['category'])){
 			$where = "";
@@ -43,8 +43,21 @@ class ParticularHelper
 
 			$getParticular = $getParticular->where($where);
 		}
+		if($orderBy != null){
+			$getParticular = $getParticular->orderBy($orderBy);
+		}
 
 		$getParticular = $getParticular->asArray()->all();
+		return $getParticular;
+	}
+
+	public static function getParticular($filter, $asArray = false){
+		$getParticular = AccountParticulars::find()->where($filter);
+		if($asArray){
+			$getParticular = $getParticular->asArray;
+		}
+		$getParticular = $getParticular->one();
+
 		return $getParticular;
 	}
 
@@ -222,8 +235,6 @@ class ParticularHelper
 		return true;
 		
 	}
-	
-	
 	
 	
 }

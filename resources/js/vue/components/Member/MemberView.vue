@@ -160,44 +160,33 @@
 							></member-family>
 						</div>
 						<div class = "tab-pane" id = "accounts">
-							<div class = "nav-tabs-custom" id = "content-right">
-								<ul class = "nav nav-tabs">
-									<li class="active"><a href="#savingsaccount" data-toggle="tab">Savings Account</a></li>
-									<li><a href="#shareaccount" data-toggle="tab">Share Account</a></li>
-									<li><a href="#loanaccount" data-toggle="tab">Loan Account</a></li>
-									<li><a href="#tdaccount" data-toggle="tab">Time Deposit Accounts</a></li>
-								</ul>
-								<div class = "tab-content">
-									<div class = "active tab-pane" id = "savingsaccount">
-										<member-savings 
-											:member="member"
-											:can-edit = "canEdit"
-											:data-accounts = "savingsAccounts"
-										></member-savings>
-									</div>
-									<div class = "tab-pane" id = "shareaccount">
-										<member-share 
-											:member="member"
-											:can-edit = "canEdit"
-											:data-accounts = "shareAccounts"
-										></member-share>
-									</div>
-									<div class = "tab-pane" id = "loanaccount">
-										<member-loan 
-											:member="member"
-											:can-edit = "canEdit"
-											:data-accounts = "loanAccounts"
-										></member-loan>
-									</div>
-									<div class = "tab-pane" id = "tdaccount">
-										<member-timedeposit 
-											:member="member"
-											:can-edit = "canEdit"
-											:data-accounts = "timedepositAccounts"
-										></member-timedeposit>
-									</div>
-								</div>
-							</div>
+							<el-tabs type="border-card" v-model = "accountTab">
+							    <el-tab-pane label="Loan Account" name = "loanaccount" lazy>
+							    	<member-loan 
+										:member="member"
+										:can-edit = "canEdit">
+									</member-loan>
+							    </el-tab-pane>
+							    <el-tab-pane label="Savings Account" name = "savingsaccount" lazy>
+							    	<member-savings 
+									:member="member"
+									:can-edit = "canEdit">
+									</member-savings>
+							    </el-tab-pane>
+							    <el-tab-pane label="Share Account" name = "shareaccount" lazy>
+							    	<member-share 
+										:member="member"
+										:can-edit = "canEdit">
+									</member-share>
+
+							    </el-tab-pane>
+							    <el-tab-pane label="Time Deposit Account" name = "tdaccount" lazy>
+							    	<member-timedeposit 
+										:member="member"
+										:can-edit = "canEdit">										
+									</member-timedeposit>
+							    </el-tab-pane>
+							</el-tabs>
 						</div>
 					</div>
 				</div>
@@ -266,10 +255,7 @@ export default {
 			uploadImageimageUrl	: '',
 			proPicVisible 		: false,
             maxFileUpload		: 2097152,
-            savingsAccounts 	: null,
-            shareAccounts		: null,
-            timedepositAccounts	: null,
-            loanAccounts		: null
+            accountTab 			: 'loanaccount'
 		}
 	},
 	components: {
@@ -282,7 +268,6 @@ export default {
         MemberLoan
     },
     created(){
-    	this.getMemberAccounts()
     },
 	mounted: function ()
 	{  		
@@ -297,33 +282,6 @@ export default {
     methods: {  	
     	testupdate(data){
     		console.log(data)
-    	},
-    	getMemberAccounts(){
-
-    		let data = {
-    			member_id : this.member.id
-    		}
-    		axios.post(this.$baseUrl+'/member/get-accounts', data).then((result) => {
-            	let res = result.data
-            	console.log('res', res)
-            	this.savingsAccounts = res.savingsAccounts
-        		this.shareAccounts = res.shareAccounts
-        		this.timedepositAccounts = res.timedepositAccounts
-        		this.loanAccounts = res.loanAccounts
-	            
-            }).catch(function (error) {
-    			new Noty({
-		            theme: 'relax',
-		            type: 'error',
-		            layout: 'topRight',
-		            text: 'An error occured. Please try again or contact administrator',
-		            timeout: 2500
-		        }).show()
-
-    			if(error.response.status == 403)
-    				location.reload()
-  			})
-
     	},
   		handleAvatarSuccess(file, filelist){
   			let arr = new Array

@@ -12,14 +12,27 @@ use app\helpers\payment\PaymentHelper;
 
 class PaymentController extends \yii\web\Controller
 {
+    public $entryType = array();
+
+    public function __construct($id, $module, $config = [])
+    {
+        $paymentHelper = new PaymentHelper;
+        $entryType = $paymentHelper->entry_type;
+
+        parent::__construct($id, $module, $config);
+    } 
+
+
     public function actionIndex()
     {
         $this->layout = 'main-vue';
     	$paymentModel = new \app\models\PaymentRecord;
-        $paymentModel = $paymentModel->attributes();
+        $paymentModel = $paymentModel->getAttributes();
 
         $filter  = ['category' => ['OTHERS']];
-        $getParticular = ParticularHelper::getParticulars($filter);
+        $orderBy = "name ASC";
+        $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
+
 
         return $this->render('index', [
         	'model'         	=> $paymentModel,
@@ -50,7 +63,7 @@ class PaymentController extends \yii\web\Controller
 
                 //Check GV Number if exist
                 $or_num = $paymentModel['or_num'];
-                $getOR = \app\models\PaymentRecord::find()->where(['or_num' => $or_num])->one();
+                $getOR = \app\models\JournalHeader::find()->where(['reference_no' => $or_num])->one();
                 if($getOR){
                     return [
                         'success'   => "mesry",
@@ -60,11 +73,10 @@ class PaymentController extends \yii\web\Controller
                 else{
 
                     //Save Loan payment here
-                    $saveTransaction = true;
 
 
                     //After loan transaction is saved, Save General Voucher and Entries
-                    if($saveTransaction){
+                    if($success){
                         //Save gv and entries
                         $saveOR = PaymentHelper::savePayment($paymentModel);
                         if($saveOR){
@@ -74,10 +86,88 @@ class PaymentController extends \yii\web\Controller
                                 $success = "wtf";
                             }
                             else{
-                                $success = true;
+                                $success = false;
+                                $transaction->rollBack();
                             }
                         }
+                        else{
+                            $success = false;
+                            $transaction->rollBack();
+                        }
 
+                    }
+
+                    //Save in journal
+                    if($success && $saveOR){
+                        $journalHeader = new \app\models\JournalHeader;
+                        $journalHeaderData = $journalHeader->getAttributes();
+                        $journalHeaderData['reference_no'] = $saveOR->or_num;
+                        $journalHeaderData['posting_date'] = $saveOR->date_transact;
+                        $journalHeaderData['total_amount'] = 0;
+                        $journalHeaderData['trans_type'] = 'Payment';
+                        $journalHeaderData['remarks'] = '';
+
+                        $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+                        if($saveJournal){
+                            //Entries
+
+                            $journalList = new \app\models\JournalDetails;
+                            $journalListAttr = $journalList->getAttributes();
+                            $lists = array();
+                            $totalAmount = 0;
+                            $totalCredit = 0;
+                            $totalDebit = 0;
+                            foreach ($allAccounts as $acct) {
+                                $arr = $journalListAttr;
+                                $arr['amount'] = $acct['amount'];
+                                $arr['particular_id'] = $acct['particular_id'];
+                                $arr['entry_type'] = $entryType[$acct['type']];
+
+                                if($arr['entry_type'] == 'CREDIT'){
+                                    $totalCredit += $acct['amount'];
+                                }
+                                else if($arr['entry_type'] == 'CREDIT'){
+                                    $totalDebit += $acct['amount'];
+                                }
+
+                                $totalAmount += $acct['amount'];
+                                array_push($lists, $arr);
+                            }
+
+                            // Set total credit and total debit as Cash On Hand
+                            $coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);
+                            if($totalCredit > 0){
+                                $arr = $journalListAttr;
+                                $arr['amount'] = $totalCredit;
+                                $arr['particular_id'] = $coh_id->id;
+                                $arr['entry_type'] = "DEBIT";
+                                array_push($lists, $arr);
+                            } 
+
+                            if($totalDebit > 0){
+                                $arr = $journalListAttr;
+                                $arr['amount'] = $totalDebit;
+                                $arr['particular_id'] = $coh_id->id;
+                                $arr['entry_type'] = "CREDIT";
+                                array_push($lists, $arr);
+                            } 
+
+                            $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->id);
+                            if($insertSuccess){
+                                $saveJournal->total_amount = $totalAmount;
+                                $saveJournal->save();
+                                
+                                $success = true;
+                            }
+                            else{
+                                $success = false;
+                                $transaction->rollBack();
+                            }
+                        }
+                        else{
+                            $success = false;
+                            $transaction->rollBack();
+                        }
                     }
                 }
 

@@ -25,4 +25,15 @@ export default {
 
 		
 	},
+
+	saveTransaction(params){	
+		return axios.post('/savings/save-transaction', params)
+	},
+
+	getTransaction(fk_savings_id){	
+		let params = {
+			fk_savings_id : fk_savings_id
+		}
+		return axios.post('/savings/get-transaction', params)
+	},
 }

@@ -15,8 +15,6 @@ use Yii;
  * @property string $posting_code
  * @property string $created_date
  * @property integer $created_by
- *
- * @property VoucherDetails[] $voucherDetails
  */
 class GeneralVoucher extends \yii\db\ActiveRecord
 {
@@ -59,13 +57,5 @@ class GeneralVoucher extends \yii\db\ActiveRecord
             'created_date' => 'Created Date',
             'created_by' => 'Created By',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getVoucherDetails()
-    {
-        return $this->hasMany(VoucherDetails::className(), ['voucher_id' => 'id']);
     }
 }

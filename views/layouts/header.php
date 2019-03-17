@@ -49,6 +49,24 @@ use yii\helpers\Html;
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view")
                     ],
                     [
+                        'label'     => 'Collecion',
+                        'items'      => [
+                            [
+                                'label'     => 'Payments', 
+                                'url'       => ['loan/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_add")
+                            ],
+                            [
+                                'label'     => 'List', 
+                                'url'       => ['loan/list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
+                            ],
+
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
+                    ],
+
+                    [
                         'label'     => 'Loan Account',
                         'items'      => [
                             [
@@ -66,8 +84,10 @@ use yii\helpers\Html;
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
                     ],
                     [
-                        'label'     => 'Savings Account',
+                        'label'     => 'Accounts',
                         'items'      => [
+
+                            ['label' => 'Savings Accouts', 'options' => ['class' => 'header ft-bold']],
                             [
                                 'label'     => 'New', 
                                 'url'       => ['savings/'], 
@@ -79,10 +99,41 @@ use yii\helpers\Html;
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_edit")
                             ],
                             [
-                                'label'     => 'Wihthdraw', 
+                                'label'     => 'Withdraw', 
                                 'url'       => ['savings/withdraw'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_edit")
                             ],
+                            ['label' => '', 'options' => ['class' => 'divider']],
+
+                            ['label' => 'Share Accounts', 'options' => ['class' => 'header ft-bold']],
+                            [
+                                'label'     => 'New', 
+                                'url'       => ['shareaccount/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
+                            ],
+                            ['label' => '', 'options' => ['class' => 'divider']],
+
+                            [
+                                'label' => 'Time Deposit Accounts', 
+                                'options' => ['class' => 'header ft-bold'],
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_view")
+                            ],
+                            [
+                                'label'     => 'New', 
+                                'url'       => ['time-deposit/create'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_add")
+                            ],
+                            [
+                                'label'     => 'All List', 
+                                'url'       => ['time-deposit/list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
+                            ],
+                            [
+                                'label'     => 'Matured List', 
+                                'url'       => ['time-deposit/matured-accounts'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
+                            ],
+                            
 
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_view")
@@ -177,9 +228,9 @@ use yii\helpers\Html;
                         </li>
                         <!-- Menu Footer-->
                         <li class="user-footer">
-                            <!--<div class="pull-left">
-                                <a href="#" class="btn btn-default btn-flat">Profile</a>
-                            </div>-->
+                            <div class="pull-left">
+                                <a href="<?php echo yii\helpers\Url::toRoute(['member/view/' . \Yii::$app->user->identity->member->id]); ?>" class="btn btn-default btn-flat">Profile</a>
+                            </div>
                             <div class="pull-right">
                                 <?= Html::a(
                                     'Sign out',

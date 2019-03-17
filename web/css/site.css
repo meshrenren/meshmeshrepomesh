@@ -376,3 +376,6 @@ a.desc:after {
 .pd-40 { padding-bottom: 40px !important; }
 .pd-50 { padding-bottom: 50px !important; }
 .pd-100 { padding-bottom: 100px !important; }
+
+/* Font style */
+.ft-bold { font-weight: bold !important; }

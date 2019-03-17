@@ -13,7 +13,7 @@
                         <el-select
                             @change = "changeName"
                             v-model="voucherModel.name_id"
-                            filterable
+                            filterable default-first-option
                             remote :allow-create = "allowCreateName"
                             reserve-keyword
                             :disabled = "disabledVoucher"
@@ -106,69 +106,69 @@
 
             </el-row>
         </el-form>
-
-        <el-row :gutter="20" v-if = "showButtons">
-            <el-col :span="3">
-                <el-button type = "success" size = "large" @click = "createVoucher(false)" :disabled = "btnDisable">Finish</el-button>
-            </el-col>
-            <el-col :span="3">
-                <el-button type = "danger"size = "large"  @click = "cancelVoucher" :disabled = "btnDisable">Cancel</el-button>
-            </el-col>
-        </el-row>
         
-        <div class = "voucher-sample-form">
-            <h3>VOUCHER</h3>
-            <el-table
-                :data="entryList"
-                border striped
-                style="width: 100%"
-                height = "350px">
-                <el-table-column
-                    prop="date_transact"
-                    label="Date">
-                    <template slot-scope="scope">
-                        {{ $df.formatDate(voucherModel.date_transact, "YYYY-MM-DD")}}
-                    </template>
-                    
-                </el-table-column>
-                <el-table-column
-                    prop="particular_id"
-                    label="Description">
-                    <template slot-scope="scope">
-                        <el-select v-model="scope.row.particular_id" filterable placeholder="Select">
-                            <el-option
-                                v-for="item in particularList"
-                                :key="parseInt(item.id)"
-                                :label="item.name"
-                                :value="parseInt(item.id)">
-                            </el-option>
-                        </el-select>
-                    </template>
-                </el-table-column>
-                <el-table-column
-                    prop="debit"
-                    label="Debit">
-                    <template slot-scope="scope">
-                        <el-input type="number" v-model="scope.row.debit" ></el-input>
-                    </template>
-                </el-table-column>
-                <el-table-column
-                    prop="credit"
-                    label="Credit">
-                    <template slot-scope="scope">
-                        <el-input type="number" v-model="scope.row.credit" ></el-input>
-                    </template>
-                </el-table-column>
-                <el-table-column
-                    label="Action">
-                    <template slot-scope="scope">
-                        <el-button
-                          size="mini"
-                          type="warning"
-                          @click="handleRemove(scope.$index, scope.row)">Remove</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
+        <div class="box box-primary voucher-sample-form">
+            <div class="box-header">
+                <h3 class="box-title">VOUCHER</h3>
+                <div class="box-tools pull-right">
+                    <el-button class = "auto-width ml-5" type = "success" size = "large" @click = "createVoucher()" :disabled = "btnDisable">Finish</el-button>
+                    <el-button class = "auto-width ml-5" type = "danger"size = "large"  @click = "cancelVoucher" :disabled = "btnDisable">Cancel</el-button>
+                </div>
+            </div>
+            <div class="box-body">
+                <el-table
+                    class = "mt-10"
+                    :data="entryList"
+                    border striped
+                    style="width: 100%"
+                    height = "350px">
+                    <el-table-column
+                        prop="date_transact"
+                        label="Date">
+                        <template slot-scope="scope">
+                            {{ $df.formatDate(voucherModel.date_transact, "YYYY-MM-DD")}}
+                        </template>
+                        
+                    </el-table-column>
+                    <el-table-column
+                        prop="particular_id"
+                        label="Description">
+                        <template slot-scope="scope">
+                            <el-select v-model="scope.row.particular_id" filterable placeholder="Select">
+                                <el-option
+                                    v-for="item in particularList"
+                                    :key="parseInt(item.id)"
+                                    :label="item.name"
+                                    :value="parseInt(item.id)">
+                                </el-option>
+                            </el-select>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="debit"
+                        label="Debit">
+                        <template slot-scope="scope">
+                            <el-input type="number" v-model="scope.row.debit" ></el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        prop="credit"
+                        label="Credit">
+                        <template slot-scope="scope">
+                            <el-input type="number" v-model="scope.row.credit" ></el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                        label="Action">
+                        <template slot-scope="scope">
+                            <el-button
+                              size="mini"
+                              type="warning"
+                              @click="handleRemove(scope.$index, scope.row)">Remove</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
         </div>
 	</div>
 </template>
@@ -191,23 +191,23 @@ export default {
             default : true
         },
         dataModel: {
-            type: Array,
-            default : [],
+            type: Object,
+            default: function () { return {} },
             required: true
         },
         dataDetailsModel: {
-            type: Array,
-            default : [],
+            type: Object,
+            default: function () { return {} },
             required: true
         },
         dataParticularList: {
             type: Array,
-            default : [],
+            default: function () { return [] },
             required: true
         },
         dataEntryList: {
             type: Array,
-            default : [],
+            default: function () { return [] },
             required: false
         },
         showButtons: {
@@ -222,18 +222,11 @@ export default {
         }
     },
     data: function () {    	
-    	let formVoucher  = {}
-
-  		this.dataModel.forEach(function(detail){
-  			formVoucher[detail] = null
-  		})
+    	let formVoucher  = cloneDeep(this.dataModel)
         formVoucher['name_id'] = null
         formVoucher['member_id'] = null
 
-        let formParticulars = {}
-        this.dataDetailsModel.forEach(function(detail){
-            formParticulars[detail] = null
-        })
+        let formParticulars = this.dataDetailsModel
 
       	return {
       		voucherModel			: formVoucher,
@@ -322,6 +315,7 @@ export default {
             return "" 
         },
         saveVoucherMain(){
+            console.log("voucherModel", this.voucherModel);
             this.$refs.voucherForm.validate((valid) => {
                 if (valid){
                     this.disabledVoucher = true
@@ -355,7 +349,7 @@ export default {
             let name = this.getVoucherName(val)
             this.voucherModel.name = name
 
-            let data = {type : this.voucherModel.type, name : name, id : id}
+            let data = {type : null, name : name, id : id}
             this.$EventDispatcher.fire('CHANGE_NAME', data)
         },
         addEntry(){
@@ -436,7 +430,7 @@ export default {
             return hasError
 
         },
-        createVoucher(isForceAdd){
+        createVoucher(){
             let vm = this
 
             if(this.validateEntries()){
@@ -518,12 +512,9 @@ export default {
             margin-top: 20px;
 
             h3{
-                text-align: center;
                 font-weight: bold;
-            }
-
-            .el-table{
-                margin-top:10px;
+                font-size: 24px;
+                margin-top: 8px;
             }
         }
 
