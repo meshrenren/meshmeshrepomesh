@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'accountnumber',
             'fk_memid',
-            'NoOfShares',
+         //   'NoOfShares',
             'totalSubscription',
             'balance',
             // 'dateCreated',

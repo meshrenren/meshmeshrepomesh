@@ -26,13 +26,19 @@ class PaymentController extends \yii\web\Controller
             'particularList'   => $getParticular
         ]);
     }
+    
+    
+    public function actionPostPayment($id)
+    {
+    	PaymentHelper::postPayment($id);
+    }
 
     public function actionSavePaymentList(){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-            $success = false;
+            $success = "begin me";
             $error = '';
             $data = null;
 
@@ -47,7 +53,7 @@ class PaymentController extends \yii\web\Controller
                 $getOR = \app\models\PaymentRecord::find()->where(['or_num' => $or_num])->one();
                 if($getOR){
                     return [
-                        'success'   => false,
+                        'success'   => "mesry",
                         'error'     => 'ERROR_HASOR'
                     ];
                 }
@@ -65,7 +71,7 @@ class PaymentController extends \yii\web\Controller
                             //Entries
                             $insertSuccess = PaymentHelper::insertAccount($allAccounts, $saveOR->id);
                             if(!$insertSuccess){
-                                $success = false;
+                                $success = "wtf";
                             }
                             else{
                                 $success = true;
@@ -80,10 +86,10 @@ class PaymentController extends \yii\web\Controller
                 }
             } catch (\Exception $e) {
                 $transaction->rollBack();
-                throw $e;
+                $error =  $e->getMessage();
             } catch (\Throwable $e) {
                 $transaction->rollBack();
-                throw $e;
+                $error = $e->getMessage();
             }
 
             return [
