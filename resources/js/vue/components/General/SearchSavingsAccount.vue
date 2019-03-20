@@ -94,25 +94,17 @@ export default {
     },
     methods: {
         getAccount(){
-            let data = new FormData()
-            data.set('nameInput', this.nameInput)
             this.loadingTable = true
-            
-            axios.post(this.baseUrl+'/savings/get-account', data).then((result) => {
+
+            this.$API.Savings.getAccounts()
+            .then(result => {
                 let res = result.data
-                let type = ""
-                let message = ""
-                console.log(res)
-
-                this.tableData = res 
-                  
-            }).catch(function (error) {
-            
-                console.log(error);
-
-                if(error.response.status == 403)
-                    location.reload()
-            }).then(_ => { 
+                this.tableData = res
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
                 this.loadingTable = false
             })
         },

@@ -1,5 +1,5 @@
 <template>
-	<div class="savings-account-create">
+	<div class="savings-account-create" v-loading = "pageLoading">
 		<div class="box box-info">
 	        <div class="box-header with-border">
 	            <h3 class="box-title">Savings Account</h3>
@@ -43,7 +43,7 @@
 				                </el-input>
 				            </el-form-item>
 							<el-form-item label="Savings Product" prop = "saving_product_id">
-								<el-select v-model="savingAccountDetails.saving_product_id" placeholder="Select product">
+								<el-select v-model="savingAccountDetails.saving_product_id" :disabled = "true" placeholder="Select product">
 								    <el-option
 								      	v-for="item in dataSavingsProduct"
 								      	:key="item.value"
@@ -67,13 +67,11 @@
 						            </el-table-column>
 						        </el-table>
 							</div>
+                            
+                            <el-form-item>
+                            	<el-button class = "pull-right" type = "primary" @click="createAccount">Save New Account</el-button>
+                            </el-form-item>
 						</el-form>
-						<div style="margin-top: 10px;">
-							<span class = "pull-right">
-								<el-button @click="cancelForm">Cancel</el-button>
-								<el-button type = "primary" @click="createAccount">Save New Account</el-button>
-							</span>
-						</div>
 					</el-col>
 				</el-row>
 	        </div>
@@ -104,7 +102,8 @@ export default {
       		isGet 					: "",
       		signatoryList			: [],
       		accountList 			: this.dataAccountList,
-      		accountFilter 			: ""
+      		accountFilter 			: "",
+      		pageLoading				: false
       	}
   	},
   	created(){
@@ -180,13 +179,6 @@ export default {
     		//this.memberDetails = data
     		
     	},
-    	cancelForm(){
-    		let vm = this
-    		this.memberDetails = {id : null, fullname : null},
-    		this.dataSavingsAccount.forEach(function(detail){
-	  			vm.savingAccountDetails[detail] = null
-	  		})
-    	},
     	removeSignatory(data){
     		let index = this.signatoryList.findIndex(ci => {return Number(ci.id) == Number(data.id)})		
 			if (index >= 0){ 
@@ -224,66 +216,59 @@ export default {
 		            }).then(function(result) {
 		            	if (result.value) {
 
-			            	let data = {
-			            		account : vm.savingAccountDetails,
-			            		signatoryList : vm.signatoryList
-			            	}
-
-				    		//data.set('account', JSON.stringify(vm.savingAccountDetails))
-
-				            axios.post(vm.baseUrl+'/savings/create-account', data).then((result) => {
-				            	let res = result.data
-				            	let type = ""
-				            	let message = ""
-				            	if(res.success == true){
-				            		type = "success"
-				            		message = "New savings account successfully created."
-				            		location.reload()
-				            	}
-				            	else{
-				            		if(res.status == 'has-account'){
-				            			let getProduct = vm.dataSavingsProduct.findIndex(prod => prod.value == vm.savingAccountDetails.saving_product_id)
-				            			console.log(getProduct)
-					            		message = vm.memberDetails.fullname + " already has savings account with "+ vm.dataSavingsProduct[getProduct].label + " product."
-
-				            		}
-				            		else{
-					            		message = "Savings account not successfully created. Please try again or contact administrator."
-					            		//location.reload()
-				            		}
-				            		type = "error"
-				            	}
-
-				            	new Noty({
-						            theme: 'relax',
-						            type: type,
-						            layout: 'topRight',
-						            text: message,
-						            timeout: 2500
-						        }).show()
-
-						        //vm.cancelForm()
-						        //location.reload()
-				            }).catch(error =>{
-
-				            	console.log(error)
-				          		new Noty({
-						            theme: 'relax',
-						            type: "error",
-						            layout: 'topRight',
-						            text: 'An error occured. Please try again or contact administrator',
-						            timeout: 3000
-						        }).show()
-
-						        if(error.response && error.response.status == 403)
-				    				location.reload()
-				            })
+			            	vm.processAccount()
 				        }
 			        })
 	          	} else {
 	            	return false;
 	          	}
 	        });
+    	},
+    	processAccount(){
+    		this.pageLoading = true
+
+    		let data = {
+        		account : this.savingAccountDetails,
+        		signatoryList : this.signatoryList
+        	}
+            this.$API.Savings.createAccount(data)
+            .then(result => {
+                let res = result.data
+            	let type = ""
+            	let message = ""
+            	if(res.success == true){
+            		type = "success"
+            		message = "New savings account successfully created."
+            		location.reload()
+            	}
+            	else{
+            		if(res.error == 'HAS_ACCOUNT'){
+            			let getProduct = this.dataSavingsProduct.findIndex(prod => prod.value == this.savingAccountDetails.saving_product_id)
+            			console.log(getProduct)
+	            		message = this.savingAccountDetails.account_name + " already has "+ this.dataSavingsProduct[getProduct].label + " account."
+
+            		}
+            		else{
+	            		message = "Savings account not successfully created. Please try again or contact administrator."
+	            		//location.reload()
+            		}
+            		type = "error"
+            	}
+
+            	new Noty({
+		            theme: 'relax',
+		            type: type,
+		            layout: 'topRight',
+		            text: message,
+		            timeout: 2500
+		        }).show()
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.pageLoading = false
+            })
     	}
     }
 }

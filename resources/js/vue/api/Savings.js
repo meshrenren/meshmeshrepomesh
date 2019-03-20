@@ -1,6 +1,10 @@
 import axios from 'axios'
 
 export default {
+	createAccount(params){	
+		return axios.post('/savings/create-account', params)
+	},
+
 	getFormPDF(account_no, type){
 		if(type == 'pdf'){
 			return axios({
@@ -28,6 +32,14 @@ export default {
 
 	saveTransaction(params){	
 		return axios.post('/savings/save-transaction', params)
+	},
+
+
+	getAccounts(){	
+		let params = {
+			action : "savingsaccount"
+		}
+		return axios.post('/savings/get-account', params)
 	},
 
 	getTransaction(fk_savings_id){	

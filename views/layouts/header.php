@@ -111,6 +111,11 @@ use yii\helpers\Html;
                                 'url'       => ['shareaccount/'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
                             ],
+                            [
+                                'label'     => 'Deposit', 
+                                'url'       => ['shareaccount/deposit'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
+                            ],
                             ['label' => '', 'options' => ['class' => 'divider']],
 
                             [

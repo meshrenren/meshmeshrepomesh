@@ -105,71 +105,92 @@ class SavingsController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-            $post = \Yii::$app->getRequest()->getBodyParams();
+            $success = false;
+            $error = '';
+            $data = null;
 
-        	$accountDetails = $post['account'];
-        	$accountDetails = (array)$accountDetails;
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $post = \Yii::$app->getRequest()->getBodyParams();
 
-        	$hasAccount = null;
-        	$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
+            	$accountDetails = $post['account'];
 
-        	if($product->is_multiple == 0 && $accountDetails['type'] == "Member")
-        		$hasAccount = \app\models\SavingsAccount::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
+            	$hasAccount = null;
+            	$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
 
-    		if($hasAccount == null){
-    			//$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
-	        	$account = new SavingsAccount;
-	        	$trans_serial = $product->trans_serial + 1;
-	        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
-	        	$account->account_no = $product->id . "-" . $trans_serial_pad;
-	        	$account->member_id = $accountDetails['member_id'];
-	        	$account->saving_product_id = $accountDetails['saving_product_id'];
-	        	$account->balance = 0;
-	        	$account->date_created = date('Y-m-d H:i:s');
-	        	$account->transacted_date = date('Y-m-d H:i:s');
-                $account->type = $accountDetails['type'];
-                if($accountDetails['type'] == "Group"){
-                    $account->account_name = $accountDetails['account_name'];
-                    $account->member_id = 0;
-                }
-	        	$account->is_active = 1;
-	        	if($account->save()){
-	        		$product->trans_serial = $trans_serial;
-	        		$product->save();
-	        		$getAccount = SavingsAccount::find()->where(['account_no' => $account->account_no])->one();
+            	if($product->is_multiple == 0 && $accountDetails['type'] == "Member")
+            		$hasAccount = \app\models\SavingsAccount::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
 
-                    if($account->type == "Group" && isset($post['signatoryList'])){
-                        $signatories = $post['signatoryList'];
-                        foreach ($signatories as $sign) {
-                            $newSign = new \app\models\SaGroupSignatory;
-                            $newSign->savings_account = $account->account_no;
-                            $newSign->member_id = $sign['id'];
-                            $newSign->save();
-                        }
+        		if($hasAccount == null){
+        			//$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
+    	        	$account = new SavingsAccount;
+    	        	$trans_serial = $product->trans_serial + 1;
+    	        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+    	        	$account->account_no = $product->id . "-" . $trans_serial_pad;
+    	        	$account->member_id = $accountDetails['member_id'];
+    	        	$account->saving_product_id = $accountDetails['saving_product_id'];
+    	        	$account->balance = 0;
+    	        	$account->date_created = date('Y-m-d H:i:s');
+    	        	$account->transacted_date = date('Y-m-d H:i:s');
+                    $account->type = $accountDetails['type'];
+                    if($accountDetails['type'] == "Group"){
+                        $account->account_name = $accountDetails['account_name'];
+                        $account->member_id = 0;
                     }
+    	        	$account->is_active = 1;
+    	        	if($account->save()){
+                        $success = true;
 
-	        		return [
-				        'success' 	=> true,
-			        	'status'	=> 'okay',
-				        'data' 		=> $getAccount
-				    ];
-	        	}
-	        	else{
-	        		$error = $account->getErrors();
-	        		return [
-				        'success' 	=> false,
-			        	'status'	=> 'has-error',
-				        "error"		=> $error
-				    ];
-	        	}
-    		}
-    		else{
-    			return [
-			        'success' 	=> false,
-			        'status'	=> 'has-account'
-			    ];
-    		}
-        	
+    	        		$product->trans_serial = $trans_serial;
+                        if(!$product->save()){
+                            $success = false;
+                        }
+
+                        if($success){
+                            if($account->type == "Group" && isset($post['signatoryList'])){
+                                $signatories = $post['signatoryList'];
+                                foreach ($signatories as $sign) {
+                                    $newSign = new \app\models\SaGroupSignatory;
+                                    $newSign->savings_account = $account->account_no;
+                                    $newSign->member_id = $sign['id'];
+                                    if(!$newSign->save()){
+                                        $success = false;
+                                    }
+                                }
+                            }
+                        }
+                        
+    	        	}
+    	        	else{
+                        $success = false;
+    	        		$errorList = $account->getErrors();
+    	        	}
+        		}
+        		else{
+                    $success = false;
+                    $error = 'HAS_ACCOUNT';
+        		}
+
+                if($success){
+                    $transaction->commit();
+                }
+                else{
+                    $transaction->rollBack();
+                }
+                
+        	} catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+
+            return [
+                'success'   => $success,
+                'error'     => $error,
+                'data'      => $data
+            ];
 
         	
         }
@@ -184,20 +205,27 @@ class SavingsController extends \yii\web\Controller
 
     public function actionGetAccount(){
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    	$model = new \app\models\SavingsAccount;
-    	
-    	$accountList = $model->getAccountList($_POST['nameInput']);
-    	return $accountList;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+        	$model = new \app\models\SavingsAccount;
+        	
+        	$accountList = $model->getAccountList();
+        	return $accountList;
+        }
     }
 
     public function actionGetTransaction(){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $post = \Yii::$app->getRequest()->getBodyParams();
-        $fk_savings_id = $post['fk_savings_id'];
-        
-        $accountList = SavingsHelper::getTransaction($fk_savings_id);
-        return $accountList;
+        if(\Yii::$app->getRequest()->getBodyParams()){
+            
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $fk_savings_id = $post['fk_savings_id'];
+            
+            $accountList = SavingsHelper::getTransaction($fk_savings_id);
+            return $accountList;
+        }
     }
+
 
     public function actionSaveTransaction(){
 
@@ -352,8 +380,6 @@ class SavingsController extends \yii\web\Controller
         	
         }
     }
-    
-    
     
 
     public function actionPrintPdf($type, $id){

@@ -1,5 +1,5 @@
 <template>
-    <div class="share-account-create">
+    <div class="share-account-create" v-loading  ="pageLoading">
         <div class="box box-info">
             <div class="box-header with-border">
                 <h3 class="box-title">Share Account</h3>
@@ -31,50 +31,40 @@
                     </el-col>
                     <el-col :span="12">
                         <h3>Add New Account</h3>
-                        <el-form  label-width="120px" :model="shareaccount" ref="shareaccount">
-                            <el-form-item label="Name">
+                        <el-form  label-width="120px" :model="shareaccount" :rules = "ruleAccount" ref="shareaccount">
+                            <el-form-item label="Name" prop="fk_memid">
                                 <el-input v-model="fullname" >
                                     <el-button slot="append" type = "primary" @click="showModal = true">Find Member</el-button>
                                 </el-input>
                             </el-form-item>
 
                             <el-form-item label="Customer ID">
-                                <el-input v-model="shareaccount.fk_memid" ></el-input>
+                                <el-input v-model="shareaccount.fk_memid" :disabled = "true"></el-input>
                             </el-form-item>
 
                             <el-form-item label="Share Product" prop="shareProduct" ref="shareProduct">
-                                <el-select v-model = "shareaccount.fk_share_product" prop="shareProduct"  placeholder="Please Select Share Product">
+                                <el-select v-model = "shareaccount.fk_share_product" prop="shareProduct" :disabled = "true"  placeholder="Please Select Share Product">
                                     <el-option
-                                      v-for="product in shares" :key="product.id" :label="product.name" :value="product.id">
+                                      v-for="product in shares" :key="Number(product.id)" :label="product.name" :value="Number(product.id)">
                                     </el-option>
                                 </el-select>
                             </el-form-item>
                             
-                            <el-form-item label="No. Of Shares">
+                            <el-form-item label="No. Of Shares" prop = "no_of_shares">
                               <el-input v-model="shareaccount.no_of_shares" :value="shareaccount.no_of_shares"></el-input>
-                            </el-form-item>
-
-                            
-                            <el-form-item label="" prop="shareProduct" ref="shareProduct">
-                                <el-checkbox @change="toggleDeposit()" v-model="shareaccount.isWithDeposit" prop="shareProduct" label="Is With Deposit" name="type"></el-checkbox>
-                            </el-form-item>
-                            
-                            <el-form-item label="Amount" v-if="isWithDep">
-                              <el-input v-model="shareaccount.Deposit" type="number"></el-input>
                             </el-form-item>
                             
                             <el-form-item>
-                                <el-button @click="onSubmit()" type="primary" >Creates</el-button>
-                                <el-button>Cancel</el-button>
+                                <el-button class = "pull-right" @click="onSubmit()" type="primary" >Save New Account</el-button>
                             </el-form-item>
 
-                          </el-form>
+                        </el-form>
                     </el-col>
                 </el-row>
             </div>
+            <search-member :base-url="baseUrl" :show-modal = "showModal"  @select="populateField" @close = "showModal = false" >
+            </search-member>
         </div>
-        <search-member :base-url="baseUrl" v-if = "showModal" @select="populateField" @close = "showModal = false" >
-        </search-member>
     </div>
 </template>
 
@@ -111,10 +101,19 @@ export default {
             id              : "",
             fullname        : "",
             dialogVisible   : false,
-            showModal       :false,
+            showModal       : true,
             isWithDep       : false,
             accountList     : this.shareAccountList,
-            accountFilter   : ''
+            accountFilter   : '',
+            ruleAccount     : [],
+            pageLoading     : false
+        }
+    },
+    created(){
+        this.shareaccount.fk_share_product = 1
+        this.ruleAccount = {
+            fk_memid : [{ required: true, message: 'Please select member. Just click "Find Member" button.', trigger: 'change' }],
+            no_of_shares : [{ required: true, message: 'No Of Shares cannot be blank.', trigger: 'change' }],
         }
     },
     computed:{
@@ -142,35 +141,91 @@ export default {
     },
     methods: {
 
-    populateField(row){
-      console.log("populateFields",row)
-      this.id = row.id
-      this.fullname = row.fullname
-      this.shareaccount.fk_memid = row.id;
-    },
+        populateField(row){
+            console.log("populateFields",row)
+            this.id = row.id
+            this.fullname = row.fullname
+            this.shareaccount.fk_memid = row.id;
+        },
 
-     toggleDeposit(){
-        console.log(this.shareaccount.isWithDeposit);
-        this.shareaccount.Deposit = 0;
-        this.isWithDep = this.shareaccount.isWithDeposit;
-        
-     },
-
-
-     onSubmit()
-     {
-       //first get the form data
-       let dataSubmitted = new FormData();
-
-       dataSubmitted.set('shareaccount', JSON.stringify(this.shareaccount));
-
-       axios.post(this.baseUrl+'/shareaccount/createaccount', dataSubmitted).then((result)=>{
-          let res  = result.data;
-          console.log(res);
-       });
+        toggleDeposit(){
+            console.log(this.shareaccount.isWithDeposit);
+            this.shareaccount.Deposit = 0;
+            this.isWithDep = this.shareaccount.isWithDeposit;
+            
+        },
 
 
-     }
+        onSubmit()
+        {
+            let vm = this
+            this.$refs.shareaccount.validate((valid) => {
+                if (valid) {
+                    vm.$swal({
+                        title: 'Create Share Account?',
+                        text: "Are you sure you want to save this account? This action cannot be undone.",
+                        type: 'warning',
+                        showCancelButton: true,
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Proceed',
+                        focusConfirm: false,
+                        focusCancel: true,
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true,
+                        width: '400px',
+                    }).then(function(result) {
+                        if (result.value) {
+                            vm.createAccount()
+                        }
+                   })
+                } else {
+                    return false;
+                }
+            })
+        },
+
+        createAccount(){
+            this.pageLoading = true
+            this.$API.Share.createAccount(this.shareaccount)
+            .then(result => {
+                var res = result.data
+                let message = ""
+                let type = ""
+                if(res.success){
+                    type = "success"
+                    message = "New share account successfully created."
+                    location.reload()
+                }
+                else{
+                    if(res.error == 'HAS_ACCOUNT'){
+                        let getProduct = this.shareProduct.find(prod => { return Number(prod.id) == Number(this.shareaccount.fk_share_product) } )
+                        console.log(getProduct)
+                        message = this.fullname + " already has "+ getProduct.name + " account."
+
+                    }
+                    else{
+                        message = "Share account not successfully created. Please try again or contact administrator."
+                        //location.reload()
+                    }
+                    type = "error"
+                }
+
+                new Noty({
+                    theme: 'relax',
+                    type: type,
+                    layout: 'topRight',
+                    text: message,
+                    timeout: 2500
+                }).show()
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.pageLoading = false
+            })
+
+        }
 
 
 

@@ -66,7 +66,7 @@ class SavingsAccount extends \yii\db\ActiveRecord
         return $this->hasOne(Member::className(), [ 'id' => 'member_id' ] )->select(["member.*", "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname"]);
     }
 
-    public function getAccountList($name) {
+    public function getAccountList() {
         $retval = $this->find()->joinWith(['product', 'member'])->asArray()->all();
         
         return $retval;

@@ -99,10 +99,6 @@ class ParticularHelper
 		
 		
 		
-		
-
-		
-		
 		//move to next day
 		$calendar = Calendar::findOne(['date_id'=>$currentDay['date_id'], 'date'=>$currentDay['date']]);
 		$calendar->is_current = 0;
