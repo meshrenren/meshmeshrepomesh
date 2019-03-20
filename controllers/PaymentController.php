@@ -82,11 +82,11 @@ class PaymentController extends \yii\web\Controller
                         if($saveOR){
                             //Entries
                             $insertSuccess = PaymentHelper::insertAccount($allAccounts, $saveOR->id);
-                            if(!$insertSuccess){
-                                $success = "wtf";
+                            if($insertSuccess){
+                                $success = true;
                             }
                             else{
-                                $success = false;
+                            	$success = $insertSuccess;
                                 $transaction->rollBack();
                             }
                         }
@@ -98,7 +98,7 @@ class PaymentController extends \yii\web\Controller
                     }
 
                     //Save in journal
-                    if($success && $saveOR){
+                    /*if($success && $saveOR){
                         $journalHeader = new \app\models\JournalHeader;
                         $journalHeaderData = $journalHeader->getAttributes();
                         $journalHeaderData['reference_no'] = $saveOR->or_num;
@@ -168,12 +168,15 @@ class PaymentController extends \yii\web\Controller
                             $success = false;
                             $transaction->rollBack();
                         }
-                    }
+                    } */
                 }
 
                 if($success){
                     $transaction->commit();
                 }
+                
+                else
+                	$transaction->rollBack();
             } catch (\Exception $e) {
                 $transaction->rollBack();
                 $error =  $e->getMessage();

@@ -5,6 +5,9 @@ namespace app\helpers\payment;
 use Yii;
 use app\models\PaymentRecord;
 use app\models\PaymentRecordList;
+use app\models\LoanProduct;
+use app\models\LoanAccount;
+use app\models\LoanTransaction;
 
 class PaymentHelper 
 {
@@ -58,34 +61,154 @@ class PaymentHelper
 	//posting of payment
 	public static function postPayment($ref_id)
 	{
-		$success = false;
-		//$transaction = \Yii::$app->db->beginTransaction();
-		
-		$dateToday = date('Y-m-d');
-		$payments = PaymentRecordList::findAll(['payment_record_id'=>$ref_id]);
-		
-		foreach ($payments as $row)
-		{
-			/*
-			 * rules for payment
-			 * 1. insert to payment transaction
-			 * 		->portion of payment due to P.I (Prepaid Interest)
-			 * 		->identify accumulated interest from last transaction, disbursed date if none.
-			 * 2. insert transaction to accounting entry
-			 * 3. update loan balance
-			 */
+		try {
+			
+			$success = true;
+			$transaction = \Yii::$app->db->beginTransaction();
+			
+			$dateToday = date('Y-m-d');
+			$payments = PaymentRecordList::findAll(['payment_record_id'=>$ref_id]);
+			$paymentHeader = PaymentRecord::findOne(['id'=>$ref_id]);
+			foreach ($payments as $row)
+			{
+				/*
+				 * rules for payment
+				 * 0. identify deductions
+				 * 	0.1 identify interest
+				 * 1. insert to payment transaction
+				 * 		->portion of payment due to P.I (Prepaid Interest)
+				 * 		->identify accumulated interest from last transaction, disbursed date if none.
+				 * 2. insert transaction to accounting entry
+				 * 3. update loan balance
+				 */
+				
+				
+				//processing rule no. 1, identify loan product parameters
+				
+				echo $row['type'].'<br/>';
+				
+				
+				if($row['type']=='LOAN')
+				{
+					$product = LoanProduct::findOne($row['product_id']);
+					$account = LoanAccount::findOne($row['account_no']);
+					
+					
+					//$prepaid_interest_pay = $product->prepaid_monthly_interest==1 ? $account->principal * ($product->prepaid_interest/100) : 0;
+					
+					
+					$connection = Yii::$app->getDb();
+					$command = $connection->createCommand("
+				    select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $row['account_no']]);
+					$lastTransaction = $command->queryOne();
+					
+					echo $lastTransaction['lasttrandate']." | ";
+					$noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($lastTransaction['lasttrandate']));
+					
+					$noOfDaysPassed = $noOfDaysPassed->format("%a");
+					
+					
+					//0. identifying deductions or payment distributions
+					$prepaidInterest = 0;
+					if($account->term<=12 && $product->prepaid_monthly_interest==1)
+					{
+						$prepaidInterest  = ($account->principal *prepa) / 5;
+						$prepaidInterest = $prepaidInterest * 7;
+						$prepaidInterest = $prepaidInterest / 24;
+					}
+					
+					else if($account->term<=18 && $product->prepaid_monthly_interest==1)
+					{
+						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 7.5;
+						$prepaidInterest = $prepaidInterest * 11.5;
+						$prepaidInterest = $prepaidInterest / 36;
+					}
+					
+					
+					else if($account->term<=24 && $product->prepaid_monthly_interest==1)
+					{
+						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 10;
+						$prepaidInterest = $prepaidInterest * 14;
+						$prepaidInterest = $prepaidInterest / 48;
+					}
+					
+					else if($account->term<=36 && $product->prepaid_monthly_interest==1)
+					{
+						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 15;
+						$prepaidInterest = $prepaidInterest * 21;
+						$prepaidInterest = $prepaidInterest / 72;
+					}
+					
+					echo $noOfDaysPassed."|".$prepaidInterest."<br/>";
+					
+					$principal_pay = $row['amount'] - $prepaidInterest;
+					
+					$interestEarned = ($account->principal_balance * ($product->int_rate/100))/30;
+					$interestEarned = $interestEarned * $noOfDaysPassed;
+					
+					
+					
+					//1. insert to payment transaction
+					$loanTransaction = new LoanTransaction();
+					$loanTransaction->loan_account = $row['account_no'];
+					$loanTransaction->amount = round($row['amount'], 2);
+					$loanTransaction->transaction_type='PAYCASH';
+					$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+					$loanTransaction->transaction_date = date('Y-m-d');
+					$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
+					$loanTransaction->remarks="payment thru payment facility";
+					$loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
+					$loanTransaction->interest_paid = 0;
+					$loanTransaction->OR_no= $paymentHeader->or_num;
+					$loanTransaction->principal_paid = round($principal_pay, 2);
+					$loanTransaction->arrears_paid = 0;
+					$loanTransaction->date_posted = date('Y-m-d');
+					$loanTransaction->interest_earned = round($interestEarned, 2);
+					
+					$account->principal_balance = $loanTransaction->running_balance;
+					$account->interest_balance = $account->interest_balance + $interestEarned;
+					
+					if($loanTransaction->running_balance<0)
+					{
+						$success = false;
+						echo "achieved negative";
+						
+					}
+					
+					if($loanTransaction->save() && $account->save())
+					{
+						
+						
+					}
+					
+					else
+					{
+						echo var_dump($loanTransaction->errors);
+						$success = false;
+						break;
+					}
+					
+					
+					
+					
+				}
+				
+				
+				
+				
+			}
 			
 			
-			//processing rule no. 1, identify loan product parameters
+			if($success)
+			{
+				$transaction->commit();
+			}
+			
+			else $transaction->rollBack();
 			
 			
-			echo $row['type'].'<br/>';
-			
-			
-			
-			
-			
-			
+		} catch (\Exception $e) {
+			echo $e->getMessage();
 		}
 		
 		

@@ -527,8 +527,9 @@ export default {
 				this.evaluationForm.notary_amount = getProduct.notary_fee
 				this.evaluationForm.prepaid_amortization_quincena = prepaid_interest/2
 				this.evaluationForm.service_charge_amount = parseFloat(service_charge).toFixed(2)
-				//this.evaluationForm.saving_retention_amount = saving_retention
-				//this.evaluationForm.redemption_insurance_amount = redemption_insurance
+
+
+
 				this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.amount) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
 							
 				this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
@@ -539,6 +540,68 @@ export default {
 
 				return [];
 			}
+
+
+			/*
+				regardless if loan is latest or not: consider these factors
+				1. is loan product add in or prepaid something?
+
+				----- start of doing consideration #1 ------
+			*/
+			
+			if(getProduct.interest_type_id==2 || getProduct.interest_type_id=="2") //2 stands for add in
+			{
+			  let principal_amt = this.evaluationForm.amount
+			  this.evaluationForm.credit_preinterest = parseFloat(principal_amt * (getProduct.prepaid_interest/100)).toFixed(2);
+			  this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+			  console.log("prep int yohooa");
+
+			}
+
+		
+
+			/*
+				----- end of doing consideration #1 ------
+
+				2. is loan eGadget Loan nga samok kaayo?
+
+				---start of doing consideration #2---
+			*/
+
+			else if(getProduct.id=='14' || getProduct.product_name.includes("GADGET"))
+				{
+					if(evalForm.duration>=24)
+					{
+					 let accumulated_prepaid =  parseFloat((evalForm.amount*(getProduct.prepaid_interest/100)) * (evalForm.duration/12)).toFixed(2);
+					 let eddedToPrincipal = accumulated_prepaid / (evalForm.duration/12); //assuming loan is 2 years
+					 this.evaluationForm.credit_preinterest = parseFloat(accumulated_prepaid).toFixed(2);
+					 this.evaluationForm.debit_loan = parseFloat(Number(evalForm.amount) + Number(eddedToPrincipal)).toFixed(2);
+
+
+					}
+
+					else
+					{
+						 let principal_amt = this.evaluationForm.amount
+						 this.evaluationForm.credit_preinterest = parseFloat(principal_amt * (getProduct.prepaid_interest/100)).toFixed(2);
+						 this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+			 
+					}
+
+					
+				}
+
+			else
+			{
+				this.evaluationForm.credit_preinterest = 0;
+				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
+
+			}
+
+			/*
+				---end of doing consideration #2---
+
+			*/
 
     		console.log("getProduct", getProduct)
     		console.log("latestLoan", latestLoan)
@@ -566,7 +629,7 @@ export default {
 			
 
     		//Set Amount
-    		this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
+    		
     		this.evaluationForm.credit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
 			this.evaluationForm.credit_redemption_ins = parseFloat(redemptionInsurance).toFixed(2)
 			this.evaluationForm.debit_redemption_ins = parseFloat(redemptionInsuranceDebit).toFixed(2)
@@ -591,7 +654,7 @@ export default {
 			this.evaluationForm.debit_interest = 0;
 			this.evaluationForm.credit_interest = parseFloat(numerator * rangeNoOfDays).toFixed(2);
 			this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
-			this.evaluationForm.credit_preinterest = 0;
+		//	
 			this.evaluationForm.notary_amount = getProduct.notary_fee
 
     		
@@ -601,7 +664,7 @@ export default {
 			this.evaluationForm.service_charge_amount = parseFloat(service_charge).toFixed(2)
 			//this.evaluationForm.saving_retention_amount = saving_retention
 			//this.evaluationForm.redemption_insurance_amount = redemption_insurance
-			this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.amount) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
+			this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.debit_loan) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
 						
 			this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 			this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)

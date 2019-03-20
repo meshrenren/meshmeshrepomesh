@@ -42,6 +42,7 @@ class LoanTransaction extends \yii\db\ActiveRecord
         return [
             [['amount', 'running_balance', 'prepaid_intpaid', 'interest_paid', 'principal_paid', 'arrears_paid'], 'number'],
             [['transacted_by'], 'integer'],
+        	[['principal_paid'], 'double', 'min'=> 0],
             [['transaction_date', 'date_posted'], 'safe'],
             [['prepaid_intpaid', 'interest_paid', 'OR_no', 'principal_paid', 'arrears_paid', 'date_posted'], 'required'],
             [['loan_account', 'OR_no'], 'string', 'max' => 15],
