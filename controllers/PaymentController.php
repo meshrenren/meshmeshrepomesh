@@ -39,13 +39,19 @@ class PaymentController extends \yii\web\Controller
             'particularList'   => $getParticular
         ]);
     }
+    
+    
+    public function actionPostPayment($id)
+    {
+    	PaymentHelper::postPayment($id);
+    }
 
     public function actionSavePaymentList(){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-            $success = false;
+            $success = "begin me";
             $error = '';
             $data = null;
 
@@ -60,7 +66,7 @@ class PaymentController extends \yii\web\Controller
                 $getOR = \app\models\JournalHeader::find()->where(['reference_no' => $or_num])->one();
                 if($getOR){
                     return [
-                        'success'   => false,
+                        'success'   => "mesry",
                         'error'     => 'ERROR_HASOR'
                     ];
                 }
@@ -80,7 +86,7 @@ class PaymentController extends \yii\web\Controller
                                 $success = true;
                             }
                             else{
-                                $success = false;
+                            	$success = $insertSuccess;
                                 $transaction->rollBack();
                             }
                         }
@@ -92,7 +98,7 @@ class PaymentController extends \yii\web\Controller
                     }
 
                     //Save in journal
-                    if($success && $saveOR){
+                    /*if($success && $saveOR){
                         $journalHeader = new \app\models\JournalHeader;
                         $journalHeaderData = $journalHeader->getAttributes();
                         $journalHeaderData['reference_no'] = $saveOR->or_num;
@@ -162,18 +168,21 @@ class PaymentController extends \yii\web\Controller
                             $success = false;
                             $transaction->rollBack();
                         }
-                    }
+                    } */
                 }
 
                 if($success){
                     $transaction->commit();
                 }
+                
+                else
+                	$transaction->rollBack();
             } catch (\Exception $e) {
                 $transaction->rollBack();
-                throw $e;
+                $error =  $e->getMessage();
             } catch (\Throwable $e) {
                 $transaction->rollBack();
-                throw $e;
+                $error = $e->getMessage();
             }
 
             return [
