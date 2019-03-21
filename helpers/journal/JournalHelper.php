@@ -26,7 +26,7 @@ class JournalHelper
 
     public static function insertJournal($list, $fk_reference_no){
     	$success = true;
-    
+    	
     	if(count($list)<1)
     		return false;
     	
@@ -39,6 +39,7 @@ class JournalHelper
 
             if(!$journal->save()){
             	echo var_dump($journal->errors);
+            	echo "<br/><br/> ".$value['particular_id'];
             	return false;
             }
             
