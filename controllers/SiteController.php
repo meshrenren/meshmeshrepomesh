@@ -9,6 +9,8 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 
+use app\helpers\particulars\ParticularHelper;
+
 class SiteController extends Controller
 {
     /**
@@ -19,12 +21,21 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['logout'],
+                'only' => ['logout', 'beginning-of-day', 'begin-the-day'],
                 'rules' => [
                     [
                         'actions' => ['logout'],
                         'allow' => true,
                         'roles' => ['@'],
+                    ],
+                    [
+                        'actions' => ['beginning-of-day', 'begin-the-day'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_begin_the_day_","_view") ){
+                                return true;
+                            }
+                        }
                     ],
                 ],
             ],
@@ -67,12 +78,16 @@ class SiteController extends Controller
         $connection = \Yii::$app->db;
         $command = $connection->createCommand("select * from calendar c where c.date = CURDATE() and is_current=1 limit 1");
         $result = $command->queryOne();
+
+        $currentDate = ParticularHelper::getCurrentDay();
+        $currDate = date("m/d/Y", strtotime($currentDate));
         
         
         return $this->render('index',[
-            'countAll'      => $countAll,
-            'countLastYear' => $countLastYear,
-        	'calendarDate' => $result
+            'countAll'          => $countAll,
+            'countLastYear'     => $countLastYear,
+        	'calendarDate'      => $result,
+            'currentDate'       => $currDate
         ]);
         
         
@@ -163,5 +178,28 @@ class SiteController extends Controller
         if ($exception !== null) {
             return $this->render('error', ['exception' => $exception]);
         }
+    }
+
+    
+    public function actionBeginningOfDay()
+    {
+        $this->layout = 'main-vue';
+
+        $currentDate = ParticularHelper::getCurrentDay();
+        
+        return $this->render('beginningofday', ['currentDate' => $currentDate]);
+        
+    }
+    public function actionBeginTheDay()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if(\Yii::$app->getRequest()->getBodyParams()){
+            
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            
+            $helper = ParticularHelper::processBeginning();
+            return $helper;
+        }
+        
     }
 }

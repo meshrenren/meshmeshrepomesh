@@ -17,15 +17,19 @@ $this->title = 'DILG XI - EMPC';
             
             <?php 
             if(empty($calendarDate['date']))
-            { ?>
-             <div class="alert alert-danger alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                <h4><i class="icon fa fa-warning"></i> Reminder!!! </h4>
-                System Date is not updated. Please update.
-            </div>
+            {   
+                $link = "";
+                if(Yii::$app->user->identity->checkUserAccess("_begin_the_day_","_view")){
+                    $link = "<a href = '".Yii::$app->request->baseUrl."/site/beginning-of-day' >here</a>";
+                }
+            ?>
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <h4><i class="icon fa fa-warning"></i> Reminder!!! </h4>
+                    System Date is not updated. Please update <?= $link ?>.
+                </div>
              	
-             	
-             	<?php 
+            <?php 
             }
             
             else
@@ -50,7 +54,7 @@ $this->title = 'DILG XI - EMPC';
 
                         <div class="info-box-content">
                             <span class="info-box-text">ACTIVE SYSTEM DATE</span>
-                            <span class="info-box-number">4/18/2018</span>
+                            <span class="info-box-number"><?= $currentDate ?></span>
                         </div>
                     </div>
                 </div>

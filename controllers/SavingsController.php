@@ -195,13 +195,6 @@ class SavingsController extends \yii\web\Controller
         	
         }
     }
-    
-    
-    public function actionBeginningofday()
-    {
-    	$helper = ParticularHelper::processBeginning();
-    	
-    }
 
     public function actionGetAccount(){
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;

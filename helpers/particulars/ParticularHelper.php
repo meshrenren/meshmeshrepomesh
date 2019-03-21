@@ -18,6 +18,11 @@ use app\models\TdTransaction;
 class ParticularHelper 
 {
 
+	public static function getCurrentDay(){
+		$getDate = Calendar::find()->where(['is_current' => 1])->one();
+		return $getDate->date;
+	}
+
 	public static function getParticulars($filter = null, $orderBy = null){
 		$getParticular = AccountParticulars::find();
 		if(isset($filter['category'])){
@@ -109,11 +114,11 @@ class ParticularHelper
 		if($calendar->save() && $tomcalendar->save())
 		{
 			echo "success sir <br/>";
+			return true;
 			
 		}
 		
-		else echo "bad sir <br/>";
-		echo "end hit. <br/>";
+		return false;
 		
 	}
 	

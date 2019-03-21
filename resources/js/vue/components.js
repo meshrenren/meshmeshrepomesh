@@ -12,6 +12,9 @@ Vue.component('search-member', SearchMember)
 import PermissionSettings from './components/Settings/PermissionSettings.vue'
 Vue.component('permission-settings', PermissionSettings)
 
+import BeginningOfDay from './components/General/BeginningOfDay.vue'
+Vue.component('beginning-of-day', BeginningOfDay)
+
 
 
 /* Share Account */
