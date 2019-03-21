@@ -6,17 +6,32 @@ Vue.component('member-form', MemberForm)
 import MemberView from './components/Member/MemberView.vue'
 Vue.component('member-view', MemberView)
 
-import ShareAccountForm from './components/Shareaccounts/ShareAccountForm.vue'
-Vue.component('share-account-form', ShareAccountForm)
-
-
 import SearchMember from './components/General/SearchMember.vue'
 Vue.component('search-member', SearchMember)
 
 import PermissionSettings from './components/Settings/PermissionSettings.vue'
 Vue.component('permission-settings', PermissionSettings)
 
-//Savings
+import BeginningOfDay from './components/General/BeginningOfDay.vue'
+Vue.component('beginning-of-day', BeginningOfDay)
+
+
+
+/* Share Account */
+/* --- START --- */
+
+import ShareAccountForm from './components/Shareaccounts/ShareAccountForm.vue'
+Vue.component('share-account-form', ShareAccountForm)
+
+import ShareDeposit from './components/Shareaccounts/ShareDeposit.vue'
+Vue.component('share-deposit', ShareDeposit)
+
+/* --- END --- */
+
+
+/* Savings Account */
+/* --- START --- */
+
 import SavingsDepositForm from './components/Savings/SavingsDepositForm.vue'
 Vue.component('savings-deposit-form', SavingsDepositForm)
 
@@ -26,26 +41,51 @@ Vue.component('savings-withdraw-form', SavingsWithdrawForm)
 import SavingsAccountCreate from './components/Savings/SavingsAccountCreate.vue'
 Vue.component('savings-account-create', SavingsAccountCreate)
 
-//Time Deposit
+/* --- END --- */
+
+
+/* Time Deposit Account */
+/* --- START --- */
 import TimeDepositCreate from './components/TimeDeposit/TimeDepositCreate.vue'
 Vue.component('time-deposit-create', TimeDepositCreate)
+
 import TimeDepositList from './components/TimeDeposit/TimeDepositList.vue'
 Vue.component('time-deposit-list', TimeDepositList)
 
-//Loan
+/* --- END --- */
+
+
+/* Loan Account */
+/* --- START --- */
+
 import LoanEvaluation from './components/Loan/LoanEvaluation.vue'
 Vue.component('loan-evaluation', LoanEvaluation)
+
 import LoanVoucher from './components/Loan/LoanVoucher.vue'
 Vue.component('loan-voucher', LoanVoucher)
 
-//General Voucher
+/* --- END --- */
+
+
+/* General Voucher */
+/* --- START --- */
+
 import VoucherCreate from './components/Voucher/VoucherCreate.vue'
 Vue.component('voucher-create', VoucherCreate)
+
 import VoucherView from './components/Voucher/VoucherView.vue'
 Vue.component('voucher-view', VoucherView)
 
-//Payment Record
+/* --- END --- */
+
+
+/* Payment Record */
+/* --- START --- */
+
 import PaymentRecord from './components/Payment/PaymentRecord.vue'
 Vue.component('payment-record', PaymentRecord)
+
 import PaymentPayroll from './components/Payment/PaymentPayroll.vue'
 Vue.component('payment-payroll', PaymentPayroll)
+
+/* --- END --- */
