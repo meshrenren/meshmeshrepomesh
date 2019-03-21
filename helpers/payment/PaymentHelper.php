@@ -8,6 +8,11 @@ use app\models\PaymentRecordList;
 use app\models\LoanProduct;
 use app\models\LoanAccount;
 use app\models\LoanTransaction;
+use app\models\JournalHeader;
+use app\helpers\journal\JournalHelper;
+use app\models\SavingsAccount;
+use app\models\SavingsTransaction;
+use app\models\Savingsproduct;
 
 class PaymentHelper 
 {
@@ -69,6 +74,19 @@ class PaymentHelper
 			$dateToday = date('Y-m-d');
 			$payments = PaymentRecordList::findAll(['payment_record_id'=>$ref_id]);
 			$paymentHeader = PaymentRecord::findOne(['id'=>$ref_id]);
+			
+			
+			//2. prepare header for accounting entry
+			$journalheader['reference_no'] = $paymentHeader->or_num;
+			$journalheader['posting_date'] = date('Y-m-d');
+			$journalheader['total_amount'] = 0;
+			$journalheader['remarks'] = "Payment made by ".$paymentHeader->name;
+			$journalheader['trans_type'] = 'Payment';
+			
+			
+			
+			$journaldetails = [];
+			
 			foreach ($payments as $row)
 			{
 				/*
@@ -171,12 +189,62 @@ class PaymentHelper
 					if($loanTransaction->running_balance<0)
 					{
 						$success = false;
-						echo "achieved negative";
+						$transaction->rollBack();
+						return "achieved negative. might want to proceed to close payment.";
+						break;
 						
 					}
 					
+					//3. update loan balance
 					if($loanTransaction->save() && $account->save())
 					{
+
+						//accounting entry goes here...
+						
+						//debit part
+						array_push($journaldetails, [
+								'amount' => $loanTransaction->prepaid_intpaid + $loanTransaction->principal_paid + $loanTransaction->arrears_paid + $loanTransaction->interest_paid,
+								'entry_type'=>'DEBIT',
+								'particular_id'=>67 //67 is cash on hand
+						]);
+						
+				
+						//credit part		
+						if($loanTransaction->prepaid_intpaid>0)
+						{
+							
+							array_push($journaldetails, [
+									'amount'=> $loanTransaction->prepaid_intpaid,
+									'entry_type' => 'CREDIT',
+									'particular_id' => $product->pi_particular_id
+							]);
+							
+						}
+						
+						if($loanTransaction->principal_paid>0)
+						{
+							
+							array_push($journaldetails, [
+									'amount'=> $loanTransaction->principal_paid,
+									'entry_type' => 'CREDIT',
+									'particular_id' => $product->particular_id
+							]);
+							
+						}
+						
+						
+						if($loanTransaction->interest_paid>0)
+						{
+							
+							array_push($journaldetails, [
+									'amount'=> $loanTransaction->interest_paid,
+									'entry_type' => 'CREDIT',
+									'particular_id' => $product->int_particular_id
+							]);
+							
+						}
+						
+						
 						
 						
 					}
@@ -194,17 +262,80 @@ class PaymentHelper
 				}
 				
 				
+				else if($row['type']=='SAVINGS')
+				{
+					$savingsaccount = SavingsAccount::findOne(['account_no'=>$row['account_no']]);
+					$savingstransaction = new SavingsTransaction();
+					$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
+					
+					
+					$savingstransaction->fk_savings_id = $row['account_no'];
+					$savingstransaction->amount = $row['amount'];
+					$savingstransaction->transaction_type = 'CASHDEP';
+					$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
+					$savingstransaction->transaction_date = date('Y-m-d H:i:s');
+					$savingstransaction->running_balance = $savingsaccount->balance + $row['amount'];
+					$savingstransaction->remarks = "posted as Payment from ".$paymentHeader->or_num;
+					$savingstransaction->ref_no = $paymentHeader->or_num;
+					
+					$savingsaccount->balance = $savingsaccount->balance + $row['amount'];
+					
+					if($savingsaccount->save() && $savingstransaction->save())
+					{
+						array_push($journaldetails, [
+								'amount'=> $savingstransaction->amount,
+								'entry_type' => 'DEBIT',
+								'particular_id' => 67
+						]);
+						
+						
+						array_push($journaldetails, [
+								'amount'=> $savingstransaction->amount,
+								'entry_type' => 'CREDIT',
+								'particular_id' => $savingsproduct->particular_id
+						]);
+						
+						
+					}
+					
+					else
+					{
+						$success = false;
+						break;
+					}
+				 
+					
+					
+				}
+				
+				
+				
+				
 				
 				
 			}
+			
+			//post to journal entry
+			if(JournalHelper::saveJournalHeader($journalheader) && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
+			{
+				
+			}
+			
+			else $success = false;
+			
+			
+			
 			
 			
 			if($success)
 			{
 				$transaction->commit();
+				echo "<br/>saved";
 			}
 			
-			else $transaction->rollBack();
+			else {$transaction->rollBack();
+			echo "<br/>UNsaved";
+			}
 			
 			
 		} catch (\Exception $e) {

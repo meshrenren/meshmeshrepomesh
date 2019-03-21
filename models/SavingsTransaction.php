@@ -33,14 +33,14 @@ class SavingsTransaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fk_savings_id', 'amount', 'transaction_type', 'transacted_by', 'transaction_date', 'running_balance', 'reference_number'], 'required'],
+            [['fk_savings_id', 'amount', 'transaction_type', 'transacted_by', 'transaction_date', 'running_balance', 'ref_no'], 'required'],
             [['amount', 'running_balance'], 'number'],
             [['transacted_by'], 'integer'],
             [['transaction_date'], 'safe'],
             [['fk_savings_id'], 'string', 'max' => 25],
             [['transaction_type'], 'string', 'max' => 30],
             [['remarks'], 'string', 'max' => 120],
-            [['reference_number'], 'string', 'max' => 100],
+           // [['reference_number'], 'string', 'max' => 100],
         ];
     }
 
@@ -58,7 +58,7 @@ class SavingsTransaction extends \yii\db\ActiveRecord
             'transaction_date' => 'Transaction Date',
             'running_balance' => 'Running Balance',
             'remarks' => 'Remarks',
-            'reference_number' => 'Reference Number',
+         //   'reference_number' => 'Reference Number',
         ];
     }
 }

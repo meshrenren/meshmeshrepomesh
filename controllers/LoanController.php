@@ -88,6 +88,14 @@ class LoanController extends \yii\web\Controller
     	}
    
     }
+    
+    
+    public function actionApproveLoan()
+    {
+    	
+    	
+    	
+    }
 
     public function actionGetAccountLoanInfo(){
 

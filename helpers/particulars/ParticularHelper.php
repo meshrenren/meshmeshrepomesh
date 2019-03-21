@@ -201,7 +201,7 @@ class ParticularHelper
 			
 			$interest = 0;
 			$interest = $personalBalance * 0.005;
-			$totalBalance = $rows["last_interest_balance"] + round($interest, 2);
+			$totalBalance = $rows["balance"] + round($interest, 2);
 			
 			
 			
@@ -223,6 +223,7 @@ class ParticularHelper
 				$mdlTrans->transaction_date = $currentDate;
 				$mdlTrans->running_balance = $totalBalance;
 				$mdlTrans->remarks = "IntPost.".date("mdY", strtotime($nextday['date']));
+				$mdlTrans->ref_no = "IntPost.".date("mdY", strtotime($nextday['date']));
 				
 				
 				$mdlTrans->save();
