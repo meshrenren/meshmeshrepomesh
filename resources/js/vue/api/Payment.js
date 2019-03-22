@@ -22,5 +22,13 @@ export default {
 			member_id: member_id
 		}
 		return axios.post('/payment/get-member-accounts', params)
+	},
+
+	getPaymentDetails(or_num){
+
+		let params = {
+			or_num: or_num
+		}
+		return axios.post('/payment/get-payment-details', params)
 	}
 }

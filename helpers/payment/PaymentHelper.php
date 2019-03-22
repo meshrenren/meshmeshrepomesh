@@ -130,7 +130,7 @@ class PaymentHelper
 					$prepaidInterest = 0;
 					if($account->term<=12 && $product->prepaid_monthly_interest==1)
 					{
-						$prepaidInterest  = ($account->principal *prepa) / 5;
+						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 5;
 						$prepaidInterest = $prepaidInterest * 7;
 						$prepaidInterest = $prepaidInterest / 24;
 					}
@@ -316,7 +316,7 @@ class PaymentHelper
 			}
 			
 			//post to journal entry
-			if(JournalHelper::saveJournalHeader($journalheader) && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
+			if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
 			{
 				
 			}
@@ -346,6 +346,14 @@ class PaymentHelper
 				
 	}
 	
+	public static function getPaymentList($payment_record_id){
+		$accountList = PaymentRecordList::find()->joinWith(['member', 'particular', 'savingsProduct', 'shareProduct', 'loanProduct', 'tdProduct']);
+        if($payment_record_id != null){
+            $accountList = $accountList->where(['payment_record_id' => $payment_record_id]);
+        }
+        
+        return $accountList->asArray()->all();
+	}
 	
 	
 	

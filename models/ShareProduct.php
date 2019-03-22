@@ -32,7 +32,7 @@ class ShareProduct extends \yii\db\ActiveRecord
         return [
             [['name', 'amount_per_share', 'transaction_serial'], 'required'],
             [['amount_per_share'], 'number'],
-            [['transaction_serial'], 'integer'],
+            [['transaction_serial', 'particular_id'], 'integer'],
             [['name'], 'string', 'max' => 80],
         ];
     }

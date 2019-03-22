@@ -19,9 +19,9 @@ class JournalHelper
         $journal->transacted_by = \Yii::$app->user->identity->id;
 
         if($journal->save()){
-            return true;
+            return $journal;
         }
-        return false;
+        return null;
 	}
 
     public static function insertJournal($list, $fk_reference_no){

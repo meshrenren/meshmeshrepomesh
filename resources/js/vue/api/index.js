@@ -4,6 +4,7 @@ import Voucher from './Voucher.js'
 import Payment from './Payment.js'
 import Savings from './Savings.js'
 import Share from './Share.js'
+import General from './General.js'
 
 
 export default {
@@ -12,5 +13,6 @@ export default {
 	Voucher,
 	Payment,
 	Savings,
-	Share
+	Share,
+	General
 }

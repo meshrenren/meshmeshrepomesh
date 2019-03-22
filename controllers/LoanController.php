@@ -21,10 +21,10 @@ class LoanController extends \yii\web\Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['index', 'list'],
                 'rules' => [
                     [
-                        'actions' => ['index'],
+                        'actions' => ['index', 'list'],
                         'allow' => true,
                         'matchCallback' => function() {
                             if( Yii::$app->user->identity->checkUserAccess("_loan_account_","_view") ){
@@ -52,15 +52,29 @@ class LoanController extends \yii\web\Controller
         $settings  = new \app\models\DefaultSettings;
         $default_setting['loan_redemption_insurance'] = $settings->getValue('loan_redemption_insurance');
         $default_setting['loan_refundable_retention'] = $settings->getValue('loan_redemption_insurance');
-        
-        
-        
-        
     	
         return $this->render('index', [
         	'loandProduct'		   => $loandProduct,
             'default_setting'      => $default_setting,
         ]);
+    }
+
+    public function actionList()
+    {
+        $this->layout = 'main-vue';
+        
+        return $this->render('list');
+    }
+
+    public function actionGetTransaction(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $transaction = LoanHelper::getLoanTransaction($post['loan_account']);
+            return $transaction;
+        }
     }
     
     

@@ -38,7 +38,7 @@
 						            </el-table-column>
 						            <el-table-column label="Reference No">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.reference_number }}</span>
+						                    <span style="margin-left: 10px">{{ scope.row.ref_no }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Transaction Type">
@@ -57,7 +57,7 @@
 						                </template>
 						            </el-table-column>
 						        </el-table>
-						        <el-button class = "mt-10" type = "default"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
+						        <el-button class = "mt-10" type = "default"  @click="printForm('pdf')" v-if = "accountDetails.account_no">Print Form</el-button>
 						    </div>
 	            		</div>
             		</el-col>
@@ -72,7 +72,7 @@
 									<el-input-number v-model="savingTransactionForm.amount" controls-position="right" :min="1" :max = "savingTransactionForm.current_balance"></el-input-number>
 								</el-form-item>
 								<el-form-item label="Reference No. (GV No.)" prop="reference_number">
-									<el-input type = "text" v-model="savingTransactionForm.reference_number"></el-input>
+									<el-input type = "text" v-model="savingTransactionForm.ref_no"></el-input>
 								</el-form-item>		
 								<el-form-item label="Remarks" prop="remarks">
 									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
@@ -131,7 +131,7 @@ export default {
 		this.ruleTransaction = {
   			amount : [{ required: true, message: 'Amount cannot be blank.', trigger: 'change' },],
   			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
-  			reference_number : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
+  			ref_no : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
 		}
 	},
     components: {
@@ -235,7 +235,7 @@ export default {
 				                    let text = res.errorMessage
 				                    if(res.error == 'ERROR_HASRN'){
 				                        title = 'Error: Reference Number Exist'
-				                        text = "Reference Number " + accountTransaction.reference_number + " already exist."
+				                        text = "Reference Number " + accountTransaction.ref_no + " already exist."
 				                        type = "error"
 				                    }
 

@@ -39,6 +39,13 @@ class PaymentController extends \yii\web\Controller
             'particularList'   => $getParticular
         ]);
     }
+
+    public function actionList()
+    {
+        $this->layout = 'main-vue';
+        
+        return $this->render('list');
+    }
     
     
     public function actionPostPayment($id)
@@ -253,6 +260,29 @@ class PaymentController extends \yii\web\Controller
             
         }
 
+    }
+
+    public function actionGetPaymentDetails(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $paymentRecord  = \app\models\PaymentRecord::find()
+                ->where(['or_num' => $post['or_num']])->asArray()->one();
+            $paymentList = "";
+            $success = false;
+            if($paymentRecord != null){
+                $paymentList = PaymentHelper::getPaymentList($paymentRecord['id']);
+                $success = true;
+            }
+
+            return [
+                'success'   => $success,
+                'paymentRecord' => $paymentRecord,
+                'paymentList' => $paymentRecord,
+            ];
+        }
     }
 
 }

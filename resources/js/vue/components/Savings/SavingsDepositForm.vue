@@ -25,35 +25,35 @@
 							<hr>
 							<div class = "transaction-list">
 		            			<h4>Transaction List</h4>
-								<el-table :data="accountTransactionList" style="width: 100%" stripe border>
-						            <el-table-column label="Transaction ID">
+								<el-table :data="accountTransactionList" height = "400px" stripe border>
+						            <el-table-column label="ID" width = "50px">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.id }}</span>
+						                    <span>{{ scope.row.id }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Amount">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.amount }}</span>
+						                    <span>{{ scope.row.amount }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Reference No">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.reference_number }}</span>
+						                    <span>{{ scope.row.ref_no }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Transaction Type">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.transaction_type }}</span>
+						                    <span>{{ scope.row.transaction_type }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Running Balance">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.running_balance }}</span>
+						                    <span>{{ scope.row.running_balance }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Remarks">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.remarks }}</span>
+						                    <span>{{ scope.row.remarks }}</span>
 						                </template>
 						            </el-table-column>
 						        </el-table>
@@ -76,8 +76,8 @@
 								      	<!-- <el-radio label="Cheque"></el-radio> -->
 								    </el-radio-group>
 								</el-form-item>
-								<el-form-item label="Reference No. (OR Number)" prop="reference_number">
-									<el-input type = "text" v-model="savingTransactionForm.reference_number"></el-input>
+								<el-form-item label="Reference No. (OR Number)" prop="ref_no">
+									<el-input type = "text" v-model="savingTransactionForm.ref_no"></el-input>
 								</el-form-item>	
 								<el-form-item label="Remarks" prop="remarks">
 									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
@@ -134,7 +134,7 @@ export default {
 		this.ruleTransaction = {
   			amount : [{ required: true, message: 'Amount cannot be blank.', trigger: 'change' },],
   			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
-  			reference_number : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
+  			ref_no : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
 		}
 	},
     components: {
@@ -223,7 +223,7 @@ export default {
 				                    let text = res.errorMessage
 				                    if(res.error == 'ERROR_HASRN'){
 				                        title = 'Error: Reference Number Exist'
-				                        text = "Reference Number " + accountTransaction.reference_number + " already exist."
+				                        text = "Reference Number " + accountTransaction.ref_no + " already exist."
 				                        type = "error"
 				                    }
 

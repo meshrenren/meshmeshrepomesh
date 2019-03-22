@@ -26,8 +26,17 @@ class SavingsController extends \yii\web\Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'deposit', 'withdraw'],
+                'only' => ['index', 'deposit', 'withdraw', 'list'],
                 'rules' => [
+                    [
+                        'actions' => ['list'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_savings_account_", "_view") ){
+                                return true;
+                            }
+                        }
+                    ],
                     [
                         'actions' => ['index'],
                         'allow' => true,
@@ -97,6 +106,13 @@ class SavingsController extends \yii\web\Controller
         return $this->render('withdraw', [ 
             'savingsTransaction' => $savingsTransaction
         ]);
+    }
+
+    public function actionList()
+    {
+        $this->layout = 'main-vue';
+        
+        return $this->render('list');
     }
 
     public function actionCreateAccount()
@@ -238,16 +254,15 @@ class SavingsController extends \yii\web\Controller
                 $product_particularid = $product['particular_id'];
 
                 //Check Reference Number if exist
-                $reference_no = $acct_transaction['reference_number'];
-                $getJH = JournalHeader::find()->where(['reference_no' => $reference_no])->one();
+                $ref_no = $acct_transaction['ref_no'];
+                $getJH = JournalHeader::find()->where(['reference_no' => $ref_no])->one();
                 if($getJH){
                     return [
                         'success'   => false,
                         'error'     => 'ERROR_HASRN',
-                        'errorMessage' => 'Error processing the transaction. Please try again'
+                        'errorMessage' => 'Reference number exist. Please try again'
                     ];
                 }
-
 
             	$getSavingsAccount = SavingsAccount::findOne($acct_transaction['fk_savings_id']);
 
@@ -293,7 +308,7 @@ class SavingsController extends \yii\web\Controller
                     if($success && $saveSD){
                         $journalHeader = new JournalHeader;
                         $journalHeaderData = $journalHeader->getAttributes();
-                        $journalHeaderData['reference_no'] = $saveSD->reference_number;
+                        $journalHeaderData['reference_no'] = $saveSD->ref_no;
                         $journalHeaderData['posting_date'] = $saveSD->transaction_date;
                         $journalHeaderData['total_amount'] = $saveSD->amount;
                         $journalHeaderData['trans_type'] = $trans_type;
@@ -321,7 +336,6 @@ class SavingsController extends \yii\web\Controller
                             $arr['particular_id'] = $coh_id->id;
                             $arr['entry_type'] = $coh_entrytype;
                             array_push($lists, $arr);
-
 
                             $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
                             if($insertSuccess){                                
@@ -459,9 +473,4 @@ class SavingsController extends \yii\web\Controller
         }
         
     }
-
-    public function actionTestLayout(){
-        return $this->render('testlayout');
-    }
-
 }

@@ -8,8 +8,10 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use \Mpdf\Mpdf;
 
 use app\helpers\particulars\ParticularHelper;
+use app\helpers\accounts\SavingsHelper;
 
 class SiteController extends Controller
 {
@@ -199,6 +201,45 @@ class SiteController extends Controller
             
             $helper = ParticularHelper::processBeginning();
             return $helper;
+        }
+        
+    }
+
+
+
+    public function actionPrintList(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            $accType = $postData['accountType'];
+            if($accType == 'Savings')
+                $template = SavingsHelper::printList($postData['data']);
+            else if($accType == 'Share')
+                $template = ShareHelper::printList($postData['data']);
+            
+            $type = $postData['type'];
+            if($type == "pdf"){
+                // Set up MPDF configuration
+                $config = [
+                    'mode' => '+utf-8', 
+                    "allowCJKoverflow" => true, 
+                    "autoScriptToLang" => true,
+                    "allow_charset_conversion" => false,
+                    "autoLangToFont" => true,
+                ];
+                $mpdf = new Mpdf($config);
+                $mpdf->WriteHTML($template);
+
+                // Download the PDF file
+                $mpdf->Output();
+                exit();
+            }
+            else{
+                return [ 'data' => $template];
+            }
         }
         
     }

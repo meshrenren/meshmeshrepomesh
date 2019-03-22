@@ -98,9 +98,9 @@
                                         <el-form-item label="Amount" prop="amount">
                                             <el-input type="number" size = "small" :min = "0" v-model="otherModel.amount"></el-input>
                                         </el-form-item>
-                                        <el-form-item label="Remarks" prop="remarks">
+                                        <!-- <el-form-item label="Remarks" prop="remarks">
                                             <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="Please input" v-model="textarea2"> </el-input>
-                                        </el-form-item>
+                                        </el-form-item> -->
                                     </el-col>
                                 </el-row>
                                 </el-form>
