@@ -186,7 +186,7 @@ class PaymentHelper
 					$account->principal_balance = $loanTransaction->running_balance;
 					$account->interest_balance = $account->interest_balance + $interestEarned;
 					
-					if($loanTransaction->running_balance<0)
+					if($loanTransaction->running_balance<=0)
 					{
 						$success = false;
 						$transaction->rollBack();

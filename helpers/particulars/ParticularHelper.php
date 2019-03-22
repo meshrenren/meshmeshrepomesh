@@ -12,6 +12,7 @@ use phpDocumentor\Reflection\Types\Static_;
 use app\models\SavingsAccount;
 use app\models\SavingsTransaction;
 use app\models\TdTransaction;
+use app\models\TimeDepositAccount;
 
 
 
@@ -103,6 +104,8 @@ class ParticularHelper
 		}
 		
 		
+		//calculate td maturity here
+		static::calculateMaturity($nextDay);
 		
 		//move to next day
 		$calendar = Calendar::findOne(['date_id'=>$currentDay['date_id'], 'date'=>$currentDay['date']]);
@@ -126,14 +129,40 @@ class ParticularHelper
 	public static function calculateMaturity($nextday)
 	{
 		
-		$qry = "select * from td_account where maturity_date ='".$nextday['date']."' and account_status='ACTIVE'";
+		$qry = "select * from td_account where maturity_date <='".$nextday['date']."' and account_status='ACTIVE'";
 		$connection = Yii::$app->getDb();
 		$command = $connection->createCommand($qry);
 		$result = $command->queryAll();
 		
 		foreach($result as $rows)
 		{
+			$tdaccount = TimeDepositAccount::findOne($rows['accountnumber']);
+			$interest = $tdaccount->balance * ($tdaccount->interest_rate/100);
+			
+			
+			
+			
 			$tdtransaction = new TdTransaction();
+			$tdtransaction->fk_account_number = $rows['accountnumber'];
+			$tdtransaction->transaction_type='TDINTEREST';
+			$tdtransaction->amount = $interest;
+			$tdtransaction->balance = $tdaccount->balance+ $interest;
+			$tdtransaction->transaction_date = $nextday['date'];
+			$tdtransaction->transacted_by = \Yii::$app->user->identity->id;
+			
+			$tdaccount->balance = $tdaccount->balance+ $interest;
+			$tdaccount->account_status = 'MATURED';
+			
+			
+			if($tdtransaction->save() && $tdaccount->save())
+			{
+				//entry to accounting
+				
+			}
+			
+			
+			
+			
 			
 			
 			
