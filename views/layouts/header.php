@@ -49,21 +49,26 @@ use yii\helpers\Html;
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view")
                     ],
                     [
+                        'label'     => 'Disbursement',
+                        'items'      => [
+                            [
+                                'label'     => 'General Voucher', 
+                                'url'       => ['general-voucher/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_add")
+                            ],
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_view")
+                    ],
+                    [
                         'label'     => 'Collection',
                         'items'      => [
                             [
                                 'label'     => 'Payments', 
                                 'url'       => ['payment/'], 
-                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_add")
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
                             ],
-                            /*[
-                                'label'     => 'List', 
-                                'url'       => ['payment/list'], 
-                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
-                            ],
-*/
                         ],
-                        'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                     ],
 
                     [

@@ -23,11 +23,21 @@ class PaymentController extends \yii\web\Controller
     } 
 
 
-    public function actionIndex()
+    public function actionIndex($id = null)
     {
         $this->layout = 'main-vue';
-    	$paymentModel = new \app\models\PaymentRecord;
-        $paymentModel = $paymentModel->getAttributes();
+
+        if($id != null){
+            $paymentModel = \app\models\PaymentRecord::find()->where(['id' => $id])->asArray()->one();
+
+        }
+        else{
+            $paymentModel = new \app\models\PaymentRecord;
+            $paymentModel = $paymentModel->getAttributes();
+
+            $paymentModelList = new \app\models\PaymentRecordList;
+            $paymentModelList = $paymentModelList->getAttributes();
+        }
 
         $filter  = ['category' => ['OTHERS']];
         $orderBy = "name ASC";
@@ -35,8 +45,36 @@ class PaymentController extends \yii\web\Controller
 
 
         return $this->render('index', [
-        	'model'         	=> $paymentModel,
-            'particularList'   => $getParticular
+            'model'             => $paymentModel,
+            'paymentModelList'  => $paymentModelList,
+            'particularList'    => $getParticular
+        ]);
+    }
+
+    public function actionIndex2($id = null)
+    {
+        $this->layout = 'main-vue';
+
+        if($id != null){
+            $paymentModel = \app\models\PaymentRecord::find()->where(['id' => $id]);
+        }
+        else{
+            $paymentModel = new \app\models\PaymentRecord;
+            $paymentModel = $paymentModel->getAttributes();
+
+            $paymentModelList = new \app\models\PaymentRecordList;
+            $paymentModelList = $paymentModelList->getAttributes();
+        }
+
+        $filter  = ['category' => ['OTHERS']];
+        $orderBy = "name ASC";
+        $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
+
+
+        return $this->render('index', [
+            'model'             => $paymentModel,
+            'paymentModelList'  => $paymentModelList,
+            'particularList'    => $getParticular
         ]);
     }
 
@@ -270,17 +308,28 @@ class PaymentController extends \yii\web\Controller
             $post = \Yii::$app->getRequest()->getBodyParams();
             $paymentRecord  = \app\models\PaymentRecord::find()
                 ->where(['or_num' => $post['or_num']])->asArray()->one();
-            $paymentList = "";
+            $paymentList = [];
             $success = false;
             if($paymentRecord != null){
                 $paymentList = PaymentHelper::getPaymentList($paymentRecord['id']);
+                foreach ($paymentList as $key => $list) {
+                    $getProduct = [];
+                    if($list['type'] == 'OTHERS'){
+                        $getProduct = PaymentHelper::getPaymentProduct($list['type'], $list['particular_id']);
+                    }
+                    else{
+                        $getProduct = PaymentHelper::getPaymentProduct($list['type'], $list['product_id']);
+                    }
+
+                    $paymentList[$key]['productData'] = $getProduct;
+                }
                 $success = true;
             }
 
             return [
                 'success'   => $success,
                 'paymentRecord' => $paymentRecord,
-                'paymentList' => $paymentRecord,
+                'paymentList' => $paymentList,
             ];
         }
     }

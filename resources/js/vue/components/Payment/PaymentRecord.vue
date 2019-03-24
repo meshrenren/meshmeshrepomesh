@@ -253,7 +253,7 @@
 
 export default {
     mixins: [getNameList, swalAlert],
-    props: ['dataModel', 'dataParticularList'],
+    props: ['dataModel', 'dataPaymentList', 'dataParticularList'],
     data: function () {  
         let formPayment  = cloneDeep(this.dataModel)
         formPayment['name_id'] = null

@@ -2,15 +2,34 @@
 	<div class = "loan-list">
 		<div class="box box-info" v-loading = "pageLoading">
             <div class="box-header with-border">
-              	<h3 class="box-title">View Loans</h3>
+              	<h3 class="box-title">View slfjbjldsbfjlfssLoans</h3>
             </div>
 	        <div class = "box-body">
 	        	<el-row :gutter = "20">
 	        		<el-col :span="10">
-	        			<el-input v-model="or_number" v-on:keyup.enter="searchPayment">
+	        			<el-input v-model="or_number" @keyup.enter.native ="searchPayment">
 		                    <el-button slot="append" type = "default" @click="searchPayment()">Search</el-button>
 		                </el-input>
-	        			<div class="box box-primary mt-10">
+		                <table class = "mt-10">
+		                	<tr>
+		                		<th>Name: </th>
+		                		<td class = "pl-10" v-if = "paymentRecord">{{ paymentRecord.name }}</td>
+		                		<th>Status: </th>
+		                		<td class = "pl-10" v-if = "paymentRecord">
+		                			<template v-if = "paymentRecord.posted_date">
+		                				UNPOSTED
+		                			</template>
+		                			<template v-if = "paymentRecord.posted_date">
+		                				POSTED
+		                			</template>
+		                		</td>
+		                	</tr>
+		                	<tr>
+		                		<th>Date Transact: </th>
+		                		<td class = "pl-10" v-if = "paymentRecord">{{ paymentRecord.date_transact }}</td>
+		                	</tr>
+		                </table>
+	        			<div class="box mt-20">
 		                    <div class="box-header">
 		                        <h3 class="box-title">TOTAL</h3>
 		                    </div>
@@ -21,7 +40,7 @@
 		                            style="width: 100%"
 		                            height = "400px">
 		                            <el-table-column
-		                                prop="product_name"
+		                                prop="productData.name"
 		                                label="Account">                            
 		                            </el-table-column>
 		                            <el-table-column
@@ -47,17 +66,17 @@
 		                    </div>
 		                    <div class="box-body payment-entry-list mt-5">
 		                        <el-table
-		                            :data="allTotalAccount.filter(data => !nameSearch || data.fullname.toLowerCase().includes(nameSearch.toLowerCase()))"
+		                            :data="allTotalAccount.filter(data => !nameSearch || (data.member && data.member.fullname.toLowerCase().includes(nameSearch.toLowerCase())))"
 		                            border striped
 		                            style="width: 100%"
 		                            height = "480px">
-		                            <el-table-column prop = "fullname"> 
+		                            <el-table-column prop = "member.fullname"> 
 		                                <template slot="header" slot-scope="scope">
 		                                    <el-input v-model="nameSearch" size="mini" placeholder="Search Member"/>
 		                                </template>                       
 		                            </el-table-column>
 		                            <el-table-column
-		                                prop="product_name"
+		                                prop="productData.name"
 		                                label="Account">                            
 		                            </el-table-column>
 		                            <el-table-column
@@ -96,7 +115,7 @@ export default {
 		return {
 			or_number 				: "",
 			pageLoading 			: false,
-			paymentList 	 		: [],
+			allTotalAccount 	 	: [],
 			paymentRecord 			: {},
 			nameSearch 				: ''
 		}
@@ -108,10 +127,14 @@ export default {
             let list = this.allTotalAccount
             let account = []
 
-           /* _forEach(list, rs =>{
+            _forEach(list, rs =>{
                 let acct = cloneDeep(rs)
-
-                let getInd = account.findIndex(rs => { return rs.type == acct.type && rs.product_id == acct.product_id})
+                let getInd = -1
+                if(acct.type == "OTHERS"){
+                	getInd = account.findIndex(rs => { return rs.type == acct.type && rs.particular_id == acct.particular_id})
+                }else{
+                	getInd = account.findIndex(rs => { return rs.type == acct.type && rs.product_id == acct.product_id})
+                }
                 if(getInd >= 0){
                     let amt = cloneDeep(Number(account[getInd].amount)) + Number(acct.amount)
                     account[getInd].amount = amt
@@ -123,15 +146,9 @@ export default {
 
             _forEach(account, rs =>{
                 rs.amount = Number(rs.amount).toFixed(2)
-            })*/
+            })
 
             return account 
-        },
-        allTotalAccount(){
-        	let list = this.paymentList
-            let recordList = []
-
-            return recordList 
         }
     },
 	methods:{	
@@ -145,7 +162,7 @@ export default {
                 let res = result.data
                 if(res.success){
                 	this.paymentRecord = res.paymentRecord
-                	this.paymentList = res.paymentList
+                	this.allTotalAccount = res.paymentList
                 }
                 else{
                 	this.getSwalAlert("error", "OR Number Not Found")
