@@ -19,7 +19,7 @@ class JournalHelper
         $journal->transacted_by = \Yii::$app->user->identity->id;
 
         if($journal->save()){
-            return true;
+            return $journal;
         }
         return false;
 	}

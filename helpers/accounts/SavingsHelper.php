@@ -40,11 +40,12 @@ class SavingsHelper
         $model->attributes = $data;
         $model->transaction_date = date('Y-m-d H:i:s');
         $model->transacted_by = \Yii::$app->user->identity->id;
+        $model->ref_no=$data['reference_number'];
 
         if($model->save()){
             return $model;
         }
-        return null;
+        return $model->errors;
                 
     }
 }
