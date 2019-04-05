@@ -15,7 +15,7 @@ use Yii;
  * @property string $transaction_date
  * @property double $running_balance
  * @property string $remarks
- * @property string $reference_number
+ * @property string $ref_no
  */
 class SavingsTransaction extends \yii\db\ActiveRecord
 {
@@ -40,7 +40,7 @@ class SavingsTransaction extends \yii\db\ActiveRecord
             [['fk_savings_id'], 'string', 'max' => 25],
             [['transaction_type'], 'string', 'max' => 30],
             [['remarks'], 'string', 'max' => 120],
-           // [['reference_number'], 'string', 'max' => 100],
+            [['ref_no'], 'string', 'max' => 50],
         ];
     }
 
@@ -58,7 +58,7 @@ class SavingsTransaction extends \yii\db\ActiveRecord
             'transaction_date' => 'Transaction Date',
             'running_balance' => 'Running Balance',
             'remarks' => 'Remarks',
-         //   'reference_number' => 'Reference Number',
+            'ref_no' => 'Ref No',
         ];
     }
 }

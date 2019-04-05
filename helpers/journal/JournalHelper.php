@@ -21,7 +21,7 @@ class JournalHelper
         if($journal->save()){
             return $journal;
         }
-        return false;
+        return null;
 	}
 
     public static function insertJournal($list, $fk_reference_no){

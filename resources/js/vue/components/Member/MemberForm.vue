@@ -23,14 +23,14 @@
 				<div class = "row member-list" v-if = "pageView == 'member-list'">
 					<div class = "table-toolbar">
 						<div>
-							<button type="button" class="btn btn-xs btn-default" @click = "pageView = 'member-create'">Create Member</button>
+							<el-input type="text" v-model="search" placeholder = "Search member name"></el-input>
 						</div>
 						<div>
-							<button type="button" class="btn btn-xs btn-default" @click = "pageView = 'member-create'">Create Member</button>
+							<el-button type="primary" @click = "pageView = 'member-create'">Create Member</el-button>
 						</div>
 					</div>
 					<div class = "member-table">
-						<datatable ref="memberTable" title="" :perPage="[10, 25, 50, 100]" :exportable="true" :printable="true" :columns="columnList" :rows="listMember" :sortable="false" :searchable="true" :exactSearch="false" >
+						<datatable ref="memberTable" title="" :perPage="[10, 25, 50, 100]" :exportable="true" :printable="true" :columns="columnList" :rows="memberListData" :sortable="false" :searchable="false" :exactSearch="false" >
 						</datatable>
 					</div>
 				</div>
@@ -189,6 +189,7 @@
 
 	import axios from 'axios'
     import Noty from 'noty'
+    import cloneDeep from 'lodash/cloneDeep'  
     import Multiselect from 'vue-multiselect'
     import DatePicker from 'vue2-datepicker'
     import VueTimepicker from 'vue2-timepicker'
@@ -257,12 +258,12 @@ export default {
                     html: true,
                     export: true,
                 },
-				{
+				/*{
                     label: 'Date Registered',
                     field: this.retDateRegistered,
                     html: true,
                     export: true,
-                },
+                },*/
 				{
                     label: 'Action',
                     field: this.retAction,
@@ -295,7 +296,22 @@ export default {
               	showClose	: true,
             },
             pageView		: this.dataView,
-            columnList		: cols
+            columnList		: cols,
+            search 			: ""
+		}
+	},
+	computed:{
+		memberListData(){
+			let list = cloneDeep(this.listMember)
+			let sMember = this.search
+
+			if(sMember){
+				list = list.filter(data => { 
+					let fullname = data.first_name + ' '+ data.middle_name + ' '+  data.last_name
+					return fullname.toLowerCase().includes(sMember.toLowerCase()) 
+				})
+			}
+			return list
 		}
 	},
     components: {

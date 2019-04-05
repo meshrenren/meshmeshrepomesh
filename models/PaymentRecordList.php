@@ -62,11 +62,59 @@ class PaymentRecordList extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getMember() {
+        return $this->hasOne(Member::className(), [ 'id' => 'member_id' ] )->select(["member.id", "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname"]);
+    }
+
     /**
      * @return \yii\db\ActiveQuery
      */
     public function getPaymentRecord()
     {
         return $this->hasOne(PaymentRecord::className(), ['id' => 'payment_record_id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getParticular()
+    {
+        return $this->hasOne(AccountParticulars::className(), ['id' => 'particular_id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getSavingsProduct()
+    {
+        return $this->hasOne(Savingsproduct::className(), ['id' => 'product_id'])
+            ->onCondition('payment_record_list.type = "SAVINGS"');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getShareProduct()
+    {
+        return $this->hasOne(ShareProduct::className(), ['id' => 'product_id'])
+            ->andOnCondition('payment_record_list.type = "SHARE"');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getLoanProduct()
+    {
+        return $this->hasOne(LoanProduct::className(), ['id' => 'product_id'])
+            ->andOnCondition('payment_record_list.type = "LOAN"');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getTdProduct()
+    {
+        return $this->hasOne(TimeDepositProduct::className(), ['id' => 'product_id'])
+            ->andOnCondition('payment_record_list.type = "TIME_DEPOSIT"');
     }
 }

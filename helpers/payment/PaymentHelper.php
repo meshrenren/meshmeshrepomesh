@@ -9,10 +9,14 @@ use app\models\LoanProduct;
 use app\models\LoanAccount;
 use app\models\LoanTransaction;
 use app\models\JournalHeader;
-use app\helpers\journal\JournalHelper;
 use app\models\SavingsAccount;
 use app\models\SavingsTransaction;
 use app\models\Savingsproduct;
+use app\models\ShareProduct;
+use app\models\TimeDepositProduct;
+use app\models\AccountParticulars;
+
+use app\helpers\journal\JournalHelper;
 
 class PaymentHelper 
 {
@@ -130,7 +134,7 @@ class PaymentHelper
 					$prepaidInterest = 0;
 					if($account->term<=12 && $product->prepaid_monthly_interest==1)
 					{
-						$prepaidInterest  = ($account->principal *prepa) / 5;
+						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 5;
 						$prepaidInterest = $prepaidInterest * 7;
 						$prepaidInterest = $prepaidInterest / 24;
 					}
@@ -316,7 +320,7 @@ class PaymentHelper
 			}
 			
 			//post to journal entry
-			if(JournalHelper::saveJournalHeader($journalheader) && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
+			if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
 			{
 				
 			}
@@ -346,6 +350,59 @@ class PaymentHelper
 				
 	}
 	
+	public static function getPaymentList($payment_record_id){
+		$accountList = PaymentRecordList::find()->joinWith(['member']);
+        if($payment_record_id != null){
+            $accountList = $accountList->where(['payment_record_id' => $payment_record_id]);
+        }
+        
+        return $accountList->asArray()->all();
+	}
+
+	public static function getPaymentProduct($type, $id){
+		$product = [];
+		if($type == "SAVINGS"){
+			$getModel = Savingsproduct::findOne($id);
+			if($getModel){
+				$product['id'] = $getModel->id;
+				$product['name'] = $getModel->description;
+			}
+		}
+
+		else if($type == "SHARE"){
+			$getModel = ShareProduct::findOne($id);
+			if($getModel){
+				$product['id'] = $getModel->id;
+				$product['name'] = $getModel->name;
+			}
+		}
+
+		else if($type == "TIME_DEPOSIT"){
+			$getModel = TimeDepositProduct::findOne($id);
+			if($getModel){
+				$product['id'] = $getModel->id;
+				$product['name'] = $getModel->description;
+			}
+		}
+
+		else if($type == "LOAN"){
+			$getModel = LoanProduct::findOne($id);
+			if($getModel){
+				$product['id'] = $getModel->id;
+				$product['name'] = $getModel->product_name;
+			}
+		}
+
+		else if($type == "OTHERS"){
+			$getModel = AccountParticulars::findOne($id);
+			if($getModel){
+				$product['id'] = $getModel->id;
+				$product['name'] = $getModel->name;
+			}
+		}
+
+		return $product;
+	}
 	
 	
 	

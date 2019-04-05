@@ -10,3 +10,25 @@
     	}
 	}
 }
+
+.right-toolbar{
+	text-align: right;
+
+	.btn-app{
+	    padding: 7px 5px;
+	    min-width: 60px;
+	    height: 50px;
+	}
+}
+
+.el-table{
+	.el-table__body{
+		td{
+			padding: 3px 0px;
+
+			.el-button{
+				padding: 5px 15px;
+			}
+		}
+	}
+}

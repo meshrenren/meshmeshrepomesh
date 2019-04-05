@@ -45,7 +45,65 @@ class SavingsHelper
         if($model->save()){
             return $model;
         }
-        return $model->errors;
+
+        else{
+            var_dump($model->getErrors());
+        }
+        return null;
+
                 
+    }
+
+    public static function printList($postData){
+        $account_no = $postData['account_no'];
+        $account_name = $postData['account_name'];
+        $balance = $postData['balance'];
+        $transaction = $postData['transaction'];
+
+        $listTemplate = '<table>
+            <tr>
+                <td style = "font-weight: bold;">Account Name: </td> 
+                <td><span>[account_name]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Account Number: </td> 
+                <td>[account_no] </td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Balance: </td> 
+                <td>[balance]</td>
+            </tr>
+        </table>';
+        $listTemplate = str_replace('[account_name]', $account_name, $listTemplate);
+        $listTemplate = str_replace('[account_no]', $account_no, $listTemplate);
+        $listTemplate = str_replace('[balance]', $balance, $listTemplate);
+
+        if(count($transaction) > 0){
+            $transTable = '<table style = "margin-top: 20px; border-collapse: collapse !important:">
+                <tr>
+                    <th style = "font-weight: bold; border: 1px solid #000;">Date Transact</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Amount</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Transaction Type</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Reference No</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Running Balance</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Remarks</th> 
+                </tr>';
+            foreach ($transaction as $trans) {
+                $transDate = date('Y-m-d', strtotime($trans['transaction_date']));
+                $transTable .= '<tr>
+                    <td style = "border: 1px solid #000;">'.$transDate.'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['amount'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['transaction_type'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['ref_no'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['running_balance'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['remarks'].'</td> 
+                </tr>';
+            }
+
+            $transTable .= '</table>';
+        }
+        $listTemplate = $listTemplate . $transTable;
+
+        return $listTemplate;
     }
 }

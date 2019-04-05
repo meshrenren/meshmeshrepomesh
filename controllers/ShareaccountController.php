@@ -32,13 +32,31 @@ class ShareaccountController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['index', 'deposit', 'list'],
                 'rules' => [
                     [
                         'actions' => ['index'],
                         'allow' => true,
                         'matchCallback' => function() {
                             if( Yii::$app->user->identity->checkUserAccess("_share_account_","_add") ){
+                                    return true;
+                            }
+                        }
+                    ],
+                    [
+                        'actions' => ['list'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_share_account_","_view") ){
+                                    return true;
+                            }
+                        }
+                    ],
+                    [
+                        'actions' => ['deposit'],
+                        'allow' => true,
+                        'matchCallback' => function() {
+                            if( Yii::$app->user->identity->checkUserAccess("_share_account_","_edit") ){
                                     return true;
                             }
                         }
@@ -178,6 +196,13 @@ class ShareaccountController extends Controller
         return $this->render('deposit', [ 'savingsTransaction' => $savingsTransaction]);
     }
 
+    public function actionList()
+    {
+        $this->layout = 'main-vue';
+        
+        return $this->render('list');
+    }
+
 
     /*
      This transaction id for Deposit only.
@@ -226,9 +251,12 @@ class ShareaccountController extends Controller
                     $saveSD = ShareHelper::saveShareTransaction($acct_transaction);
                     if($saveSD){
                         $getShareAccount->balance = $running_balance;
-                        $getShareAccount->save();
-
-                        $success = true;
+                        if($getShareAccount->save()){
+                            $success = true;
+                        }
+                        else{
+                            $success = false;
+                        }
                         $data = $saveSD->id;
 
                     }

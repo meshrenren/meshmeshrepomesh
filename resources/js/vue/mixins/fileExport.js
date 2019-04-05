@@ -13,7 +13,7 @@ export default {
     	winPrint(data, title){
     		let win = window.open("");
 			win.document.write('<h1 style="text-align:center; font-family: monospace;">' + title+ '</h1>')
-			win.document.write(data)
+			win.document.writeHtml(data)
 			win.print()
 			win.close()
     	},

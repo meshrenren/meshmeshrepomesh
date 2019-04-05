@@ -105,7 +105,7 @@ $this->title = 'DILG XI - EMPC';
                 <div class="col-md-9">
                     <div class="box box-success">
                         <div class="box-header with-border">
-                            <h3 class="box-title text-green"> <i class="fa fa-fw fa-download"></i> SYSTEM UPDATES</h3>
+                            <h3 class="box-title text-green"> <i class="fa fa-fw fa-download"></i> SYSTEM FEATURES</h3>
 
                             <div class="box-tools pull-right">
                                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
@@ -120,9 +120,7 @@ $this->title = 'DILG XI - EMPC';
                                     
                                     </div>
                                     <div class="product-info">
-                                        <a href="javascript:void(0)" class="product-title">Loan Installment
-                                            <span class="label label-warning pull-right">Fix</span></a>
-                                        <span class="product-description">Loan Installment now has a uniform or consistent monthly amortization.</span>
+                                        <a href="javascript:void(0)" class="product-title">SAVINGS DEPOSIT AND WITHDRAWAL FACILITY</a>
                                     </div>
                                 </li>
 
@@ -131,9 +129,7 @@ $this->title = 'DILG XI - EMPC';
                                     
                                     </div>
                                     <div class="product-info">
-                                        <a href="javascript:void(0)" class="product-title">Member Information Conflict
-                                            <span class="label label-warning pull-right">Fix</span></a>
-                                        <span class="product-description"> System now detects whether a new encoded member already exists to avoid data redundancy. </span>
+                                        <a href="javascript:void(0)" class="product-title">SHARE DEPOSIT FACILITY</a>
                                     </div>
                                 </li>
 
@@ -142,9 +138,7 @@ $this->title = 'DILG XI - EMPC';
                                     
                                     </div>
                                     <div class="product-info">
-                                        <a href="javascript:void(0)" class="product-title">UI Enhancement
-                                            <span class="label label-warning pull-right">Fix</span></a>
-                                        <span class="product-description"> Texts were made larger for a better and clearer viewing. </span>
+                                        <a href="javascript:void(0)" class="product-title">One page paymeny facility</a>
                                     </div>
                                 </li>
 
@@ -153,9 +147,7 @@ $this->title = 'DILG XI - EMPC';
                                     
                                     </div>
                                     <div class="product-info">
-                                        <a href="javascript:void(0)" class="product-title">Loan Products
-                                            <span class="label label-success pull-right">New!</span></a>
-                                        <span class="product-description">  New Loan Products requested were now included in the system. </span>
+                                        <a href="javascript:void(0)" class="product-title">General Voucher Facility</a>
                                     </div>
                                 </li>
 
@@ -164,9 +156,8 @@ $this->title = 'DILG XI - EMPC';
                                     
                                     </div>
                                     <div class="product-info">
-                                        <a href="javascript:void(0)" class="product-title">Emailing Facility
-                                            <span class="label label-success pull-right">New!</span></a>
-                                        <span class="product-description"> The System now a facility that enables the user to email the members when their accounts are about to due. </span>
+                                        <a href="javascript:void(0)" class="product-title">Change Password</a>
+                                        <span class="product-description"> Allow member to change his/her password. </span>
                                     </div>
                                 </li>
 

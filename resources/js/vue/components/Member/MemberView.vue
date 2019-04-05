@@ -31,6 +31,9 @@
 								<form-info ref = "email"  type = "email" :value = "member.email" props = "email" label = "Email" @update = "updateUserInfo" v-if = "canEdit"></form-info>
 							<span v-else >{{ member.email }}</span>
 							</li>
+							<li class = "list-group-item" style="text-align: center;" v-if = "Number(currUserMember) == Number(member.id)">
+								<el-button @click = "showChangePassModal = true">Change Password</el-button>
+							</li>
 						</ul>
 					</div>
 				</div>
@@ -202,6 +205,9 @@
 		    <el-button type="primary" @click="uploadProfileImage" v-if = "uploadImageimageUrl"> Upload </el-button>
 		  </span>
 		</el-dialog>
+
+    	<change-password  v-if = "Number(currUserMember) == Number(member.id)" :show-modal = "showChangePassModal" :member-id = "member.id" @close = "showChangePassModal = false" >
+  		</change-password>
 	</div>
 </template>
 
@@ -225,9 +231,10 @@
 	import MemberShare from './ViewTab/MemberShare'
 	import MemberTimedeposit from './ViewTab/MemberTimedeposit'
 	import MemberLoan from './ViewTab/MemberLoan'
+	import ChangePassword from './ChangePassword'
 
 export default {
-	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberFamily', 'dataMemberAddress', 'baseUrl', 'canEdit'],
+	props: ['dataMember', 'dataStationList', 'dataDivisionList', 'dataTypeList', 'dataMemberFamily', 'dataMemberAddress', 'baseUrl', 'canEdit', 'currUserMember'],
 	data: function () {
 
 		let gender = [{ value : "Male", label : "Male", column_name : 'gender'}, { value : "Female", label : "Female", column_name : 'gender'}]
@@ -255,7 +262,8 @@ export default {
 			uploadImageimageUrl	: '',
 			proPicVisible 		: false,
             maxFileUpload		: 2097152,
-            accountTab 			: 'loanaccount'
+            accountTab 			: 'loanaccount',
+            showChangePassModal	: false
 		}
 	},
 	components: {
@@ -265,7 +273,8 @@ export default {
         MemberSavings,
         MemberShare,
         MemberTimedeposit,
-        MemberLoan
+        MemberLoan,
+        ChangePassword
     },
     created(){
     },

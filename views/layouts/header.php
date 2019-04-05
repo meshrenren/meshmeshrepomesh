@@ -49,21 +49,26 @@ use yii\helpers\Html;
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view")
                     ],
                     [
-                        'label'     => 'Collecion',
+                        'label'     => 'Disbursement',
+                        'items'      => [
+                            [
+                                'label'     => 'General Voucher', 
+                                'url'       => ['general-voucher/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_add")
+                            ],
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_view")
+                    ],
+                    [
+                        'label'     => 'Collection',
                         'items'      => [
                             [
                                 'label'     => 'Payments', 
-                                'url'       => ['loan/'], 
-                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_add")
+                                'url'       => ['payment/'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
                             ],
-                            [
-                                'label'     => 'List', 
-                                'url'       => ['loan/list'], 
-                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
-                            ],
-
                         ],
-                        'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                     ],
 
                     [
@@ -103,6 +108,11 @@ use yii\helpers\Html;
                                 'url'       => ['savings/withdraw'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_edit")
                             ],
+                            [
+                                'label'     => 'View/List', 
+                                'url'       => ['savings/list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_edit")
+                            ],
                             ['label' => '', 'options' => ['class' => 'divider']],
 
                             ['label' => 'Share Accounts', 'options' => ['class' => 'header ft-bold']],
@@ -114,6 +124,11 @@ use yii\helpers\Html;
                             [
                                 'label'     => 'Deposit', 
                                 'url'       => ['shareaccount/deposit'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
+                            ],
+                            [
+                                'label'     => 'View/List', 
+                                'url'       => ['shareaccount/list'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_add")
                             ],
                             ['label' => '', 'options' => ['class' => 'divider']],
@@ -133,17 +148,17 @@ use yii\helpers\Html;
                                 'url'       => ['time-deposit/list'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
                             ],
-                            [
+                            /*[
                                 'label'     => 'Matured List', 
                                 'url'       => ['time-deposit/matured-accounts'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
-                            ],
+                            ],*/
                             
 
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_savings_account_", "_view")
                     ],
-                    [
+                    /*[
                         'label'     => 'Time Deposit',
                         'items'      => [
                             [
@@ -164,7 +179,7 @@ use yii\helpers\Html;
 
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_time_account_", "_view")
-                    ],
+                    ],*/
                     [
                         'label'     => 'Reports',
                         'url'       => '#', 

@@ -26,6 +26,9 @@ Vue.component('share-account-form', ShareAccountForm)
 import ShareDeposit from './components/Shareaccounts/ShareDeposit.vue'
 Vue.component('share-deposit', ShareDeposit)
 
+import ShareList from './components/Shareaccounts/ShareList.vue'
+Vue.component('share-list', ShareList)
+
 /* --- END --- */
 
 
@@ -40,6 +43,9 @@ Vue.component('savings-withdraw-form', SavingsWithdrawForm)
 
 import SavingsAccountCreate from './components/Savings/SavingsAccountCreate.vue'
 Vue.component('savings-account-create', SavingsAccountCreate)
+
+import SavingsAccountList from './components/Savings/SavingsAccountList.vue'
+Vue.component('savings-account-list', SavingsAccountList)
 
 /* --- END --- */
 
@@ -64,6 +70,9 @@ Vue.component('loan-evaluation', LoanEvaluation)
 import LoanVoucher from './components/Loan/LoanVoucher.vue'
 Vue.component('loan-voucher', LoanVoucher)
 
+import LoanList from './components/Loan/LoanList.vue'
+Vue.component('loan-list', LoanList)
+
 /* --- END --- */
 
 
@@ -87,5 +96,8 @@ Vue.component('payment-record', PaymentRecord)
 
 import PaymentPayroll from './components/Payment/PaymentPayroll.vue'
 Vue.component('payment-payroll', PaymentPayroll)
+
+import PaymentList from './components/Payment/PaymentList.vue'
+Vue.component('payment-list', PaymentList)
 
 /* --- END --- */

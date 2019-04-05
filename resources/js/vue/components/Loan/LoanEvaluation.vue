@@ -39,37 +39,37 @@
 							<hr>
 							<div class = "Loan List">
 			        			<h4>Member's List of Loan</h4>
-								<el-table :data="accountLoanList" style="width: 100%" height = "350px" stripe border>
+								<el-table :data="accountLoanList"height = "350px" stripe border>
 						            <el-table-column label="Date Transaction">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.release_date }}</span>
+						                    <span>{{ scope.row.release_date }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Type">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.product.product_name }}</span>
+						                    <span>{{ scope.row.product.product_name }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Principal Loan">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ parseFloat(scope.row.principal).toFixed(2) }}</span>
+						                    <span>{{ parseFloat(scope.row.principal).toFixed(2) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Balance">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ parseFloat(scope.row.principal_balance).toFixed(2)  }}</span>
+						                    <span>{{ parseFloat(scope.row.principal_balance).toFixed(2)  }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Duration">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.term }}</span>
+						                    <span>{{ scope.row.term }}</span>
 						                </template>
 						            </el-table-column>
-						            <el-table-column label="Maturity Date">
+						            <!-- <el-table-column label="Maturity Date">
 						                <template slot-scope="scope">
-						                    <span style="margin-left: 10px">{{ scope.row.maturity_date }}</span>
+						                    <span>{{ scope.row.maturity_date }}</span>
 						                </template>
-						            </el-table-column>
+						            </el-table-column -->>
 			       				</el-table>
 			       				
 			       			</div>
@@ -535,8 +535,8 @@ export default {
 				this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 				this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
 				this.evaluationForm.member_id = this.memberDetails.id
-				this.evaluationForm.principal_amortization_quincena = 100
-				this.evaluationForm.prepaid_amortization_quincena = 250
+				this.evaluationForm.principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
+				//this.evaluationForm.prepaid_amortization_quincena = ''
 
 				return [];
 			}
@@ -669,8 +669,9 @@ export default {
 			this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 			this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
 			this.evaluationForm.member_id = this.memberDetails.id
-			this.evaluationForm.principal_amortization_quincena = 100
-			this.evaluationForm.prepaid_amortization_quincena = 250
+			this.evaluationForm.principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
+			//this.evaluationForm.principal_amortization_quincena = 100
+			//this.evaluationForm.prepaid_amortization_quincena = 250
 			
     	},
     	newLoan(){

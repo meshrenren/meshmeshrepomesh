@@ -29,4 +29,13 @@ class LoanHelper
         }
 		return $accountList;
 	}
+
+    public static function getLoanTransaction($loan_account, $filter=null){
+        $accountList = LoanTransaction::find();
+        if($loan_account != null){
+            $accountList = $accountList->where(['loan_account' => $loan_account]);
+        }
+        
+        return $accountList->asArray()->all();
+    }
 }

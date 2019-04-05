@@ -624,4 +624,57 @@ class MemberController extends \yii\web\Controller
         }
     }
 
+    public function actionChangePassword(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $success = false;
+            $error = '';
+            $errorMessage = '';
+            $data = null;
+
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $post = \Yii::$app->getRequest()->getBodyParams();
+                $member_id = $post['memberId'];
+                $form = $post['form'];
+                $model = \app\models\Member::findOne($member_id);
+                if($model != null && $model->user != null){
+                    $user = \app\models\User::findOne($model->user_id);
+                    if(sha1($form['oldPassword']) === $model->user->password){
+                        $user->password = sha1($form['newPassword']);
+                        $user->save(false);
+                        $success = true;
+                    }
+                    else{
+                        return [
+                            'success'       => false,
+                            'error'         => 'ERROR_PASSWORD',
+                        ];
+                    }
+                }
+
+                if($success){
+                    $transaction->commit();
+                }
+
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+
+            return [
+                'success'       => $success,
+                'error'         => $error,
+                'errorMessage'  => $errorMessage,
+                'data'          => $data,
+            ];
+        }
+
+    }
+
 }

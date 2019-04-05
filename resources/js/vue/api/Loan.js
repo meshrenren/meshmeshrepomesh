@@ -8,6 +8,13 @@ export default {
 		return axios.post('/loan/get-account-loan-info', params)
 	},
 
+	getLoanTransaction(loan_account){
+		let params = {
+			loan_account : loan_account
+		}	
+		return axios.post('/loan/get-transaction', params)
+	},
+
 	getLatestLoan(loan_id, member_id){
 		let params = {
 			member_id : member_id,
