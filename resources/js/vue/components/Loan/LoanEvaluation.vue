@@ -491,6 +491,59 @@ export default {
 			this.evaluationForm.prepaid_amortization_quincena = ''
 
 		},
+
+		calculatePrepaidInterest(principal, term, prepaid_int, loantype)
+		{	let prepaid = 0
+
+			
+
+			//NOTICE: Result of this function implies prepaid interest per quincena. i repeat, per quincena.
+
+			if(loantype==1)
+			{
+				prepaid  = principal * prepaid_int;
+				prepaid = prepaid / 2;
+			}
+
+			else if(loantype==2)
+			{
+					if(term<=12)
+					{
+						prepaid = (principal * prepaid_int) / 5;
+						prepaid = prepaid * 7;
+						prepaid = prepaid / 24;
+					}
+
+					else if(term<=18)
+					{
+						prepaid = (principal * prepaid_int) / 7.5;
+						prepaid = prepaid * 11.5;
+						prepaid = prepaid / 36;
+					}
+
+					else if(term<=24)
+					{
+						prepaid = (principal * prepaid_int) / 10;
+						prepaid = prepaid * 14;
+						prepaid = prepaid / 48;
+					}
+
+					else if(term<=36)
+					{
+						prepaid = (principal * prepaid_int) / 5;
+						prepaid = prepaid * 7;
+						prepaid = prepaid / 24;
+					}
+			}
+
+
+			return prepaid;
+
+
+		},
+
+
+
     	calculateLoan(getProduct, dataneeded){
 			let latestLoan = dataneeded.latestLoan;
 			let lastTran = dataneeded.lastTransaction;
@@ -514,7 +567,7 @@ export default {
 
 			if(!latestLoan)
 			{
-				console.log("new loan");
+				console.log("getProduct", getProduct)
 				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
 				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)
@@ -523,9 +576,14 @@ export default {
 				this.evaluationForm.debit_interest = 0;
 				this.evaluationForm.credit_interest = 0;
 				this.evaluationForm.debit_preinterest = 0;
-				this.evaluationForm.credit_preinterest = 0;
+
+				
+
+				//if loan is regular loan or appliance loan, apply CREDIT prepaid int.
+				this.evaluationForm.credit_preinterest = getProduct.id == 2 ? parseFloat(Number(this.evaluationForm.amount) * Number(getProduct.prepaid_interest)).toFixed(2) : 0 ;
+
 				this.evaluationForm.notary_amount = getProduct.notary_fee
-				this.evaluationForm.prepaid_amortization_quincena = prepaid_interest/2
+				
 				this.evaluationForm.service_charge_amount = parseFloat(service_charge).toFixed(2)
 
 
@@ -536,8 +594,9 @@ export default {
 				this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
 				this.evaluationForm.member_id = this.memberDetails.id
 				this.evaluationForm.principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
-				//this.evaluationForm.prepaid_amortization_quincena = ''
-
+				
+								
+				this.evaluationForm.prepaid_amortization_quincena = this.calculatePrepaidInterest(Number(this.evaluationForm.amount), Number(this.evaluationForm.duration), getProduct.id==2 ? 0.0687 : 0.01, getProduct.id);
 				return [];
 			}
 
@@ -593,7 +652,7 @@ export default {
 
 			else
 			{
-				this.evaluationForm.credit_preinterest = 0;
+				this.evaluationForm.credit_preinterest = getProduct.id ==2 ? parseFloat(Number(this.evaluationForm.amount) * Number(getProduct.prepaid_interest)).toFixed(2) : 0 ;
 				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
 
 			}
