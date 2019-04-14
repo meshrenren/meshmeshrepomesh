@@ -8,6 +8,5 @@ node_modules
 webpack.mix.js
 package.json
 package-lock.json
-vendor
 
 
