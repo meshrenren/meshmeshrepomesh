@@ -627,6 +627,7 @@ class SeedController extends Controller
                     $trans_serial = $product->trans_serial + 1;
                     $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 
+
                     $account = new \app\models\SavingsAccount;
                     $account->account_no = $product->id . "-" . $trans_serial_pad;
                     $account->saving_product_id = $product->id;
@@ -635,6 +636,8 @@ class SeedController extends Controller
                     $account->is_active = 1;
                     $account->date_created = date('Y-m-d H:i:s');
                     $account->transacted_date = date('Y-m-d H:i:s');
+                    $account->old_db_idnum_zero = $cs['IDNum'];
+
 
                     if($account->save()){
                         $product->trans_serial = $trans_serial;
@@ -657,8 +660,84 @@ class SeedController extends Controller
         }
     }
 
+    public function actionSavingsTransaction(){
+        $accounts = \app\models\SavingsAccount::find()->where(['account_no' => '1-000137'])->all();
 
-    public function actionSavingsAccountBalance(){
+        foreach ($accounts as $key => $acc) {
+            $getTRans = \app\models\SavingsTransaction::find()->where(['fk_savings_id' => $acc->account_no])->count(); 
+            if($getTRans > 0){
+                continue;
+            }
+
+            $query = new \yii\db\Query;
+            $query->select('*');
+            $query->from('zold_sdledger scl')->where(['IDNum' => $acc->old_db_idnum_zero]);
+            $savingsLedger = $query->all();
+            $total = 0;
+            foreach ($savingsLedger as $key => $ledger) {
+                $type = "";
+                $amount = 0;
+                $Deposit = floatval(str_replace(",", "", $ledger['Deposit']));
+                $Withdrawal = floatval(str_replace(",", "", $ledger['Withdrawal']));
+                $Balance = floatval(str_replace(",", "", $ledger['Balance']));
+
+                if($ledger['Deposit'] != '' && $Deposit > 0){
+                    $type = "CASHDEP";
+                    $amount = $Deposit;
+                }
+                else if($ledger['Withdrawal'] != '' && $Withdrawal > 0){
+                    $type = "WITHDRWL";
+                    $amount = $Withdrawal;
+                }
+                else{
+                    var_dump($ledger['Numbering']);
+                    var_dump($Balance);
+                    if($ledger['Numbering'] == "1" && $Balance > 0){
+                        $type = "CASHDEP";
+                        $amount = $Balance;
+                        var_dump("Here");
+                    }
+                    else{
+                        continue;
+                    }
+                }
+
+                $date = explode(' ', $ledger['DateTransac']) ;
+                $dSub = explode('/', $date[0]) ;
+                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+
+                $addTrans = new \app\models\SavingsTransaction;
+                $addTrans->fk_savings_id = $acc->account_no;
+                $addTrans->ref_no = $ledger['ORGVNum'];
+                $addTrans->amount = $amount;
+                $addTrans->transaction_type = $type;
+                $addTrans->transacted_by = 18;
+                $addTrans->transaction_date = $d;
+                $addTrans->running_balance = $Balance;
+                $addTrans->remarks = "Migrate from old DB";
+                $addTrans->olddb_entrynum = $ledger['Numbering'];
+                if($addTrans->save()){
+                    if($type == "CASHDEP"){
+                        $total += $amount;
+                        echo "Add:" . $total . "\n";
+                    }
+                    else if($type == "WITHDRWL"){
+                        $total -= $amount;
+                        echo "Sub:" . $total . "\n";
+                    }
+                }
+                else{
+                    var_dump($addTrans->getErrors());
+                }
+            }
+            $acc->balance = $total;
+            $acc->save();
+            echo "Save \t" . $total;
+        }
+    }
+
+
+    /*public function actionSavingsAccountBalance(){
         $query = new \yii\db\Query;
         $query->select('*');
         $query->from('zold_sdtransac sdt');
@@ -677,7 +756,8 @@ class SeedController extends Controller
             }
             //echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " \tBalance->". $balance. "\n";
         }
-    }
+    }*/
+
 
     public function actionParticulars(){
         $query = new \yii\db\Query;

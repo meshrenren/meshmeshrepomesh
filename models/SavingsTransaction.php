@@ -33,7 +33,7 @@ class SavingsTransaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fk_savings_id', 'amount', 'transaction_type', 'transacted_by', 'transaction_date', 'running_balance', 'ref_no'], 'required'],
+            [['fk_savings_id', 'amount', 'transaction_type', 'transacted_by', 'transaction_date', 'running_balance'], 'required'],
             [['amount', 'running_balance'], 'number'],
             [['transacted_by'], 'integer'],
             [['transaction_date'], 'safe'],
