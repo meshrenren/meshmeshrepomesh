@@ -3,6 +3,14 @@
 
 This module provides integration with [Yii framework](http://www.yiiframework.com/) (2.0).
 It initializes Yii framework in test environment and provides actions for functional testing.
+## Application state during testing
+This section details what you can expect when using this module.
+* You will get a fresh application in `\Yii::$app` at the start of each test (available in the test and in `_before()`).
+* Inside your test you may change application state; however these changes will be lost when doing a request if you have enabled `recreateApplication`.
+* When executing a request via one of the request functions the `request` and `response` component are both recreated.
+* After a request the whole application is available for inspection / interaction.
+* You may use multiple database connections, each will use a separate transaction; to prevent accidental mistakes we
+will warn you if you try to connect to the same database twice but we cannot reuse the same connection.
 
 ## Config
 
@@ -11,15 +19,24 @@ It initializes Yii framework in test environment and provides actions for functi
 * `entryScript` - front script title (like: index-test.php). If not set - taken from entryUrl.
 * `transaction` - (default: true) wrap all database connection inside a transaction and roll it back after the test. Should be disabled for acceptance testing..
 * `cleanup` - (default: true) cleanup fixtures after the test
-
+* `ignoreCollidingDSN` - (default: false) When 2 database connections use the same DSN but different settings an exception will be thrown, set this to true to disable this behavior.
+* `fixturesMethod` - (default: _fixtures) Name of the method used for creating fixtures.
+* `responseCleanMethod` - (default: clear) Method for cleaning the response object. Note that this is only for multiple requests inside a single test case.
+Between test casesthe whole application is always recreated
+* `requestCleanMethod` - (default: recreate) Method for cleaning the request object. Note that this is only for multiple requests inside a single test case.
+Between test cases the whole application is always recreated
+* `recreateComponents` - (default: []) Some components change their state making them unsuitable for processing multiple requests. In production this is usually
+not a problem since web apps tend to die and start over after each request. This allows you to list application components that need to be recreated before each request.
+As a consequence, any components specified here should not be changed inside a test since those changes will get regarded.
 You can use this module by setting params in your functional.suite.yml:
-
+* `recreateApplication` - (default: false) whether to recreate the whole application before each request
+You can use this module by setting params in your functional.suite.yml:
 ```yaml
 actor: FunctionalTester
 modules:
     enabled:
         - Yii2:
-            configFile: '/path/to/config.php'
+            configFile: 'path/to/config.php'
 ```
 
 ### Parts
@@ -109,7 +126,7 @@ $I->sendAjaxPostRequest(['/user/update', 'id' => 1], ['UserForm[name]' => 'G.Hop
 Maintainer: **samdark**
 Stability: **stable**
 
-
+@property \Codeception\Lib\Connector\Yii2 $client
 
 ## Actions
 
@@ -332,7 +349,7 @@ $I->click('Submit');
 // CSS button
 $I->click('#form input[type=submit]');
 // XPath
-$I->click('//form/*[@type=submit]');
+$I->click('//form/*[@type="submit"]');
 // link in context
 $I->click('Logout', '#nav');
 // using strict locator
@@ -342,6 +359,13 @@ $I->click(['link' => 'Login']);
 
  * `param` $link
  * `param` $context
+
+
+### createAndSetCsrfCookie
+ 
+This function creates the CSRF Cookie.
+ * `param string` $val The value of the CSRF token
+ * `return` string[] Returns an array containing the name of the CSRF param and the masked CSRF token.
 
 
 ### deleteHeader
@@ -391,7 +415,7 @@ But will ignore strings like:
 For checking the raw source code, use `seeInSource()`.
 
  * `param string` $text
- * `param string` $selector optional
+ * `param array|string` $selector optional
 
 
 ### dontSeeCheckboxIsChecked
@@ -440,7 +464,7 @@ Checks that current url doesn't match the given regular expression.
 ``` php
 <?php
 // to match root url
-$I->dontSeeCurrentUrlMatches('~$/users/(\d+)~');
+$I->dontSeeCurrentUrlMatches('~^/users/(\d+)~');
 ?>
 ```
 
@@ -660,7 +684,6 @@ $I->grabAttributeFrom('#tooltip', 'title');
 ?>
 ```
 
-
  * `param` $cssOrXpath
  * `param` $attribute
 
@@ -677,6 +700,7 @@ $mailer = $I->grabComponent('mailer');
 
  * `param` $component
 @throws ModuleException
+@deprecated in your tests you can use \Yii::$app directly.
 
 
 ### grabCookie
@@ -726,7 +750,7 @@ If no parameters are provided, the full URI is returned.
 
 ``` php
 <?php
-$user_id = $I->grabFromCurrentUrl('~$/user/(\d+)/~');
+$user_id = $I->grabFromCurrentUrl('~^/user/(\d+)/~');
 $uri = $I->grabFromCurrentUrl();
 ?>
 ```
@@ -799,7 +823,7 @@ $category = $I->grabRecord('app\models\User', array('name' => 'davert'));
 ### grabSentEmails
  
 Returns array of all sent email messages.
-Each message implements `yii\mail\Message` interface.
+Each message implements `yii\mail\MessageInterface` interface.
 Useful to perform additional checks using `Asserts` module:
 
 ```php
@@ -966,7 +990,7 @@ But will *not* be true for strings like:
 For checking the raw source code, use `seeInSource()`.
 
  * `param string` $text
- * `param string` $selector optional
+ * `param array|string` $selector optional
 
 
 ### seeCheckboxIsChecked
@@ -1021,7 +1045,7 @@ Checks that the current URL matches the given regular expression.
 ``` php
 <?php
 // to match root url
-$I->seeCurrentUrlMatches('~$/users/(\d+)~');
+$I->seeCurrentUrlMatches('~^/users/(\d+)~');
 ?>
 ```
 
@@ -1272,6 +1296,34 @@ $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
  * `param` $code
 
 
+### seeResponseCodeIsBetween
+ 
+Checks that response code is between a certain range. Between actually means [from <= CODE <= to]
+
+ * `param` $from
+ * `param` $to
+
+
+### seeResponseCodeIsClientError
+ 
+Checks that the response code is 4xx
+
+
+### seeResponseCodeIsRedirection
+ 
+Checks that the response code 3xx
+
+
+### seeResponseCodeIsServerError
+ 
+Checks that the response code is 5xx
+
+
+### seeResponseCodeIsSuccessful
+ 
+Checks that the response code 2xx
+
+
 ### selectOption
  
 Selects an option in a select tag or in radio button group.
@@ -1360,19 +1412,10 @@ $I->sendAjaxRequest('PUT', '/posts/7', array('title' => 'new title'));
 
 ### setCookie
  
-Sets a cookie with the given name and value.
-You can set additional cookie params like `domain`, `path`, `expires`, `secure` in array passed as last argument.
-
-``` php
-<?php
-$I->setCookie('PHPSESSID', 'el4ukv0kqbvoirg7nkp4dncpk3');
-?>
-```
-
- * `param` $name
- * `param` $val
- * `param array` $params
-
+Sets a cookie and, if validation is enabled, signs it.
+ * `param string` $name The name of the cookie
+ * `param string` $value The value of the cookie
+ * `param array` $params Additional cookie params like `domain`, `path`, `expires` and `secure`.
 
 
 ### submitForm
@@ -1578,4 +1621,4 @@ $I->uncheckOption('#notify');
 
  * `param` $option
 
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.3/src/Codeception/Module/Yii2.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.5/src/Codeception/Module/Yii2.php">Help us to improve documentation. Edit module reference</a></div>

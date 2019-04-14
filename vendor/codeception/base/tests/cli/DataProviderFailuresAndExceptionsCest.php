@@ -29,7 +29,7 @@ class DataProviderFailuresAndExceptionsCest
         $devNull = (DIRECTORY_SEPARATOR === '\\')?'NUL':'/dev/null';
         $I->executeCommand('run -n -v unit DataProvidersFailureCest 2> '.$devNull,false);
         // We should only see the version headers in stdout when there is this kind of failure.
-        $I->canSeeShellOutputMatches('/^Codeception PHP Testing Framework v[0-9\.]+\nPowered by PHPUnit .+ by Sebastian Bergmann and contributors\.$/');
+        $I->canSeeShellOutputMatches('/^Codeception PHP Testing Framework v[0-9\.]+\nPowered by PHPUnit .+ by Sebastian Bergmann and contributors\./');
         $I->seeResultCodeIs(1);
     }
 
@@ -43,7 +43,6 @@ class DataProviderFailuresAndExceptionsCest
     public function runTestWithDataProvidersFailureStderr(\CliGuy $I)
     {
         $I->executeCommand('run -n unit DataProvidersFailureCest 2>&1',false);
-        $I->seeInShellOutput('[Codeception\Exception\TestParseException]');
         $I->seeInShellOutput('Couldn\'t parse test');
         $I->seeInShellOutput('DataProvider \'rectangle\' for DataProvidersFailureCest->testIsTriangle');
         $I->seeInShellOutput('Make sure that the dataprovider exist within the test class.');
@@ -57,7 +56,6 @@ class DataProviderFailuresAndExceptionsCest
         $I->dontSeeInShellOutput('Tests: 1, Assertions: 0, Warnings: 1.');
         // In normal mode the Exception trace should not appear.
         $I->dontSeeInShellOutput('Exception trace');
-        $I->dontSeeInShellOutput('Test'.DIRECTORY_SEPARATOR.'Loader'.DIRECTORY_SEPARATOR.'Cest.php:');
         $I->seeResultCodeIs(1);
     }
 
@@ -71,7 +69,6 @@ class DataProviderFailuresAndExceptionsCest
     public function runTestWithDataProvidersFailureStderrVerbose(\CliGuy $I)
     {
         $I->executeCommand('run -n unit DataProvidersFailureCest -v 2>&1',false);
-        $I->seeInShellOutput('[Codeception\Exception\TestParseException]');
         $I->seeInShellOutput('Couldn\'t parse test');
         $I->seeInShellOutput('DataProvider \'rectangle\' for DataProvidersFailureCest->testIsTriangle');
         $I->seeInShellOutput('Make sure that the dataprovider exist within the test class.');
@@ -84,8 +81,8 @@ class DataProviderFailuresAndExceptionsCest
         $I->dontSeeInShellOutput('OK');
         $I->dontSeeInShellOutput('Tests: 1, Assertions: 0, Warnings: 1.');
         // In verbose mode the Exception trace should be output.
+        $I->seeInShellOutput('[Codeception\Exception\TestParseException]');
         $I->seeInShellOutput('Exception trace');
-        $I->seeInShellOutput('Test'.DIRECTORY_SEPARATOR.'Loader'.DIRECTORY_SEPARATOR.'Cest.php:');
         $I->seeResultCodeIs(1);
 
     }
@@ -108,7 +105,7 @@ class DataProviderFailuresAndExceptionsCest
         $devNull = (DIRECTORY_SEPARATOR === '\\')?'NUL':'/dev/null';
         $I->executeCommand('run -n unit DataProvidersExceptionCest -v 2> '.$devNull, false);
         // Depending on the test environment, we either see nothing or just the headers here.
-        $I->canSeeShellOutputMatches('/^Codeception PHP Testing Framework v[0-9\.]+\nPowered by PHPUnit .+ by Sebastian Bergmann and contributors\.$/');
+        $I->canSeeShellOutputMatches('/^Codeception PHP Testing Framework v[0-9\.]+\nPowered by PHPUnit .+ by Sebastian Bergmann and contributors\./');
         $I->seeResultCodeIs(1);
     }
 
@@ -134,12 +131,10 @@ class DataProviderFailuresAndExceptionsCest
         $I->dontSeeInShellOutput('Couldn\'t parse test');
         $I->dontSeeInShellOutput('DataProvider \'rectangle\' for DataProvidersFailureCest->testIsTriangle ');
 
-        // We should just see the exception and the message
-        $I->seeInShellOutput('[Exception]');
+        // We should just see the message
         $I->seeInShellOutput('Something went wrong!!!');
         // We don't have the verbose flag set, so there should be no trace.
         $I->dontSeeInShellOutput('Exception trace:');
-        $I->dontSeeInShellOutput('DataProvidersExceptionCest');
         $I->seeResultCodeIs(1);
 
     }
@@ -165,12 +160,11 @@ class DataProviderFailuresAndExceptionsCest
         $I->dontSeeInShellOutput('Couldn\'t parse test');
         $I->dontSeeInShellOutput('DataProvider \'rectangle\' for DataProvidersFailureCest->testIsTriangle is ');
 
-        // We should just see the exception and the message
-        $I->seeInShellOutput('[Exception]');
+        // We should just see the message
         $I->seeInShellOutput('Something went wrong!!!');
         // We have the verbose flag set, so there should be a trace.
+        $I->seeInShellOutput('[Exception]');
         $I->seeInShellOutput('Exception trace:');
-        $I->seeInShellOutput('DataProvidersExceptionCest');
         $I->seeResultCodeIs(1);
     }
 }

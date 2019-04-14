@@ -1,6 +1,43 @@
 Change Log: `yii2-dynagrid`
 ===========================
 
+## Version 1.5.1
+
+**Date:** 24-Feb-2019
+
+- (bug #211): Correct bootstrap Modal class parsing.
+- (enh #202, #203): Correct attribute label parsing.
+- Update README.
+- (enh #197): Correct current controller action refresh.
+
+## Version 1.5.0
+
+**Date:** 11-Sep-2018
+
+- (enh #195): Ability to configure all icons.
+- (bug #194): Correct dynagrid sortable initializations.
+
+## Version 1.4.9
+
+**Date:** 10-Sep-2018
+
+- Move all source code to `src` directory.
+- Updates to support Bootstrap v4.x.
+- (enh #192): Update Spanish Translations.
+- (enh #191): Correct m140101_100000_dynagrid.php.
+- (enh #189): Update Ukranian Translations.
+
+## Version 1.4.8
+
+**Date:** 15-Feb-2018
+
+- Update copyright year to current.
+- (enh #188): Reset and cleanup bootstrap modals on pjax reload.
+- (enh #183, #182): Update DynaGridStore.php for yii 2.0.13 support.
+- (enh #180): Enhance dynagrid config form when all settings are hidden.
+- (enh #177, #178): Update French Translations.
+- (enh #176): Update German Translations.
+
 ## Version 1.4.7
 
 **Date:** 23-Oct-2017

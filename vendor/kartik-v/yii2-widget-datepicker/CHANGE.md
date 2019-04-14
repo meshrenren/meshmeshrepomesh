@@ -1,16 +1,45 @@
 Change Log: `yii2-widget-datepicker`
 ====================================
 
+## Version 1.4.7
+
+**Date:** 09-Oct-2018
+
+- Bump composer dependencies.
+
+## Version 1.4.6
+
+**Date:** 29-Aug-2018
+
+- Correct Asset Bundle registration to validate `bsVersion`.
+- (enh #170): Add Bootstrap 4.x support.
+- Reorganize source code in `src` directory.
+
+## Version 1.4.5
+
+- (no changes) - bump up version
+
+## version 1.4.4
+
+**Date:** 13-Jul-2018
+
+- (enh #168): Add Kazakh translations.
+- (enh #166, #165): Simplify INLINE editor behavior.
+- (enh #164, #161, #160): Remove interim z-index fix for BS modal dialog.
+- (enh #154): Add support for jQuery 3.x - update source plugin to v1.8.0.
+- (enh #150): Enhance to make `form-control` CSS class the default and yet optional.
+- (enh #149): Add Finnish translations.
+
 ## version 1.4.3
 
 **Date:** 04-Sep-2017
 
 - Add github contribution and issue/PR logging templates.
-- (enh #131): Added Romanian translations.
+- (enh #131): Add Romanian translations.
 - (enh #128): Update bootstrap-datepicker to 1.7.1.
 - (enh #127): Allow overriding the `form-control` input CSS class.
-- (enh #120): Added Estonian translations.
-- (enh #117): Added Dutch (NL) translations.
+- (enh #120): Add Estonian translations.
+- (enh #117): Add Dutch (NL) translations.
 - (enh #116): Add Gujarati and Hindi language translations.
 - (enh #115): Add Indonesian translations.
 

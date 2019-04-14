@@ -13,11 +13,16 @@
         }
     ],
     "require": {
-        "kartik-v/yii2-krajee-base": "~1.7"
+        "kartik-v/yii2-krajee-base": ">=2.0.0"
     },
     "autoload": {
         "psr-4": {
-            "kartik\\sortable\\": ""
+            "kartik\\sortable\\": "src"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.2.x-dev"
         }
     }
 }

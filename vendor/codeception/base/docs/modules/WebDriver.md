@@ -45,10 +45,10 @@ To run tests in Chrome browser you may connect to ChromeDriver directly, without
              port: 9515
              browser: chrome
              capabilities:
-                 chromeOptions: # additional chrome options
+                 "goog:chromeOptions": # additional chrome options
 ```
 
-Additional [Chrome options](https://sites.google.com/a/chromium.org/chromedriver/capabilities) can be set in `chromeOptions` capabilities.
+Additional [Chrome options](https://sites.google.com/a/chromium.org/chromedriver/capabilities) can be set in `goog:chromeOptions` capabilities. Note that Selenium 3.8 renamed this capability from `chromeOptions` to `goog:chromeOptions`.
 
 
 ### PhantomJS
@@ -230,7 +230,6 @@ $this->getModule('WebDriver')->webDriver->getKeyboard()->sendKeys('hello, webdri
 ```
 
 
-
 ## Actions
 
 ### _backupSession
@@ -328,7 +327,7 @@ $topBar = $module->_findElements('.top-bar')[0];
 $el = $module->_findClickable($topBar, 'Click Me');
 
 ```
- * `param` $page WebDriver instance or an element to search within
+ * `param RemoteWebDriver` $page WebDriver instance or an element to search within
  * `param` $link a link text or locator to click
  * `return` WebDriverElement
 
@@ -543,6 +542,18 @@ $I->checkOption('#agree');
  * `param` $option
 
 
+### clearField
+ 
+Clears given field which isn't empty.
+
+``` php
+<?php
+$I->clearField('#username');
+```
+
+ * `param` $field
+
+
 ### click
  
 Perform a click on a link or a button, given by a locator.
@@ -564,7 +575,7 @@ $I->click('Submit');
 // CSS button
 $I->click('#form input[type=submit]');
 // XPath
-$I->click('//form/*[@type=submit]');
+$I->click('//form/*[@type="submit"]');
 // link in context
 $I->click('Logout', '#nav');
 // using strict locator
@@ -616,8 +627,8 @@ $I->clickWithRightButton(['css' => '.checkout'], 20, 50);
 ```
 
  * `param string` $cssOrXPath css or xpath of the web element (body by default).
- * `param int`    $offsetX
- * `param int`    $offsetY
+ * `param int` $offsetX
+ * `param int` $offsetY
 
 @throws \Codeception\Exception\ElementNotFound
 
@@ -638,7 +649,16 @@ Can't be used with PhantomJS
  
 Print out latest Selenium Logs in debug mode
 
- * `param TestInterface` $test
+ * `param \Codeception\TestInterface` $test
+
+
+### deleteSessionSnapshot
+ 
+Deletes session snapshot.
+
+See [saveSessionSnapshot](#saveSessionSnapshot)
+
+ * `param` $name
 
 
 ### dontSee
@@ -669,7 +689,7 @@ But will ignore strings like:
 For checking the raw source code, use `seeInSource()`.
 
  * `param string` $text
- * `param string` $selector optional
+ * `param array|string` $selector optional
 
 
 ### dontSeeCheckboxIsChecked
@@ -718,7 +738,7 @@ Checks that current url doesn't match the given regular expression.
 ``` php
 <?php
 // to match root url
-$I->dontSeeCurrentUrlMatches('~$/users/(\d+)~');
+$I->dontSeeCurrentUrlMatches('~^/users/(\d+)~');
 ?>
 ```
 
@@ -834,6 +854,16 @@ Checks that the page source doesn't contain the given string.
  * `param` $text
 
 
+### dontSeeInPopup
+ 
+Checks that the active JavaScript popup,
+as created by `window.alert`|`window.confirm`|`window.prompt`, does NOT contain the given string.
+
+ * `param` $text
+
+@throws \Codeception\Exception\ModuleException
+
+
 ### dontSeeInSource
  
 Checks that the current page contains the given string in its
@@ -908,6 +938,25 @@ $I->dragAndDrop('#drag', '#drop');
  * `param string` $target (CSS ID or XPath)
 
 
+### executeAsyncJS
+ 
+Executes asynchronous JavaScript.
+A callback should be executed by JavaScript to exit from a script.
+Callback is passed as a last element in `arguments` array.
+Additional arguments can be passed as array in second parameter.
+
+```js
+// wait for 1200 milliseconds my running `setTimeout`
+* $I->executeAsyncJS('setTimeout(arguments[0], 1200)');
+
+$seconds = 1200; // or seconds are passed as argument
+$I->executeAsyncJS('setTimeout(arguments[1], arguments[0])', [$seconds]);
+```
+
+ * `param` $script
+ * `param array` $arguments
+
+
 ### executeInSelenium
  
 Low-level API method.
@@ -936,10 +985,14 @@ This example uses jQuery to get a value and assigns that value to a PHP variable
 ```php
 <?php
 $myVar = $I->executeJS('return $("#myField").val()');
-?>
+
+// additional arguments can be passed as array
+// Example shows `Hello World` alert:
+$I->executeJS("window.alert(arguments[0])", ['Hello world']);
 ```
 
  * `param` $script
+ * `param array` $arguments
 
 
 ### fillField
@@ -968,7 +1021,6 @@ $I->grabAttributeFrom('#tooltip', 'title');
 ?>
 ```
 
-
  * `param` $cssOrXpath
  * `param` $attribute
 
@@ -991,7 +1043,7 @@ If no parameters are provided, the full URI is returned.
 
 ``` php
 <?php
-$user_id = $I->grabFromCurrentUrl('~$/user/(\d+)/~');
+$user_id = $I->grabFromCurrentUrl('~^/user/(\d+)/~');
 $uri = $I->grabFromCurrentUrl();
 ?>
 ```
@@ -1073,8 +1125,12 @@ $name = $I->grabValueFrom(['name' => 'username']);
 
 ### loadSessionSnapshot
  
- * `param string` $name
- * `return` bool
+Loads cookies from a saved snapshot.
+Allows to reuse same session across tests without additional login.
+
+See [saveSessionSnapshot](#saveSessionSnapshot)
+
+ * `param` $name
 
 
 ### makeScreenshot
@@ -1254,7 +1310,33 @@ $I->resizeWindow(800, 600);
 
 ### saveSessionSnapshot
  
- * `param string` $name
+Saves current cookies into named snapshot in order to restore them in other tests
+This is useful to save session state between tests.
+For example, if user needs log in to site for each test this scenario can be executed once
+while other tests can just restore saved cookies.
+
+``` php
+<?php
+// inside AcceptanceTester class:
+
+public function login()
+{
+     // if snapshot exists - skipping login
+     if ($I->loadSessionSnapshot('login')) return;
+
+     // logging in
+     $I->amOnPage('/login');
+     $I->fillField('name', 'jon');
+     $I->fillField('password', '123345');
+     $I->click('Login');
+
+     // saving snapshot
+     $I->saveSessionSnapshot('login');
+}
+?>
+```
+
+ * `param` $name
 
 
 ### scrollTo
@@ -1304,7 +1386,7 @@ But will *not* be true for strings like:
 For checking the raw source code, use `seeInSource()`.
 
  * `param string` $text
- * `param string` $selector optional
+ * `param array|string` $selector optional
 
 
 ### seeCheckboxIsChecked
@@ -1359,7 +1441,7 @@ Checks that the current URL matches the given regular expression.
 ``` php
 <?php
 // to match root url
-$I->seeCurrentUrlMatches('~$/users/(\d+)~');
+$I->seeCurrentUrlMatches('~^/users/(\d+)~');
 ?>
 ```
 
@@ -1982,6 +2064,23 @@ $I->waitForElementChange('#menu', function(WebDriverElement $el) {
 @throws \Codeception\Exception\ElementNotFound
 
 
+### waitForElementClickable
+ 
+Waits up to $timeout seconds for the given element to be clickable.
+If element doesn't become clickable, a timeout exception is thrown.
+
+``` php
+<?php
+$I->waitForElementClickable('#agree_button', 30); // secs
+$I->click('#agree_button');
+?>
+```
+
+ * `param` $element
+ * `param int` $timeout seconds
+@throws \Exception
+
+
 ### waitForElementNotVisible
  
 Waits up to $timeout seconds for the given element to become invisible.
@@ -2051,4 +2150,4 @@ $I->waitForText('foo', 30, '.title'); // secs
  * `param string` $selector optional
 @throws \Exception
 
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.3/src/Codeception/Module/WebDriver.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.5/src/Codeception/Module/WebDriver.php">Help us to improve documentation. Edit module reference</a></div>

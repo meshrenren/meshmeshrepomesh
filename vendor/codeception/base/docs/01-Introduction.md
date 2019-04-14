@@ -48,7 +48,6 @@ With acceptance tests, you can be confident that users, following all the define
 
 ```php
 <?php
-$I = new AcceptanceTester($scenario);
 $I->amOnPage('/');
 $I->click('Sign Up');
 $I->submitForm('#signup', ['username' => 'MilesDavis', 'email' => 'miles@davis.com']);
@@ -61,7 +60,7 @@ What if we could check our application without running it on a server?
 That way we could see detailed exceptions on errors, have our tests run faster,
 and check the database against predictable and expected results. That's what functional tests are for.
 
-For functional tests, you emulate a web request (`$_GET` and `$_POST` variables) 
+For functional tests, you emulate a web request (`$_GET` and `$_POST` variables)
 which returns the HTML response. Inside a test, you can make assertions about the response,
 and you can check if the data was successfully stored in the database.
 
@@ -72,7 +71,6 @@ Codeception provides connectors to several popular PHP frameworks. You can also 
 
 ```php
 <?php
-$I = new FunctionalTester($scenario);
 $I->amOnPage('/');
 $I->click('Sign Up');
 $I->submitForm('#signup', ['username' => 'MilesDavis', 'email' => 'miles@davis.com']);
@@ -106,7 +104,7 @@ function testSavingUser()
     $user->setSurname('Davis');
     $user->save();
     $this->assertEquals('Miles Davis', $user->getFullName());
-    $this->unitTester->seeInDatabase('users', ['name' => 'Miles', 'surname' => 'Davis']);
+    $this->tester->seeInDatabase('users', ['name' => 'Miles', 'surname' => 'Davis']);
 }
 ```
 

@@ -22,6 +22,7 @@ class Menu extends \yii\widgets\Menu
     public $submenuTemplate = "\n<ul class='treeview-menu' {show}>\n{items}\n</ul>\n";
     public $activateParents = true;
     public $defaultIconHtml = '<i class="fa fa-circle-o"></i> ';
+    public $options = ['class' => 'sidebar-menu', 'data-widget' => 'tree'];
 
     /**
      * @var string is prefix that will be added to $item['icon'] if it exist.
@@ -80,7 +81,7 @@ class Menu extends \yii\widgets\Menu
         $replacements = [
             '{label}' => strtr($this->labelTemplate, ['{label}' => $item['label'],]),
             '{icon}' => empty($item['icon']) ? $this->defaultIconHtml
-                : '<i class="' . self::$iconClassPrefix . $item['icon'] . '"></i> ',
+                : '<i class="' . static::$iconClassPrefix . $item['icon'] . '"></i> ',
             '{url}' => isset($item['url']) ? Url::to($item['url']) : 'javascript:void(0);',
         ];
 
@@ -189,7 +190,7 @@ class Menu extends \yii\widgets\Menu
     {
         if (isset($item['url']) && is_array($item['url']) && isset($item['url'][0])) {
             $route = $item['url'][0];
-            if ($route[0] !== '/' && Yii::$app->controller) {
+            if (isset($route[0]) && $route[0] !== '/' && Yii::$app->controller) {
                 $route = ltrim(Yii::$app->controller->module->getUniqueId() . '/' . $route, '/');
             }
             $route = ltrim($route, '/');

@@ -1,7 +1,18 @@
-yii2-dynagrid
-=============
+<h1 align="center">
+    <a href="http://demos.krajee.com" title="Krajee Demos" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/krajee-logo-b.png" alt="Krajee Logo"/>
+    </a>
+    <br>
+    yii2-dynagrid
+    <hr>
+    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DTP3NZQ6G2AYU"
+       title="Donate via Paypal" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/donate.png" alt="Donate"/>
+    </a>
+</h1>
 
 [![Latest Stable Version](https://poser.pugx.org/kartik-v/yii2-dynagrid/v/stable)](https://packagist.org/packages/kartik-v/yii2-dynagrid)
+[![Latest Unstable Version](https://poser.pugx.org/kartik-v/yii2-dynagrid/v/unstable)](https://packagist.org/packages/kartik-v/yii2-dynagrid)
 [![License](https://poser.pugx.org/kartik-v/yii2-dynagrid/license)](https://packagist.org/packages/kartik-v/yii2-dynagrid)
 [![Total Downloads](https://poser.pugx.org/kartik-v/yii2-dynagrid/downloads)](https://packagist.org/packages/kartik-v/yii2-dynagrid)
 [![Monthly Downloads](https://poser.pugx.org/kartik-v/yii2-dynagrid/d/monthly)](https://packagist.org/packages/kartik-v/yii2-dynagrid)
@@ -34,9 +45,13 @@ set and save their own grid configuration. The major features provided by this m
 [composer.json](https://github.com/kartik-v/yii2-dynagrid/blob/master/composer.json) for this extension's requirements and dependencies. 
 
 ## Latest Release
-The latest version of the module is v1.4.7. Refer the [CHANGE LOG](https://github.com/kartik-v/yii2-dynagrid/blob/master/CHANGE.md) for details.
+Refer the [CHANGE LOG](https://github.com/kartik-v/yii2-dynagrid/blob/master/CHANGE.md) for details on changes to various releases.
 - With v1.2.0, the Dynagrid is revamped to include a `DynaGridStore` object and ability to save, update, or delete grid personalizations including grid filter and sort.
 - With v1.1.0, the DynaGrid includes Pjax support. To enable Pjax processing, set `gridOptions['pjax']` property to `true` and control pjax behavior using `gridOptions['pjaxSettings']`.
+
+How to contribute via a pull request?
+-------------------------------------
+Refer this [git workflow for contributors](.github/GIT-WORKFLOW.md).
 
 ### Demo
 You can see detailed [documentation](http://demos.krajee.com/dynagrid) or view a [complete demo](http://demos.krajee.com/dynagrid-demo) on usage of the extension.
@@ -135,4 +150,4 @@ such formulae columns and its dependencies to `DynaGrid::ORDER_FIX_LEFT`, so tha
 
 ## License
 
-**yii2-dynagrid** is released under the BSD 3-Clause License. See the bundled `LICENSE.md` for details.
+**yii2-dynagrid** is released under the BSD-3-Clause License. See the bundled `LICENSE.md` for details.

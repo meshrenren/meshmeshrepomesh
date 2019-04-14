@@ -1,7 +1,18 @@
-yii2-grid
-=========
+<h1 align="center">
+    <a href="http://demos.krajee.com" title="Krajee Demos" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/krajee-logo-b.png" alt="Krajee Logo"/>
+    </a>
+    <br>
+    yii2-grid
+    <hr>
+    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DTP3NZQ6G2AYU"
+       title="Donate via Paypal" target="_blank">
+        <img src="http://kartik-v.github.io/bootstrap-fileinput-samples/samples/donate.png" alt="Donate"/>
+    </a>
+</h1>
 
 [![Latest Stable Version](https://poser.pugx.org/kartik-v/yii2-grid/v/stable)](https://packagist.org/packages/kartik-v/yii2-grid)
+[![Latest Unstable Version](https://poser.pugx.org/kartik-v/yii2-grid/v/unstable)](https://packagist.org/packages/kartik-v/yii2-grid)
 [![License](https://poser.pugx.org/kartik-v/yii2-grid/license)](https://packagist.org/packages/kartik-v/yii2-grid)
 [![Total Downloads](https://poser.pugx.org/kartik-v/yii2-grid/downloads)](https://packagist.org/packages/kartik-v/yii2-grid)
 [![Monthly Downloads](https://poser.pugx.org/kartik-v/yii2-grid/d/monthly)](https://packagist.org/packages/kartik-v/yii2-grid)
@@ -12,8 +23,8 @@ Refer [detailed documentation](http://demos.krajee.com/grid) and/or a [complete 
 
 ![GridView Screenshot](https://lh4.googleusercontent.com/-4x-CdyyZAsY/VNxLPmaaAXI/AAAAAAAAAQ8/XYYxTiQZvJk/w868-h516-no/krajee-yii2-grid.jpg)
 
-## Latest Release
-The latest version of the module is v3.1.1. Refer the [CHANGE LOG](https://github.com/kartik-v/yii2-grid/blob/master/CHANGE.md) for details. 
+## Release Changes
+> NOTE: Refer the [CHANGE LOG](https://github.com/kartik-v/yii2-grid/blob/master/CHANGE.md) for details on changes to various releases.
 
 New features with release 2.7.0.
 
@@ -38,6 +49,10 @@ New features with release 2.7.0.
 > NOTE: This extension depends on other yii2 extensions based on the functionality chosen by you. It will not install such dependent packages by default, but will prompt through an exception, if accessed.
 For example, if you choose to enable PDF export, then the [yii2-mpdf](http://demos.krajee.com/mpdf) will be mandatory and exception will be raised if `yii2-mpdf` is not installed.
 Check the [composer.json](https://github.com/kartik-v/yii2-grid/blob/master/composer.json) for other extension dependencies.
+
+How to contribute via a pull request?
+-------------------------------------
+Refer this [git workflow for contributors](.github/GIT-WORKFLOW.md).
 
 ## Module
 The extension has been created as a module to enable access to advanced features like download actions (exporting as csv, text, html, or xls). You should configure the module with a name of `gridview` as shown below:
@@ -139,6 +154,10 @@ This extension (with v2.3.0) adds ability to toggle between viewing **all grid d
 ### \kartik\grid\DataColumn
 The default Yii data column has been enhanced with various additional parameters. Refer [documentation](http://demos.krajee.com/grid#data-column) for details.
 
+## Enum Column (New)
+### \kartik\grid\EnumColumn
+This is a new grid column class available from release v3.2.7 that extends the `\kartik\grid\DataColumn` class. It  allows you to configure and display a dynamic content / markup for each of the cell attribute  values based on enumerated `$value => $content` pairs. 
+
 ## Expand Row Column (New)
 ### \kartik\grid\ExpandRowColumn
 An enhanced data column that allows one to expand a grid row and display additional/detail content in a new row below it either directly or via ajax. Refer [documentation](http://demos.krajee.com/grid#expand-row-column) for details.
@@ -149,13 +168,15 @@ An enhanced data column that allows you to edit the cell content using [kartik\e
 
 ## Formula Column (New)
 ### \kartik\grid\FormulaColumn
-This is a new grid column class that extends the \kartik\grid\DataColumn class. It allows calculating formulae just like in spreadsheets - based on
+This is a new grid column class that extends the `\kartik\grid\DataColumn` class. It allows calculating formulae just like in spreadsheets - based on
 values of other columns in the grid. The formula calculation is done at grid rendering runtime and does not need to query the database. Hence you can use formula columns
 within another formula column. Refer [documentation](http://demos.krajee.com/grid#formula-column) for details.
 
+Refer [documentation](http://demos.krajee.com/grid#enum-column) for details.
+
 ## Boolean Column (New)
 ### \kartik\grid\BooleanColumn
-This is a new grid column class that extends the \kartik\grid\DataColumn class. It automatically converts boolean data (true/false) values to user friendly indicators or labels (that are configurable). 
+This is a new grid column class that extends the `\kartik\grid\DataColumn` class. It automatically converts boolean data (true/false) values to user friendly indicators or labels (that are configurable). 
 Refer [documentation](http://demos.krajee.com/grid#boolean-column) for details. The following are new features added since release v1.6.0:
 
 - `BooleanColumn` icons have been setup as `ICON_ACTIVE` and `ICON_INACTIVE` constants in GridView.
@@ -296,4 +317,4 @@ echo GridView::widget([
 
 ## License
 
-**yii2-grid** is released under the BSD 3-Clause License. See the bundled `LICENSE.md` for details.
+**yii2-grid** is released under the BSD-3-Clause License. See the bundled `LICENSE.md` for details.

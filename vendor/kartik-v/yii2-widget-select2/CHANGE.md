@@ -1,6 +1,34 @@
 Change Log: `yii2-widget-select2`
 =================================
 
+## Version 2.1.3
+
+**Date:** 07-Sep-2018
+
+- Enhancements for Bootstrap 4.x Support.
+
+## Version 2.1.2
+
+**Date:** 17-Aug-2018
+
+- Reorganize all source code in `src` directory.
+- (enh #268): Add Bootstrap 4.x Support.
+- (enh #249): Update German Translations.
+- (enh #242): Update Marathi Translations.
+- (enh #246, #247, #253): Fix Select All behavior for multiple select.
+
+## Version 2.1.1
+
+**Date:** 25-Nov-2017
+
+- (enh #241): Enhancements to Select2 Krajee theme styles.
+- Updated code of conduct.
+- (enh #240, #233, #212): Update to latest release v4.0.5 of the plugin.
+- (enh #236): Enable Select All with Ajax Loading .
+- (enh #231): Update Chinese translations.
+- (enh #225, #224): Add Finnish translations.
+- (bug #220): Correct multiple ajax select bug.
+
 ## Version 2.1.0
 
 **Date:** 07-Aug-2017

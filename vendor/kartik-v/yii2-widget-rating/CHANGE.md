@@ -1,6 +1,20 @@
 Change Log: `yii2-widget-rating`
 ================================
 
+## Version 1.0.4
+
+**Date:** 16-Sep-2018
+
+- Updates to support Bootstrap 4.x.
+- Reorganize relevant code in "src" directory.
+
+## Version 1.0.3
+
+**Date:** 18-Nov-2017
+
+- Add github contribution and issue/PR log templates.
+- (enh #10): Correct language initialization.
+
 ## Version 1.0.2
 
 **Date:** 18-Feb-2016

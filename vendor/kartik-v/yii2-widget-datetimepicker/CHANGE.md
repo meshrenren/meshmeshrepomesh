@@ -1,6 +1,35 @@
 Change Log: `yii2-widget-datetimepicker`
 ========================================
 
+## Version 1.4.8
+
+**Date:** 09-Oct-2018
+
+- Bump composer dependencies.
+
+## Version 1.4.7
+
+**Date:** 29-Aug-2018
+
+- (bug #97): Correct input clear/reset after click.
+- Correct Asset Bundle registration to validate `bsVersion`.
+
+## Version 1.4.6
+
+**Date:** 25-Aug-2018
+
+- (bug #96): Correct JS language locale translations.
+
+## Version 1.4.5
+
+**Date:** 22-Aug-2018
+
+- Add Bootstrap 4.x support.
+- Reorganize source code in `src` directory.
+- (enh #94): Add Kazakh Translations.
+- (enh #92): Update bootstrap-datetimepicker.js plugin to support Bootstrap 4.x.
+- (enh #86): Update Turkish translations.
+
 ## Version 1.4.4
 
 **Date:** 08-Jun-2017

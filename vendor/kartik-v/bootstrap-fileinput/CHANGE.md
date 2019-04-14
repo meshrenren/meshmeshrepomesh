@@ -1,6 +1,134 @@
 Change Log: `bootstrap-fileinput`
 =================================
 
+## version 4.5.2
+
+**Date:** 03-Jan-2019
+
+- (enh #1342): Update Turkish Translations.
+- (enh #1339): Better validation of `createObjectURL` and `revokeObjectURL`.
+- Update examples\index.html to use latest jQuery, Bootstrap & Font Awesome libraries.
+- (enh #1333): Update Galician Translations.
+- (enh #1332): Update Chinese Translations.
+- (enh #1325): Update README for NPM install.
+- (bug #1324): Error in IE11 Folder drag and drop.
+- (enh #1322): Add Uzbek Translations.
+- (enh #1320): New events for files dragged and dropped.
+- (enh #1319): Enhance mimeType parsing via `mimeTypeAliases`.
+   - allows quicktime `.mov` files to be previewed in non Apple browsers like Chrome/Firefox/IE.
+- (enh #1318): Configure PDFjs viewer for IE11 pdf preview.
+- (enh #1314): Update Hebrew Translations.
+- (enh #1313): Correct file type function validation.
+- (enh #1311): Correct preview zoom modal keydown next and prev keyboard behavior.
+- (enh #1308): Enhance audio file preview thumbnail styling.
+- (enh #1298): New `encodeUrl` boolean option that encodes all URL passed by default.
+
+## version 4.5.1
+
+**Date:** 25-Sep-2018
+
+- (enh #1305): Correct `browseOnZoneClick` behavior.
+- (enh #1297): Update default thumbnail shadow style.
+- (enh #1286): Correct piexif library load validation.
+
+## version 4.5.0
+
+**Date:** 30-Aug-2018
+
+- (enh #1292): Update DOMPurify plugin to the latest release.
+- (enh #1291): Update Dutch Translations.
+- (enh #1290): Enhance `htmlEncode` to parse undefined variables.
+- (enh #1288): Update Dutch Translations.
+- (enh #1287): Correct full screen modal styling.
+- (enh #1286): Default `autoOrientImage` to `false`.
+- (enh #1285): Update Danish Translations.
+- (bug #1282): Allow `filebrowse` event to be prevented.
+- (enh #1279): Enhance `usePdfRenderer` callback check to detect android phones.
+- Correct nuget batch file.
+
+## version 4.4.9
+
+**Date:** 25-Jul-2018
+
+- (bug #1276): More correct validation of `previewContentTemplates`.
+- (enh #1275): Update Farsi Translations.
+- (enh #1272, #1273): Add Hebrew Translations.
+- (enh #1269, #1270): Enhance auto orientation of images using piexif.js.
+- Enhance progress bar text styling.
+- (enh #1254): Enhance PDF Preview on iOS devices via external PDF renderer (PDFJS).
+- (bug #1242): Correct drop zone enabling check for ajax uploads.
+- (bug #1232): Correct RTL input group button styling.
+- (enh #1228): Enhance and correct preview refresh for various scenarios.
+- (bug #1226): Enhance native input display styling when `showBrowse` is `false`.
+- (enh #1223): Update Font Awesome 5.x theme icons.
+
+## version 4.4.8
+
+**Date:** 11-Apr-2018
+
+- (enh #1221): Update Indonesian Translations.
+- (enh #1220): Add Krajee Explorer Font Awesome 5 Theme (`explorer-fas`).
+- (enh #1219): Update Chinese translations.
+- (bug #1217): Fix drag and drop to send files correctly for form submission.
+- (enh #1216): Add drag and drop support for folders for webkit browsers (only for ajax upload mode).
+- (bug #1215): Correct zoom preview for errored thumbnails.
+- (enh #1210): Enhance support for Office Docs Preview and Google Docs Preview.
+- (bug #1204): Correct merging of ajax callbacks.
+- (bug #1201, #1200): Correct `elErrorContainer` validation for `browseOnZoneClick`.
+- (enh #1197): Add new Font Awesome 5 Theme.
+- (enh #1193): Add drag and drop functionality for form based submissions.
+- (enh #1179): New property `reversePreviewOrder` to allow reversing files displayed in preview.
+- (enh #1178): Enhance BS button styling for default and FA themes.
+- (bug #1173): Correct `showRemove` validation in `fileActionSettings`.
+- (enh #1168): Update Ukranian translations.
+- (enh #1166): Update Hungarian translations.
+- (enh #1148): Update font awesome themes to include missing download icon.
+
+## version 4.4.7
+
+**Date:** 22-Jan-2018
+
+- Update copyright year to current.
+- (enh #1164): Update Slovak translations.
+- (enh #1163): Update Czech translations.
+- (enh #1159): Update Portuguese Brazilian translations.
+- (enh #1157, #1158): Update input group styles for BS4 beta3.
+- (bug #1152): Correct preview thumbs stacking post sorting and/or ajax deletion.
+- (enh #1149): Enhance download button behavior to allow Firefox browser to download.
+- (enh #1143): Correct translation path in docs.
+- (enh #1142, #1141): Update Georgian translations.
+- (enh #1138, #1137): Update Italian translations.
+- (enh #1134): Update Polish translations.
+- (enh #1131): New public method `readFiles` to allow input & preview of file objects programmatically.
+- (enh #1128, #1129): Update rubaxa sortable plugin to fix Chrome support errors.
+- (enh #1127): Update Italian Translations.
+
+## version 4.4.6
+
+**Date:** 13-Nov-2017
+
+- (enh #1125): Create CODE_OF_CONDUCT.md.
+- (bug #1123): Correct error container close button click behavior for various scenarios.
+- (enh #1121): Update Spanish Translations.
+- (enh #1119): Enhance close button icon markup as per BS4 norms.
+- (enh #1118): Better file action button style.
+- (bug #1117): Reset `ajaxAborted` status more correctly before upload.
+- (enh #1113): Correct slug default callback to include hyphens in file name.
+- (enh #1111): Enhance default file download action to use `button` markup.
+- (enh #1110): Add support for previewing TIFF, EPS, AI, WMF files.
+- (bug #1108): Correct sortable drag element parsing during sorting.
+- (enh #1106): Update Portuguese BR Translations.
+- (enh #1105): Update Russian Translations.
+- (enh #1103): Update German Translations.
+- (enh #1099): Enhance mime type parsing for IE 11. 
+- (enh #1097): Add support for previewing Office file formats (e.g. docx, xlsx, pptx). 
+    - Supports all common formats that google docs can view.
+    - Available only for initial preview content (where the document is accessible via a public web link).
+- Update README to include updated cover images for bootstrap-fileinput themes (with Bootstrap 4.x support).
+- (enh #1096): Update Czech language folder and code to ISO code `cs`.
+- (bug #1095): Fix resize image when used with non JPEG images (silently ignoring `piexif` errors).
+- (enh #1094): Update French Translations.
+
 ## version 4.4.5
 
 **Date:** 01-Oct-2017

@@ -24,15 +24,9 @@ class ApplicationDescription
 {
     const GLOBAL_NAMESPACE = '_global';
 
-    /**
-     * @var Application
-     */
     private $application;
-
-    /**
-     * @var null|string
-     */
     private $namespace;
+    private $showHidden;
 
     /**
      * @var array
@@ -48,11 +42,6 @@ class ApplicationDescription
      * @var Command[]
      */
     private $aliases;
-
-    /**
-     * @var bool
-     */
-    private $showHidden;
 
     /**
      * @param Application $application
@@ -108,12 +97,12 @@ class ApplicationDescription
 
     private function inspectApplication()
     {
-        $this->commands = array();
-        $this->namespaces = array();
+        $this->commands = [];
+        $this->namespaces = [];
 
         $all = $this->application->all($this->namespace ? $this->application->findNamespace($this->namespace) : null);
         foreach ($this->sortCommands($all) as $namespace => $commands) {
-            $names = array();
+            $names = [];
 
             /** @var Command $command */
             foreach ($commands as $name => $command) {
@@ -130,19 +119,17 @@ class ApplicationDescription
                 $names[] = $name;
             }
 
-            $this->namespaces[$namespace] = array('id' => $namespace, 'commands' => $names);
+            $this->namespaces[$namespace] = ['id' => $namespace, 'commands' => $names];
         }
     }
 
     /**
-     * @param array $commands
-     *
      * @return array
      */
     private function sortCommands(array $commands)
     {
-        $namespacedCommands = array();
-        $globalCommands = array();
+        $namespacedCommands = [];
+        $globalCommands = [];
         foreach ($commands as $name => $command) {
             $key = $this->application->extractNamespace($name, 1);
             if (!$key) {

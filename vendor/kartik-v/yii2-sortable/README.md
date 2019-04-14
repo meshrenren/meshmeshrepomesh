@@ -1,7 +1,8 @@
 yii2-sortable
 =============
 
-[![Latest Stable Version](https://poser.pugx.org/kartik-v/yii2-sortable/v/stable)](https://packagist.org/packages/kartik-v/yii2-sortable)
+[![Stable Version](https://poser.pugx.org/kartik-v/yii2-widget-sortable/v/stable)](https://packagist.org/packages/kartik-v/yii2-widget-sortable)
+[![Unstable Version](https://poser.pugx.org/kartik-v/yii2-widget-sortable/v/unstable)](https://packagist.org/packages/kartik-v/yii2-widget-sortable)
 [![License](https://poser.pugx.org/kartik-v/yii2-sortable/license)](https://packagist.org/packages/kartik-v/yii2-sortable)
 [![Total Downloads](https://poser.pugx.org/kartik-v/yii2-sortable/downloads)](https://packagist.org/packages/kartik-v/yii2-sortable)
 [![Monthly Downloads](https://poser.pugx.org/kartik-v/yii2-sortable/d/monthly)](https://packagist.org/packages/kartik-v/yii2-sortable)
@@ -58,4 +59,4 @@ echo Sortable::widget([
 
 ## License
 
-**yii2-sortable** is released under the BSD 3-Clause License. See the bundled `LICENSE.md` for details.
+**yii2-sortable** is released under the BSD-3-Clause License. See the bundled `LICENSE.md` for details.
