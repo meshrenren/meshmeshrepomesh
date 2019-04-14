@@ -20,8 +20,8 @@ class JournalHelper
         }else{
             $journal->transacted_date = date('Y-m-d H:i:s');
         }
-        //$journal->transacted_by = \Yii::$app->user->identity->id;
-        $journal->transacted_by = 18; //CINCO
+        $journal->transacted_by = \Yii::$app->user->identity->id;
+        //$journal->transacted_by = 18; //CINCO
 
         if($journal->save()){
             return $journal;
@@ -43,8 +43,8 @@ class JournalHelper
             $journal->particular_id = $value['particular_id'];
 
             if(!$journal->save()){
-            	echo var_dump($journal->errors);
-            	echo "<br/><br/> ".$value['particular_id'];
+            	//echo var_dump($journal->errors);
+            	//echo "<br/><br/> ".$value['particular_id'];
             	return false;
             }
             

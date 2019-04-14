@@ -33,8 +33,8 @@ class PaymentHelper
         $payment->check_number = $data['check_number'];
         $payment->amount_paid = $data['amount_paid'];
         $payment->created_date = date('Y-m-d H:i:s');
-        //$payment->created_by = \Yii::$app->user->identity->id;
-        $payment->created_by = 18; //CINCO
+        $payment->created_by = \Yii::$app->user->identity->id;
+        //$payment->created_by = 18; //CINCO
 
         if($payment->save()){
             return $payment;
