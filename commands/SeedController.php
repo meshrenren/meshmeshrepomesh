@@ -5,6 +5,14 @@ namespace app\commands;
 use Yii;
 use yii\console\Controller;
 use yii\db\Query;
+use app\helpers\particulars\ParticularHelper;
+use app\helpers\accounts\LoanHelper;
+use app\helpers\accounts\SavingsHelper;
+use app\helpers\accounts\ShareHelper;
+use app\helpers\accounts\TimeDepositHelper;
+
+use app\helpers\payment\PaymentHelper;
+use app\helpers\journal\JournalHelper;
 
 class SeedController extends Controller
 {
@@ -268,7 +276,8 @@ class SeedController extends Controller
         }
     }*/
 
-    public function actionSeedLoanTransacMember(){
+    //Done Seeding loan. Please don't uncomment or run this unless necessary
+    /*public function actionSeedLoanTransacMember(){
         $query = new \yii\db\Query;
         $query->select('*');
         $query->from('zold_loantransacmember llm');
@@ -284,6 +293,12 @@ class SeedController extends Controller
                 $loanLedgerMember = $query2->all();
                 $loans = "";
                 foreach ($loanLedgerMember as $key => $loan) {
+                    $balance = floatVal(str_replace(",", "", $loan['Balance']));
+                    $dateStrpos = strpos($loan['DateTransac'], '2019');
+                    if($balance <= 0 && !$dateStrpos){
+                        continue;
+                    }
+
                     $loanType = strtoupper($loan['LoanType']);
                     $loan_id = 0;
                     if(strpos($loanType, "APPLIANCE")){
@@ -352,8 +367,6 @@ class SeedController extends Controller
                             $date = explode("/", $date[0]);
                             $release_date = $date[2] . "-" . $date[1] . "-" . $date[0];
                         }
-                        /*echo $loan['DateTransac'] . "\n";
-                        echo $release_date . "\n";*/
                         $addLoanAccount = new \app\models\LoanAccount;
                         $addLoanAccount->account_no = $product->id . "-" . $trans_serial_pad;
                         $addLoanAccount->loan_id = $loan_id;
@@ -372,7 +385,7 @@ class SeedController extends Controller
                         $addLoanAccount->quin_prepaid = floatVal(str_replace(",", "", $loan['QuiPrepaid']));
                         $addLoanAccount->interest_accum = floatVal(str_replace(",", "", $loan['InterestAccum']));
                         $addLoanAccount->prepaid_accum = floatVal(str_replace(",", "", $loan['PrepaidAccum']));
-                        $addLoanAccount->olddb_transacnum = floatVal(str_replace(",", "", $loan['TransactNum']));
+                        $addLoanAccount->olddb_transacnum = $loan['TransactNum'];
                         if(!$addLoanAccount->save()){
                             var_dump($addLoanAccount->getErrors());
                         }
@@ -392,6 +405,100 @@ class SeedController extends Controller
             else{
                 echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
             }
+        }
+    }*/
+
+    public function actionLoanLedger(){
+
+        $loanAccount = \app\models\LoanAccount::find()->all();
+
+        foreach ($loanAccount as $key => $accs) {
+            $query = new \yii\db\Query;
+            $query->select('*');
+            $query->from('zold_loanledger ll')->where("TransacNum = '".$accs->olddb_transacnum."' AND PrincipalLoan != ''")->orderBy('EntryNum DESC');
+            $getPLegder = $query->one();
+            if($getPLegder != null){
+                echo $accs->account_no . "\tHAs Ledger: \t" .  $getPLegder['DateTransac'] . "\n";
+
+                $query = new \yii\db\Query;
+                $query->select('*');
+                $query->from('zold_loanledger ll')->where("TransacNum = '".$accs->olddb_transacnum."' AND EntryNum >= ".$getPLegder['EntryNum']);
+                $getLegder = $query->all();
+                if(count($getLegder) > 0){
+                    echo "\tList Ledger: \t" .  count($getLegder) . "\n";
+                    foreach ($getLegder as $key2 => $ledger) {
+                        $getTrans = \app\models\LoanTransaction::find()->where(['olddb_entrynum' => $ledger['EntryNum']])->one();
+                        if($getTrans != null){
+                            continue;
+                        }
+                        $date = explode(' ', $ledger['DateTransac']) ;
+                        $dSub = explode('/', $date[0]) ;
+                        $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+
+                        $type = "PAYPARTIAL";
+                        $amount = 0;
+                        $AmtPaid = 0;
+                        $Prepaid = 0;
+                        $Interest = 0;
+                        $Interest_earn = 0;
+                        $Balance = floatval(str_replace(",", "", $ledger['Balance']));
+                        if($ledger['PrincipalLoan'] != ''){
+                            $type = "RELEASE";
+                            $amount = floatval(str_replace(",", "", $ledger['PrincipalLoan']));
+                        }else{
+                            $AmtPaid = floatval(str_replace(",", "", $ledger['AmtPaid']));
+                            $Prepaid = floatval(str_replace(",", "", $ledger['Prepaid']));
+                            $Interest = floatval(str_replace(",", "", $ledger['Interest']));
+                            $Interest_earn = $Interest;
+                            $amount = $AmtPaid + $Prepaid;
+
+                            if($ledger['Remarks'] == 'End'){
+                                $amount = $AmtPaid + $Prepaid + $Interest;
+                                $Interest_earn = 0;
+                            }else{
+                                $Interest = 0;
+                            }                       
+                        }
+
+                        $addLoanAccount = new \app\models\LoanTransaction;
+                        $addLoanAccount->loan_account = $accs->account_no;
+                        $addLoanAccount->amount = $amount;
+                        $addLoanAccount->transaction_type = $type;
+                        $addLoanAccount->transacted_by = 18;
+                        $addLoanAccount->transaction_date = $d;
+                        $addLoanAccount->running_balance = $Balance;
+                        $addLoanAccount->remarks = "Migrate from old db";
+                        $addLoanAccount->prepaid_intpaid = $Prepaid;
+                        $addLoanAccount->interest_paid = $Interest;
+                        $addLoanAccount->OR_no = $d;
+                        $addLoanAccount->principal_paid = $AmtPaid;
+                        $addLoanAccount->arrears_paid = 0;
+                        $addLoanAccount->date_posted = $d;
+                        $addLoanAccount->interest_earned = $Interest_earn;
+                        $addLoanAccount->olddb_entrynum = $ledger['EntryNum'];
+
+                        if($addLoanAccount->save()){
+                            echo $ledger['EntryNum'] . "\tSuccess Save \n";
+                        }
+                        else{
+                            var_dump($addLoanAccount->getErrors());
+                        }
+
+                    }
+                }/*else{
+                    echo $accs->account_no . "\tNo Ledger: \n";
+                }*/
+            }
+
+            /*if(count($getLegder) > 0){
+                echo $accs->account_no . "\tHAs Ledger: \t" .  count($getLegder) . "\n";
+                foreach ($getLegder as $key2 => $ledger) {
+                    
+                }
+            }else{
+                echo $accs->account_no . "\tNo Ledger: \n";
+            }*/
+            
         }
     }
 
@@ -419,6 +526,7 @@ class SeedController extends Controller
                     $account->balance = 0;
                     $account->status = "Active";
                     $account->fk_share_product = $product->id;
+                    $account->old_db_idnum_zero = $cs['IDNum'];
 
                     if($account->save()){
                         $product->transaction_serial = $trans_serial;
@@ -434,6 +542,74 @@ class SeedController extends Controller
             else{
                 echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " No Member" . "\n";
             }*/
+        }
+    }
+
+    public function actionShareTransaction(){
+        $accounts = \app\models\Shareaccount::find()->all();
+
+        foreach ($accounts as $key => $acc) {
+            $getTRans = \app\models\ShareTransaction::find()->where(['fk_share_id' => $acc->accountnumber])->count(); 
+            if($getTRans > 0){
+                continue;
+            }
+
+            $query = new \yii\db\Query;
+            $query->select('*');
+            $query->from('zold_sharecapledger scl')->where(['IDNum' => $acc->old_db_idnum_zero]);
+            $shareLedger = $query->all();
+            $total = 0;
+            foreach ($shareLedger as $key => $ledger) {
+                $type = "";
+                $amount = 0;
+                $Receive = floatval(str_replace(",", "", $ledger['Receive']));
+                $Withdrawal = floatval(str_replace(",", "", $ledger['Withdrawal']));
+                $Balance = floatval(str_replace(",", "", $ledger['Balance']));
+
+                if($ledger['Receive'] != '' && $Receive > 0){
+                    $type = "CASHDEP";
+                    $amount = $Receive;
+                }
+                else if($ledger['Withdrawal'] != '' && $Withdrawal > 0){
+                    $type = "WITHDRWL";
+                    $amount = $Withdrawal;
+                }
+                else{
+                    if($ledger['EntryNum'] == 1 && $Balance > 0){
+                        $type = "CASHDEP";
+                        $amount = $Balance;
+                    }
+                    else{
+                        continue;
+                    }
+                }
+
+                $date = explode(' ', $ledger['DateTransac']) ;
+                $dSub = explode('/', $date[0]) ;
+                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+
+                $addTrans = new \app\models\ShareTransaction;
+                $addTrans->fk_share_id = $acc->accountnumber;
+                $addTrans->reference_number = $ledger['ORGVNum'];
+                $addTrans->amount = $amount;
+                $addTrans->transaction_type = $type;
+                $addTrans->transacted_by = 18;
+                $addTrans->transaction_date = $d;
+                $addTrans->running_balance = $Balance;
+                $addTrans->remarks = "Migrate from old DB";
+                $addTrans->olddb_entrynum = $ledger['EntryNum'];
+                if($addTrans->save()){
+                    if($type == "CASHDEP"){
+                        $total += $amount;
+                    }
+                    else if($type == "WITHDRWL"){
+                        $total -= $amount;
+                    }
+                }
+            }
+            $acc->balance = $total;
+            $acc->save();
+            echo "Save \t" . $total;
         }
     }
 
@@ -535,6 +711,772 @@ class SeedController extends Controller
             }
         }
     }
+
+    public function actionPaymentHasPayroll(){
+        $query = new \yii\db\Query;
+        $query->select('Distinct(ORNum), Name, DateTransac');
+        $query->from('zold_paymentrec')->where(['ORNum' => 'n4687'])->orderBy('ORNum');
+        $payrollRec = $query->all();
+        foreach ($payrollRec as $key => $rec) {
+
+            $getOR = \app\models\PaymentRecord::find()->where(['or_num' => $rec['ORNum']])->one();
+            if($getOR != null){
+                echo 'Payment exist: ' . $rec['ORNum'] . "\n";
+                continue;
+            }
+
+            $success = null;
+
+            //Get
+            $totalpayroll = 0;
+            $query3 = new \yii\db\Query;
+            $query3->select('*');
+            $query3->from('zold_payrolllist')->where(['ORNum' => $rec['ORNum']]);
+            $payrollRec3 = $query3->all();
+            if(count($payrollRec3) > 0){
+                $recordList = [];
+                $journalList = [];
+                $totalCredit = 0;
+                $totalDebit = 0;
+                foreach ($payrollRec3 as $key3 => $rec3) {
+                    if($rec3['Name'] == 'TOTAL'){
+                        continue;
+                    }
+
+                    $getMember = \app\models\Member::find()->where("CONCAT(last_name, ', ', first_name, ' ', middle_name) = '" . $rec3['Name'] . "'")->one();
+                    $member_id = null;
+                    if($getMember){
+                        $member_id = $getMember->id;
+                        echo "\t Has Member: \t" . $getMember->last_name . "\n";
+                    }else{
+                        echo "\t No Member: \t" . $rec3['Name'] . "\n";
+                        continue;
+                    }
+
+                    $ShareDeposit = floatval(str_replace(",", "", $rec3['ShareDeposit']));
+                    $RL = floatval(str_replace(",", "", $rec3['RL']));
+                    $PIonRL = floatval(str_replace(",", "", $rec3['PIonRL']));
+                    $PCL = floatval(str_replace(",", "", $rec3['PCL']));
+                    $EduL = floatval(str_replace(",", "", $rec3['EduL']));
+                    $HL = floatval(str_replace(",", "", $rec3['HL']));
+                    $SD = floatval(str_replace(",", "", $rec3['SD']));
+                    $MCL = floatval(str_replace(",", "", $rec3['MCL']));
+                    $HIL = floatval(str_replace(",", "", $rec3['HIL']));
+                    $AL = floatval(str_replace(",", "", $rec3['AL']));
+                    $PIonAL = floatval(str_replace(",", "", $rec3['PIonAL']));
+                    $HC = floatval(str_replace(",", "", $rec3['HC']));
+                    $Mortuary = floatval(str_replace(",", "", $rec3['Mortuary']));
+                    $OBL = floatval(str_replace(",", "", $rec3['OBL']));
+                    $BUL = floatval(str_replace(",", "", $rec3['BUL']));
+                    $ML = floatval(str_replace(",", "", $rec3['ML']));
+                    $EG = floatval(str_replace(",", "", $rec3['EG']));
+                    $DML = floatval(str_replace(",", "", $rec3['DML']));
+                    $Time = floatval(str_replace(",", "", $rec3['Time']));
+                    $CPL = floatval(str_replace(",", "", $rec3['CPL']));
+                    $CCL = floatval(str_replace(",", "", $rec3['CCL']));
+                    $AntiRad = floatval(str_replace(",", "", $rec3['AntiRad']));
+                    $Casserole = floatval(str_replace(",", "", $rec3['Casserole']));
+                    $Keyboard = floatval(str_replace(",", "", $rec3['Keyboard']));
+                    $LGCode = floatval(str_replace(",", "", $rec3['LGCode']));
+                    $RaffleTicket = floatval(str_replace(",", "", $rec3['RaffleTicket']));
+                    $Catering = floatval(str_replace(",", "", $rec3['Catering']));
+                    $RiceLoan = floatval(str_replace(",", "", $rec3['RiceLoan']));
+                    $TShirt = floatval(str_replace(",", "", $rec3['TShirt']));
+                    $NotarialFee = floatval(str_replace(",", "", $rec3['NotarialFee']));
+                    $Misc = floatval(str_replace(",", "", $rec3['Misc']));
+
+                    $list = [
+                        'ShareDeposit' => $ShareDeposit,
+                        'RL' => $RL,
+                        'PIonRL' => $PIonRL,
+                        'PCL' => $PCL,
+                        'EduL' => $EduL,
+                        'HL' => $HL,
+                        'SD' => $SD,
+                        'MCL' => $MCL,
+                        'HIL' => $HIL,
+                        'AL' => $AL,
+                        'PIonAL' => $PIonAL,
+                        'HC' => $HC,
+                        'Mortuary' => $Mortuary,
+                        'OBL' => $OBL,
+                        'BUL' => $BUL,
+                        'EG' => $EG,
+                        'DML' => $DML,
+                        'Time' => $Time,
+                        'CPL' => $CPL,
+                        'CCL' => $CCL,
+                        'AntiRad' => $AntiRad,
+                        'Casserole' => $Casserole,
+                        'Keyboard' => $Keyboard,
+                        'LGCode' => $LGCode,
+                        'RaffleTicket' => $RaffleTicket,
+                        'Catering' => $Catering,
+                        'RiceLoan' => $RiceLoan,
+                        'TShirt' => $TShirt,
+                        'NotarialFee' => $NotarialFee,
+                        'Misc' => $Misc
+                    ];
+
+                    
+                    $totalpayroll += $ShareDeposit + $RL + $PIonRL + $PCL + $EduL + $HL + $SD + $MCL + $HIL + $AL + $PIonAL + $HC + $Mortuary + $OBL + $BUL + $EG + $DML + $CPL + $CCL + $AntiRad + $Casserole + $Keyboard + $LGCode + $RaffleTicket + $Catering + $RiceLoan + $TShirt + $NotarialFee + $Misc;
+
+                    $res = $this->paymentList($member_id, $list);
+                    $totalCredit += $res['totalCredit'];
+                    $totalDebit += $res['totalDebit'];
+
+                    $recordList = array_merge($recordList, $res['recordList']);
+                    $journalList = array_merge($journalList, $res['journalList']);
+                }
+                /*if($totalpayroll != $total){
+                    echo ($rec['ORNum'] . "\t" . $rec['Name']) . "\n";
+                    echo "\tTotal \t" . $total . "\n";
+                    echo "\tHas Payroll List \t" . $totalpayroll . " \t Not EQUAL \n";
+                }
+                else{
+                    echo "\tHas Payroll List \t" . $totalpayroll . "\n";
+                }*/
+
+                $date = explode(' ', $rec['DateTransac']) ;
+                $dSub = explode('/', $date[0]) ;
+
+                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+                echo ($rec['ORNum'] . "\t" . $rec['Name']) . "\n";
+                $PaymentRecord = [];
+                $PaymentRecord['or_num'] = $rec['ORNum'];
+                $PaymentRecord['name'] = $rec['Name'];
+                $PaymentRecord['type'] = 'Individual';
+                $PaymentRecord['posting_code'] = '';
+                $PaymentRecord['check_number'] = '';
+                $PaymentRecord['amount_paid'] = $totalpayroll;
+                $PaymentRecord['date_transact'] = $d;
+
+                $saveOR = PaymentHelper::savePayment($PaymentRecord);
+                if($saveOR){
+                    $success = true;
+                    $insertSuccess = PaymentHelper::insertAccount($recordList, $saveOR->id);
+                    if($insertSuccess){
+                        $success = true;
+                    }
+                    else{
+                        $success = false;
+                    }
+                }
+                else{
+                    $success = false;
+                }
+
+                if($success){
+                    //Journal
+                    $journalHeaderData = array();
+                    $journalHeaderData['reference_no'] = $rec['ORNum'];
+                    $journalHeaderData['posting_date'] = $saveOR->date_transact;
+                    $journalHeaderData['transacted_date'] = $saveOR->date_transact;
+                    $journalHeaderData['total_amount'] = $totalpayroll;
+                    $journalHeaderData['trans_type'] = 'Payment';
+                    $journalHeaderData['remarks'] = '';
+
+                    $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+                    if($saveJournal){
+
+                        if($totalCredit > 0){
+                            $arr = [];
+                            $arr['amount'] = $totalCredit;
+                            $arr['particular_id'] = 99;
+                            $arr['entry_type'] = "DEBIT";
+                            array_push($journalList, $arr);
+                        } 
+
+                        if($totalDebit > 0){
+                            $arr = [];
+                            $arr['amount'] = $totalDebit;
+                            $arr['particular_id'] = 99;
+                            $arr['entry_type'] = "CREDIT";
+                            array_push($journalList, $arr);
+                        }
+
+                        $insertSuccess = JournalHelper::insertJournal($journalList, $saveJournal->reference_no);
+                        if($insertSuccess){
+                            $success = true;
+                        }
+                        else{
+                            $success = false;
+                        }
+                    }
+                    else{
+                        $success = false;
+                    }
+
+                }
+
+                 
+            }
+            /*else{
+                echo "\tNo Payroll List" . "\n";
+            }*/
+            
+        }
+    }
+
+    public function paymentList($member_id, $list){
+        $recordList = [];
+        $journalList = [];
+        $totalCredit = 0;
+        $totalDebit = 0;
+
+        $paymentRec = new \app\models\PaymentRecordList;
+        $paymentRecAttr = $paymentRec->getAttributes();
+        $paymentRecAttr['member_id'] = $member_id;
+
+        $journal = new \app\models\JournalDetails;
+        $journalListAttr = $journal->getAttributes();
+
+        if($list['ShareDeposit'] > 0){
+            $amt = $list['ShareDeposit'];
+            $getShareAcct = ShareHelper::getAccountShareInfo($member_id, false);
+            if(count($getShareAcct) > 0){
+                $getAcct = $getShareAcct[0];
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'SHARE';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->fk_share_product;
+                $prArr['account_no'] = $getAcct->accountnumber;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'CREDIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalCredit += $amt;
+            }                        
+        }
+
+        //SAving Deposit
+        if($list['SD'] > 0){
+            $amt = $list['SD'];
+            $getSDAcct = SavingsHelper::getAccountSavingsInfo(['member_id' => $member_id], false);
+            if(count($getSDAcct) > 0){
+                $getAcct = $getSDAcct[0];
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'SAVINGS';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->saving_product_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'CREDIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalCredit += $amt;
+            }                         
+        }
+
+
+        //Regular Loan
+        if($list['RL'] > 0 || $list['PIonRL'] > 0){
+            $amt = $list['RL'] + $list['PIonRL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 2, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalCredit += $amt;
+            }                        
+        }
+
+        //Educational Loan
+        if($list['EduL'] > 0){
+            $amt = $list['EduL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 9, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //Hospitalization Loan
+        if($list['HL'] > 0){
+            $amt = $list['HL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 11, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //MEDICAL CARE LOAN
+        if($list['MCL'] > 0){
+            $amt = $list['MCL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 7, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        // HOUSE IMPROVEMENT LOAN
+        if($list['HIL'] > 0){
+            $amt = $list['HIL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 6, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        if($list['AL'] > 0 && $list['PIonAL'] > 0){
+            $amt = $list['AL'] + $list['PIonAL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 1, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //OTHER BUSINESS LOAN
+        if($list['OBL'] > 0){
+            $amt = $list['OBL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 8, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //BUY-OUT LOAN
+        if($list['BUL'] > 0){
+            $amt = $list['BUL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 12, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //EMERGENCY LOAN
+        if($list['EG'] > 0){
+            $amt = $list['EG'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 4, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //DOMESTIC MERCHANDISE LOAN
+        if($list['DML'] > 0){
+            $amt = $list['DML'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 15, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+
+        //CELLPHONE LOAN
+        if($list['CPL'] > 0){
+            $amt = $list['CPL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 10, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        //CELLCARD LOAN
+        if($list['CCL'] > 0){
+            $amt = $list['CCL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 11, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+
+        if($list['AntiRad'] > 0){
+            $amt = $list['AntiRad'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 16, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+
+        if($list['Casserole'] > 0){
+            $amt = $list['Casserole'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 17, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+
+        if($list['Keyboard'] > 0){
+            $amt = $list['Keyboard'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 18, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+
+        if($list['CCL'] > 0){
+            $amt = $list['CCL'];
+            $getAcct = LoanHelper::getMemberLoan($member_id, 11, false);
+            if($getAcct != null){
+                //Payment
+                $prArr = $paymentRecAttr;
+                $prArr['type'] = 'LOAN';
+                $prArr['amount'] = $amt;
+                $prArr['particular_id'] = null;
+                $prArr['product_id'] = $getAcct->loan_id;
+                $prArr['account_no'] = $getAcct->account_no;
+                array_push($recordList, $prArr);
+
+                //Journal
+                $jrArr = $journalListAttr;
+                $jrArr['amount'] = $amt;
+                $jrArr['entry_type'] = 'DEBIT';
+                $jrArr['particular_id'] = $getAcct->product->particular_id;
+                array_push($journalList, $jrArr);
+
+                $totalDebit += $amt;
+            }                         
+        }
+
+        if($list['PCL'] > 0){
+            $amt = $list['PCL'];
+            //Payment
+            $prArr = $paymentRecAttr;
+            $prArr['type'] = 'OTHERS';
+            $prArr['amount'] = $amt;
+            $prArr['particular_id'] = 29;
+            $prArr['product_id'] = null;
+            $prArr['account_no'] = null;
+            array_push($recordList, $prArr);
+
+            //Journal
+            $jrArr = $journalListAttr;
+            $jrArr['amount'] = $amt;
+            $jrArr['entry_type'] = 'DEBIT';
+            $jrArr['particular_id'] = 29;
+            array_push($journalList, $jrArr);
+
+            $totalDebit += $amt;                       
+        }
+
+        //HEalth Care
+        if($list['HC'] > 0){
+            $amt = $list['HC'];
+            //Payment
+            $prArr = $paymentRecAttr;
+            $prArr['type'] = 'OTHERS';
+            $prArr['amount'] = $amt;
+            $prArr['particular_id'] = 21;
+            $prArr['product_id'] = null;
+            $prArr['account_no'] = null;
+            array_push($recordList, $prArr);
+
+            //Journal
+            $jrArr = $journalListAttr;
+            $jrArr['amount'] = $amt;
+            $jrArr['entry_type'] = 'DEBIT';
+            $jrArr['particular_id'] = 21;
+            array_push($journalList, $jrArr);
+
+            $totalDebit += $amt;                        
+        }
+
+        if($list['Mortuary'] > 0){
+            $amt = $list['Mortuary'];
+            //Payment
+            $prArr = $paymentRecAttr;
+            $prArr['type'] = 'OTHERS';
+            $prArr['amount'] = $amt;
+            $prArr['particular_id'] = 22;
+            $prArr['product_id'] = null;
+            $prArr['account_no'] = null;
+            array_push($recordList, $prArr);
+
+            //Journal
+            $jrArr = $journalListAttr;
+            $jrArr['amount'] = $amt;
+            $jrArr['entry_type'] = 'DEBIT';
+            $jrArr['particular_id'] = 22;
+            array_push($journalList, $jrArr);
+
+            $totalDebit += $amt;                         
+        }
+
+        if($list['Misc'] > 0){
+            $amt = $list['Misc'];
+            //Payment
+            $prArr = $paymentRecAttr;
+            $prArr['type'] = 'OTHERS';
+            $prArr['amount'] = $amt;
+            $prArr['particular_id'] = 28;
+            $prArr['product_id'] = null;
+            $prArr['account_no'] = null;
+            array_push($recordList, $prArr);
+
+            //Journal
+            $jrArr = $journalListAttr;
+            $jrArr['amount'] = $amt;
+            $jrArr['entry_type'] = 'DEBIT';
+            $jrArr['particular_id'] = 28;
+            array_push($journalList, $jrArr);
+
+            $totalDebit += $amt;                        
+        }
+
+        return [
+            'recordList'    => $recordList,
+            'journalList'   => $journalList,
+            'totalCredit'   => $totalCredit,
+            'totalDebit'    => $totalDebit,
+        ];
+    }
+
+
 }
 
 

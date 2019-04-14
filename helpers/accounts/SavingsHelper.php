@@ -9,7 +9,7 @@ use app\models\SavingsTransaction;
 class SavingsHelper 
 {
 
-	public static function getAccountSavingsInfo($filter = []){
+	public static function getAccountSavingsInfo($filter = [], $asArray = true){
 
         $accountList = SavingsAccount::find()->innerJoinWith(['product']);
         if(isset($filter['member_id'])){
@@ -21,9 +21,10 @@ class SavingsHelper
             $accountList = $accountList->joinWith(['member']);
         }
         
-        $accountList = $accountList->asArray()->all();
-        
-		return $accountList;
+        if($asArray){
+            return $accountList->asArray()->all();
+        }
+        return $accountList->all();
 	}
 
     public static function getTransaction($fk_savings_id = null, $filter = null){

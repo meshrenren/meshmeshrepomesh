@@ -20,7 +20,8 @@ use app\helpers\journal\JournalHelper;
 
 class PaymentHelper 
 {
-	public $entry_type = ['SAVINGS' => 'CREDIT', 'SHARE' => 'CREDIT', 'OTHERS' => 'DEBIT',  'LOAN' => 'DEBIT', 'TIME_DEPOSIT' => 'DEBIT'];
+	public $entry_type = ['SAVINGS' => 'CREDIT', 'SHARE' => 'CREDIT', 'OTHERS' => 'DEBIT',  'LOAN' => 'DEBIT', 'TIME_DEPOSIT' => 'CREDIT'];
+
 	public static function savePayment($data){
         $payment = new PaymentRecord;
       
@@ -30,8 +31,10 @@ class PaymentHelper
         $payment->type = $data['type'];
         $payment->posting_code = $data['posting_code'];
         $payment->check_number = $data['check_number'];
+        $payment->amount_paid = $data['amount_paid'];
         $payment->created_date = date('Y-m-d H:i:s');
-        $payment->created_by = \Yii::$app->user->identity->id;
+        //$payment->created_by = \Yii::$app->user->identity->id;
+        $payment->created_by = 18; //CINCO
 
         if($payment->save()){
             return $payment;
@@ -39,7 +42,8 @@ class PaymentHelper
         /*else{
             var_dump($voucher->getErrors());
         }*/
-        return $payment->errors;
+        //return $payment->getErrors();
+        return false;
     }
 
     public static function insertAccount($list, $payment_record_id){
@@ -49,7 +53,6 @@ class PaymentHelper
             $payment->payment_record_id = $payment_record_id;
             $payment->type = $value['type'];
             $payment->amount = $value['amount'];
-            $payment->entry_type = "CREDIT";
             $payment->member_id = $value['member_id'];
             if($value['type'] == "OTHERS"){
             	$payment->particular_id = $value['particular_id'];
@@ -60,10 +63,9 @@ class PaymentHelper
             }
 
             if(!$payment->save()){
-            	return $payment->errors;
+            	$success = false;
             }
         }
-
         return $success;
 	}
 	
