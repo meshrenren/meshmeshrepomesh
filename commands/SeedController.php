@@ -520,7 +520,7 @@ class SeedController extends Controller
                         $addLoanAccount->remarks = "Migrate from old db";
                         $addLoanAccount->prepaid_intpaid = $Prepaid;
                         $addLoanAccount->interest_paid = $Interest;
-                        $addLoanAccount->OR_no = $d;
+                        $addLoanAccount->OR_no = $ledger['GVORNum'];
                         $addLoanAccount->principal_paid = $AmtPaid;
                         $addLoanAccount->arrears_paid = 0;
                         $addLoanAccount->date_posted = $d;

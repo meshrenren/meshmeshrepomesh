@@ -16,7 +16,10 @@
     				</tr>
     				<tr>
     					<th>Account Number: </th> 
-    					<td v-if = "accountSelected" class = "pl-10">{{ accountSelected.account_no }} </td>
+    					<td v-if = "accountSelected && accountSelected.account_no" class = "pl-10">{{ accountSelected.account_no }} </td>
+                        <td v-else-if = "accountSelected && accountSelected.accountnumber" class = "pl-10">{{ accountSelected.accountnumber }} </td>
+
+                        
     				</tr>
     				<tr>
     					<th>Balance: </th> 

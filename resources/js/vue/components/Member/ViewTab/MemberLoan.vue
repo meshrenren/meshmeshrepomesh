@@ -25,6 +25,11 @@
                     <span>{{scope.row.principal_balance}}</span>
                 </template>
             </el-table-column>
+            <el-table-column label="Action">
+                <template slot-scope="scope">
+                    <el-button size="mini" @click="selectAccount(scope.index, scope.row)">View Transaction</el-button>
+                </template>
+            </el-table-column>
 
             <!-- <el-table-column label="Maturity Date">
                 <template slot-scope="scope">
@@ -33,6 +38,12 @@
             </el-table-column> -->
 
         </el-table>
+        <el-dialog title="Savings Transaction" top = "10px" v-if="dialogVisible"  :visible.sync="dialogVisible" width="80%" @close = "dialogVisible = false">
+            <loan-transactions 
+                :account-selected = "selectAccountDetails"
+                :account-transaction-list = "selectAccountTrans"> 
+            </loan-transactions>
+        </el-dialog>
 	</div>
 </template>
 <script>
@@ -41,16 +52,22 @@
     import _forEach from 'lodash/forEach' 
 
     import fileExport from '../../../mixins/fileExport'
+
+    import LoanTransactions from '../../Loan/LoanTransactions.vue' 
 export default {
     mixins: [fileExport],
 	props: ['member', 'canEdit'],
 	data: function () {
 		return{
-			memberData : this.member,
-            dataAccounts    : [],
-            loadingTable     : false
+			memberData              : this.member,
+            dataAccounts            : [],
+            loadingTable            : false,
+            selectAccountDetails    : {},
+            selectAccountTrans      : [],
+            dialogVisible           : false
         }
     },
+    components: { LoanTransactions },
     created(){
         this.getAccount()
     },
@@ -63,6 +80,31 @@ export default {
             .then(result => {
                 var res = result.data
                 this.dataAccounts = res.loanAccounts
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.loadingTable = false
+            })
+        },
+
+        selectAccount(index, data){
+            this.selectAccountDetails = cloneDeep(data)
+            this.selectAccountDetails['member'] = {}
+            this.selectAccountDetails['member']['fullname'] = this.memberData.last_name + " " + this.memberData.first_name + " " + this.memberData.middle_name
+            this.getTransaction(this.selectAccountDetails.account_no)
+        },
+        getTransaction(account_no){
+            this.loadingTable = true
+
+            this.$API.Loan.getLoanTransaction(account_no)
+            .then(result => {
+                var res = result.data
+                if(res.length > 0 ){
+                    this.selectAccountTrans = res
+                }
+                this.dialogVisible = true
             })
             .catch(err => {
                 console.log(err)

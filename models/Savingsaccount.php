@@ -16,6 +16,7 @@ use Yii;
  * @property integer $transacted_date
  * @property string $deleted_date
  */
+
 class SavingsAccount extends \yii\db\ActiveRecord
 {
     /**

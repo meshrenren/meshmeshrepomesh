@@ -4,7 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use yii\filters\AccessControl;
-use mPDF;
+use \Mpdf\Mpdf;
 use app\models\LoanAccount;
 use app\models\LoanProduct;
 
