@@ -72,7 +72,7 @@ class SavingsController extends \yii\web\Controller
         $savings = new \app\models\SavingAccounts;
         $savingsAccount = $savings->getAttributes();
 
-        $savingsProduct  = \app\models\SavingsProduct::find()
+        $savingsProduct  = \app\models\Savingsproduct::find()
             ->where(['is_active' => 1])
             ->select(['id as value', 'description as label'])
             ->asArray()->all();
@@ -127,7 +127,7 @@ class SavingsController extends \yii\web\Controller
         	$accountDetails = (array)$accountDetails;
 
         	$hasAccount = null;
-        	$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
+        	$product = \app\models\Savingsproduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
 
         	if($product->is_multiple == 0 && $accountDetails['type'] == "Member")
         		$hasAccount = \app\models\SavingAccounts::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();

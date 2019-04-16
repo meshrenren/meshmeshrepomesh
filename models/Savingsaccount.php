@@ -60,7 +60,7 @@ class SavingsAccounts extends \yii\db\ActiveRecord
 
 
     public function getProduct() {
-        return $this->hasOne(SavingsProduct::className(), [ 'id' => 'saving_product_id' ] );
+        return $this->hasOne(Savingsproduct::className(), [ 'id' => 'saving_product_id' ] );
     }
 
     public function getMember() {
