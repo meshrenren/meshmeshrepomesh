@@ -12,6 +12,7 @@ use \Mpdf\Mpdf;
 
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\SavingsHelper;
+use app\helpers\accounts\ShareHelper;
 
 class SiteController extends Controller
 {
@@ -75,7 +76,7 @@ class SiteController extends Controller
     {
         $member = new \app\models\Member();
         $countAll = $member->getMemberCount(0, 0, 'All');
-        $countLastYear = $member->getMemberCount("2017-01-01", "2017-12-31");
+        $countLastYear = $member->getMemberCount("2019-01-01", "2019-12-31");
         
         $connection = \Yii::$app->db;
         $command = $connection->createCommand("select * from calendar c where c.date = CURDATE() and is_current=1 limit 1");
@@ -229,6 +230,7 @@ class SiteController extends Controller
                     "autoScriptToLang" => true,
                     "allow_charset_conversion" => false,
                     "autoLangToFont" => true,
+                    'orientation' => 'L'
                 ];
                 $mpdf = new Mpdf($config);
                 $mpdf->WriteHTML($template);

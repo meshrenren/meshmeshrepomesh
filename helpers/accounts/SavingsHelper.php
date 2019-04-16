@@ -3,8 +3,8 @@
 namespace app\helpers\accounts;
 
 use Yii;
-use app\models\SavingsAccount;
-use app\models\SavingsTransaction;
+use \app\models\SavingsAccount;
+use \app\models\SavingsTransaction;
 
 class SavingsHelper 
 {
@@ -33,7 +33,7 @@ class SavingsHelper
             $model = $model->where(['fk_savings_id' => $fk_savings_id]);
         }
         
-        return $model->asArray()->all();
+        return $model->orderBy('transaction_date DESC')->asArray()->all();
     }
 
     public static function saveSavingsTransaction($data){
@@ -60,8 +60,12 @@ class SavingsHelper
         $account_name = $postData['account_name'];
         $balance = $postData['balance'];
         $transaction = $postData['transaction'];
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Savings Account Transaction</div></tr>
+        </table>';
 
-        $listTemplate = '<table>
+        $listTemplate .= '<table>
             <tr>
                 <td style = "font-weight: bold;">Account Name: </td> 
                 <td><span>[account_name]</span></td>
@@ -80,10 +84,11 @@ class SavingsHelper
         $listTemplate = str_replace('[balance]', $balance, $listTemplate);
 
         if(count($transaction) > 0){
-            $transTable = '<table style = "margin-top: 20px; border-collapse: collapse !important:">
+            $transTable = '<table width = "100%" style = "margin-top: 20px; border-collapse: collapse !important:">
                 <tr>
                     <th style = "font-weight: bold; border: 1px solid #000;">Date Transact</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Amount</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">In</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Out</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Transaction Type</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Reference No</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Running Balance</th> 
@@ -93,7 +98,8 @@ class SavingsHelper
                 $transDate = date('Y-m-d', strtotime($trans['transaction_date']));
                 $transTable .= '<tr>
                     <td style = "border: 1px solid #000;">'.$transDate.'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['amount'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['amount_in'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['amount_out'].'</td> 
                     <td style = "border: 1px solid #000;">'.$trans['transaction_type'].'</td> 
                     <td style = "border: 1px solid #000;">'.$trans['ref_no'].'</td> 
                     <td style = "border: 1px solid #000;">'.$trans['running_balance'].'</td> 

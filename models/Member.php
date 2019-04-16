@@ -171,7 +171,7 @@ class Member extends \yii\db\ActiveRecord {
 		if($joinWith != null){
 			$retval = $retval->joinWith($joinWith);
 		}
-		$retval = $retval->select(["member.*", "CONCAT(last_name,', ',first_name,' ',middle_name)fullname"])->where("CONCAT(last_name,', ',first_name,' ',middle_name) like '".$name."%'")->asArray()->all();
+		$retval = $retval->select(["member.*", "CONCAT(last_name,', ',first_name,' ',middle_name)fullname"])->where("CONCAT(last_name,', ',first_name,' ',middle_name) like '".$name."%'")->orderBy('fullname ASC')->asArray()->all();
 		
 		return $retval;
 	}

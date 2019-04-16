@@ -28,8 +28,7 @@ use yii\helpers\Html;
                     ],
                     [
                         'label'     => 'Profile',
-                        'url'       => ['member/view/'.\Yii::$app->user->identity->member->id], 
-                        'visible'   => Yii::$app->user->identity->checkUserAccess("_member_profile_", "_view") || (isset($_GET['member_id']) && $_GET['member_id'] == Yii::$app->user->identity->member->id)
+                        'url'       => ['member/view/'.\Yii::$app->user->identity->member->id]
                     ],
                     [
                         'label'     => 'Member',
@@ -196,10 +195,10 @@ use yii\helpers\Html;
 
                 <!-- Tasks: style can be found in dropdown.less -->
                 <li class="dropdown tasks-menu">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <!-- <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-flag-o"></i>
                         <span class="label label-danger"></span>
-                    </a>
+                    </a> -->
                     <ul class="dropdown-menu">
                         <li class="header">Important Notice</li>
                         <li>

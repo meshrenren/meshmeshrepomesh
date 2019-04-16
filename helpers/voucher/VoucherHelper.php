@@ -3,8 +3,8 @@
 namespace app\helpers\voucher;
 
 use Yii;
-use app\models\GeneralVoucher;
-use app\models\voucherDetails;
+use \app\models\GeneralVoucher;
+use \app\models\voucherDetails;
 
 class VoucherHelper 
 {

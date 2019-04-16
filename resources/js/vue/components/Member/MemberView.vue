@@ -5,7 +5,7 @@
 				<div class = "box box-primary" id = "content-left">
 					<div class = "box-body box-profile">
 						<div class = "image-container">
-							<div v-if = "canEdit" class="circle-avatar" @click = "proPicVisible = true" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
+							<div v-if = "canEdit || Number(currUserMember) == Number(member.id)" class="circle-avatar" @click = "proPicVisible = true" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
 
 							<div v-else class="circle-avatar" :style = "member.image_path ? { backgroundImage : 'url('+member.image_path+')' } : {}"></div>
 						</div>
@@ -686,4 +686,8 @@ export default {
 		float: right;
 	}
 }
+
+.el-dialog__header{
+		border-bottom : 1px solid #EBEEF5;
+	}
 </style>

@@ -64,20 +64,25 @@
 
             				<el-col :span="8"> 
 		            			<div class = "right-toolbar">
-		            				<!-- <button class = "btn btn-app" @click = "printForm('pdf')"><i class = "fa fa-print"></i> Print</button> -->
-		            				<button class = "btn btn-app" @click = "printForm('print')"><i class = "fa fa-print"></i> Print</button>
+		            				<button class = "btn btn-app" @click = "printForm('pdf')"><i class = "fa fa-file-pdf-0"></i> Export</button>
+		            				<!-- <button class = "btn btn-app" @click = "printForm('print')"><i class = "fa fa-print"></i> Print</button> -->
 		            			</div>
 		            		</el-col>
 		            	</el-row>
-						<el-table :data="accountTransactionList" height = "430px" stripe border v-loading = "loadingTransTable">
+						<el-table :data="transactionList" height = "430px" stripe border v-loading = "loadingTransTable">
 				            <el-table-column label="Date Transact">
 				                <template slot-scope="scope">
 				                    <span>{{ $df.formatDate(scope.row.transaction_date, "YYYY-MM-DD") }}</span>
 				                </template>
 				            </el-table-column>
-				            <el-table-column label="Amount">
+				            <el-table-column label="In">
 				                <template slot-scope="scope">
-				                    <span>{{ scope.row.amount }}</span>
+				                    <span>{{ scope.row.amount_in }}</span>
+				                </template>
+				            </el-table-column>
+				            <el-table-column label="Out">
+				                <template slot-scope="scope">
+				                    <span>{{ scope.row.amount_out }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Transaction Type">
@@ -113,6 +118,7 @@
     import axios from 'axios'
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'  
+    import _forEach from 'lodash/forEach'  
 
 	import fileExport from '../../mixins/fileExport'
 
@@ -133,6 +139,22 @@ export default {
 	},
 	created(){
 		this.getAccountList()
+	},
+	computed:{
+		transactionList(){
+			let list = cloneDeep(this.accountTransactionList)
+
+			_forEach(list, ls =>{
+				ls['amount_out'] = ''
+				ls['amount_in'] = ''
+				if(ls.transaction_type == 'WITHDRWL')
+					ls.amount_out = cloneDeep(ls.amount)
+				else
+					ls.amount_in = cloneDeep(ls.amount)
+			})
+
+			return list
+		}
 	},
 	methods:{
 		getAccountList(){

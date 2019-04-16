@@ -81,7 +81,7 @@
 			       	</el-col>
 			       	<el-col :span = "12">
 			       		<div class = "Loan List">
-		        			<h4>Transactions</h4>
+		        			<!-- <h4>Transactions</h4> -->
 		        			<label>Loan Account : </label> <span v-if = "selectedAccount && selectedAccount.product"> {{ selectedAccount.product.product_name}}</span>
 							<el-table :data="loanTransaction"height = "450px" stripe border>
 					            <el-table-column label="Date Transaction">
@@ -91,7 +91,7 @@
 					            </el-table-column>
 					            <el-table-column label="Refernce No">
 					                <template slot-scope="scope">
-					                    <span>{{ scope.row.product.OR_no }}</span>
+					                    <span>{{ scope.row.OR_no }}</span>
 					                </template>
 					            </el-table-column>
 					            <el-table-column label="Principal Paid">

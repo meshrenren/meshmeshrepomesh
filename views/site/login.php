@@ -30,11 +30,11 @@ $this->title = 'Login';
                 <?= $form->field($model, 'password')->passwordInput() ?>
 
                 <div class="row">
-                    <div class = "col-md-8">
+                    <!-- <div class = "col-md-8">
                         <a href="#">I forgot my password</a><br>
-                    </div>
-                    <div class="col-lg-4">
-                        <?= Html::submitButton('Login', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
+                    </div> -->
+                    <div class="col-lg-4 col-lg-offset-4">
+                        <?= Html::submitButton('Login', ['class' => 'btn btn-primary btn-block', 'name' => 'login-button']) ?>
                     </div>
                 </div>
 

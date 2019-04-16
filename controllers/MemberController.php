@@ -611,7 +611,7 @@ class MemberController extends \yii\web\Controller
             $image = \yii\web\UploadedFile::getInstanceByName('imagefile');
             
             if (isset($image)){
-                $model->image_path = 'http://dilgempc.local/images/members/' . $model->id . '.jpg';
+                $model->image_path = '/images/members/' . $model->id . '.jpg';
                 $image->saveAs('images/members/'. $model->id . '.jpg');
                 $imagepath = $model->image_path;
                 $model->save(false);
@@ -623,6 +623,7 @@ class MemberController extends \yii\web\Controller
 
         }
     }
+
 
     public function actionChangePassword(){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;

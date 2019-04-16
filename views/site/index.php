@@ -11,7 +11,7 @@ $this->title = 'DILG XI - EMPC';
 
     <div class="box box-primary direct-chat direct-chat-primary">
         <div class="box-header with-border">
-            <h3 class="box-title">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMs  <?php echo $calendarDate['date'] ?></h3>
+            <h3 class="box-title">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS  <?php echo $calendarDate['date'] ?></h3>
         </div>
         <div class="box-body">
             
@@ -74,7 +74,7 @@ $this->title = 'DILG XI - EMPC';
                         <span class="info-box-icon bg-yellow"><i class="fa fa-fw fa-user"></i></span>
 
                         <div class="info-box-content">
-                            <span class="info-box-text">NEW MEMBERS (2017)</span>
+                            <span class="info-box-text">NEW MEMBERS (2019)</span>
                             <span class="info-box-number"><?php echo $countLastYear; ?></span>
                         </div>
 

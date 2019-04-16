@@ -3,8 +3,8 @@
 namespace app\helpers\journal;
 
 use Yii;
-use app\models\JournalHeader;
-use app\models\JournalDetails;
+use \app\models\JournalHeader;
+use \app\models\JournalDetails;
 
 class JournalHelper 
 {

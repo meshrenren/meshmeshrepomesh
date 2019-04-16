@@ -3,18 +3,18 @@
 namespace app\helpers\payment;
 
 use Yii;
-use app\models\PaymentRecord;
-use app\models\PaymentRecordList;
-use app\models\LoanProduct;
-use app\models\LoanAccount;
-use app\models\LoanTransaction;
-use app\models\JournalHeader;
-use app\models\SavingsAccount;
-use app\models\SavingsTransaction;
-use app\models\Savingsproduct;
-use app\models\ShareProduct;
-use app\models\TimeDepositProduct;
-use app\models\AccountParticulars;
+use \app\models\PaymentRecord;
+use \app\models\PaymentRecordList;
+use \app\models\LoanProduct;
+use \app\models\LoanAccount;
+use \app\models\LoanTransaction;
+use \app\models\JournalHeader;
+use \app\models\SavingsAccount;
+use \app\models\SavingsTransaction;
+use \app\models\Savingsproduct;
+use \app\models\ShareProduct;
+use \app\models\TimeDepositProduct;
+use \app\models\AccountParticulars;
 
 use app\helpers\journal\JournalHelper;
 

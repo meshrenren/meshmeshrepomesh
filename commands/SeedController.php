@@ -123,6 +123,34 @@ class SeedController extends Controller
     	}
 
     }
+
+    public function actionMemberDate()
+    {
+        $oldmembers = \app\models\Membersold::find()->orderBy('IDNum ASC')->select(["*"])->all();
+        foreach ($oldmembers as $oldmember) {
+            $getMember = \app\models\Member::find()->where(['first_name' => $oldmember->FName, 'last_name' =>  $oldmember->SName, 'middle_name' =>  $oldmember->MName])->one();
+            if($getMember != null){
+
+
+                if($oldmember->DateMem != "---" && $oldmember->DateMem != "")   {
+                    $date = explode(' ', $oldmember->DateMem) ;
+                    $dSub = explode('/', $date[0]) ;
+                    $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+
+                    $getMember->mem_date = $d;
+                } 
+                if($oldmember->BDay != "---" && $oldmember->BDay != "")   {
+                    $date = explode(' ', $oldmember->DateMem) ;
+                    $dSub = explode('/', $date[0]) ;
+                    $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+                    
+                    $getMember->birthday = $d;
+                } 
+                $getMember->save(false);
+            }
+        }
+    }
+
     public function actionUpdateIdnumLeadZero()
     {
         $getMembers = \app\models\Member::find()->where('old_db_idnum_zero IS NULL')->all();
@@ -156,6 +184,28 @@ class SeedController extends Controller
             $nullmember->user_id = $newUser->id;
             $nullmember->update();
     	}
+    }
+
+    public function actionUpdateImage()
+    {
+        $getMembers = \app\models\Member::find()->all();
+        foreach ($getMembers as $member) {
+            $fileName = $member->first_name . "_" . $member->middle_name . "_" . $member->last_name . ".jpg";
+            $image_path = 'images/members/' . $fileName;
+            $newImage_path = '/images/user.png';
+
+            if(file_exists($image_path)){
+                $newFileName = $member->id . ".jpg";
+                $newImage_path = 'images/members/' . $newFileName;
+                rename( $image_path, $newImage_path);
+                $newImage_path = '/images/members/' . $newFileName;
+                echo $fileName . " exist. <br>";
+            }else{
+                //echo $fileName . " no exist. \n";
+            }
+            $member->image_path = $newImage_path;
+            $member->save();
+        }
     }
 
     /*public function actionSeedLoanLedgerMember(){
@@ -427,7 +477,7 @@ class SeedController extends Controller
                 if(count($getLegder) > 0){
                     echo "\tList Ledger: \t" .  count($getLegder) . "\n";
                     foreach ($getLegder as $key2 => $ledger) {
-                        $getTrans = \app\models\LoanTransaction::find()->where(['olddb_entrynum' => $ledger['EntryNum']])->one();
+                        $getTrans = \app\models\LoanTransaction::find()->where(['olddb_entrynum' => $ledger['EntryNum'], 'loan_account' => $accs->account_no])->one();
                         if($getTrans != null){
                             continue;
                         }
@@ -527,6 +577,8 @@ class SeedController extends Controller
                     $account->status = "Active";
                     $account->fk_share_product = $product->id;
                     $account->old_db_idnum_zero = $cs['IDNum'];
+                    $account->old_db_sname = $cs['SName'];
+                    $account->old_db_fname = $cs['FName'];
 
                     if($account->save()){
                         $product->transaction_serial = $trans_serial;
@@ -556,8 +608,8 @@ class SeedController extends Controller
 
             $query = new \yii\db\Query;
             $query->select('*');
-            $query->from('zold_sharecapledger scl')->where(['IDNum' => $acc->old_db_idnum_zero]);
-            $shareLedger = $query->all();
+            $query->from('zold_sharecapledger scl')->where(['IDNum' => $acc->old_db_idnum_zero, 'SName' => $acc->old_db_sname, 'FName' => $acc->old_db_fname]);
+            $shareLedger = $query->orderBy('EntryNum ASC')->all();
             $total = 0;
             foreach ($shareLedger as $key => $ledger) {
                 $type = "";
@@ -595,7 +647,8 @@ class SeedController extends Controller
                 $addTrans->transaction_type = $type;
                 $addTrans->transacted_by = 18;
                 $addTrans->transaction_date = $d;
-                $addTrans->running_balance = $Balance;
+                $addTrans->running_balance = 0;
+                $addTrans->olddb_balance = $Balance;
                 $addTrans->remarks = "Migrate from old DB";
                 $addTrans->olddb_entrynum = $ledger['EntryNum'];
                 if($addTrans->save()){
@@ -605,23 +658,68 @@ class SeedController extends Controller
                     else if($type == "WITHDRWL"){
                         $total -= $amount;
                     }
+
+                    $addTrans->running_balance = $total;
+                    $addTrans->save();
                 }
             }
             $acc->balance = $total;
             $acc->save();
-            echo "Save \t" . $total;
+            echo "Save \t" . $total . " \n" ;
         }
     }
 
     public function actionSeedSavingsAccount(){
         $query = new \yii\db\Query;
         $query->select('*');
-        $query->from('zold_savingsledger scl');
+        $query->from('zold_sdtransac sdl');
         $capitalShare = $query->all();
         foreach ($capitalShare as $key => $cs) {
-            $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $cs['IDNum'], 'last_name' => $cs['SName'], 'first_name' => $cs['FName']])->one();
-            if($getMember){
-                $getAccount = \app\models\SavingsAccount::find()->where(['member_id' => $getMember->id])->one();
+            if($cs['IDNum'] != '' && $cs['SName'] != '' && $cs['FName'] != ''){
+                $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $cs['IDNum'], 'last_name' => $cs['SName'], 'first_name' => $cs['FName']])->one();
+                if($getMember){
+                    $getAccount = \app\models\SavingsAccount::find()->where(['member_id' => $getMember->id])->one();
+                    if($getAccount == null){
+                        $product = \app\models\Savingsproduct::find()->where(['id' => 1])->one();
+                        $trans_serial = $product->trans_serial + 1;
+                        $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+
+                        $account = new \app\models\SavingsAccount;
+                        $account->account_no = $product->id . "-" . $trans_serial_pad;
+                        $account->saving_product_id = $product->id;
+                        $account->member_id = $getMember->id;
+                        $account->balance = 0;
+                        $account->is_active = 1;
+                        $account->date_created = date('Y-m-d H:i:s');
+                        $account->transacted_date = date('Y-m-d H:i:s');
+                        $account->old_db_name = $cs['Name'];
+                        $account->old_db_idnum_zero = $cs['IDNum'];
+                        $account->old_db_sname = $cs['SName'];
+                        $account->old_db_fname = $cs['FName'];
+
+
+                        if($account->save()){
+                            $product->trans_serial = $trans_serial;
+                            $product->save();
+
+                            echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " Account created: \tAccountNumber->" . $account->account_no ."\tName: " . $getMember->last_name . " ".  $getMember->first_name . "\n";
+                        }
+                        else{
+                            echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " Account not created: \tAccountNumber->". "\n";
+                        }
+
+
+                    }
+                    //echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " Has Member created: \tIDNum->" . $getMember->id ."\tName: " . $getMember->last_name . " ".  $getMember->first_name . "\n";
+                    
+                }
+                else{
+                    echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " No Member" . "\n";
+                }
+            }
+            else{
+                $getAccount = \app\models\SavingsAccount::find()->where(['account_name' => $cs['Name']])->one();
                 if($getAccount == null){
                     $product = \app\models\Savingsproduct::find()->where(['id' => 1])->one();
                     $trans_serial = $product->trans_serial + 1;
@@ -631,37 +729,34 @@ class SeedController extends Controller
                     $account = new \app\models\SavingsAccount;
                     $account->account_no = $product->id . "-" . $trans_serial_pad;
                     $account->saving_product_id = $product->id;
-                    $account->member_id = $getMember->id;
+                    $account->account_name = $cs['Name'];
+                    $account->member_id = null;
                     $account->balance = 0;
                     $account->is_active = 1;
                     $account->date_created = date('Y-m-d H:i:s');
                     $account->transacted_date = date('Y-m-d H:i:s');
-                    $account->old_db_idnum_zero = $cs['IDNum'];
+                    $account->old_db_name = $cs['Name'];
 
 
                     if($account->save()){
                         $product->trans_serial = $trans_serial;
                         $product->save();
 
-                        echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " Account created: \tAccountNumber->" . $account->account_no ."\tName: " . $getMember->last_name . " ".  $getMember->first_name . "\n";
+                        echo $cs['Name'] . "->" . " Account created: \tAccountNumber->" . $account->account_no ."\tName: " . $account->account_name . "\n";
                     }
                     else{
-                        echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " Account not created: \tAccountNumber->". "\n";
+                        echo $cs['Name'] . "->" . " Account not created: \tAccountNumber->". "\n";
                     }
 
 
                 }
-                //echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " Has Member created: \tIDNum->" . $getMember->id ."\tName: " . $getMember->last_name . " ".  $getMember->first_name . "\n";
-                
             }
-            else{
-                echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " No Member" . "\n";
-            }
+            
         }
     }
 
     public function actionSavingsTransaction(){
-        $accounts = \app\models\SavingsAccount::find()->where(['account_no' => '1-000137'])->all();
+        $accounts = \app\models\SavingsAccount::find()->all();
 
         foreach ($accounts as $key => $acc) {
             $getTRans = \app\models\SavingsTransaction::find()->where(['fk_savings_id' => $acc->account_no])->count(); 
@@ -669,10 +764,18 @@ class SeedController extends Controller
                 continue;
             }
 
-            $query = new \yii\db\Query;
-            $query->select('*');
-            $query->from('zold_sdledger scl')->where(['IDNum' => $acc->old_db_idnum_zero]);
-            $savingsLedger = $query->all();
+            if($acc->member_id != null){
+                $query = new \yii\db\Query;
+                $query->select('*');
+                $query->from('zold_sdledger scl')->where(['IDNum' => $acc->old_db_idnum_zero, 'Name' => $acc->old_db_name, 'SName' => $acc->old_db_sname, 'FName' => $acc->old_db_fname]);
+                $savingsLedger = $query->orderBy('Numbering ASC')->all();
+            }
+            else{
+                $query = new \yii\db\Query;
+                $query->select('*');
+                $query->from('zold_sdledger scl')->where(['Name' => $acc->old_db_name]);
+                $savingsLedger = $query->orderBy('Numbering ASC')->all();
+            }
             $total = 0;
             foreach ($savingsLedger as $key => $ledger) {
                 $type = "";
@@ -713,7 +816,8 @@ class SeedController extends Controller
                 $addTrans->transaction_type = $type;
                 $addTrans->transacted_by = 18;
                 $addTrans->transaction_date = $d;
-                $addTrans->running_balance = $Balance;
+                $addTrans->running_balance = 0;
+                $addTrans->olddb_balance = $Balance;
                 $addTrans->remarks = "Migrate from old DB";
                 $addTrans->olddb_entrynum = $ledger['Numbering'];
                 if($addTrans->save()){
@@ -725,6 +829,9 @@ class SeedController extends Controller
                         $total -= $amount;
                         echo "Sub:" . $total . "\n";
                     }
+
+                    $addTrans->running_balance = $total;
+                    $addTrans->save();
                 }
                 else{
                     var_dump($addTrans->getErrors());
@@ -732,7 +839,7 @@ class SeedController extends Controller
             }
             $acc->balance = $total;
             $acc->save();
-            echo "Save \t" . $total;
+            echo "Save \t" . $total . "\n";            
         }
     }
 

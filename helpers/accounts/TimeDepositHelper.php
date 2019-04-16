@@ -3,8 +3,8 @@
 namespace app\helpers\accounts;
 
 use Yii;
-use app\models\TimeDepositAccount;
-use app\models\TimeDepositTransaction;
+use \app\models\TimeDepositAccount;
+use \app\models\TimeDepositTransaction;
 
 class TimeDepositHelper 
 {

@@ -30,7 +30,7 @@
 						</div>
 					</div>
 					<div class = "member-table">
-						<datatable ref="memberTable" title="" :perPage="[10, 25, 50, 100]" :exportable="true" :printable="true" :columns="columnList" :rows="memberListData" :sortable="false" :searchable="false" :exactSearch="false" >
+						<datatable ref="memberTable" title="" :perPage="[10, 25, 50, 100]" :exportable="false" :printable="false" :columns="columnList" :rows="memberListData" :sortable="false" :searchable="false" :exactSearch="false" >
 						</datatable>
 					</div>
 				</div>

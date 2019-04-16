@@ -3,16 +3,16 @@
 namespace app\helpers\particulars;
 
 use Yii;
-use app\models\AccountParticulars;
-use app\models\Particulars;
-use app\models\PayrollParticulars;
-use app\models\Calendar;
-use app\models\BranchParameters;
+use \app\models\AccountParticulars;
+use \app\models\Particulars;
+use \app\models\PayrollParticulars;
+use \app\models\Calendar;
+use \app\models\BranchParameters;
 use phpDocumentor\Reflection\Types\Static_;
-use app\models\SavingsAccount;
-use app\models\SavingsTransaction;
-use app\models\TdTransaction;
-use app\models\TimeDepositAccount;
+use \app\models\SavingsAccount;
+use \app\models\SavingsTransaction;
+use \app\models\TdTransaction;
+use \app\models\TimeDepositAccount;
 
 
 
