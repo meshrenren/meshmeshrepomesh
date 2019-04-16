@@ -41,7 +41,7 @@ class Shareaccount extends \yii\db\ActiveRecord
             [['totalSubscription', 'balance'], 'number'],
             [['accountnumber'], 'string', 'max' => 25],
             [['status'], 'string', 'max' => 10],
-            [['fk_share_product'], 'exist', 'skipOnError' => true, 'targetClass' => Shareproduct::className(), 'targetAttribute' => ['fk_share_product' => 'id']],
+            [['fk_share_product'], 'exist', 'skipOnError' => true, 'targetClass' => ShareProduct::className(), 'targetAttribute' => ['fk_share_product' => 'id']],
         ];
     }
 
@@ -74,6 +74,6 @@ class Shareaccount extends \yii\db\ActiveRecord
     }
 
     public function getProduct() {
-        return $this->hasOne(Shareproduct::className(), [ 'id' => 'fk_share_product' ] );
+        return $this->hasOne(ShareProduct::className(), [ 'id' => 'fk_share_product' ] );
     }
 }
