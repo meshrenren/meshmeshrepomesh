@@ -17,7 +17,7 @@ use Yii;
  * @property string $deleted_date
  */
 
-class SavingsAccount extends \yii\db\ActiveRecord
+class SavingAccounts extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
