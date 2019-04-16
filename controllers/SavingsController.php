@@ -6,7 +6,7 @@ use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
-use app\models\SavingsAccount;
+use app\models\SavingAccounts;
 use \app\models\JournalHeader;
 use \app\models\JournalDetails;
 use kartik\mpdf\Pdf; 
@@ -69,7 +69,7 @@ class SavingsController extends \yii\web\Controller
         
         $this->layout = 'main-vue';
 
-        $savings = new \app\models\SavingsAccount;
+        $savings = new \app\models\SavingAccounts;
         $savingsAccount = $savings->getAttributes();
 
         $savingsProduct  = \app\models\SavingsProduct::find()
@@ -130,11 +130,11 @@ class SavingsController extends \yii\web\Controller
         	$product = \app\models\SavingsProduct::find()->where(['id' => $accountDetails['saving_product_id']])->one();
 
         	if($product->is_multiple == 0 && $accountDetails['type'] == "Member")
-        		$hasAccount = \app\models\SavingsAccount::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
+        		$hasAccount = \app\models\SavingAccounts::find()->where(['member_id' => $accountDetails['member_id'], 'saving_product_id' => $accountDetails['saving_product_id']])->one();
 
     		if($hasAccount == null){
     			//$member = \app\models\Member::find()->where(['id' => $accountDetails['member_id']])->one();
-	        	$account = new SavingsAccount;
+	        	$account = new SavingAccounts;
 	        	$trans_serial = $product->trans_serial + 1;
 	        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 	        	$account->account_no = $product->id . "-" . $trans_serial_pad;
@@ -152,7 +152,7 @@ class SavingsController extends \yii\web\Controller
 	        	if($account->save()){
 	        		$product->trans_serial = $trans_serial;
 	        		$product->save();
-	        		$getAccount = SavingsAccount::find()->where(['account_no' => $account->account_no])->one();
+	        		$getAccount = SavingAccounts::find()->where(['account_no' => $account->account_no])->one();
 
                     if($account->type == "Group" && isset($post['signatoryList'])){
                         $signatories = $post['signatoryList'];
@@ -200,7 +200,7 @@ class SavingsController extends \yii\web\Controller
 
     public function actionGetAccount(){
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    	$model = new \app\models\SavingsAccount;
+    	$model = new \app\models\SavingAccounts;
     	if(isset($_POST['nameInput']))
     	   $accountList = $model->getAccountList($_POST['nameInput']);
         else{
@@ -246,7 +246,7 @@ class SavingsController extends \yii\web\Controller
                     ];
                 }
 
-            	$getSavingsAccount = SavingsAccount::findOne($acct_transaction['fk_savings_id']);
+            	$getSavingsAccount = SavingAccounts::findOne($acct_transaction['fk_savings_id']);
 
                 $trans_type = "";
                 $coh_entrytype = ""; // entry_type for Cash On Hand
@@ -411,9 +411,9 @@ class SavingsController extends \yii\web\Controller
             $postData = \Yii::$app->getRequest()->getBodyParams();
             $account_no = $postData['account_no'];
             $type = $postData['type'];
-            $model = \app\models\SavingsAccount::find()->where(['savingsaccount.account_no' => $account_no])->joinWith(['member'])->one();
+            $model = \app\models\SavingAccounts::find()->where(['savingsaccount.account_no' => $account_no])->joinWith(['member'])->one();
             if($model){
-                $transaction = \app\models\SavingsAccount::find()->where(['account_no' => $model->account_no])->one();
+                $transaction = \app\models\SavingAccounts::find()->where(['account_no' => $model->account_no])->one();
                 $account_no = $model->account_no;
                 $account_name = $model->member->fullname;
                 $last_transaction = "";

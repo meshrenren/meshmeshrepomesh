@@ -9,7 +9,7 @@ use \app\models\LoanProduct;
 use \app\models\LoanAccount;
 use \app\models\LoanTransaction;
 use \app\models\JournalHeader;
-use \app\models\SavingsAccount;
+use \app\models\SavingAccounts;
 use \app\models\SavingsTransaction;
 use \app\models\Savingsproduct;
 use \app\models\ShareProduct;
@@ -260,7 +260,7 @@ class PaymentHelper
 				
 				else if($row['type']=='SAVINGS')
 				{
-					$savingsaccount = SavingsAccount::findOne(['account_no'=>$row['account_no']]);
+					$savingsaccount = SavingAccounts::findOne(['account_no'=>$row['account_no']]);
 					$savingstransaction = new SavingsTransaction();
 					$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
 					

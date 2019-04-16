@@ -244,7 +244,7 @@ class MemberController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
             $member_id = $post['member_id'];
-            $getSavings = \app\models\SavingsAccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['member_id' => $member_id])->asArray()->all();
+            $getSavings = \app\models\SavingAccounts::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['member_id' => $member_id])->asArray()->all();
 
             $getShare = \app\models\Shareaccount::find()->innerJoinWith(['product'])->joinWith(['member'])->where(['fk_memid' => $member_id])->asArray()->all();
 

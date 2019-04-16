@@ -3,7 +3,7 @@
 namespace app\helpers\accounts;
 
 use Yii;
-use \app\models\SavingsAccount;
+use \app\models\SavingAccounts;
 use \app\models\SavingsTransaction;
 
 class SavingsHelper 
@@ -11,7 +11,7 @@ class SavingsHelper
 
 	public static function getAccountSavingsInfo($filter = [], $asArray = true){
 
-        $accountList = SavingsAccount::find()->innerJoinWith(['product']);
+        $accountList = SavingAccounts::find()->innerJoinWith(['product']);
         if(isset($filter['member_id'])){
             $accountList = $accountList->where(['member_id' => $filter['member_id']]);
         }

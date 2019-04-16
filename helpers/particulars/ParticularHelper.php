@@ -9,7 +9,7 @@ use \app\models\PayrollParticulars;
 use \app\models\Calendar;
 use \app\models\BranchParameters;
 use phpDocumentor\Reflection\Types\Static_;
-use \app\models\SavingsAccount;
+use \app\models\SavingAccounts;
 use \app\models\SavingsTransaction;
 use \app\models\TdTransaction;
 use \app\models\TimeDepositAccount;
@@ -237,7 +237,7 @@ class ParticularHelper
 			
 			if($interest>0)
 			{
-				$mdlAccount = SavingsAccount::findOne(['account_no'=>$rows["account_no"]]);
+				$mdlAccount = SavingAccounts::findOne(['account_no'=>$rows["account_no"]]);
 				
 				$mdlAccount->balance = $totalBalance;
 				$mdlAccount->last_interest_balance = $totalBalance;
