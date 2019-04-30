@@ -17,7 +17,7 @@ class LoanHelper
             ->where('member_id = '. $member_id);
         $loanAccounts = $query->all();
         $accountList = array();
-        if(count($loanAccounts) > 1){
+        if(count($loanAccounts) >= 1){
             foreach ($loanAccounts as $loan) {
                 $acc = \app\models\LoanAccount::find()
                     ->innerJoinWith(['product'])

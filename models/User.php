@@ -160,6 +160,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     }
 
     public function checkUserAccess($key,$operation){
+    	
+    	return "i am hit, ".$key." and ".$operation;
+    	
         if($this->id){
             $level_id = $this->level_id;
 

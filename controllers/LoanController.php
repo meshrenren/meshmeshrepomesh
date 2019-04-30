@@ -11,6 +11,7 @@ use app\models\LoanProduct;
 use app\helpers\accounts\LoanHelper;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\voucher\VoucherHelper;
+use app\models\LoanTransaction;
 
 
 class LoanController extends \yii\web\Controller
@@ -125,7 +126,7 @@ class LoanController extends \yii\web\Controller
                 ->where('member_id = '. $member_id);
             $loanAccounts = $query->all();
             $accountList = array();
-            if(count($loanAccounts) > 1){
+            if(count($loanAccounts) >= 1){
                 foreach ($loanAccounts as $loan) {
                     $acc = \app\models\LoanAccount::find()
                         ->innerJoinWith(['product'])
@@ -257,8 +258,24 @@ class LoanController extends \yii\web\Controller
     		$loanmodel->net_cash = $loanaccount['net_cash'];
     		$loanmodel->member_id = $loanaccount['member_id'];
     		
+    		$loanTransaction = new LoanTransaction();
+    		$loanTransaction->loan_account = $loanmodel->account_no;
+    		$loanTransaction->amount = $loanaccount['amount'];
+    		$loanTransaction->transaction_type='RELEASE';
+    		$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+    		$loanTransaction->transaction_date = date('Y-m-d');
+    		$loanTransaction->running_balance = $loanaccount['amount'];
+    		$loanTransaction->remarks = "loan release";
+    		$loanTransaction->prepaid_intpaid = 0;
+    		$loanTransaction->interest_paid = 0;
+    		$loanTransaction->OR_no = "GV123.sample";
+    		$loanTransaction->principal_paid = 0;
+    		$loanTransaction->arrears_paid = 0;
+    		$loanTransaction->date_posted = date('Y-m-d');
+    		$loanTransaction->interest_earned = 0;
     		
-    		if($loanproduct->save() && $loanmodel->save())
+    		
+    		if($loanproduct->save() && $loanmodel->save() && $loanTransaction->save())
     		{
     			return $loanaccount;
     			
@@ -266,7 +283,8 @@ class LoanController extends \yii\web\Controller
     				'status'=>'not saved',
     				 'errors'=> [
     				 		'lpError' => $loanproduct->getErrors(),
-    				 		'lmError' => $loanmodel->getErrors()
+    				 		'lmError' => $loanmodel->getErrors(),
+    				 		'ltError' => $loanTransaction->getErrors()
     				 ]
     				
     		];

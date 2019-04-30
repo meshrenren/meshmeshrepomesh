@@ -124,46 +124,36 @@ class PaymentHelper
 				    select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $row['account_no']]);
 					$lastTransaction = $command->queryOne();
 					
-					echo $lastTransaction['lasttrandate']." | ";
+					echo $lastTransaction['lasttrandate']." | <br/>-";
 					$noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($lastTransaction['lasttrandate']));
 					
 					$noOfDaysPassed = $noOfDaysPassed->format("%a");
 					
 					
-					//0. identifying deductions or payment distributions
+					//0. identifying deductions or payment distributions, if loan is appliance or regular loan, mothly prepaid interest should be paid.
 					$prepaidInterest = 0;
-					if($account->term<=12 && $product->prepaid_monthly_interest==1)
+					
+					if($product->id == 1 || $product->id == 2)
 					{
-						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 5;
-						$prepaidInterest = $prepaidInterest * 7;
-						$prepaidInterest = $prepaidInterest / 24;
+						$command = $connection->createCommand("SELECT ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
+							loan_account=:accountnumber and left(transaction_type,3)='PAY'), 0) - ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
+							loan_account=:accountnumber and left(transaction_type,2)='CN'), 0) AS totalPrepaidPaid", [':accountnumber' => $row['account_no']]);
+						$totalPrepaidPaid = $command->queryOne();
+						
+						$PIMustPay = ($noOfDaysPassed / 15) * $account->prepaid_amortization_quincena;
+						
+						$accumulatedPrepaid = $PIMustPay - $totalPrepaidPaid['totalPrepaidPaid'];
+						$prepaidInterest= $accumulatedPrepaid < 0 ? 0 : $accumulatedPrepaid;
+						
+						
 					}
 					
-					else if($account->term<=18 && $product->prepaid_monthly_interest==1)
-					{
-						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 7.5;
-						$prepaidInterest = $prepaidInterest * 11.5;
-						$prepaidInterest = $prepaidInterest / 36;
-					}
+					echo "i am interest prepaid .. ".$prepaidInterest." | <br/>";
 					
-					
-					else if($account->term<=24 && $product->prepaid_monthly_interest==1)
-					{
-						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 10;
-						$prepaidInterest = $prepaidInterest * 14;
-						$prepaidInterest = $prepaidInterest / 48;
-					}
-					
-					else if($account->term<=36 && $product->prepaid_monthly_interest==1)
-					{
-						$prepaidInterest  = ($account->principal * $product->prepaid_interest) / 15;
-						$prepaidInterest = $prepaidInterest * 21;
-						$prepaidInterest = $prepaidInterest / 72;
-					}
-					
-					echo $noOfDaysPassed."|".$prepaidInterest."<br/>";
 					
 					$principal_pay = $row['amount'] - $prepaidInterest;
+					
+					
 					
 					$interestEarned = ($account->principal_balance * ($product->int_rate/100))/30;
 					$interestEarned = $interestEarned * $noOfDaysPassed;
@@ -174,7 +164,7 @@ class PaymentHelper
 					$loanTransaction = new LoanTransaction();
 					$loanTransaction->loan_account = $row['account_no'];
 					$loanTransaction->amount = round($row['amount'], 2);
-					$loanTransaction->transaction_type='PAYCASH';
+					$loanTransaction->transaction_type='PAYPARTIAL';
 					$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
 					$loanTransaction->transaction_date = date('Y-m-d');
 					$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
