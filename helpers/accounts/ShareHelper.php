@@ -9,14 +9,18 @@ use app\models\ShareTransaction;
 class ShareHelper 
 {
 
-	public static function getAccountShareInfo($member_id = null){
+	public static function getAccountShareInfo($member_id = null, $asArray = true){
     
         $accountList = Shareaccount::find()->innerJoinWith(['product', 'member']);
         if($member_id != null){
         	$accountList = $accountList->where(['fk_memid' => $member_id]);
         }
+
+        if($asArray){
+            return $accountList->asArray()->all();
+        }
         
-        return $accountList->asArray()->all();
+        return $accountList->all();
 	}
 
     public static function getTransaction($fk_share_id = null, $filter = null){

@@ -15,8 +15,13 @@ class JournalHelper
         $journal->total_amount = $data['total_amount'];
         $journal->trans_type = $data['trans_type'];
         $journal->remarks = $data['remarks'];
-        $journal->transacted_date = date('Y-m-d H:i:s');
+        if(isset($data['transacted_date'])){
+            $journal->transacted_date = $data['transacted_date'];
+        }else{
+            $journal->transacted_date = date('Y-m-d H:i:s');
+        }
         $journal->transacted_by = \Yii::$app->user->identity->id;
+        //$journal->transacted_by = 18; //CINCO
 
         if($journal->save()){
             return $journal;
@@ -38,8 +43,8 @@ class JournalHelper
             $journal->particular_id = $value['particular_id'];
 
             if(!$journal->save()){
-            	echo var_dump($journal->errors);
-            	echo "<br/><br/> ".$value['particular_id'];
+            	//echo var_dump($journal->errors);
+            	//echo "<br/><br/> ".$value['particular_id'];
             	return false;
             }
             

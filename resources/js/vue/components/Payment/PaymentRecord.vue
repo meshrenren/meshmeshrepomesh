@@ -290,11 +290,7 @@ export default {
             name_id: [ { required: true, message: 'Name cannot be blank.', trigger: 'blur' }
             ],
             date_transact: [ { required: true, message: 'Date cannot be blank.', trigger: 'blur' }
-            ], 
-            particular_id: [ { required: true, message: 'Description cannot be blank.', trigger: 'blur' }
-            ],   
-            amount_paid: [ { required: true, message: 'Amount cannot be blank.', trigger: 'blur' }
-            ],            
+            ],           
         } 
 
         this.rulesOther = {
@@ -310,6 +306,7 @@ export default {
         totalAccounts(){
             let list = this.allTotalAccount
             let account = []
+            let totalAmt = 0
 
             _forEach(list, rs =>{
                 let acct = cloneDeep(rs)
@@ -326,7 +323,10 @@ export default {
 
             _forEach(account, rs =>{
                 rs.amount = Number(rs.amount).toFixed(2)
+                totalAmt += Number(rs.amount).toFixed(2)
             })
+            this.paymentModel.amount_paid = totalAmt
+            this.totalAmount = totalAmt
 
             return account 
         }
@@ -737,7 +737,7 @@ export default {
         }
     },
     watch:{
-        'entryList': function(val){
+        /*'entryList': function(val){
             let total = 0
             if(val.length > 0){
                 _forEach(val, vl =>{
@@ -750,7 +750,7 @@ export default {
             }
 
             this.totalAmount = total
-        }
+        }*/
     }
 }
 </script>

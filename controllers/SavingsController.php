@@ -201,8 +201,11 @@ class SavingsController extends \yii\web\Controller
     public function actionGetAccount(){
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     	$model = new \app\models\SavingsAccount;
-    	
-    	$accountList = $model->getAccountList($_POST['nameInput']);
+    	if(isset($_POST['nameInput']))
+    	   $accountList = $model->getAccountList($_POST['nameInput']);
+        else{
+            $accountList = $model->getAccountList();
+        }
     	return $accountList;
     }
 

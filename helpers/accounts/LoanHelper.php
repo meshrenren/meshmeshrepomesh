@@ -9,6 +9,7 @@ use app\models\LoanTransaction;
 class LoanHelper 
 {
 
+    /* Get latest each loan type accounts for the member */
 	public static function getAccountLoanInfo($member_id){
 
 		$query = new \yii\db\Query;
@@ -29,6 +30,17 @@ class LoanHelper
         }
 		return $accountList;
 	}
+
+    public static function getMemberLoan($member_id, $loan_id, $asArray = true){
+        $acc = \app\models\LoanAccount::find()
+            ->innerJoinWith(['product'])
+            ->where(['member_id' => $member_id, 'loan_id' =>  $loan_id])
+            ->orderBy('release_date DESC');
+        if($asArray){
+            return $acc->asArray()->one();
+        }
+        return $acc->one();
+    }
 
     public static function getLoanTransaction($loan_account, $filter=null){
         $accountList = LoanTransaction::find();
