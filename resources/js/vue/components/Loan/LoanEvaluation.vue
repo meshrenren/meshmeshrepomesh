@@ -309,7 +309,8 @@ export default {
 			minTerm 				: 1,
 			maxTerm					: 12,
 			disabledBox 			: true,
-			isLoading				: false
+			isLoading				: false,
+			LoanToRenew				: null
 		}
 	},
 	created(){
@@ -451,6 +452,7 @@ export default {
 				    		.then(result => {
 				    			let res = result.data
 								console.log("resRES", res)
+								vm.LoanToRenew = res.data.latestLoan;
 				    			this.calculateLoan(getProduct, res.data)
 				    			
 				    			this.isLoading = false
@@ -541,6 +543,73 @@ export default {
 
 
 		},
+		
+
+
+		calculateMiscDeductions(getProduct, evalForm)
+		{
+			/*
+				regardless if loan is latest or not: consider these factors
+				1. is loan product add in or prepaid something?
+
+				----- start of doing consideration #1 ------
+			*/
+			
+			if(getProduct.interest_type_id==2 || getProduct.interest_type_id=="2") //2 stands for add in
+			{
+			  let principal_amt = this.evaluationForm.amount
+			  this.evaluationForm.credit_preinterest = parseFloat(principal_amt * (getProduct.prepaid_interest/100)).toFixed(2);
+			  this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+			  console.log("prep int yohooa");
+
+			}
+
+		
+
+			/*
+				----- end of doing consideration #1 ------
+
+				2. is loan eGadget Loan nga samok kaayo?
+
+				---start of doing consideration #2---
+			*/
+
+			else if(getProduct.id=='14' || getProduct.product_name.includes("GADGET"))
+				{
+					if(evalForm.duration>=24)
+					{
+					 let accumulated_prepaid =  parseFloat((evalForm.amount * getProduct.prepaid_interest) * (evalForm.duration/12)).toFixed(2);
+					 let eddedToPrincipal = accumulated_prepaid / (evalForm.duration/12); //assuming loan is 2 years
+					 this.evaluationForm.credit_preinterest = parseFloat(accumulated_prepaid).toFixed(2);
+					 this.evaluationForm.debit_loan = parseFloat(Number(evalForm.amount) + Number(eddedToPrincipal)).toFixed(2);
+
+
+					}
+
+					else
+					{
+						 let principal_amt = this.evaluationForm.amount
+						 this.evaluationForm.credit_preinterest = parseFloat(principal_amt * getProduct.prepaid_interest).toFixed(2);
+						 this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+			 
+					}
+
+					
+				}
+
+			else
+			{
+				this.evaluationForm.credit_preinterest = getProduct.id ==2 ? parseFloat(Number(this.evaluationForm.amount) * Number(getProduct.prepaid_interest)).toFixed(2) : 0 ;
+				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
+
+			}
+
+			/*
+				---end of doing consideration #2---
+
+			*/
+
+		},
 
 
 
@@ -551,7 +620,7 @@ export default {
 			let evalForm = cloneDeep(this.evaluationForm)
 			let service_charge = 0
 
-
+			console.log("im data needed", dataneeded);
 			//Calculate Service Charge
 			if(evalForm.service_charge){
 
@@ -595,72 +664,16 @@ export default {
 				this.evaluationForm.member_id = this.memberDetails.id
 				this.evaluationForm.principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
 				
-								
+				this.calculateMiscDeductions(getProduct, evalForm);					
 				this.evaluationForm.prepaid_amortization_quincena = this.calculatePrepaidInterest(Number(this.evaluationForm.amount), Number(this.evaluationForm.duration), getProduct.id==2 ? 0.0687 : 0.01, getProduct.id);
 				return [];
 			}
 
 
-			/*
-				regardless if loan is latest or not: consider these factors
-				1. is loan product add in or prepaid something?
+			this.calculateMiscDeductions(getProduct, evalForm);
 
-				----- start of doing consideration #1 ------
-			*/
+
 			
-			if(getProduct.interest_type_id==2 || getProduct.interest_type_id=="2") //2 stands for add in
-			{
-			  let principal_amt = this.evaluationForm.amount
-			  this.evaluationForm.credit_preinterest = parseFloat(principal_amt * (getProduct.prepaid_interest/100)).toFixed(2);
-			  this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
-			  console.log("prep int yohooa");
-
-			}
-
-		
-
-			/*
-				----- end of doing consideration #1 ------
-
-				2. is loan eGadget Loan nga samok kaayo?
-
-				---start of doing consideration #2---
-			*/
-
-			else if(getProduct.id=='14' || getProduct.product_name.includes("GADGET"))
-				{
-					if(evalForm.duration>=24)
-					{
-					 let accumulated_prepaid =  parseFloat((evalForm.amount*(getProduct.prepaid_interest/100)) * (evalForm.duration/12)).toFixed(2);
-					 let eddedToPrincipal = accumulated_prepaid / (evalForm.duration/12); //assuming loan is 2 years
-					 this.evaluationForm.credit_preinterest = parseFloat(accumulated_prepaid).toFixed(2);
-					 this.evaluationForm.debit_loan = parseFloat(Number(evalForm.amount) + Number(eddedToPrincipal)).toFixed(2);
-
-
-					}
-
-					else
-					{
-						 let principal_amt = this.evaluationForm.amount
-						 this.evaluationForm.credit_preinterest = parseFloat(principal_amt * (getProduct.prepaid_interest/100)).toFixed(2);
-						 this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
-			 
-					}
-
-					
-				}
-
-			else
-			{
-				this.evaluationForm.credit_preinterest = getProduct.id ==2 ? parseFloat(Number(this.evaluationForm.amount) * Number(getProduct.prepaid_interest)).toFixed(2) : 0 ;
-				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
-
-			}
-
-			/*
-				---end of doing consideration #2---
-
-			*/
 
     		console.log("getProduct", getProduct)
     		console.log("latestLoan", latestLoan)
@@ -711,7 +724,7 @@ export default {
 			console.log("harold " + rangeNoOfDays);
 			let numerator = (latestLoan.principal_balance * (latestLoan.product.int_rate/100))/30;
 			this.evaluationForm.debit_interest = 0;
-			this.evaluationForm.credit_interest = parseFloat(numerator * rangeNoOfDays).toFixed(2);
+			this.evaluationForm.credit_interest = parseFloat(lastTran.interest_accum).toFixed(2);
 			this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
 		//	
 			this.evaluationForm.notary_amount = getProduct.notary_fee
@@ -737,9 +750,18 @@ export default {
     		if(this.memberDetails.id != null){
     			this.disabledBox = false
 			//	this.$refs.product_loan_id.focus()
-				
+
 				let data = new FormData()
-				data.set('applyLoan', JSON.stringify(this.evaluationForm))
+
+				let loandata = {
+					evaluationFormss: this.evaluationForm,
+					loanToRenew: this.LoanToRenew == null ? null : {
+						account_number: this.LoanToRenew.account_no,
+						product_id:  this.LoanToRenew.loan_id,
+					}
+				}
+
+				data.set('applyLoan', JSON.stringify(loandata))
 				
 				this.$API.Loan.applyLoan(data)
 				.then(result=>{

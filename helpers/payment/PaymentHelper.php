@@ -123,7 +123,7 @@ class PaymentHelper
 					
 					$connection = Yii::$app->getDb();
 					$command = $connection->createCommand("
-				    select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $row['account_no']]);
+				    select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' AND is_cancelled=0 order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $row['account_no']]);
 					$lastTransaction = $command->queryOne();
 					
 					echo $lastTransaction['lasttrandate']." | <br/>-";

@@ -5,6 +5,7 @@ namespace app\helpers\accounts;
 use Yii;
 use \app\models\LoanAccount;
 use \app\models\LoanTransaction;
+use app\models\LoanProduct;
 
 class LoanHelper 
 {
@@ -13,7 +14,8 @@ class LoanHelper
 	public static function getAccountLoanInfo($member_id){
 
 		$query = new \yii\db\Query;
-        $query->select('DISTINCT(loan_id) as loan_id')
+		//$query->select('DISTINCT(loan_id) as loan_id') -->giusab sa nako ren para maview tanang loans
+        $query->select('account_no')
             ->from('loanaccount la')
             ->where('member_id = '. $member_id);
         $loanAccounts = $query->all();
@@ -22,7 +24,8 @@ class LoanHelper
             foreach ($loanAccounts as $loan) {
                 $acc = \app\models\LoanAccount::find()
                     ->innerJoinWith(['product'])
-                    ->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']])
+                    //->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']]) -->giusab sa nako ni ren para maview tanang loans. :)
+               		 ->where(['member_id' => $member_id, 'account_no' => $loan['account_no']])
                     ->orderBy('release_date DESC')
                     ->asArray()->one();
                 array_push($accountList, $acc);
@@ -50,6 +53,90 @@ class LoanHelper
         
         return $accountList->asArray()->all();
     }
+    
+    
+    
+    
+    
+    
+    public static function closeAccountDueToRenewal($loanDetails)
+    {
+    	//start of hell
+    	
+    	$product = LoanProduct::findOne($loanDetails['product_id']);
+    	$account = LoanAccount::findOne($loanDetails['accountnumber']);
+    	
+
+    	
+    	$prepaidInterest = $loanDetails['prepaid_int_pay']; //multiply to -1 to negate the prepaid interest
+    	$principal_pay = $loanDetails['principal_pay'];
+    	
+    	
+    	
+
+    	$interestEarned = 0; 
+    	
+    	$totalToPay =  $loanDetails['principal_pay'] +  $loanDetails['prepaid_int_pay'] + $loanDetails['interest_pay'];
+    	
+    	
+    	//1. insert to payment transaction
+    	$loanTransaction = new LoanTransaction();
+    	$loanTransaction->loan_account = $loanDetails['accountnumber'];
+    	$loanTransaction->amount = round($totalToPay, 2);
+    	$loanTransaction->transaction_type='PAYCLOSE';
+    	$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+    	$loanTransaction->transaction_date = date('Y-m-d');
+    	$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
+    	$loanTransaction->remarks="payment thru payment facility";
+    	$loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
+    	$loanTransaction->interest_paid = $loanDetails['interest_pay'];
+    	$loanTransaction->OR_no= $loanDetails['reference'];
+    	$loanTransaction->principal_paid = round($principal_pay, 2);
+    	$loanTransaction->arrears_paid = 0;
+    	$loanTransaction->date_posted = date('Y-m-d');
+    	$loanTransaction->interest_earned = round($interestEarned, 2);
+    	
+    	$account->principal_balance = $loanTransaction->running_balance;
+    	$account->interest_balance = $account->interest_balance - $loanDetails['interest_pay'];
+    	$account->status = "Closed";
+    	
+    	if($loanTransaction->running_balance<0)
+    	{
+    		
+   
+    		return "achieved negative. might want to proceed to close payment.";
+
+    		
+    	}
+    	
+    	//3. update loan balance
+    	if($loanTransaction->save() && $account->save())
+    	{
+    		return "success";
+    		
+    	}
+    	
+    	else
+    	{
+    		return [
+    				'lnTransaction' => $loanTransaction->errors,
+    				'lnAccount' => $account->errors
+    		];
+    		
+    		
+    	}
+    	//end of start of hell
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     public static function printLoanSummary($dataLoan){
         $details = $dataLoan['details'];
