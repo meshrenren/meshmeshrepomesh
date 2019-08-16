@@ -1,4 +1,5 @@
 import axios from 'axios'
+let $baseUrl = window.Yii.baseUrl
 
 export default {
 	
@@ -8,7 +9,7 @@ export default {
 			id 		: id,
 			name 	: name
 		}
-		return axios.post('/member/get-all-accounts', params)
+		return axios.post(this.$baseUrl + '/member/get-all-accounts', params)
 	},
 
 	changePassword(form, memberId){

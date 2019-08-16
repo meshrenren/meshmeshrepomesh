@@ -23,7 +23,6 @@ export default {
 	},
 	methods:{
 		beginTheDay(){
-			console.log("Here")
 			let vm = this
       		this.$swal({
               title: 'Begin The Day?',
@@ -44,7 +43,7 @@ export default {
             			action : "beginTheDay"
             		}
 
-            		axios.post(vm.baseUrl+'/site/begin-the-day', data).then((result) => {
+            		axios.post(vm.$baseUrl+'/site/begin-the-day', data).then((result) => {
 		                let res = result.data
 		                if(res){
 		                	document.location.href="/";

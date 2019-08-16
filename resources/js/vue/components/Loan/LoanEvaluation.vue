@@ -94,7 +94,15 @@
 									  	<el-row :gutter = "20">
 									  		<el-col :span="18">
 											  	<el-form-item label="Duration" prop = "duration" label-width="200px">
-											  		<el-input-number v-model="evaluationForm.duration" :min = "1" :controls = "false" @keyup.enter.native = "selectLoanDuration" ref = "duration" :disabled = "disabledBox"></el-input-number>
+											  		<el-select v-model="evaluationForm.duration" ref = "duration" placeholder="Select duration" :disabled = "disabledBox" @change = "selectLoanDuration">
+													    <el-option
+													      v-for="item in durationList"
+													      :key="item.value"
+													      :label="item.label"
+													      :value="item.value">
+													    </el-option>
+													</el-select>
+											  		<!-- <el-input-number v-model="evaluationForm.duration" :min = "1" :controls = "false" @keyup.enter.native = "selectLoanDuration" ref = "duration" :disabled = "disabledBox"></el-input-number> -->
 											  	</el-form-item>
 											</el-col>
 									  		<el-col :span="6">
@@ -298,6 +306,11 @@ export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	data: function () {
 		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : true, savings_retention: null}
+		let durationList = [ {value : 6, label : 6},
+			{value : 12, label : 12},
+			{value : 24, label : 24},
+			{value : 36, label : 36},
+		]
 		return {
 			evaluationForm 			: form,
 			loanProduct 			: this.dataLoanProduct,
@@ -310,7 +323,8 @@ export default {
 			maxTerm					: 12,
 			disabledBox 			: true,
 			isLoading				: false,
-			LoanToRenew				: null
+			LoanToRenew				: null,
+			durationList
 		}
 	},
 	created(){

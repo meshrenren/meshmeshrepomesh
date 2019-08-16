@@ -211,9 +211,6 @@
 	</div>
 </template>
 
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
-<style src="vue-tabs-component/docs/resources/tabs-component.css"></style>
-
 <script>
 
 	window.noty = require('noty')

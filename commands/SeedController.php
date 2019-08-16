@@ -1663,7 +1663,6 @@ class SeedController extends Controller
         ];
     }
 
-
 }
 
 

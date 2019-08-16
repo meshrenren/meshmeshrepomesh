@@ -1,6 +1,32 @@
 Yii Framework 2 debug extension Change Log
 ==========================================
 
+2.0.14 September 24, 2018
+-------------------------
+
+- Bug #300: Fixed email files are not deleted by GC (pistej)
+- Bug #302: Fixed panel usage with suffixes in UrlManager (kyrylo-permiakov)
+- Bug #327: Fix animation on page load when the toolbar is expanded (brandonkelly)
+- Bug #332: Fix error when trace is missing from message (cornernote)
+- Enh #77: Added "Events" panel (klimov-paul)
+- Enh #301: Added configuration option to toggle IP address restriction warning on / off (jkrasniewski)
+- Enh #311: Adjusted module's code to use `->get()` for dependencies (samdark)
+- Enh #316: Prevent multiple lines in toolbar (ZAYEC77)
+
+
+2.0.13 December 5, 2017
+-----------------------
+
+- Bug #284: Fixed "TypeError: input.substr is not a function" (leopold537)
+- Bug #290: Fixed "fetch request profile link" (leopold537)
+- Enh #274: Made user component configurable for `UserSwitch` and `UserPanel` (samdark)
+- Enh #283: Send debug headers in AJAX requests in order to be able to link to debug panel from single page apps (glendemon)
+- Enh #283: Duplicated queries count on DB panel (pistej)
+- Enh #294: Added a "General Info" table to the Request panel (brandonkelly)
+- Chg #292: Added PHP 7.2 compatibility (brandonkelly)
+- Chg: Changed `default/view` not to depend on `db` panel (silverfire)
+
+
 2.0.12 October 09, 2017
 -----------------------
 

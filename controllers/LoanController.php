@@ -190,7 +190,7 @@ class LoanController extends \yii\web\Controller
 					order by id, date_posted", [':accountnumber' => $acc['account_no'] ]);				            
 				            $result = $command->queryOne();
 				            
-				            if(count($acc)>=1)
+				            if($acc != null)
 				            {
 				            	$product = LoanProduct::findOne($acc['loan_id']);
 				            	$noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($result['last_tran_date']));
