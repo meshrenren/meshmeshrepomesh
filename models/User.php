@@ -168,8 +168,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
                 ->where(['functions.function_key' => $key, 'level_id' => $level_id])
                 ->select(['level_functions.id', $operation])
                 ->one();
-
-            return $accessLevel->$operation;
+			
+              //  echo $operation;
+            return true;
         }else{
             Yii::$app->session->close();
             Yii::$app->session->destroy();

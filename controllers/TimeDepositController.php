@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use kartik\mpdf\Pdf; 
 use app\models\TimeDepositAccount;
+use app\models\TimeDepositRateTable;
 
 class TimeDepositController extends \yii\web\Controller
 {
@@ -28,6 +29,8 @@ class TimeDepositController extends \yii\web\Controller
 
         $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member'])
             ->asArray()->all();
+        
+        $tdRates = TimeDepositRateTable::find()->asArray()->all();
 
     	$tdProduct  = \app\models\TimeDepositProduct::find()
     		->joinWith(['ratetable'])
@@ -37,7 +40,8 @@ class TimeDepositController extends \yii\web\Controller
             'tdlist'        => $tdlist,
         	'tdProduct'		=> $tdProduct,
         	'tdAccount'		=> $tdAccount,
-        	'tdTransaction'	=> $tdTransaction
+        	'tdTransaction'	=> $tdTransaction,
+        	'tdRates'		=> $tdRates
         ]);
     }
     
@@ -60,7 +64,7 @@ class TimeDepositController extends \yii\web\Controller
         	$tdaccount = (array)$tdaccount;
         	$model = new \app\models\TimeDepositAccount;
         	$model->attributes = $tdaccount;
-
+			$model->service_charge = $tdaccount['service_charge'];
         	$product = \app\models\TimeDepositProduct::find()->where(['id' => $tdaccount['fk_td_product']])->one();
 
         	$trans_serial = $product->trans_serial + 1;
@@ -105,7 +109,9 @@ class TimeDepositController extends \yii\web\Controller
 
         		//var_dump($tdTransaction->getErrors());
         		return [
-	        		'success'	=> true
+	        		'success'	=> true,
+        				'account' => $tdaccount
+        		
 	        	];
 	        }
 	        else{
