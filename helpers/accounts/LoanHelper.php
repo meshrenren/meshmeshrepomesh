@@ -34,16 +34,25 @@ class LoanHelper
 		return $accountList;
 	}
 
-    public static function getMemberLoan($member_id, $loan_id, $asArray = true){
+    public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = nul, $isAll = false){
         $acc = \app\models\LoanAccount::find()
             ->innerJoinWith(['product'])
             ->where(['member_id' => $member_id, 'loan_id' =>  $loan_id])
             ->orderBy('release_date DESC');
+        if($joinWith){
+            $acc->joinWith($joinWith);
+        }
+
         if($asArray){
-            return $acc->asArray()->one();
+            $acc->asArray();
+        }
+
+        if($isAll){
+            return $acc->all();
         }
         return $acc->one();
     }
+
 
     public static function getLoanTransaction($loan_account, $filter=null){
         $accountList = LoanTransaction::find();

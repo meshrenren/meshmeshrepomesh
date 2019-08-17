@@ -6,7 +6,7 @@
             </div>
 	        <div class = "box-body">
 	        	<el-row :gutter = "20">
-	        		<el-col :span="12">
+	        		<el-col :span="10">
 	        			<div class = "box-content">
 	        				<el-form label-position="right" label-width="120px" :model="memberDetails" ref = "loanEvaluateForm">
 				        		<el-row :gutter = "20">
@@ -40,7 +40,7 @@
 							<div class = "Loan List">
 			        			<h4>Member's List of Loan</h4>
 								<el-table :data="accountLoanList"height = "350px" stripe border>
-						            <el-table-column label="Date Transact">
+						            <el-table-column label="Date">
 						                <template slot-scope="scope">
 						                    <span>{{ scope.row.release_date }}</span>
 						                </template>
@@ -50,14 +50,14 @@
 						                    <span>{{ scope.row.product.product_name }}</span>
 						                </template>
 						            </el-table-column>
-						            <el-table-column label="Principal Loan">
+						            <el-table-column label="Principal">
 						                <template slot-scope="scope">
-						                    <span>{{ scope.row.principal }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.principal) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Balance">
 						                <template slot-scope="scope">
-						                    <span>{{ scope.row.principal_balance  }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.principal_balance)  }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Duration">
@@ -67,7 +67,8 @@
 						            </el-table-column>
 						            <el-table-column label="Action">
 						                <template slot-scope="scope">
-						                    <el-button size="mini" @click="selectAccount(scope.index, scope.row)">Select</el-button>
+						                    <!-- <el-button size="mini" @click="selectAccount(scope.index, scope.row)">Transaction</el-button><br> -->
+						                    <el-button class = "mt-5" size="mini" @click="getLoanHistory(scope.index, scope.row)">View</el-button>
 						                </template>
 						            </el-table-column>
 						            <!-- <el-table-column label="Maturity Date">
@@ -79,34 +80,39 @@
 			       			</div>
 			       		</div>
 			       	</el-col>
-			       	<el-col :span = "12">
+			       	<el-col :span = "14">
 			       		<div class = "Loan List">
 		        			<!-- <h4>Transactions</h4> -->
 		        			<label>Loan Account : </label> <span v-if = "selectedAccount && selectedAccount.product"> {{ selectedAccount.product.product_name}}</span>
-							<el-table :data="loanTransaction"height = "450px" stripe border>
-					            <el-table-column label="Date Transaction">
+							<el-table :data="getAllHistory"height = "450px" stripe border>
+					            <el-table-column label="Date">
 					                <template slot-scope="scope">
-					                    <span>{{ scope.row.transaction_date }}</span>
+					                    <span>{{ $df.formatDate(scope.row.transaction_date, 'YYYY-MM-DD') }}</span>
 					                </template>
 					            </el-table-column>
-					            <el-table-column label="Refernce No">
+					            <el-table-column label="Type">
+					                <template slot-scope="scope">
+					                    <span>{{ scope.row.transaction_type }}</span>
+					                </template>
+					            </el-table-column>
+					            <el-table-column label="Reference No">
 					                <template slot-scope="scope">
 					                    <span>{{ scope.row.OR_no }}</span>
 					                </template>
 					            </el-table-column>
 					            <el-table-column label="Principal Paid">
 					                <template slot-scope="scope">
-					                    <span>{{ scope.row.principal_paid }}</span>
+					                    <span>{{ $nf.formatNumber(scope.row.principal_paid) }}</span>
 					                </template>
 					            </el-table-column>
 					            <el-table-column label="Prepaid Interest Paid">
 					                <template slot-scope="scope">
-					                    <span>{{ scope.row.prepaid_intpaid }}</span>
+					                    <span>{{ $nf.formatNumber(scope.row.prepaid_intpaid) }}</span>
 					                </template>
 					            </el-table-column>
 					            <el-table-column label="Interest">
 					                <template slot-scope="scope">
-					                    <span>{{ scope.row.interest_earned }}</span>
+					                    <span>{{ $nf.formatNumber(scope.row.interest_earned) }}</span>
 					                </template>
 					            </el-table-column>
 		       				</el-table>		       				
@@ -125,7 +131,8 @@
 	window.noty = require('noty')
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'    
-    import _forEach from 'lodash/forEach'
+    import _forEach from 'lodash/forEach' 
+    import _concat from 'lodash/concat'
 
 export default {
 	props: [],
@@ -136,10 +143,24 @@ export default {
 			accountLoanList 		: [],
 			pageLoading 			: false,
 			loanTransaction 		: [],
-			selectedAccount 		: {}
+			selectedAccount 		: {},
+			allLoanAccount 			: []
 		}
 	},
 	created(){
+	},
+	computed:{
+		getAllHistory(){
+			let allAccount = this.allLoanAccount
+			let transaction = []
+			_forEach(allAccount, acc =>{
+				if(acc.loanTransaction){
+					transaction = _concat(transaction, acc.loanTransaction)
+				}
+			})
+
+			return transaction;
+		}
 	},
 	methods:{		
     	populateField(data){
@@ -178,6 +199,24 @@ export default {
             .then(result => {
                 let res = result.data
                 this.loanTransaction = res
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.pageLoading = false
+            })
+    	},
+
+    	getLoanHistory(index, data){
+    		this.pageLoading = true
+    		this.selectedAccount = data
+
+            this.$API.Loan.getLoanHistory(this.memberDetails.id, data.loan_id)
+            .then(result => {
+                let res = result.data
+                console.log("res", res)
+                this.allLoanAccount = res
             })
             .catch(err => {
                 console.log(err)
