@@ -76,7 +76,9 @@
 						    		<span slot="append">%</span>
 						    	</el-input-number> -->
 						  	</el-form-item>
-						  	<a class = "click-class" @click="viewRateModal" >View rate list of the selected product here.</a>
+							  Service Fee: {{serviceFee}} <br/>
+							  Total Amount to be Incurred: {{totalIncurred}} <br/>
+						  	<a class = "click-class" @click="viewRateModal" >View rate list of the selected product here. </a>
 
 						  	<div class = "signatory" v-if = "tdAccountDetails.type == 'Group'">
 								<el-button type = "info" @click="getSignatory()">Add Signatory</el-button>
@@ -122,7 +124,7 @@
     import _forEach from 'lodash/forEach'
 
 export default {
-	props: ['dataTimeDepositAccount', 'dataTimeDepositTransaction', 'dataTimeDepositProduct', 'dataTimeDepositList', 'baseUrl'],
+	props: ['dataTimeDepositAccount', 'dataTimeDepositTransaction', 'dataTimeDepositProduct', 'dataTimeDepositList', 'baseUrl', 'dataTdRates'],
 	data: function () {
 
     	let account  = {}
@@ -142,7 +144,9 @@ export default {
       		accountList 			: this.dataTimeDepositList,
       		accountFilter 			: "",
       		isGet 					: "",
-      		signatoryList			: [],
+			signatoryList			: [],
+			serviceFee: 0,
+			totalIncurred: 0
 		}
 	},
 	created(){
@@ -308,7 +312,11 @@ export default {
 						return Number(term_count) == Number(ci.days) && Number(amount) >= Number(ci.min_amount) && Number(amount) <= Number(ci.max_amount) 
 					})
 					if(rate){
+						
 						this.tdAccountDetails.interest_rate = rate.interest_rate
+						this.serviceFee = (this.tdAccountDetails.amount * (rate.interest_rate/100)) * rate.service_charge_percentage
+						this.totalIncurred = this.serviceFee + this.tdAccountDetails.amount
+						this.tdAccountDetails.service_charge = this.serviceFee
 					}
 				}
     		}
@@ -397,7 +405,7 @@ export default {
 						            text: message,
 						            timeout: 2500
 						        }).show()
-				                location.reload()
+				              //  location.reload()
 				                  
 				            }).catch(function (error) {
 				            

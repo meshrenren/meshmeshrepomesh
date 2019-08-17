@@ -13,6 +13,7 @@ use \app\models\SavingAccounts;
 use \app\models\SavingsTransaction;
 use \app\models\TdTransaction;
 use \app\models\TimeDepositAccount;
+use app\models\SavingsAccount;
 
 
 
@@ -133,6 +134,7 @@ class ParticularHelper
 		$connection = Yii::$app->getDb();
 		$command = $connection->createCommand($qry);
 		$result = $command->queryAll();
+		$currentDate = date('Y-m-d', strtotime($nextday['date']));
 		
 		foreach($result as $rows)
 		{
@@ -140,23 +142,46 @@ class ParticularHelper
 			$interest = $tdaccount->balance * ($tdaccount->interest_rate/100);
 			
 			
+			/*
+			 * Automatically add to savings the interest of TD.
+			 */
+			
+			$savingsAccount = SavingAccounts::findOne(['member_id'=>$tdaccount->member_id, 'saving_product_id'=>1, 'is_active'=>1]);
+			$savingsAccount->balance = round($savingsAccount->balance + $interest, 2);
+			$savingsAccount->update();
 			
 			
-			$tdtransaction = new TdTransaction();
-			$tdtransaction->fk_account_number = $rows['accountnumber'];
-			$tdtransaction->transaction_type='TDINTEREST';
-			$tdtransaction->amount = $interest;
-			$tdtransaction->balance = $tdaccount->balance+ $interest;
-			$tdtransaction->transaction_date = $nextday['date'];
-			$tdtransaction->transacted_by = \Yii::$app->user->identity->id;
+			$savingsTransaction = new SavingsTransaction();
 			
-			$tdaccount->balance = $tdaccount->balance+ $interest;
+			$savingsTransaction->fk_savings_id = $savingsAccount->account_no;
+			$savingsTransaction->amount = round($interest, 2);
+			$savingsTransaction->transaction_type = "TDINTEREST";
+			$savingsTransaction->transacted_by = \Yii::$app->user->identity->id;
+			$savingsTransaction->transaction_date = $currentDate;
+			$savingsTransaction->running_balance = $savingsAccount->balance;
+			$savingsTransaction->remarks = "TD Auto Interest Posting.".date("mdY", strtotime($nextday['date']));
+			$savingsTransaction->ref_no = "TDIntPost.".date("mdY", strtotime($nextday['date']));
+			$savingsTransaction->save();
+			
+			
+			
+		//	$tdtransaction = new TdTransaction();
+		//	$tdtransaction->fk_account_number = $rows['accountnumber'];
+		//	$tdtransaction->transaction_type='TDINTEREST';
+		//	$tdtransaction->amount = $interest;
+		//	$tdtransaction->balance = $tdaccount->balance+ $interest;
+		//	$tdtransaction->transaction_date = $nextday['date'];
+		//	$tdtransaction->transacted_by = \Yii::$app->user->identity->id;
+			
+		//	$tdaccount->balance = $tdaccount->balance+ $interest;
 			$tdaccount->account_status = 'MATURED';
 			
 			
-			if($tdtransaction->save() && $tdaccount->save())
+			
+			if($tdaccount->save())
 			{
 				//entry to accounting
+				
 				
 			}
 			
@@ -249,7 +274,7 @@ class ParticularHelper
 				$mdlTrans->fk_savings_id = $rows["account_no"];
 				$mdlTrans->amount = round($interest, 2);
 				$mdlTrans->transaction_type = "INTEREST";
-				$mdlTrans->transacted_by = 1;
+				$mdlTrans->transacted_by = \Yii::$app->user->identity->id;
 				$mdlTrans->transaction_date = $currentDate;
 				$mdlTrans->running_balance = $totalBalance;
 				$mdlTrans->remarks = "IntPost.".date("mdY", strtotime($nextday['date']));

@@ -22,6 +22,8 @@ use Yii;
  */
 class TimeDepositAccount extends \yii\db\ActiveRecord
 {
+	
+
     /**
      * @inheritdoc
      */
@@ -62,7 +64,7 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
             'cancelled_date' => 'Cancelled Date',
             'date_created' => 'Date Created',
             'interest_rate' => 'Interest Rate',
-            'account_status' => 'Account Status',
+            'account_status' => 'Account Status'
         ];
     }
 

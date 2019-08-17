@@ -93761,7 +93761,7 @@ var render = function() {
                 fn: function(scope) {
                   return [
                     _c("span", [
-                      _vm._v(_vm._s(_vm.$nf.numberFixed(scope.row.term, 2)))
+                      _vm._v(_vm._s(_vm.$nf.numberFixed(scope.row.balance, 2)))
                     ])
                   ]
                 }
@@ -104940,6 +104940,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
 
 window.noty = __webpack_require__(1);
 
@@ -104951,7 +104953,7 @@ window.noty = __webpack_require__(1);
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-  props: ['dataTimeDepositAccount', 'dataTimeDepositTransaction', 'dataTimeDepositProduct', 'dataTimeDepositList', 'baseUrl'],
+  props: ['dataTimeDepositAccount', 'dataTimeDepositTransaction', 'dataTimeDepositProduct', 'dataTimeDepositList', 'baseUrl', 'dataTdRates'],
   data: function data() {
 
     var account = {};
@@ -104971,7 +104973,9 @@ window.noty = __webpack_require__(1);
       accountList: this.dataTimeDepositList,
       accountFilter: "",
       isGet: "",
-      signatoryList: []
+      signatoryList: [],
+      serviceFee: 0,
+      totalIncurred: 0
     };
   },
   created: function created() {
@@ -105138,7 +105142,11 @@ window.noty = __webpack_require__(1);
             return Number(term_count) == Number(ci.days) && Number(amount) >= Number(ci.min_amount) && Number(amount) <= Number(ci.max_amount);
           });
           if (rate) {
+
             this.tdAccountDetails.interest_rate = rate.interest_rate;
+            this.serviceFee = this.tdAccountDetails.amount * (rate.interest_rate / 100) * rate.service_charge_percentage;
+            this.totalIncurred = this.serviceFee + this.tdAccountDetails.amount;
+            this.tdAccountDetails.service_charge = this.serviceFee;
           }
         }
       }
@@ -105222,7 +105230,7 @@ window.noty = __webpack_require__(1);
                   text: message,
                   timeout: 2500
                 }).show();
-                location.reload();
+                //  location.reload()
               }).catch(function (error) {
 
                 console.log(error);
@@ -107317,6 +107325,18 @@ var render = function() {
                           ],
                           1
                         ),
+                        _vm._v(
+                          "\n\t\t\t\t\t\t\t  Service Fee: " +
+                            _vm._s(_vm.serviceFee) +
+                            " "
+                        ),
+                        _c("br"),
+                        _vm._v(
+                          "\n\t\t\t\t\t\t\t  Total Amount to be Incurred: " +
+                            _vm._s(_vm.totalIncurred) +
+                            " "
+                        ),
+                        _c("br"),
                         _vm._v(" "),
                         _c(
                           "a",
@@ -107326,7 +107346,7 @@ var render = function() {
                           },
                           [
                             _vm._v(
-                              "View rate list of the selected product here."
+                              "View rate list of the selected product here. "
                             )
                           ]
                         ),
