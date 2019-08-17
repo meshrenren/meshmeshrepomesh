@@ -7,13 +7,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Util;
 
 use PHPUnit\Framework\TestCase;
 
 class GlobalStateTest extends TestCase
 {
-    public function testIncludedFilesAsStringSkipsVfsProtocols(): void
+    public function testIncludedFilesAsStringSkipsVfsProtocols()
     {
         $dir   = __DIR__;
         $files = [
@@ -22,7 +23,7 @@ class GlobalStateTest extends TestCase
             $dir . '/GlobalStateTest.php',
             'vfs://' . $dir . '/RegexTest.php',
             'phpvfs53e46260465c7://' . $dir . '/TestTest.php',
-            'file://' . $dir . '/XmlTest.php',
+            'file://' . $dir . '/XmlTest.php'
         ];
 
         $this->assertEquals(

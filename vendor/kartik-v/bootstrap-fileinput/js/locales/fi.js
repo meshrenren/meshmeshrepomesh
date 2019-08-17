@@ -19,8 +19,6 @@
         removeTitle: 'Tyhj&auml;nn&auml; valitut tiedostot',
         cancelLabel: 'Peruuta',
         cancelTitle: 'Peruuta lataus',
-        pauseLabel: 'Pause',
-        pauseTitle: 'Pause ongoing upload',
         uploadLabel: 'Lataa',
         uploadTitle: 'Lataa valitut tiedostot',
         msgNoFilesSelected: '',
@@ -50,11 +48,8 @@
         msgUploadThreshold: 'Käsitellään...',
         msgUploadBegin: 'Initializing...',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
         msgUploadEmpty: 'Ei ladattavaa dataa.',
-        msgUploadError: 'Upload Error',
-        msgDeleteError: 'Delete Error',
-        msgProgressError: 'Error',
+        msgUploadError: 'Error',
         msgValidationError: 'Tiedoston latausvirhe',
         msgLoading: 'Ladataan tiedostoa {index} / {files} &hellip;',
         msgProgress: 'Ladataan tiedostoa {index} / {files} - {name} - {percent}% valmistunut.',
@@ -62,10 +57,6 @@
         msgFoldersNotAllowed: 'Raahaa ja pudota ainoastaan tiedostoja! Ohitettu {n} raahattua kansiota.',
         msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
         msgAjaxProgressError: '{operation} failed',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
-        msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
-        msgPendingTime: '{time} remaining',
-        msgCalculatingTime: 'calculating time remaining',
         ajaxOperations: {
             deleteThumb: 'file delete',
             uploadThumb: 'file upload',
@@ -84,8 +75,7 @@
             indicatorNewTitle: 'Ei ladattu',
             indicatorSuccessTitle: 'Ladattu',
             indicatorErrorTitle: 'Lataus epäonnistui',
-            indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Ladataan ...'
+            indicatorLoadingTitle: 'Ladataan ...'
         },
         previewZoomButtonTitles: {
             prev: 'Seuraava tiedosto',

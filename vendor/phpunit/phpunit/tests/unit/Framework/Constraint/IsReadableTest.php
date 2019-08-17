@@ -7,6 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Framework\Constraint;
 
 use PHPUnit\Framework\ExpectationFailedException;
@@ -14,9 +15,9 @@ use PHPUnit\Framework\TestFailure;
 
 class IsReadableTest extends ConstraintTestCase
 {
-    public function testConstraintIsReadable(): void
+    public function testConstraintIsReadable()
     {
-        $constraint = new IsReadable;
+        $constraint = new IsReadable();
 
         $this->assertFalse($constraint->evaluate('foo', '', true));
         $this->assertEquals('is readable', $constraint->toString());

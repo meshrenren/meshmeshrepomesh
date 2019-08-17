@@ -7,17 +7,18 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Util;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite;
 use PHPUnit\Runner\PhptTestCase;
 
-final class XmlTestListRenderer
+class XmlTestListRenderer
 {
     public function render(TestSuite $suite): string
     {
-        $writer = new \XMLWriter;
+        $writer = new \XmlWriter;
 
         $writer->openMemory();
         $writer->setIndent(true);

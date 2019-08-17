@@ -7,47 +7,50 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Framework\Constraint;
 
 use PHPUnit\Framework\TestCase;
 
 class ExceptionMessageRegExpTest extends TestCase
 {
-    public function testRegexMessage(): void
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessageRegExp /^A polymorphic \w+ message/
+     */
+    public function testRegexMessage()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^A polymorphic \w+ message/');
-
         throw new \Exception('A polymorphic exception message');
     }
 
-    public function testRegexMessageExtreme(): void
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessageRegExp /^a poly[a-z]+ [a-zA-Z0-9_]+ me(s){2}age$/i
+     */
+    public function testRegexMessageExtreme()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^a poly[a-z]+ [a-zA-Z0-9_]+ me(s){2}age$/i');
-
         throw new \Exception('A polymorphic exception message');
     }
 
     /**
      * @runInSeparateProcess
      * @requires extension xdebug
+     * @expectedException \Exception
+     * @expectedExceptionMessageRegExp #Screaming preg_match#
      */
-    public function testMessageXdebugScreamCompatibility(): void
+    public function testMessageXdebugScreamCompatibility()
     {
         \ini_set('xdebug.scream', '1');
-
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('#Screaming preg_match#');
 
         throw new \Exception('Screaming preg_match');
     }
 
-    public function testSimultaneousLiteralAndRegExpExceptionMessage(): void
+    /**
+     * @expectedException \Exception variadic
+     * @expectedExceptionMessageRegExp /^A variadic \w+ message/
+     */
+    public function testSimultaneousLiteralAndRegExpExceptionMessage()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/^A variadic \w+ message/');
-
         throw new \Exception('A variadic exception message');
     }
 }

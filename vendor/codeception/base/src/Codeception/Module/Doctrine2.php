@@ -481,7 +481,7 @@ EOF;
      *
      * @version 1.1
      * @param $entity
-     * @param array $params. For `IS NULL`, use `array('field'=>null)`
+     * @param array $params
      * @return array
      */
     public function grabEntitiesFromRepository($entity, $params = [])
@@ -512,7 +512,7 @@ EOF;
      *
      * @version 1.1
      * @param $entity
-     * @param array $params. For `IS NULL`, use `array('field'=>null)`
+     * @param array $params
      * @return object
      */
     public function grabEntityFromRepository($entity, $params = [])

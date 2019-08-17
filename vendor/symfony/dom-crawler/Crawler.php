@@ -11,7 +11,6 @@
 
 namespace Symfony\Component\DomCrawler;
 
-use Masterminds\HTML5;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 
 /**
@@ -56,20 +55,14 @@ class Crawler implements \Countable, \IteratorAggregate
     private $isHtml = true;
 
     /**
-     * @var HTML5|null
-     */
-    private $html5Parser;
-
-    /**
      * @param mixed  $node     A Node to use as the base for the crawling
      * @param string $uri      The current URI
      * @param string $baseHref The base href value
      */
-    public function __construct($node = null, string $uri = null, string $baseHref = null)
+    public function __construct($node = null, $uri = null, $baseHref = null)
     {
         $this->uri = $uri;
         $this->baseHref = $baseHref ?: $uri;
-        $this->html5Parser = class_exists(HTML5::class) ? new HTML5(['disable_html_ns' => true]) : null;
 
         $this->add($node);
     }
@@ -190,8 +183,29 @@ class Crawler implements \Countable, \IteratorAggregate
      */
     public function addHtmlContent($content, $charset = 'UTF-8')
     {
-        // Use HTML5 parser if the content is HTML5 and the library is available
-        $dom = null !== $this->html5Parser && strspn($content, " \t\r\n") === stripos($content, '<!doctype html>') ? $this->parseHtml5($content, $charset) : $this->parseXhtml($content, $charset);
+        $internalErrors = libxml_use_internal_errors(true);
+        $disableEntities = libxml_disable_entity_loader(true);
+
+        $dom = new \DOMDocument('1.0', $charset);
+        $dom->validateOnParse = true;
+
+        set_error_handler(function () { throw new \Exception(); });
+
+        try {
+            // Convert charset to HTML-entities to work around bugs in DOMDocument::loadHTML()
+            $content = mb_convert_encoding($content, 'HTML-ENTITIES', $charset);
+        } catch (\Exception $e) {
+        }
+
+        restore_error_handler();
+
+        if ('' !== trim($content)) {
+            @$dom->loadHTML($content);
+        }
+
+        libxml_use_internal_errors($internalErrors);
+        libxml_disable_entity_loader($disableEntities);
+
         $this->addDocument($dom);
 
         $base = $this->filterRelativeXPath('descendant-or-self::base')->extract(['href']);
@@ -487,29 +501,14 @@ class Crawler implements \Countable, \IteratorAggregate
     /**
      * Returns the children nodes of the current selection.
      *
-     * @param string|null $selector An optional CSS selector to filter children
-     *
      * @return self
      *
      * @throws \InvalidArgumentException When current node is empty
-     * @throws \RuntimeException         If the CssSelector Component is not available and $selector is provided
      */
-    public function children(/* string $selector = null */)
+    public function children()
     {
-        if (\func_num_args() < 1 && __CLASS__ !== \get_class($this) && __CLASS__ !== (new \ReflectionMethod($this, __FUNCTION__))->getDeclaringClass()->getName() && !$this instanceof \PHPUnit\Framework\MockObject\MockObject && !$this instanceof \Prophecy\Prophecy\ProphecySubjectInterface) {
-            @trigger_error(sprintf('The "%s()" method will have a new "string $selector = null" argument in version 5.0, not defining it is deprecated since Symfony 4.2.', __METHOD__), E_USER_DEPRECATED);
-        }
-        $selector = 0 < \func_num_args() ? func_get_arg(0) : null;
-
         if (!$this->nodes) {
             throw new \InvalidArgumentException('The current node list is empty.');
-        }
-
-        if (null !== $selector) {
-            $converter = $this->createCssSelectorConverter();
-            $xpath = $converter->toXPath($selector, 'child::');
-
-            return $this->filterRelativeXPath($xpath);
         }
 
         $node = $this->getNode(0)->firstChild;
@@ -556,19 +555,13 @@ class Crawler implements \Countable, \IteratorAggregate
     /**
      * Returns the node value of the first node of the list.
      *
-     * @param mixed $default When provided and the current node is empty, this value is returned and no exception is thrown
-     *
      * @return string The node value
      *
      * @throws \InvalidArgumentException When current node is empty
      */
-    public function text(/* $default = null */)
+    public function text()
     {
         if (!$this->nodes) {
-            if (0 < \func_num_args()) {
-                return \func_get_arg(0);
-            }
-
             throw new \InvalidArgumentException('The current node list is empty.');
         }
 
@@ -578,32 +571,19 @@ class Crawler implements \Countable, \IteratorAggregate
     /**
      * Returns the first node of the list as HTML.
      *
-     * @param mixed $default When provided and the current node is empty, this value is returned and no exception is thrown
-     *
      * @return string The node html
      *
      * @throws \InvalidArgumentException When current node is empty
      */
-    public function html(/* $default = null */)
+    public function html()
     {
         if (!$this->nodes) {
-            if (0 < \func_num_args()) {
-                return \func_get_arg(0);
-            }
-
             throw new \InvalidArgumentException('The current node list is empty.');
         }
 
-        $node = $this->getNode(0);
-        $owner = $node->ownerDocument;
-
-        if (null !== $this->html5Parser && '<!DOCTYPE html>' === $owner->saveXML($owner->childNodes[0])) {
-            $owner = $this->html5Parser;
-        }
-
         $html = '';
-        foreach ($node->childNodes as $child) {
-            $html .= $owner->saveHTML($child);
+        foreach ($this->getNode(0)->childNodes as $child) {
+            $html .= $child->ownerDocument->saveHTML($child);
         }
 
         return $html;
@@ -663,8 +643,6 @@ class Crawler implements \Countable, \IteratorAggregate
             foreach ($attributes as $attribute) {
                 if ('_text' === $attribute) {
                     $elements[] = $node->nodeValue;
-                } elseif ('_name' === $attribute) {
-                    $elements[] = $node->nodeName;
                 } else {
                     $elements[] = $node->getAttribute($attribute);
                 }
@@ -713,7 +691,11 @@ class Crawler implements \Countable, \IteratorAggregate
      */
     public function filter($selector)
     {
-        $converter = $this->createCssSelectorConverter();
+        if (!class_exists(CssSelectorConverter::class)) {
+            throw new \RuntimeException('To filter with a CSS selector, install the CssSelector component ("composer require symfony/css-selector"). Or use filterXpath instead.');
+        }
+
+        $converter = new CssSelectorConverter($this->isHtml);
 
         // The CssSelector already prefixes the selector with descendant-or-self::
         return $this->filterRelativeXPath($converter->toXPath($selector));
@@ -728,9 +710,10 @@ class Crawler implements \Countable, \IteratorAggregate
      */
     public function selectLink($value)
     {
-        return $this->filterRelativeXPath(
-            sprintf('descendant-or-self::a[contains(concat(\' \', normalize-space(string(.)), \' \'), %1$s) or ./img[contains(concat(\' \', normalize-space(string(@alt)), \' \'), %1$s)]]', static::xpathLiteral(' '.$value.' '))
-        );
+        $xpath = sprintf('descendant-or-self::a[contains(concat(\' \', normalize-space(string(.)), \' \'), %s) ', static::xpathLiteral(' '.$value.' ')).
+                            sprintf('or ./img[contains(concat(\' \', normalize-space(string(@alt)), \' \'), %s)]]', static::xpathLiteral(' '.$value.' '));
+
+        return $this->filterRelativeXPath($xpath);
     }
 
     /**
@@ -756,9 +739,12 @@ class Crawler implements \Countable, \IteratorAggregate
      */
     public function selectButton($value)
     {
-        return $this->filterRelativeXPath(
-            sprintf('descendant-or-self::input[((contains(%1$s, "submit") or contains(%1$s, "button")) and contains(concat(\' \', normalize-space(string(@value)), \' \'), %2$s)) or (contains(%1$s, "image") and contains(concat(\' \', normalize-space(string(@alt)), \' \'), %2$s)) or @id=%3$s or @name=%3$s] | descendant-or-self::button[contains(concat(\' \', normalize-space(string(.)), \' \'), %2$s) or @id=%3$s or @name=%3$s]', 'translate(@type, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")', static::xpathLiteral(' '.$value.' '), static::xpathLiteral($value))
-        );
+        $translate = 'translate(@type, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")';
+        $xpath = sprintf('descendant-or-self::input[((contains(%s, "submit") or contains(%1$s, "button")) and contains(concat(\' \', normalize-space(string(@value)), \' \'), %s)) ', $translate, static::xpathLiteral(' '.$value.' ')).
+                         sprintf('or (contains(%s, "image") and contains(concat(\' \', normalize-space(string(@alt)), \' \'), %s)) or @id=%s or @name=%s] ', $translate, static::xpathLiteral(' '.$value.' '), static::xpathLiteral($value), static::xpathLiteral($value)).
+                         sprintf('| descendant-or-self::button[contains(concat(\' \', normalize-space(string(.)), \' \'), %s) or @id=%s or @name=%s]', static::xpathLiteral(' '.$value.' '), static::xpathLiteral($value), static::xpathLiteral($value));
+
+        return $this->filterRelativeXPath($xpath);
     }
 
     /**
@@ -972,13 +958,17 @@ class Crawler implements \Countable, \IteratorAggregate
      *
      * The returned XPath will match elements matching the XPath inside the current crawler
      * when running in the context of a node of the crawler.
+     *
+     * @param string $xpath
+     *
+     * @return string
      */
-    private function relativize(string $xpath): string
+    private function relativize($xpath)
     {
         $expressions = [];
 
         // An expression which will never match to replace expressions which cannot match in the crawler
-        // We cannot drop
+        // We cannot simply drop
         $nonMatchingExpression = 'a[name() = "b"]';
 
         $xpathLen = \strlen($xpath);
@@ -1095,9 +1085,8 @@ class Crawler implements \Countable, \IteratorAggregate
     {
         $nodes = [];
 
-        $currentNode = $this->getNode(0);
         do {
-            if ($node !== $currentNode && XML_ELEMENT_NODE === $node->nodeType) {
+            if ($node !== $this->getNode(0) && 1 === $node->nodeType) {
                 $nodes[] = $node;
             }
         } while ($node = $node->$siblingDir);
@@ -1105,57 +1094,15 @@ class Crawler implements \Countable, \IteratorAggregate
         return $nodes;
     }
 
-    private function parseHtml5(string $htmlContent, string $charset = 'UTF-8'): \DOMDocument
-    {
-        return $this->html5Parser->parse($this->convertToHtmlEntities($htmlContent, $charset), [], $charset);
-    }
-
-    private function parseXhtml(string $htmlContent, string $charset = 'UTF-8'): \DOMDocument
-    {
-        $htmlContent = $this->convertToHtmlEntities($htmlContent, $charset);
-
-        $internalErrors = libxml_use_internal_errors(true);
-        $disableEntities = libxml_disable_entity_loader(true);
-
-        $dom = new \DOMDocument('1.0', $charset);
-        $dom->validateOnParse = true;
-
-        if ('' !== trim($htmlContent)) {
-            @$dom->loadHTML($htmlContent);
-        }
-
-        libxml_use_internal_errors($internalErrors);
-        libxml_disable_entity_loader($disableEntities);
-
-        return $dom;
-    }
-
     /**
-     * Converts charset to HTML-entities to ensure valid parsing.
-     */
-    private function convertToHtmlEntities(string $htmlContent, string $charset = 'UTF-8'): string
-    {
-        set_error_handler(function () { throw new \Exception(); });
-
-        try {
-            return mb_convert_encoding($htmlContent, 'HTML-ENTITIES', $charset);
-        } catch (\Exception $e) {
-            try {
-                $htmlContent = iconv($charset, 'UTF-8', $htmlContent);
-                $htmlContent = mb_convert_encoding($htmlContent, 'HTML-ENTITIES', 'UTF-8');
-            } catch (\Exception $e) {
-            }
-
-            return $htmlContent;
-        } finally {
-            restore_error_handler();
-        }
-    }
-
-    /**
+     * @param \DOMDocument $document
+     * @param array        $prefixes
+     *
+     * @return \DOMXPath
+     *
      * @throws \InvalidArgumentException
      */
-    private function createDOMXPath(\DOMDocument $document, array $prefixes = []): \DOMXPath
+    private function createDOMXPath(\DOMDocument $document, array $prefixes = [])
     {
         $domxpath = new \DOMXPath($document);
 
@@ -1170,9 +1117,14 @@ class Crawler implements \Countable, \IteratorAggregate
     }
 
     /**
+     * @param \DOMXPath $domxpath
+     * @param string    $prefix
+     *
+     * @return string
+     *
      * @throws \InvalidArgumentException
      */
-    private function discoverNamespace(\DOMXPath $domxpath, string $prefix): ?string
+    private function discoverNamespace(\DOMXPath $domxpath, $prefix)
     {
         if (isset($this->namespaces[$prefix])) {
             return $this->namespaces[$prefix];
@@ -1184,11 +1136,14 @@ class Crawler implements \Countable, \IteratorAggregate
         if ($node = $namespaces->item(0)) {
             return $node->nodeValue;
         }
-
-        return null;
     }
 
-    private function findNamespacePrefixes(string $xpath): array
+    /**
+     * @param string $xpath
+     *
+     * @return array
+     */
+    private function findNamespacePrefixes($xpath)
     {
         if (preg_match_all('/(?P<prefix>[a-z_][a-z_0-9\-\.]*+):[^"\/:]/i', $xpath, $matches)) {
             return array_unique($matches['prefix']);
@@ -1210,20 +1165,7 @@ class Crawler implements \Countable, \IteratorAggregate
         $crawler->isHtml = $this->isHtml;
         $crawler->document = $this->document;
         $crawler->namespaces = $this->namespaces;
-        $crawler->html5Parser = $this->html5Parser;
 
         return $crawler;
-    }
-
-    /**
-     * @throws \RuntimeException If the CssSelector Component is not available
-     */
-    private function createCssSelectorConverter(): CssSelectorConverter
-    {
-        if (!\class_exists(CssSelectorConverter::class)) {
-            throw new \LogicException('To filter with a CSS selector, install the CssSelector component ("composer require symfony/css-selector"). Or use filterXpath instead.');
-        }
-
-        return new CssSelectorConverter($this->isHtml);
     }
 }

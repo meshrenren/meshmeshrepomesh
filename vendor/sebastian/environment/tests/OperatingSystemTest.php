@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of sebastian/environment.
  *
@@ -7,6 +7,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
+
 namespace SebastianBergmann\Environment;
 
 use PHPUnit\Framework\TestCase;
@@ -21,7 +24,7 @@ final class OperatingSystemTest extends TestCase
      */
     private $os;
 
-    protected function setUp(): void
+    protected function setUp()/*: void*/
     {
         $this->os = new OperatingSystem;
     }
@@ -29,24 +32,8 @@ final class OperatingSystemTest extends TestCase
     /**
      * @requires OS Linux
      */
-    public function testFamilyCanBeRetrieved(): void
+    public function testFamilyCanBeRetrieved()/*: void*/
     {
         $this->assertEquals('Linux', $this->os->getFamily());
-    }
-
-    /**
-     * @requires OS Windows
-     */
-    public function testGetFamilyReturnsWindowsWhenRunningOnWindows(): void
-    {
-        $this->assertSame('Windows', $this->os->getFamily());
-    }
-
-    /**
-     * @requires PHP 7.2.0
-     */
-    public function testGetFamilyReturnsPhpOsFamilyWhenRunningOnPhp72AndGreater(): void
-    {
-        $this->assertSame(\PHP_OS_FAMILY, $this->os->getFamily());
     }
 }

@@ -18,7 +18,12 @@ use Throwable;
 class TestFailure
 {
     /**
-     * @var null|Test
+     * @var string
+     */
+    private $testName;
+
+    /**
+     * @var Test|null
      */
     protected $failedTest;
 
@@ -28,16 +33,58 @@ class TestFailure
     protected $thrownException;
 
     /**
-     * @var string
+     * Constructs a TestFailure with the given test and exception.
+     *
+     * @param Test      $failedTest
+     * @param Throwable $t
      */
-    private $testName;
+    public function __construct(Test $failedTest, $t)
+    {
+        if ($failedTest instanceof SelfDescribing) {
+            $this->testName = $failedTest->toString();
+        } else {
+            $this->testName = \get_class($failedTest);
+        }
+
+        if (!$failedTest instanceof TestCase || !$failedTest->isInIsolation()) {
+            $this->failedTest = $failedTest;
+        }
+
+        $this->thrownException = $t;
+    }
+
+    /**
+     * Returns a short description of the failure.
+     *
+     * @return string
+     */
+    public function toString()
+    {
+        return \sprintf(
+            '%s: %s',
+            $this->testName,
+            $this->thrownException->getMessage()
+        );
+    }
+
+    /**
+     * Returns a description for the thrown exception.
+     *
+     * @return string
+     */
+    public function getExceptionAsString()
+    {
+        return self::exceptionToString($this->thrownException);
+    }
 
     /**
      * Returns a description for an exception.
      *
-     * @throws \InvalidArgumentException
+     * @param Throwable $e
+     *
+     * @return string
      */
-    public static function exceptionToString(Throwable $e): string
+    public static function exceptionToString(Throwable $e)
     {
         if ($e instanceof SelfDescribing) {
             $buffer = $e->toString();
@@ -65,51 +112,11 @@ class TestFailure
     }
 
     /**
-     * Constructs a TestFailure with the given test and exception.
-     *
-     * @param Throwable $t
-     */
-    public function __construct(Test $failedTest, $t)
-    {
-        if ($failedTest instanceof SelfDescribing) {
-            $this->testName = $failedTest->toString();
-        } else {
-            $this->testName = \get_class($failedTest);
-        }
-
-        if (!$failedTest instanceof TestCase || !$failedTest->isInIsolation()) {
-            $this->failedTest = $failedTest;
-        }
-
-        $this->thrownException = $t;
-    }
-
-    /**
-     * Returns a short description of the failure.
-     */
-    public function toString(): string
-    {
-        return \sprintf(
-            '%s: %s',
-            $this->testName,
-            $this->thrownException->getMessage()
-        );
-    }
-
-    /**
-     * Returns a description for the thrown exception.
-     *
-     * @throws \InvalidArgumentException
-     */
-    public function getExceptionAsString(): string
-    {
-        return self::exceptionToString($this->thrownException);
-    }
-
-    /**
      * Returns the name of the failing test (including data set, if any).
+     *
+     * @return string
      */
-    public function getTestName(): string
+    public function getTestName()
     {
         return $this->testName;
     }
@@ -121,24 +128,30 @@ class TestFailure
      * isolation.
      *
      * @see Exception
+     *
+     * @return Test|null
      */
-    public function failedTest(): ?Test
+    public function failedTest()
     {
         return $this->failedTest;
     }
 
     /**
      * Gets the thrown exception.
+     *
+     * @return Throwable
      */
-    public function thrownException(): Throwable
+    public function thrownException()
     {
         return $this->thrownException;
     }
 
     /**
      * Returns the exception's message.
+     *
+     * @return string
      */
-    public function exceptionMessage(): string
+    public function exceptionMessage()
     {
         return $this->thrownException()->getMessage();
     }
@@ -146,9 +159,11 @@ class TestFailure
     /**
      * Returns true if the thrown exception
      * is of type AssertionFailedError.
+     *
+     * @return bool
      */
-    public function isFailure(): bool
+    public function isFailure()
     {
-        return $this->thrownException() instanceof AssertionFailedError;
+        return ($this->thrownException() instanceof AssertionFailedError);
     }
 }

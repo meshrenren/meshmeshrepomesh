@@ -831,7 +831,6 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
      */
     protected function proceedSubmitForm(Crawler $frmCrawl, array $params, $button = null)
     {
-        $url = null;
         $form = $this->getFormFor($frmCrawl);
         $defaults = $this->getFormValuesFor($form);
         $merged = array_merge($defaults, $params);
@@ -844,17 +843,10 @@ class InnerBrowser extends Module implements Web, PageSourceSaver, ElementLocato
             ));
             if (count($btnCrawl)) {
                 $requestParams[$button] = $btnCrawl->attr('value');
-                $formaction = $btnCrawl->attr('formaction');
-                if ($formaction) {
-                    $url = $formaction;
-                }
             }
         }
 
-        if (!$url) {
-            $url = $this->getFormUrl($frmCrawl);
-        }
-        
+        $url = $this->getFormUrl($frmCrawl);
         if (strcasecmp($form->getMethod(), 'GET') === 0) {
             $url = Uri::mergeUrls($url, '?' . http_build_query($requestParams));
         }

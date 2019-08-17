@@ -7,6 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Framework\Constraint;
 
 use PHPUnit\Framework\ExpectationFailedException;
@@ -14,7 +15,7 @@ use PHPUnit\Framework\TestFailure;
 
 class ClassHasAttributeTest extends ConstraintTestCase
 {
-    public function testConstraintClassHasAttribute(): void
+    public function testConstraintClassHasAttribute()
     {
         $constraint = new ClassHasAttribute(
             'privateAttribute'
@@ -43,7 +44,7 @@ EOF
         $this->fail();
     }
 
-    public function testConstraintClassHasAttribute2(): void
+    public function testConstraintClassHasAttribute2()
     {
         $constraint = new ClassHasAttribute(
             'privateAttribute'

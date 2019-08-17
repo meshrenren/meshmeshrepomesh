@@ -11,8 +11,13 @@ namespace PHPUnit\Runner\Filter;
 
 class IncludeGroupFilterIterator extends GroupFilterIterator
 {
-    protected function doAccept(string $hash): bool
+    /**
+     * @param string $hash
+     *
+     * @return bool
+     */
+    protected function doAccept($hash)
     {
-        return \in_array($hash, $this->groupTests, true);
+        return \in_array($hash, $this->groupTests);
     }
 }

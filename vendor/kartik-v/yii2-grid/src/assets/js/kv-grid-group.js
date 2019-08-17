@@ -1,13 +1,13 @@
 /*!
  * @package   yii2-grid
  * @author    Kartik Visweswaran <kartikv2@gmail.com>
- * @copyright Copyright &copy; Kartik Visweswaran, Krajee.com, 2014 - 2019
+ * @copyright Copyright &copy; Kartik Visweswaran, Krajee.com, 2014 - 2018
  * @version   3.2.7
  *
  * Grid grouping jquery library created for yii2-grid.
  *
  * Author: Kartik Visweswaran
- * Copyright: 2014 - 2019, Kartik Visweswaran, Krajee.com
+ * Copyright: 2014 - 2018, Kartik Visweswaran, Krajee.com
  * For more JQuery plugins visit http://plugins.krajee.com
  * For more Yii related demos visit http://demos.krajee.com
  */
@@ -187,9 +187,6 @@ var kvGridGroup;
             return source;
         };
         addRowSpan = function ($el, n) {
-            if ($el[0].hasAttribute('data-grouped-row')) {
-                return;
-            }
             n = n || 1;
             var rowspan = $el.attr('rowspan') || 1;
             rowspan = parseInt(rowspan) + n;
@@ -233,9 +230,7 @@ var kvGridGroup;
                             proceed = false;
                         }
                     });
-                    if (!$td[0].hasAttribute('data-grouped-row')) {
-                        $td.attr('rowspan', rowspan);
-                    }
+                    $td.attr('rowspan', rowspan);
                 });
             });
             $tbody.find(' > tr.kv-group-footer').each(function () {
@@ -401,9 +396,7 @@ var kvGridGroup;
                 cellKeyCurr = i > 0 ? getCellKey($cell) : $cell.text().trim();
                 if (cellKeyCurr === cellKeyPrev) {
                     rowspan++;
-                    if (!$gCell[0].hasAttribute('data-grouped-row')) {
-                        $gCell.attr('rowspan', rowspan);
-                    }
+                    $gCell.attr('rowspan', rowspan);
                     $cell.addClass('kv-temp-cells').hide();
                 } else {
                     gCol = j;

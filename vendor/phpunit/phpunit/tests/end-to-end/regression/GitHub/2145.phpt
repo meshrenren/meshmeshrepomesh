@@ -20,8 +20,8 @@ Time: %s, Memory: %s
 
 There was 1 error:
 
-1) Issue2145Test::testOne
+1) Issue2145Test
 Exception in %s%eIssue2145Test.php:%d
 %A
 ERRORS!
-Tests: 1, Assertions: 0, Errors: 1.
+Tests: 2, Assertions: 0, Errors: 1.
