@@ -3,6 +3,7 @@
  * =========================================================
  * Copyright 2012 Stefan Petre
  *
+ * Improvements by Kartik Visweswaran for Yii2 Functionality with Bootstrap 4.x support
  * Improvements by Andrew Rowls
  * Improvements by Sébastien Malot
  * Improvements by Yun Lai
@@ -23,8 +24,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Modifications by Kartik Visweswaran for Bootstrap 4.x support
  *
  * ========================================================= */
 
@@ -97,7 +96,7 @@
 
         this.bootcssVer = options.bootcssVer || (this.isInput ? (this.element.is('.form-control') ? 3 : 2) : (this.bootcssVer = this.element.is('.input-group') ? 3 : 2));
 
-        this.component = this.element.is('.date') ? (this.bootcssVer === 3 ? this.element.find(".kv-datetime-picker").parent() :
+        this.component = this.element.is('.date') ? (this.bootcssVer === 3 ? this.element.find(".kv-datetime-picker") :
             this.element.find(".add-on .icon-th, .add-on .icon-time, .add-on .icon-calendar, .add-on .fa-calendar, .add-on .fa-clock-o").parent()) : false;
         this.componentReset = this.element.is('.date') ? (this.bootcssVer === 3 ? this.element.find('.kv-datetime-remove') : this.element.find('.add-on .icon-remove, .add-on .fa-times').parent()) : false;
         this.hasInput = this.component && this.element.find('input').length;

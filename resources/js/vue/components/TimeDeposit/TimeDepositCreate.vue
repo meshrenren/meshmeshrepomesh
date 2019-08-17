@@ -326,7 +326,7 @@ export default {
             let data = new FormData()
             data.set('member_id', member_id)
 
-    		axios.post(this.baseUrl+'/time-deposit/get-td-accounts', data).then((result) => {
+    		axios.post(this.$baseUrl+'/time-deposit/get-td-accounts', data).then((result) => {
 			    let res = result.data
                 console.log(res)
                 if(res.length > 0 ){
@@ -384,7 +384,7 @@ export default {
 
 					    	/*let data = new FormData()
 		            		data.set('accountDetails', JSON.stringify(vm.tdAccountDetails))*/
-		            		axios.post(vm.baseUrl+'/time-deposit/save-td-account', data).then((result) => {
+		            		axios.post(vm.$baseUrl+'/time-deposit/save-td-account', data).then((result) => {
 				                let res = result.data
 				                let type = ""
 				                let message = ""
@@ -405,7 +405,7 @@ export default {
 						            text: message,
 						            timeout: 2500
 						        }).show()
-				              //  location.reload()
+				                location.reload()
 				                  
 				            }).catch(function (error) {
 				            

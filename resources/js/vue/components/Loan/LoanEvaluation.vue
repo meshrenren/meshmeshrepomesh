@@ -94,7 +94,15 @@
 									  	<el-row :gutter = "20">
 									  		<el-col :span="18">
 											  	<el-form-item label="Duration" prop = "duration" label-width="200px">
-											  		<el-input-number v-model="evaluationForm.duration" :min = "1" :controls = "false" @keyup.enter.native = "selectLoanDuration" ref = "duration" :disabled = "disabledBox"></el-input-number>
+											  		<el-select v-model="evaluationForm.duration" ref = "duration" placeholder="Select duration" :disabled = "disabledBox" @change = "selectLoanDuration">
+													    <el-option
+													      v-for="item in durationList"
+													      :key="item.value"
+													      :label="item.label"
+													      :value="item.value">
+													    </el-option>
+													</el-select>
+											  		<!-- <el-input-number v-model="evaluationForm.duration" :min = "1" :controls = "false" @keyup.enter.native = "selectLoanDuration" ref = "duration" :disabled = "disabledBox"></el-input-number> -->
 											  	</el-form-item>
 											</el-col>
 									  		<el-col :span="6">
@@ -107,8 +115,7 @@
 									    	</el-input>
 									  	</el-form-item>
 
-
-										<el-checkbox v-model="evaluationForm.is_savings">1% Savings Retention?</el-checkbox>
+										<el-checkbox @change = "savingsChange" v-model="evaluationForm.is_savings">1% Savings Retention?</el-checkbox>
 
 
 									</el-col>
@@ -288,8 +295,7 @@
 </template>
 
 <script>
-	window.noty = require('noty');
-    import axios from 'axios'
+	window.noty = require('noty')
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
@@ -298,6 +304,11 @@ export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	data: function () {
 		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : true, savings_retention: null}
+		let durationList = [ {value : 6, label : 6},
+			{value : 12, label : 12},
+			{value : 24, label : 24},
+			{value : 36, label : 36},
+		]
 		return {
 			evaluationForm 			: form,
 			loanProduct 			: this.dataLoanProduct,
@@ -310,7 +321,8 @@ export default {
 			maxTerm					: 12,
 			disabledBox 			: true,
 			isLoading				: false,
-			LoanToRenew				: null
+			LoanToRenew				: null,
+			durationList
 		}
 	},
 	created(){
@@ -355,6 +367,10 @@ export default {
 		}
 	},
 	methods:{		
+		savingsChange(value){
+			console.log("value", value)
+			this.evaluateLoan()
+		},
     	populateField(data){
     		this.memberDetails = data
     		this.memberDetails.share_capital = null
@@ -544,8 +560,6 @@ export default {
 
 		},
 		
-
-
 		calculateMiscDeductions(getProduct, evalForm)
 		{
 			/*
@@ -636,7 +650,6 @@ export default {
 
 			if(!latestLoan)
 			{
-				console.log("getProduct", getProduct)
 				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
 				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)

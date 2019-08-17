@@ -1663,6 +1663,44 @@ class SeedController extends Controller
         ];
     }
 
+    /*
+    To loop additional dates in calendar table
+    */
+    public function actionLoopCalendar($currYear = null){
+        if($currYear == null){
+            $currYear = date('Y');
+        }
+        $getLastCalendar = \app\models\Calendar::find()->orderBy('date_id DESC')->one();
+        $calendarDate = $getLastCalendar->date;
+        $newDate = date('Y-m-d', strtotime($calendarDate. ' +1 days'));
+        $count = 1;
+
+        //echo date('Y-m-t', strtotime('2019-04-12'));
+        for ($i=0; $i < $count; $i++) { 
+            $calendar = new \app\models\Calendar;
+            $calendar->date = $newDate;
+            $calendar->is_current = 0;
+            $calendar->is_holiday = 0;
+            $calendar->is_month_end = 0;
+
+            //Get if date is month end
+            $lastMonthDate = date('Y-m-t', strtotime($newDate));
+            if($lastMonthDate == $newDate){
+                $calendar->is_month_end = 1;
+            }
+
+            if($calendar->save()){
+                echo "Date Saved \t" .  $newDate . "\n";
+                $newDate = date('Y-m-d', strtotime($newDate. ' +1 days'));
+                if(date('Y', strtotime($newDate)) == $currYear){
+                    $count++;
+                }
+                else{
+                    break;
+                }
+            }
+        }
+    }
 
 }
 

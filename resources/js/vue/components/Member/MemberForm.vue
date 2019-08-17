@@ -180,9 +180,6 @@
   	@import '~noty/src/noty.scss';
 </style>
 
-<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
-<style src="vue-tabs-component/docs/resources/tabs-component.css"></style>
-
 <script>
 
 	window.noty = require('noty')
@@ -190,12 +187,6 @@
 	import axios from 'axios'
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'  
-    import Multiselect from 'vue-multiselect'
-    import DatePicker from 'vue2-datepicker'
-    import VueTimepicker from 'vue2-timepicker'
-    import {Tabs, Tab} from 'vue-tabs-component'
-    import VueTabs from 'vue-nav-tabs'
-    import VTab from 'vue-nav-tabs'
     import DataTable from 'vue-materialize-datatable'
     import merge from 'lodash/merge'
 
@@ -315,11 +306,6 @@ export default {
 		}
 	},
     components: {
-        DatePicker,
-        VueTimepicker,
-        Multiselect,
-        Tabs,
-        Tab,
         datatable: DataTable
     }, 
     mounted: function () {
@@ -420,7 +406,7 @@ export default {
 
 		    		data.set('employee', JSON.stringify(new_member))
 
-		            axios.post(this.baseUrl+'/member/save-member', data).then((result) => {
+		            axios.post(this.$baseUrl+'/member/save-member', data).then((result) => {
 		            	let res = result.data
 		            	let type = ""
 		            	let message = ""

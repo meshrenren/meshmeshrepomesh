@@ -83,8 +83,7 @@
 	</div>
 </template>
 <script>
-	window.noty = require('noty');
-    import axios from 'axios'
+	window.noty = require('noty')
     import Noty from 'noty'
     import SearchMember from '../General/SearchMember.vue'    
     import cloneDeep from 'lodash/cloneDeep'    

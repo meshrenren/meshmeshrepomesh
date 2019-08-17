@@ -92,7 +92,7 @@ export default {
 		    		data.set('addressMember', JSON.stringify(vm.addressModel))
 		    		data.set('member_id', this.memberId)
 
-	            	axios.post(vm.$parent.baseUrl+'/member/add-member-address', data).then((result) => {
+	            	axios.post(vm.$baseUrl+'/member/add-member-address', data).then((result) => {
 	            		let res = result.data
 	            		let type = ""
 	            		let message = ""
@@ -156,7 +156,7 @@ export default {
     		data.set('label', label)
     		data.set('value', emitData['value'])
 
-    		axios.post(this.$parent.baseUrl+'/member/update-member-address', data).then((result) => {
+    		axios.post(this.$baseUrl+'/member/update-member-address', data).then((result) => {
 	    		let res = result.data
 	    		let type = ""
 	    		let message = ""
@@ -226,7 +226,7 @@ export default {
 		    		let data = new FormData()
 		    		data.set('address_id', address_id)
 
-		    		axios.post(vm.$parent.baseUrl+'/member/delete-member-address', data).then((result) => {
+		    		axios.post(vm.$baseUrl+'/member/delete-member-address', data).then((result) => {
 			    		let res = result.data
 			    		let type = ""
 			    		let message = ""
