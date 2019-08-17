@@ -99,8 +99,7 @@
 </style>
 <script>
 
-	window.noty = require('noty');
-    import axios from 'axios'
+	window.noty = require('noty')
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'  
 

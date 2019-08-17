@@ -9,9 +9,6 @@ Vue.component('member-view', MemberView)
 import SearchMember from './components/General/SearchMember.vue'
 Vue.component('search-member', SearchMember)
 
-import PermissionSettings from './components/Settings/PermissionSettings.vue'
-Vue.component('permission-settings', PermissionSettings)
-
 import BeginningOfDay from './components/General/BeginningOfDay.vue'
 Vue.component('beginning-of-day', BeginningOfDay)
 
@@ -99,5 +96,17 @@ Vue.component('payment-payroll', PaymentPayroll)
 
 import PaymentList from './components/Payment/PaymentList.vue'
 Vue.component('payment-list', PaymentList)
+
+/* --- END --- */
+
+
+/* Settings */
+/* --- START --- */
+
+import PermissionSettings from './components/Settings/PermissionSettings.vue'
+Vue.component('permission-settings', PermissionSettings)
+
+import ProductSettings from './components/Settings/ProductSettings.vue'
+Vue.component('product-settings', ProductSettings)
 
 /* --- END --- */

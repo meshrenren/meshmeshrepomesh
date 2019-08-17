@@ -1,4 +1,5 @@
 import axios from 'axios'
+let $baseUrl = window.Yii.baseUrl
 
 export default {
 	createAccount(params){	
@@ -9,7 +10,7 @@ export default {
 		if(type == 'pdf'){
 			return axios({
 				method: 'post',
-				url: '/savings/print-withdraw',
+				url: $baseUrl + '/savings/print-withdraw',
 				data: {
 					account_no : account_no
 				},
@@ -19,7 +20,7 @@ export default {
 		else if(type == 'print'){
 			return axios({
 				method: 'post',
-				url: '/savings/print-withdraw',
+				url: $baseUrl + '/savings/print-withdraw',
 				data: {
 					account_no : account_no,
 					type : type
@@ -31,7 +32,7 @@ export default {
 	},
 
 	saveTransaction(params){	
-		return axios.post('/savings/save-transaction', params)
+		return axios.post($baseUrl + '/savings/save-transaction', params)
 	},
 
 
@@ -39,13 +40,13 @@ export default {
 		let params = {
 			action : "savingsaccount"
 		}
-		return axios.post('/savings/get-account', params)
+		return axios.post($baseUrl + '/savings/get-account', params)
 	},
 
 	getTransaction(fk_savings_id){	
 		let params = {
 			fk_savings_id : fk_savings_id
 		}
-		return axios.post('/savings/get-transaction', params)
+		return axios.post($baseUrl + '/savings/get-transaction', params)
 	},
 }

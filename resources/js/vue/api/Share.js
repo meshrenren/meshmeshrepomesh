@@ -1,4 +1,5 @@
 import axios from 'axios'
+let $baseUrl = window.Yii.baseUrl
 
 export default {
 
@@ -6,24 +7,24 @@ export default {
 		let params = {
 			shareaccount : shareaccount
 		}
-		return axios.post('/shareaccount/createaccount', params)
+		return axios.post($baseUrl + '/shareaccount/createaccount', params)
 	},
 
 	getAccounts(){	
 		let params = {
 			action : "shareaccount"
 		}
-		return axios.post('/shareaccount/get-accounts', params)
+		return axios.post($baseUrl + '/shareaccount/get-accounts', params)
 	},
 
 	getTransaction(fk_share_id){	
 		let params = {
 			fk_share_id : fk_share_id
 		}
-		return axios.post('/shareaccount/get-transaction', params)
+		return axios.post($baseUrl + '/shareaccount/get-transaction', params)
 	},
 
 	saveTransaction(params){	
-		return axios.post('/shareaccount/save-transaction', params)
+		return axios.post($baseUrl + '/shareaccount/save-transaction', params)
 	},
 }

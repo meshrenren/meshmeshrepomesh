@@ -101,7 +101,7 @@ export default {
 		    		data.set('familyMember', JSON.stringify(vm.familyModel))
 		    		data.set('member_id', this.memberId)
 
-	            	axios.post(vm.$parent.baseUrl+'/member/add-member-family', data).then((result) => {
+	            	axios.post(vm.$baseUrl+'/member/add-member-family', data).then((result) => {
 	            		let res = result.data
 	            		let type = ""
 	            		let message = ""
@@ -165,7 +165,7 @@ export default {
     		data.set('label', label)
     		data.set('value', emitData['value'])
 
-    		axios.post(this.$parent.baseUrl+'/member/update-member-family', data).then((result) => {
+    		axios.post(this.$baseUrl+'/member/update-member-family', data).then((result) => {
 	    		let res = result.data
 	    		let type = ""
 	    		let message = ""
@@ -236,7 +236,7 @@ export default {
 		    		let data = new FormData()
 		    		data.set('family_id', family_id)
 
-		    		axios.post(vm.$parent.baseUrl+'/member/delete-member-family', data).then((result) => {
+		    		axios.post(vm.$baseUrl+'/member/delete-member-family', data).then((result) => {
 			    		let res = result.data
 			    		let type = ""
 			    		let message = ""

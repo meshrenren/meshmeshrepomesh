@@ -1,4 +1,5 @@
 import axios from 'axios'
+let $baseUrl = window.Yii.baseUrl
 
 export default {
 	printList(data, type, accountType){	
@@ -10,7 +11,7 @@ export default {
 		if(type == 'pdf'){
 			return axios({
 				method: 'post',
-				url: '/site/print-list',
+				url: $baseUrl + '/site/print-list',
 				data: params,
 				responseType: 'blob'
 			})
@@ -18,7 +19,7 @@ export default {
 		else if(type == 'print'){
 			return axios({
 				method: 'post',
-				url: '/site/print-list',
+				url: $baseUrl + '/site/print-list',
 				data: params,
 			})
 		}

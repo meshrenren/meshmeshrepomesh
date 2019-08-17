@@ -406,7 +406,7 @@ export default {
 
 		    		data.set('employee', JSON.stringify(new_member))
 
-		            axios.post(this.baseUrl+'/member/save-member', data).then((result) => {
+		            axios.post(this.$baseUrl+'/member/save-member', data).then((result) => {
 		            	let res = result.data
 		            	let type = ""
 		            	let message = ""

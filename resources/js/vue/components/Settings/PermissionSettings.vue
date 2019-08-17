@@ -3,72 +3,75 @@
 
 		<div class = "row">
 			<div class = "col-md-12">
-				<ul class = "nav nav-tabs">
+				<el-tabs tab-position="top" v-model="activeTab"  type = "border-card" @tab-click="handleClick">
+
+					<el-tab-pane label="Super Admin" name="superadmin" lazy>
+						<function-permission 
+						:data-levels = "dataLevels"
+						:data-permission = "superAdminList">
+						</function-permission>
+					</el-tab-pane>
+
+					<el-tab-pane label="Admin" name="admin" lazy>
+						<function-permission 
+						:data-levels = "dataLevels"
+						:data-permission = "adminList">
+						</function-permission>
+					</el-tab-pane>
+
+					<el-tab-pane label="Manager" name="manager" lazy>
+						<function-permission 
+						:data-levels = "dataLevels"
+						:data-permission = "managerList">
+						</function-permission>
+					</el-tab-pane>
+
+					<el-tab-pane label="Normal" name="normal" lazy>
+						<function-permission 
+						:data-levels = "dataLevels"
+						:data-permission = "normalList">
+						</function-permission>
+					</el-tab-pane>
+
+					<!-- <el-tab-pane label="Limited" name="limited" lazy>
+						<function-permission 
+						:data-levels = "dataLevels"
+						:data-permission = "limitedList">
+						</function-permission>
+					</el-tab-pane> -->
+				</el-tabs>
+
+				<!-- <ul class = "nav nav-tabs">
 					<li class="active"><a href="#superadmin" data-toggle="tab">Super Admin</a></li>
 					<li><a href="#admin" data-toggle="tab">Admin</a></li>
 					<li><a href="#manager" data-toggle="tab">Manager</a></li>
 					<li><a href="#normal" data-toggle="tab">Normal</a></li>
 					<li><a href="#limited" data-toggle="tab">Limited</a></li>
-				</ul>
-				<div class = "tab-content">
-					<div class = "active tab-pane" id = "general">
-						<table class = "table table-bordered table-hover dataTable">
-							<thead>
-								<tr>
-									<th>Function</th>
-									<th>View</th>
-									<th>Add</th>
-									<th>Edit</th>
-									<th>Delete</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="(item, index) in superAdminList" :key = "index">
-									<td>
-										<span>{{ item.function.description }}</span>
-									</td>
-									<td>
-										<span v-html = "getAccess(item._view)"></span>
-									</td>
-									<td>
-										<span v-html = "getAccess(item._add)"></span>
-									</td>
-									<td>
-										<span v-html = "getAccess(item._edit)"></span>
-									</td>
-									<td>
-										<span v-html = "getAccess(item._delete)"></span>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
+				</ul> -->
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+	import FunctionPermission from './FunctionPermission'
+
 export default {
-	props: ['dataLevels', 'dataSuperAdmin', 'dataAdmin', 'dataManager', 'dataNormal', 'dataLimited', 'baseUrl', 'canEdit'],
+	props: ['dataLevels', 'dataAccessList', 'canEdit'],
+	components: {FunctionPermission},
 	data: function () {
 		return{
-			superAdminList 	: this.dataSuperAdmin,
-			adminList 		: this.dataAdmin,
-			managerList 	: this.dataManager,
-			normalList 		: this.dataNormal,
-			limitedList 	: this.dataLimited,
+			superAdminList 	: this.dataAccessList.superAdmin,
+			adminList 		: this.dataAccessList.admin,
+			managerList 	: this.dataAccessList.manager,
+			normalList 		: this.dataAccessList.normal,
+			limitedList 	: this.dataAccessList.limited,
+			activeTab 		: 'superadmin'
 		}
 	},
 	methods:{
-		getAccess(access){
-			if(access){
-				return "<i class = 'fa fa-check'></i>";
-			}
-			else{
-				return "<i class = 'fa fa-remove'></i>";
-			}
+		handleClick(){
+			console.log("Click")
 		}
 	}
 }

@@ -450,7 +450,7 @@ export default {
     		data.set('label', label)
     		data.set('value', value)
 
-            axios.post(this.baseUrl+'/member/update-member', data).then((result) => {
+            axios.post(this.$baseUrl+'/member/update-member', data).then((result) => {
             	let res = result.data
             	let type = ""
             	let message = ""
@@ -505,7 +505,7 @@ export default {
     		data.set('family_id', JSON.stringify(family_id))
     		data.set('label', dataVal.label)
     		data.set('value', dataVal.value)
-    		axios.post(this.baseUrl+'/member/update-family-member?', data).then((result) => {
+    		axios.post(this.$baseUrl+'/member/update-family-member?', data).then((result) => {
             	let res = result.data
             	let type = ""
             	let message = ""
@@ -542,7 +542,7 @@ export default {
     		data.set('label', dataVal.label)
     		data.set('value', dataVal.value)
 
-            axios.post(this.baseUrl+'/member/update-member', data).then((result) => {
+            axios.post(this.$baseUrl+'/member/update-member', data).then((result) => {
             	let res = result.data
             	console.log(res)
             	if(res.success == true){
@@ -582,7 +582,7 @@ export default {
     		data.set('label', dataVal.label)
     		data.set('value', dataVal.value)
 
-            axios.post(this.baseUrl+'/member/update-member', data).then((result) => {
+            axios.post(this.$baseUrl+'/member/update-member', data).then((result) => {
             	let res = result.data
             	console.log(res)
             	if(res.success == true){
@@ -635,7 +635,7 @@ export default {
 					data.set('member_id', this.member.id)
 					data.append('imagefile', imageFile[0].raw)
 
-		  			axios.post(this.baseUrl+'/member/profile-image-update', data, { headers: { 'Content-Type': 'multipart/form-data' }} ).then((result) => {
+		  			axios.post(this.$baseUrl+'/member/profile-image-update', data, { headers: { 'Content-Type': 'multipart/form-data' }} ).then((result) => {
 		            	let res = result.data
 		            	console.log("Okay", res)
 

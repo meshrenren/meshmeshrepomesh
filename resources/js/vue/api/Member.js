@@ -9,7 +9,7 @@ export default {
 			id 		: id,
 			name 	: name
 		}
-		return axios.post(this.$baseUrl + '/member/get-all-accounts', params)
+		return axios.post($baseUrl + '/member/get-all-accounts', params)
 	},
 
 	changePassword(form, memberId){
@@ -17,7 +17,7 @@ export default {
 			form 		: form,
 			memberId 	: memberId
 		}
-		return axios.post('/member/change-password', params)
+		return axios.post($baseUrl + '/member/change-password', params)
 	}
 
 }

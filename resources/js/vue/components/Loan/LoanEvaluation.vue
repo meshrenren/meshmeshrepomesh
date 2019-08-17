@@ -115,8 +115,7 @@
 									    	</el-input>
 									  	</el-form-item>
 
-
-										<el-checkbox v-model="evaluationForm.is_savings">1% Savings Retention?</el-checkbox>
+										<el-checkbox @change = "savingsChange" v-model="evaluationForm.is_savings">1% Savings Retention?</el-checkbox>
 
 
 									</el-col>
@@ -296,8 +295,7 @@
 </template>
 
 <script>
-	window.noty = require('noty');
-    import axios from 'axios'
+	window.noty = require('noty')
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
@@ -369,6 +367,10 @@ export default {
 		}
 	},
 	methods:{		
+		savingsChange(value){
+			console.log("value", value)
+			this.evaluateLoan()
+		},
     	populateField(data){
     		this.memberDetails = data
     		this.memberDetails.share_capital = null
@@ -558,8 +560,6 @@ export default {
 
 		},
 		
-
-
 		calculateMiscDeductions(getProduct, evalForm)
 		{
 			/*
@@ -650,7 +650,6 @@ export default {
 
 			if(!latestLoan)
 			{
-				console.log("getProduct", getProduct)
 				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
 				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)
