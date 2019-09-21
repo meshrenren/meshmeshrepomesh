@@ -74,11 +74,14 @@ class TimeDepositController extends \yii\web\Controller
         	$mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' days'));
 
         	$model->maturity_date = $mature_days;
+            $model->open_date = $today;
         	$model->date_created = date('Y-m-d H:i:s');
         	$model->account_status = 'ACTIVE';
 	        $model->created_by = \Yii::$app->user->identity->id;
+            $model->amount = $tdaccount['amount'];
 	        $model->balance = $tdaccount['amount'];
             $model->type = $tdaccount['type'];
+            $model->interest_rate = 
             if($tdaccount['type'] == "Group"){
                 $model->account_name = $tdaccount['account_name'];
                 $model->member_id = 0;

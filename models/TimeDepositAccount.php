@@ -38,7 +38,7 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['accountnumber', 'member_id', 'fk_td_product', 'term', 'amount', 'balance', 'maturity_date', 'created_by', 'date_created', 'interest_rate'], 'required'],
+            [['accountnumber', 'member_id', 'fk_td_product', 'term', 'amount', 'balance', 'maturity_date', 'date_created', 'interest_rate'], 'required'],
             [['member_id', 'fk_td_product', 'term', 'created_by'], 'integer'],
             [['amount', 'balance', 'interest_rate'], 'number'],
             [['maturity_date', 'cancelled_date', 'date_created'], 'safe'],

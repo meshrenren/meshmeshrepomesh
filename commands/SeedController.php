@@ -1702,6 +1702,138 @@ class SeedController extends Controller
         }
     }
 
+    public function actionTimeDepositAccount(){
+        $query = new \yii\db\Query;
+        $query->from('zold_tdtransac');
+        $tdAccs = $query->all();
+        foreach ($tdAccs as $key => $td) {
+            $model = new \app\models\TimeDepositAccount;
+
+            $product = \app\models\TimeDepositProduct::find()->joinWith(['ratetable'])->where(['tdproduct.id' => 1])->one();
+            $trans_serial = $product->trans_serial + 1;
+            $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+            $amount = floatval(str_replace(",", "", $td['AmountOpen']));
+            $balance = floatval(str_replace(",", "", $td['Balance']));
+            $amountMature = floatval(str_replace(",", "", $td['AmountMature']));
+
+            if($balance < 0 || $td['Remarks'] == "CLOSED"){
+                continue;
+            }
+            //Get member
+            $member_id = null;
+            $accountName = null;
+            $toSave = false;
+            if($td['IDNum'] != '' && $td['SName'] != '' && $td['FName'] != ''){
+                $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $td['IDNum'], 'last_name' => $td['SName'], 'first_name' => $td['FName']])->one(); 
+                if($getMember){
+                    $member_id = $getMember->id;
+                    $toSave = true;
+                }
+                else{
+                    echo $td['IDNum'] . "->" . $td['SName'] . " ".  $td['FName'] . " No Member" . "\n";
+                }
+            }
+            else{
+                $accountName = $td['Name'];
+                $toSave = true;
+            }
+
+            if(!$toSave) continue;
+
+            $dateOpen = "";
+            if($td['DateOpen'] != "---" && $td['DateOpen'] != "")   {
+                $date = explode("/", $td['DateOpen']);
+                $dateOpen = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
+            }
+
+            $dateMature = "";
+            if($td['DateMature'] != "---" && $td['DateMature'] != "")   {
+                $date = explode("/", $td['DateMature']);
+                $dateMature = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
+            }
+
+            //Manually set interest based on old interes
+            $interest_rate = 0;
+            $service_fee = 0;
+            if(intval($td['Terms']) == 6){
+                if($amount < 49999){
+                   $interest_rate = 4;
+                   $service_fee = 15;
+                }
+            }
+            else if(intval($td['Terms']) == 12){
+                if($amount < 9999){
+                   $interest_rate = 5;
+                   $service_fee = 30;
+                }
+                else if($amount > 10000 && $amount < 29999){
+                   $interest_rate = 5.5;
+                   $service_fee = 30;
+                }
+                else if($amount > 30000 && $amount < 49999){
+                   $interest_rate = 6;
+                   $service_fee = 30;
+                }
+            }
+
+            if($amount > 50000 && $amount < 99999){
+               $interest_rate = 6.5;
+               $service_fee = 30;
+            }
+            else if($amount > 100000 && $amount < 299999){
+               $interest_rate = 7;
+               $service_fee = 30;
+            }
+            else if($amount > 300000 && $amount < 499999){
+               $interest_rate = 7.5;
+               $service_fee = 30;
+            }
+            else if($amount > 500000){
+               $interest_rate = 8;
+               $service_fee = 30;
+            }
+            $service_amount = $amount * ($service_fee / 100);
+
+
+            $model->accountnumber = $product->id . "-" . $trans_serial_pad;
+            $model->fk_td_product = $product->id;
+            $model->member_id = $member_id;
+            $model->account_name = $accountName;
+            $model->account_status = 'ACTIVE';
+            $model->term = $td['Terms'];
+            $model->amount = $amount;
+            $model->balance = $balance;
+            $model->open_date = $dateOpen;
+            $model->maturity_date = $dateMature;
+            $model->amount_mature = $amountMature;
+            $model->service_amount = $service_amount;
+            $model->date_created = date('Y-m-d H:i:s', strtotime($dateOpen));
+            $model->interest_rate = $interest_rate;
+
+
+            $model->old_td_account = $td['TDAcctNum'];
+            $model->old_idnum = $td['IDNum'];
+            $model->old_postingcode = $td['Postingcode'];
+
+            if($model->save()){
+                $tdTransaction = new \app\models\TimeDepositTransaction;
+                $tdTransaction->fk_account_number = $model->accountnumber;
+                $tdTransaction->transaction_type = 'TDCASHDEP';
+                $tdTransaction->amount = $model->amount;
+                $tdTransaction->balance = $model->balance;
+                $tdTransaction->transaction_date = $model->date_created;
+                //$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
+                $tdTransaction->save();
+            }
+            else{
+                var_dump($model->getErrors());
+            }
+            
+            break;
+        }
+    }
+
 }
 
 
