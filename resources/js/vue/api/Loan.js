@@ -30,7 +30,12 @@ export default {
 
 	applyLoan(params)
 	{
-		return axios.post($baseUrl + 'loan/apply-loan', params)
+		return axios.post($baseUrl + 'loan/verify-loan', params)
+	},
+
+	approveLoan(params)
+	{
+		return axios.post($baseUrl + '/loan/apply-loan', params)
 	},
 	releaseLoanVoucher(voucherModel, entryList){
 		let params = {

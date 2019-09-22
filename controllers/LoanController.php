@@ -64,6 +64,29 @@ class LoanController extends \yii\web\Controller
             'default_setting'      => $default_setting,
         ]);
     }
+    
+    public function actionPendingList()
+    {
+    	$this->layout = 'main-vue';
+    	
+    //	$loandetails = LoanAccount::find()->where(['status'=>'Verified'])->asArray()->all();
+    	
+    	/*
+    	 * start
+    	 */
+    	
+    	$connection = Yii::$app->getDb();
+    	$command = $connection->createCommand("SELECT la.*, CONCAT(m.last_name,', ',m.first_name,' ',m.middle_name) as fullname, lp.product_name  FROM `loanaccount` la inner join member m on la.member_id = m.id
+		inner join loanproduct lp on la.loan_id = lp.id
+		where la.status=:muststatus", [':muststatus' => 'Verified']);
+    	
+    	$loandetails= $command->queryAll();
+    	
+    	/*
+    	 * end
+    	 */
+    	return $this->render('pending-list', ['ForApprovalLoans'=>$loandetails]);
+    }
 
     public function actionList()
     {
@@ -126,7 +149,7 @@ class LoanController extends \yii\web\Controller
             $post = \Yii::$app->getRequest()->getBodyParams();
         	$member_id = $post['member_id'];
             $query = new \yii\db\Query;
-            $query->select('DISTINCT(loan_id) as loan_id')
+            $query->select('loan_id, account_no')
                 ->from('loanaccount la')
                 ->where('member_id = '. $member_id);
             $loanAccounts = $query->all();
@@ -135,7 +158,7 @@ class LoanController extends \yii\web\Controller
                 foreach ($loanAccounts as $loan) {
                     $acc = \app\models\LoanAccount::find()
                         ->innerJoinWith(['product'])
-                        ->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']])
+                        ->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id'], 'account_no' => $loan['account_no']])
                         ->orderBy('release_date DESC')
                         ->asArray()->one();
                     array_push($accountList, $acc);
@@ -171,7 +194,7 @@ class LoanController extends \yii\web\Controller
             $acc = \app\models\LoanAccount::find()
                 ->innerJoinWith(['product'])
                 ->joinWith(['loanTransaction'])
-                ->where(['member_id' => $member_id, 'loan_id' => $loan_id])
+                ->where(['member_id' => $member_id, 'loan_id' => $loan_id, 'status'=>'Current'])
                 ->orderBy('release_date DESC')
                 ->asArray()->one();
             $res = [
@@ -238,7 +261,8 @@ class LoanController extends \yii\web\Controller
     }
     
     
-    public function actionApplyLoan()
+    
+    public function actionVerifyLoan()
     {
     	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     	
@@ -252,33 +276,8 @@ class LoanController extends \yii\web\Controller
     		$loanaccount = $loanaccount_array['evaluationFormss'];
     		
     		
-    		/* For renewal, go give these parameters to close the loan.
-    		 * Reminder: this function is not reusable for future closing of loans. 
-    		 */
-    		if($loanaccount_array['loanToRenew'])
-    		{
-    			$closeDetails = [];
-    			$closeDetails['accountnumber'] = $loanaccount_array['loanToRenew']->account_number;
-    			$closeDetails['product_id'] = $loanaccount_array['loanToRenew']->product_id;
-    			$closeDetails['interest_pay'] = $loanaccount->credit_interest;
-    			$closeDetails['principal_pay'] = $loanaccount->credit_loan;
-    			$closeDetails['prepaid_int_return'] = $loanaccount->debit_preinterest;
-    			$closeDetails['prepaid_int_pay'] = $loanaccount->credit_preinterest;
-    			$closeDetails['reference'] = "GV123.sample";
-    			
-    			$closeLoan =  LoanHelper::closeAccountDueToRenewal($closeDetails);
-    			
-    			if($closeLoan!="success")
-    			{
-    				$transaction->rollBack();
-    				return [
-    						'status'=>'not saved',
-    						'errors'=>$closeLoan    						
-    				];
-    			}
-    		}
     		
-    	//	return $loanaccount_array;
+    		//	return $loanaccount_array;
     		
     		$loanproduct = LoanProduct::findOne($loanaccount->product_loan_id);
     		$loanproduct->trans_serial = $loanproduct->trans_serial + 1;
@@ -314,14 +313,143 @@ class LoanController extends \yii\web\Controller
     		$loanmodel->principal_amortization_quincena = $loanaccount->principal_amortization_quincena;
     		$loanmodel->net_cash = $loanaccount->net_cash;
     		$loanmodel->member_id = $loanaccount->member_id;
+    		$loanmodel->date_created = date('Y-m-d');
     		
     		$loanTransaction = new LoanTransaction();
     		$loanTransaction->loan_account = $loanmodel->account_no;
     		$loanTransaction->amount = $loanaccount->amount;
-    		$loanTransaction->transaction_type='RELEASE';
+    		$loanTransaction->transaction_type='Verified';
     		$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
     		$loanTransaction->transaction_date = date('Y-m-d');
     		$loanTransaction->running_balance = $loanaccount->amount;
+    		$loanTransaction->remarks = "loan release";
+    		$loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
+    		$loanTransaction->interest_paid = 0;
+    		$loanTransaction->OR_no = "GV123.sample";
+    		$loanTransaction->principal_paid = 0;
+    		$loanTransaction->arrears_paid = 0;
+    		$loanTransaction->date_posted = date('Y-m-d');
+    		$loanTransaction->interest_earned = 0;
+    		
+    		
+    		
+    		if($loanproduct->save() && $loanmodel->save() && $loanTransaction->save())
+    		{
+    			
+    			$transaction->commit();
+    			return $loanaccount;
+    			
+    		} else
+    		{
+    			$transaction->rollBack();
+    			return [
+    					'status'=>'not saved',
+    					'errors'=> [
+    							'lpError' => $loanproduct->getErrors(),
+    							'lmError' => $loanmodel->getErrors(),
+    							'ltError' => $loanTransaction->getErrors()
+    					]
+    					
+    			];
+    		}
+    		
+    		
+    		
+    		
+    		return $loanaccount;
+    		
+    		
+    		
+    		
+    	}
+    }
+    
+    
+    
+    public function actionApplyLoan()
+    {
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	
+    	if(isset($_POST))
+    	{
+    		$success = true;
+    		$transaction = \Yii::$app->db->beginTransaction();
+    		
+    		$loanaccount_object  = json_decode($_POST['applyLoan']);
+    		$loanaccount_array = (array)$loanaccount_object;
+    		$loanaccount = $loanaccount_array['evaluationFormss'];
+    		
+    		
+    		/* For renewal, go give these parameters to close the loan.
+    		 * Reminder: this function is not reusable for future closing of loans. 
+    		 */
+    		if($loanaccount_array['loanToRenew'])
+    		{
+    			$closeDetails = [];
+    			$closeDetails['accountnumber'] = $loanaccount_array['loanToRenew']->account_number;
+    			$closeDetails['product_id'] = $loanaccount_array['loanToRenew']->product_id;
+    			$closeDetails['interest_pay'] = $loanaccount->credit_interest;
+    			$closeDetails['principal_pay'] = $loanaccount->credit_loan;
+    		//	$closeDetails['prepaid_int_return'] = $loanaccount->debit_preinterest;
+    			$closeDetails['prepaid_int_pay'] = $loanaccount->credit_preinterest;
+    			$closeDetails['reference'] = "GV123.sample";
+    			
+    			$closeLoan =  LoanHelper::closeAccountDueToRenewal($closeDetails);
+    			
+    			if($closeLoan!="success")
+    			{
+    				$transaction->rollBack();
+    				return [
+    						'status'=>'not saved',
+    						'errors'=>$closeLoan    						
+    				];
+    			}
+    		}
+    		
+    	//	return $loanaccount_array;
+    		
+    		$loanproduct = LoanProduct::findOne($loanaccount->loan_id);
+    		$loanproduct->trans_serial = $loanproduct->trans_serial + 1;
+    		
+    		$loanmodel = LoanAccount::findOne($loanaccount->account_no);
+    		
+    		//$loanmodel->attributes = $loanaccount;
+    		/*$loanmodel->account_no = $loanaccount->product_loan_id."-".str_pad($loanproduct->trans_serial, 6, '0', STR_PAD_LEFT);
+    		$loanmodel->gv_or_number = '';
+    		$loanmodel->principal = $loanaccount->amount;
+    		$loanmodel->interest_balance = 0;
+    		$loanmodel->principal_balance = $loanmodel->principal;
+    		$loanmodel->release_date = date('Y-m-d');
+    		$loanmodel->term = $loanaccount->duration;
+    		$loanmodel->prepaid = 0;
+    		$loanmodel->maturity_date = date('Y-m-d', strtotime("+".$loanmodel->term." months", strtotime($loanmodel->release_date)));
+    		$loanmodel->service_charge = $loanaccount->service_charge_amount;
+    		$loanmodel->prepaid_int = 0;
+    		$loanmodel->is_active = 1; */
+    		$loanmodel->status='Released';
+    		/*$loanmodel->prepaid_accum = 0;
+    		$loanmodel->interest_accum = 0;
+    		$loanmodel->loan_id = $loanaccount->product_loan_id;
+    		$loanmodel->redemption_insurance = $loanaccount->credit_redemption_ins;
+    		$loanmodel->credit_interest = $loanaccount->credit_interest;
+    		$loanmodel->credit_loan = $loanaccount->credit_loan;
+    		$loanmodel->credit_preinterest = $loanaccount->credit_preinterest;
+    		$loanmodel->debit_interest = $loanaccount->debit_interest;
+    		$loanmodel->debit_redemption_ins = $loanaccount->debit_redemption_ins;
+    		$loanmodel->savings_retention = $loanaccount->savings_retention;
+    		$loanmodel->notary_amount = $loanaccount->notary_amount;
+    		$loanmodel->prepaid_amortization_quincena = $loanaccount->prepaid_amortization_quincena;
+    		$loanmodel->principal_amortization_quincena = $loanaccount->principal_amortization_quincena;
+    		$loanmodel->net_cash = $loanaccount->net_cash;
+    		$loanmodel->member_id = $loanaccount->member_id; */
+    		
+    		$loanTransaction = new LoanTransaction();
+    		$loanTransaction->loan_account = $loanmodel->account_no;
+    		$loanTransaction->amount = $loanaccount->principal;
+    		$loanTransaction->transaction_type='RELEASE';
+    		$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+    		$loanTransaction->transaction_date = date('Y-m-d');
+    		$loanTransaction->running_balance = $loanaccount->principal;
     		$loanTransaction->remarks = "loan release";
     		$loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
     		$loanTransaction->interest_paid = 0;

@@ -14,6 +14,7 @@ use \app\models\SavingsTransaction;
 use \app\models\TdTransaction;
 use \app\models\TimeDepositAccount;
 use app\models\SavingsAccount;
+use app\models\LoanAccount;
 
 
 
@@ -108,6 +109,12 @@ class ParticularHelper
 		//calculate td maturity here
 		static::calculateMaturity($nextDay);
 		
+		
+		if(!static::performMakeLoanCurrent())
+		{
+			return false;
+		}
+		
 		//move to next day
 		$calendar = Calendar::findOne(['date_id'=>$currentDay['date_id'], 'date'=>$currentDay['date']]);
 		$calendar->is_current = 0;
@@ -123,6 +130,27 @@ class ParticularHelper
 		}
 		
 		return false;
+		
+	}
+	
+	
+	
+	/*
+	 * update loan status from Released to Current
+	 * this will happen as a certification that the loan application is now current.
+	 */
+	
+	public static function performMakeLoanCurrent()
+	{
+		$loanaccount = LoanAccount::find(['status'=>'Released']);
+		$loanaccount->status="Current";
+		if($loanaccount->save())
+		{
+			return true;
+		}
+		
+		else return false;
+		
 		
 	}
 	
