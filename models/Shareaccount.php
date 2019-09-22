@@ -76,4 +76,5 @@ class Shareaccount extends \yii\db\ActiveRecord
     public function getProduct() {
         return $this->hasOne(ShareProduct::className(), [ 'id' => 'fk_share_product' ] );
     }
+
 }

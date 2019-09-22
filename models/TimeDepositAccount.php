@@ -38,7 +38,7 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['accountnumber', 'member_id', 'fk_td_product', 'term', 'amount', 'balance', 'maturity_date', 'date_created', 'interest_rate'], 'required'],
+            [['accountnumber', 'fk_td_product', 'term', 'amount', 'balance', 'maturity_date', 'date_created', 'interest_rate'], 'required'],
             [['member_id', 'fk_td_product', 'term', 'created_by'], 'integer'],
             [['amount', 'balance', 'interest_rate'], 'number'],
             [['maturity_date', 'cancelled_date', 'date_created'], 'safe'],
@@ -80,6 +80,10 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
         $retval = $this->find()->innerJoinWith(['product', 'member'])->where(['member_id' => $member_id])->asArray()->all();
         
         return $retval;
+    }
+
+    public function getTransactions() {
+        return $this->hasMany(TimeDepositTransaction::className(), [ 'fk_account_number' => 'accountnumber' ] );
     }
 
     //Get the maturity amount of the account;

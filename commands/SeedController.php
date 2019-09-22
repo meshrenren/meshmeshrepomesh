@@ -1707,6 +1707,11 @@ class SeedController extends Controller
         $query->from('zold_tdtransac');
         $tdAccs = $query->all();
         foreach ($tdAccs as $key => $td) {
+            $findAcc = \app\models\TimeDepositAccount::find()->where(['old_td_account' => $td['TDAcctNum']])->one(); 
+            if($findAcc != null){
+                continue;
+            }
+
             $model = new \app\models\TimeDepositAccount;
 
             $product = \app\models\TimeDepositProduct::find()->joinWith(['ratetable'])->where(['tdproduct.id' => 1])->one();
@@ -1731,7 +1736,18 @@ class SeedController extends Controller
                     $toSave = true;
                 }
                 else{
-                    echo $td['IDNum'] . "->" . $td['SName'] . " ".  $td['FName'] . " No Member" . "\n";
+                    $text = $td['IDNum'] . "->" . $td['SName'] . " ".  $td['FName'] . " \tName: " . $td['Name'] . " \t" . $td['TDAcctNum'] .  "\n";
+                    $getMember = \app\models\Member::find()->where(['last_name' => $td['SName'], 'first_name' => $td['FName']])->one();
+
+                    if($getMember){
+                        if ($this->confirm($text . " Save as individual? If no, it will be save as a group.")) {
+                            $member_id = $getMember->id;
+                        } else {
+                            $accountName = $td['Name'];
+                        }
+                        $toSave = true;
+                    }
+                    
                 }
             }
             else{
@@ -1743,14 +1759,16 @@ class SeedController extends Controller
 
             $dateOpen = "";
             if($td['DateOpen'] != "---" && $td['DateOpen'] != "")   {
-                $date = explode("/", $td['DateOpen']);
-                $dateOpen = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
+                $dateExplode = explode(" ", $td['DateOpen']);
+                $date = explode("/", $dateExplode[0]);
+                $dateOpen = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] )); 
             }
 
             $dateMature = "";
             if($td['DateMature'] != "---" && $td['DateMature'] != "")   {
-                $date = explode("/", $td['DateMature']);
-                $dateMature = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
+                $dateExplode = explode(" ", $td['DateMature']);
+                $date = explode("/", $dateExplode[0]);
+                $dateMature = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] ));          
             }
 
             //Manually set interest based on old interes
@@ -1789,11 +1807,10 @@ class SeedController extends Controller
                $interest_rate = 7.5;
                $service_fee = 30;
             }
-            else if($amount > 500000){
+            else if($amount >= 500000){
                $interest_rate = 8;
                $service_fee = 30;
             }
-            $service_amount = $amount * ($service_fee / 100);
 
 
             $model->accountnumber = $product->id . "-" . $trans_serial_pad;
@@ -1803,11 +1820,10 @@ class SeedController extends Controller
             $model->account_status = 'ACTIVE';
             $model->term = $td['Terms'];
             $model->amount = $amount;
-            $model->balance = $balance;
+            $model->balance = $amount;
             $model->open_date = $dateOpen;
             $model->maturity_date = $dateMature;
-            $model->amount_mature = $amountMature;
-            $model->service_amount = $service_amount;
+            $model->amount_mature = 0.00;
             $model->date_created = date('Y-m-d H:i:s', strtotime($dateOpen));
             $model->interest_rate = $interest_rate;
 
@@ -1825,12 +1841,13 @@ class SeedController extends Controller
                 $tdTransaction->transaction_date = $model->date_created;
                 //$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
                 $tdTransaction->save();
+
+                $product->trans_serial = $trans_serial;
+                $product->save();
             }
             else{
                 var_dump($model->getErrors());
             }
-            
-            break;
         }
     }
 

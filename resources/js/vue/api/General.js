@@ -24,4 +24,11 @@ export default {
 			})
 		}
 	},
+
+	getParticularsByName(names){	
+		let params = {
+			names : names
+		}	
+		return axios.post($baseUrl + '/site/get-particulars', params)
+	}
 }

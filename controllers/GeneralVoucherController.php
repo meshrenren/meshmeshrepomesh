@@ -69,14 +69,10 @@ class GeneralVoucherController extends \yii\web\Controller
                 $gv_num = $voucherModel['gv_num'];
                 $getGV = \app\models\JournalHeader::find()->where(['reference_no' => $gv_num])->one();
                 if($getGV){
-                    return [
-                        'success'   => false,
-                        'error'     => 'ERROR_HASGV'
-                    ];
+                    $getGV = VoucherHelper::saveVoucher($voucherModel);
                 }
                 else{
-                    $saveGV = VoucherHelper::saveVoucher($voucherModel);
-                    if($saveGV){
+                    if($getGV){
                         //Entries
                         $insertSuccess = VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
                         if($insertSuccess){

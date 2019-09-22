@@ -123,6 +123,9 @@ class SavingsController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
 
+            $currentDate = app\helpers\particulars\ParticularHelper::getCurrentDay();
+            $today = date("Y-m-d H:i:s", strtotime($currentDate));
+
         	$accountDetails = $post['account'];
         	$accountDetails = (array)$accountDetails;
 
@@ -141,8 +144,8 @@ class SavingsController extends \yii\web\Controller
 	        	$account->member_id = $accountDetails['member_id'];
 	        	$account->saving_product_id = $accountDetails['saving_product_id'];
 	        	$account->balance = 0;
-	        	$account->date_created = date('Y-m-d H:i:s');
-	        	$account->transacted_date = date('Y-m-d H:i:s');
+	        	$account->date_created = $today;
+	        	$account->transacted_date = $today;
                 $account->type = $accountDetails['type'];
                 if($accountDetails['type'] == "Group"){
                     $account->account_name = $accountDetails['account_name'];

@@ -81,7 +81,6 @@ class SavingsAccounts extends \yii\db\ActiveRecord
         return $this->hasOne(SavingsTransaction::className(), [ 'fk_savings_id' => 'account_no' ] )->orderBy('id DESC');
     }
     
-    
     public function calculateSavingsInterest()
     {
     	
