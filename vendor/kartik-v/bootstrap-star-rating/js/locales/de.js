@@ -25,7 +25,7 @@
             4.5: 'Viereinhalb Sterne',
             5: 'Fünf Sterne'
         },
-        clearButtonTitle: 'Zurücksetzen',
-        clearCaption: 'Nicht bewertet'
+        clearButtonTitle: 'Zuücksetzen',
+        clearCaption: 'Nicht Bewertet'
     };
 })(window.jQuery);

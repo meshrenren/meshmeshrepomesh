@@ -20,13 +20,10 @@
         removeTitle: 'נקה קבצים נבחרים',
         cancelLabel: 'ביטול',
         cancelTitle: 'ביטול העלאה מתמשכת',
-        pauseLabel: 'Pause',
-        pauseTitle: 'Pause ongoing upload',
         uploadLabel: 'טעינה',
         uploadTitle: 'טעינת קבצים נבחרים',
         msgNo: 'לא',
         msgNoFilesSelected: 'לא נבחרו קבצים',
-        msgPaused: 'Paused',
         msgCancelled: 'מבוטל',
         msgPlaceholder: 'בחר {files}...',
         msgZoomModalHeading: 'תצוגה מקדימה מפורטת',
@@ -56,7 +53,6 @@
         msgUploadThreshold: 'מעבד...',
         msgUploadBegin: 'מאתחל ...',
         msgUploadEnd: 'בוצע',
-        msgUploadResume: 'Resuming upload...',
         msgUploadEmpty: 'אין נתונים זמינים להעלאה.',
         msgValidationError: 'שגיאת אימות',
         msgLoading: 'טוען קובץ {index} של {files} &hellip;',
@@ -71,10 +67,6 @@
         msgImageResizeException: 'שגיאה בעת שינוי גודל התמונה.<pre>{errors}</pre>',
         msgAjaxError: 'משהו השתבש עם {operation} המערכת. יש לנסות מאוחר יותר!',
         msgAjaxProgressError: '{operation} נכשל',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
-        msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
-        msgPendingTime: '{time} remaining',
-        msgCalculatingTime: 'calculating time remaining',
         ajaxOperations: {
             deleteThumb: 'קובץ נמחק',
             uploadThumb: 'קובץ הועלה',
@@ -91,8 +83,7 @@
             indicatorNewTitle: 'עדיין לא הועלה',
             indicatorSuccessTitle: 'הועלה',
             indicatorErrorTitle: 'שגיאת העלאה',
-            indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'מעלה...'
+            indicatorLoadingTitle: 'מעלה...'
         },
         previewZoomButtonTitles: {
             prev: 'הצגת את הקובץ הקודם',

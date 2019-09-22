@@ -7,6 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Framework\Constraint;
 
 use PHPUnit\Framework\ExpectationFailedException;
@@ -14,9 +15,9 @@ use PHPUnit\Framework\TestFailure;
 
 class IsEmptyTest extends ConstraintTestCase
 {
-    public function testConstraintIsEmpty(): void
+    public function testConstraintIsEmpty()
     {
-        $constraint = new IsEmpty;
+        $constraint = new IsEmpty();
 
         $this->assertFalse($constraint->evaluate(['foo'], '', true));
         $this->assertTrue($constraint->evaluate([], '', true));
@@ -43,9 +44,9 @@ EOF
         $this->fail();
     }
 
-    public function testConstraintIsEmpty2(): void
+    public function testConstraintIsEmpty2()
     {
-        $constraint = new IsEmpty;
+        $constraint = new IsEmpty();
 
         try {
             $constraint->evaluate(['foo'], 'custom message');

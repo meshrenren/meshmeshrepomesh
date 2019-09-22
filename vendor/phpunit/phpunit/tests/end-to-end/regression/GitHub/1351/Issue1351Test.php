@@ -1,12 +1,4 @@
 <?php
-/*
- * This file is part of PHPUnit.
- *
- * (c) Sebastian Bergmann <sebastian@phpunit.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 use PHPUnit\Framework\TestCase;
 
 class Issue1351Test extends TestCase
@@ -16,25 +8,24 @@ class Issue1351Test extends TestCase
     /**
      * @runInSeparateProcess
      */
-    public function testFailurePre(): void
+    public function testFailurePre()
     {
-        $this->instance = new ChildProcessClass1351;
+        $this->instance = new ChildProcessClass1351();
         $this->assertFalse(true, 'Expected failure.');
     }
 
-    public function testFailurePost(): void
+    public function testFailurePost()
     {
         $this->assertNull($this->instance);
-        $this->assertFalse(\class_exists(ChildProcessClass1351::class, false), 'ChildProcessClass1351 is not loaded.');
+        $this->assertFalse(class_exists(ChildProcessClass1351::class, false), 'ChildProcessClass1351 is not loaded.');
     }
 
     /**
      * @runInSeparateProcess
      */
-    public function testExceptionPre(): void
+    public function testExceptionPre()
     {
-        $this->instance = new ChildProcessClass1351;
-
+        $this->instance = new ChildProcessClass1351();
         try {
             throw new LogicException('Expected exception.');
         } catch (LogicException $e) {
@@ -42,13 +33,13 @@ class Issue1351Test extends TestCase
         }
     }
 
-    public function testExceptionPost(): void
+    public function testExceptionPost()
     {
         $this->assertNull($this->instance);
-        $this->assertFalse(\class_exists(ChildProcessClass1351::class, false), 'ChildProcessClass1351 is not loaded.');
+        $this->assertFalse(class_exists(ChildProcessClass1351::class, false), 'ChildProcessClass1351 is not loaded.');
     }
 
-    public function testPhpCoreLanguageException(): void
+    public function testPhpCoreLanguageException()
     {
         // User-space code cannot instantiate a PDOException with a string code,
         // so trigger a real one.

@@ -19,6 +19,7 @@ Time: %s, Memory: %s
 There was 1 error:
 
 1) FatalTest::testFatalError
-%a
+%s
+
 ERRORS!
 Tests: 1, Assertions: 0, Errors: 1.

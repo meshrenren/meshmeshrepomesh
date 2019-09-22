@@ -1,9 +1,9 @@
 /*!
- * bootstrap-star-rating v4.0.6
+ * bootstrap-star-rating v4.0.5
  * http://plugins.krajee.com/star-rating
  *
  * Author: Kartik Visweswaran
- * Copyright: 2013 - 2019, Kartik Visweswaran, Krajee.com
+ * Copyright: 2013 - 2018, Kartik Visweswaran, Krajee.com
  *
  * Licensed under the BSD 3-Clause
  * https://github.com/kartik-v/bootstrap-star-rating/blob/master/LICENSE.md
@@ -466,13 +466,13 @@
         },
         fetchCaption: function (rating) {
             var self = this, val = parseFloat(rating) || self.clearValue, css, cap, capVal, cssVal, caption,
-                vCap = self.starCaptions, vCss = self.starCaptionClasses, width = self.getWidthFromValue(val);
+                vCap = self.starCaptions, vCss = self.starCaptionClasses;
             if (val && val !== self.clearValue) {
                 val = $h.applyPrecision(val, $h.getDecimalPlaces(self.step));
             }
-            cssVal = typeof vCss === "function" ? vCss(val, width) : vCss[val];
-            capVal = typeof vCap === "function" ? vCap(val, width) : vCap[val];
-          
+            cssVal = typeof vCss === "function" ? vCss(val) : vCss[val];
+            capVal = typeof vCap === "function" ? vCap(val) : vCap[val];
+            // noinspection RegExpRedundantEscape
             cap = $h.isEmpty(capVal) ? self.defaultCaption.replace(/\{rating}/g, val) : capVal;
             css = $h.isEmpty(cssVal) ? self.clearCaptionClass : cssVal;
             caption = (val === self.clearValue) ? self.clearCaption : cap;

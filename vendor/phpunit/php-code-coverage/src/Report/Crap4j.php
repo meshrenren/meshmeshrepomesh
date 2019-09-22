@@ -7,28 +7,46 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace SebastianBergmann\CodeCoverage\Report;
 
 use SebastianBergmann\CodeCoverage\CodeCoverage;
+use SebastianBergmann\CodeCoverage\InvalidArgumentException;
 use SebastianBergmann\CodeCoverage\Node\File;
 use SebastianBergmann\CodeCoverage\RuntimeException;
 
-final class Crap4j
+class Crap4j
 {
     /**
      * @var int
      */
     private $threshold;
 
-    public function __construct(int $threshold = 30)
+    /**
+     * @param int $threshold
+     */
+    public function __construct($threshold = 30)
     {
+        if (!\is_int($threshold)) {
+            throw InvalidArgumentException::create(
+                1,
+                'integer'
+            );
+        }
+
         $this->threshold = $threshold;
     }
 
     /**
-     * @throws \RuntimeException
+     * @param CodeCoverage $coverage
+     * @param string       $target
+     * @param string       $name
+     *
+     * @return string
+     *
+     * @throws \SebastianBergmann\CodeCoverage\RuntimeException
      */
-    public function process(CodeCoverage $coverage, ?string $target = null, ?string $name = null): string
+    public function process(CodeCoverage $coverage, $target = null, $name = null)
     {
         $document               = new \DOMDocument('1.0', 'UTF-8');
         $document->formatOutput = true;
@@ -102,10 +120,10 @@ final class Crap4j
         $stats->appendChild($document->createElement('crapLoad', \round($fullCrapLoad)));
         $stats->appendChild($document->createElement('totalCrap', $fullCrap));
 
-        $crapMethodPercent = 0;
-
         if ($fullMethodCount > 0) {
             $crapMethodPercent = $this->roundValue((100 * $fullCrapMethodCount) / $fullMethodCount);
+        } else {
+            $crapMethodPercent = 0;
         }
 
         $stats->appendChild($document->createElement('crapMethodPercent', $crapMethodPercent));
@@ -116,8 +134,8 @@ final class Crap4j
         $buffer = $document->saveXML();
 
         if ($target !== null) {
-            if (!$this->createDirectory(\dirname($target))) {
-                throw new \RuntimeException(\sprintf('Directory "%s" was not created', \dirname($target)));
+            if (!\is_dir(\dirname($target))) {
+                \mkdir(\dirname($target), 0777, true);
             }
 
             if (@\file_put_contents($target, $buffer) === false) {
@@ -137,8 +155,10 @@ final class Crap4j
      * @param float $crapValue
      * @param int   $cyclomaticComplexity
      * @param float $coveragePercent
+     *
+     * @return float
      */
-    private function getCrapLoad($crapValue, $cyclomaticComplexity, $coveragePercent): float
+    private function getCrapLoad($crapValue, $cyclomaticComplexity, $coveragePercent)
     {
         $crapLoad = 0;
 
@@ -152,14 +172,11 @@ final class Crap4j
 
     /**
      * @param float $value
+     *
+     * @return float
      */
-    private function roundValue($value): float
+    private function roundValue($value)
     {
         return \round($value, 2);
-    }
-
-    private function createDirectory(string $directory): bool
-    {
-        return !(!\is_dir($directory) && !@\mkdir($directory, 0777, true) && !\is_dir($directory));
     }
 }

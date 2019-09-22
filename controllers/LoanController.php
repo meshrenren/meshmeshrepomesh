@@ -105,6 +105,27 @@ class LoanController extends \yii\web\Controller
             return $transaction;
         }
     }
+
+    /*
+    Retrieve all loan account of member base on product
+    */
+    public function actionGetLoanHistory(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $loan_id = $post['loan_id'];
+            $member_id = $post['member_id'];
+
+            $joinWith = ['loanTransaction' => function ($query){
+                $query->orderBy('transaction_date DESC')
+                ->asArray()->all();
+            }];
+            $loanAccounts = LoanHelper::getMemberLoan($member_id, $loan_id, true, $joinWith, true);
+            return $loanAccounts;
+        }
+    }
     
     
     public function actionGetLoansOfMember()

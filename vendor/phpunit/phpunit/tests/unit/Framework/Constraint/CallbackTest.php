@@ -7,23 +7,24 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Framework\Constraint;
 
 use PHPUnit\Framework\ExpectationFailedException;
 
 class CallbackTest extends ConstraintTestCase
 {
-    public static function staticCallbackReturningTrue()
-    {
-        return true;
-    }
-
     public function callbackReturningTrue()
     {
         return true;
     }
 
-    public function testConstraintCallback(): void
+    public static function staticCallbackReturningTrue()
+    {
+        return true;
+    }
+
+    public function testConstraintCallback()
     {
         $closureReflect = function ($parameter) {
             return $parameter;
@@ -51,7 +52,7 @@ class CallbackTest extends ConstraintTestCase
         $this->assertEquals('is accepted by specified callback', $constraint->toString());
     }
 
-    public function testConstraintCallbackFailure(): void
+    public function testConstraintCallbackFailure()
     {
         $constraint = new Callback(function () {
             return false;

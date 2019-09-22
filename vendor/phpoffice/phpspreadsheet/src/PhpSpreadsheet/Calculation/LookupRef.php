@@ -4,7 +4,6 @@ namespace PhpOffice\PhpSpreadsheet\Calculation;
 
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class LookupRef
@@ -474,9 +473,8 @@ class LookupRef
         $lookupValue = Functions::flattenSingleValue($lookupValue);
         $matchType = ($matchType === null) ? 1 : (int) Functions::flattenSingleValue($matchType);
 
-        $initialLookupValue = $lookupValue;
         // MATCH is not case sensitive
-        $lookupValue = StringHelper::strToLower($lookupValue);
+        $lookupValue = strtolower($lookupValue);
 
         // Lookup_value type has to be number, text, or logical values
         if ((!is_numeric($lookupValue)) && (!is_string($lookupValue)) && (!is_bool($lookupValue))) {
@@ -504,7 +502,7 @@ class LookupRef
             }
             // Convert strings to lowercase for case-insensitive testing
             if (is_string($lookupArrayValue)) {
-                $lookupArray[$i] = StringHelper::strToLower($lookupArrayValue);
+                $lookupArray[$i] = strtolower($lookupArrayValue);
             }
             if (($lookupArrayValue === null) && (($matchType == 1) || ($matchType == -1))) {
                 $lookupArray = array_slice($lookupArray, 0, $i - 1);
@@ -524,13 +522,9 @@ class LookupRef
 
         if ($matchType == 0 || $matchType == 1) {
             foreach ($lookupArray as $i => $lookupArrayValue) {
-                $onlyNumeric = is_numeric($lookupArrayValue) && is_numeric($lookupValue);
-                $onlyNumericExactMatch = $onlyNumeric && $lookupArrayValue == $lookupValue;
-                $nonOnlyNumericExactMatch = !$onlyNumeric && $lookupArrayValue === $lookupValue;
-                $exactMatch = $onlyNumericExactMatch || $nonOnlyNumericExactMatch;
-                if (($matchType == 0) && $exactMatch) {
+                if (($matchType == 0) && ($lookupArrayValue == $lookupValue)) {
                     //    exact match
-                    return $i + 1;
+                    return ++$i;
                 } elseif (($matchType == 1) && ($lookupArrayValue <= $lookupValue)) {
                     $i = array_search($i, $keySet);
 
@@ -667,9 +661,7 @@ class LookupRef
     {
         reset($a);
         $firstColumn = key($a);
-        $aLower = StringHelper::strToLower($a[$firstColumn]);
-        $bLower = StringHelper::strToLower($b[$firstColumn]);
-        if ($aLower == $bLower) {
+        if (($aLower = strtolower($a[$firstColumn])) == ($bLower = strtolower($b[$firstColumn]))) {
             return 0;
         }
 
@@ -715,14 +707,11 @@ class LookupRef
             uasort($lookup_array, ['self', 'vlookupSort']);
         }
 
-        $lookupLower = StringHelper::strToLower($lookup_value);
         $rowNumber = $rowValue = false;
         foreach ($lookup_array as $rowKey => $rowData) {
-            $firstLower = StringHelper::strToLower($rowData[$firstColumn]);
-
             // break if we have passed possible keys
             if ((is_numeric($lookup_value) && is_numeric($rowData[$firstColumn]) && ($rowData[$firstColumn] > $lookup_value)) ||
-                (!is_numeric($lookup_value) && !is_numeric($rowData[$firstColumn]) && ($firstLower > $lookupLower))) {
+                (!is_numeric($lookup_value) && !is_numeric($rowData[$firstColumn]) && (strtolower($rowData[$firstColumn]) > strtolower($lookup_value)))) {
                 break;
             }
             // remember the last key, but only if datatypes match
@@ -730,15 +719,17 @@ class LookupRef
                 (!is_numeric($lookup_value) && !is_numeric($rowData[$firstColumn]))) {
                 if ($not_exact_match) {
                     $rowNumber = $rowKey;
+                    $rowValue = $rowData[$firstColumn];
 
                     continue;
-                } elseif (($firstLower == $lookupLower)
+                } elseif ((strtolower($rowData[$firstColumn]) == strtolower($lookup_value))
                     // Spreadsheets software returns first exact match,
                     // we have sorted and we might have broken key orders
                     // we want the first one (by its initial index)
                     && (($rowNumber == false) || ($rowKey < $rowNumber))
                 ) {
                     $rowNumber = $rowKey;
+                    $rowValue = $rowData[$firstColumn];
                 }
             }
         }
@@ -791,11 +782,8 @@ class LookupRef
             // break if we have passed possible keys
             $bothNumeric = is_numeric($lookup_value) && is_numeric($rowData);
             $bothNotNumeric = !is_numeric($lookup_value) && !is_numeric($rowData);
-            $lookupLower = StringHelper::strToLower($lookup_value);
-            $rowDataLower = StringHelper::strToLower($rowData);
-
             if (($bothNumeric && $rowData > $lookup_value) ||
-                ($bothNotNumeric && $rowDataLower > $lookupLower)) {
+                ($bothNotNumeric && strtolower($rowData) > strtolower($lookup_value))) {
                 break;
             }
 
@@ -805,7 +793,7 @@ class LookupRef
                     $rowNumber = $rowKey;
 
                     continue;
-                } elseif ($rowDataLower === $lookupLower
+                } elseif (strtolower($rowData) === strtolower($lookup_value)
                     && ($rowNumber === null || $rowKey < $rowNumber)
                 ) {
                     $rowNumber = $rowKey;

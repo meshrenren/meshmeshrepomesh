@@ -17,6 +17,9 @@
  * NOTE: this file must be saved in UTF-8 encoding.
  */
 return [
+    'Failed to update editable data due to an unknown server error' => '',
+    'Krajee Solutions' => '',
+    'Krajee Yii2 Grid Export Extension' => '',
     'Actions' => 'Ações',
     'Active' => 'Ativo',
     'Add Book' => 'Adicionar Livro',
@@ -86,8 +89,4 @@ return [
     'items-many' => 'itens',
     'krajee, grid, export, yii2-grid, pdf' => 'krajee, grid, export, yii2-grid, pdf',
     '© Krajee Yii2 Extensions' => '© Krajee Yii2 Extensions',
-    'Failed to update editable data due to an unknown server error' => '',
-    'Krajee Solutions' => '',
-    'Krajee Yii2 Grid Export Extension' => '',
-    'items-acc' => '',
 ];

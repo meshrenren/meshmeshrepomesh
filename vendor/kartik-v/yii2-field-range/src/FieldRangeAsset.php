@@ -3,7 +3,7 @@
 /**
  * @copyright Copyright &copy; Kartik Visweswaran, Krajee.com, 2014 - 2018
  * @package yii2-field-range
- * @version 1.3.5
+ * @version 1.3.4
  */
 
 namespace kartik\field;

@@ -17,8 +17,6 @@
  * NOTE: this file must be saved in UTF-8 encoding.
  */
 return [
-    'items-few' => 'items',
-    'items-many' => 'items',
     'Actions' => '',
     'Active' => '',
     'Add Book' => '',
@@ -87,7 +85,8 @@ return [
     'grid-export' => '',
     'item' => '',
     'items' => '',
-    'items-acc' => '',
     'krajee, grid, export, yii2-grid, pdf' => '',
     '© Krajee Yii2 Extensions' => '',
+    'items-few' => 'items',
+    'items-many' => 'items',
 ];

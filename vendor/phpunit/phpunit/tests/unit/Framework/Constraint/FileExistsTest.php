@@ -7,6 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace PHPUnit\Framework\Constraint;
 
 use PHPUnit\Framework\ExpectationFailedException;
@@ -14,9 +15,9 @@ use PHPUnit\Framework\TestFailure;
 
 class FileExistsTest extends ConstraintTestCase
 {
-    public function testConstraintFileExists(): void
+    public function testConstraintFileExists()
     {
-        $constraint = new FileExists;
+        $constraint = new FileExists();
 
         $this->assertFalse($constraint->evaluate('foo', '', true));
         $this->assertEquals('file exists', $constraint->toString());
@@ -40,9 +41,9 @@ EOF
         $this->fail();
     }
 
-    public function testConstraintFileExists2(): void
+    public function testConstraintFileExists2()
     {
-        $constraint = new FileExists;
+        $constraint = new FileExists();
 
         try {
             $constraint->evaluate('foo', 'custom message');

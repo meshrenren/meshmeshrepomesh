@@ -1,13 +1,7 @@
 Change Log: `yii2-field-range`
 ==============================
 
-## Version 1.3.5
-
-**Date:** 25-May-2019
-
-- Implement stale bot.
-
-## Version 1.3.5
+## Version 1.3.4
 
 **Date:** 09-Oct-2018
 

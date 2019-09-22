@@ -27,6 +27,7 @@ Vue.prototype.$baseUrl = window.Yii.baseUrl
 Vue.use(Element, { size: 'mini', locale });
 Vue.use(VueSweetalert2);
 
+import './assets/main.scss'
 const app = new Vue({
     el: '#vue-app'
 });

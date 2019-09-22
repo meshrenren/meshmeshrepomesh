@@ -1,12 +1,5 @@
 <?php
-/*
- * This file is part of PHPUnit.
- *
- * (c) Sebastian Bergmann <sebastian@phpunit.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+
 use PHPUnit\Framework\TestCase;
 
 class Issue498Test extends TestCase
@@ -16,7 +9,7 @@ class Issue498Test extends TestCase
      * @dataProvider shouldBeTrueDataProvider
      * @group falseOnly
      */
-    public function shouldBeTrue($testData): void
+    public function shouldBeTrue($testData)
     {
         $this->assertTrue(true);
     }
@@ -26,7 +19,7 @@ class Issue498Test extends TestCase
      * @dataProvider shouldBeFalseDataProvider
      * @group trueOnly
      */
-    public function shouldBeFalse($testData): void
+    public function shouldBeFalse($testData)
     {
         $this->assertFalse(false);
     }
@@ -37,7 +30,7 @@ class Issue498Test extends TestCase
         //throw new Exception("Can't create the data");
         return [
             [true],
-            [false],
+            [false]
         ];
     }
 
@@ -47,7 +40,7 @@ class Issue498Test extends TestCase
 
         return [
             [true],
-            [false],
+            [false]
         ];
     }
 }

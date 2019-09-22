@@ -1,5 +1,5 @@
 /*!
- * Dependent Dropdown Portugese Translations
+ * Dependent Dropdown French Translations
  *
  * This file must be loaded after 'dependent-dropdown.js'. Patterns in braces '{}', or
  * any HTML markup tags in the messages must not be converted or translated.
