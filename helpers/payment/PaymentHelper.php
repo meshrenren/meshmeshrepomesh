@@ -32,7 +32,7 @@ class PaymentHelper
         $payment->posting_code = $data['posting_code'];
         $payment->check_number = $data['check_number'];
         $payment->amount_paid = $data['amount_paid'];
-        $payment->created_date = date('Y-m-d H:i:s');
+        $payment->created_date = \Yii::$app->user->identity->DateTimeNow;
         $payment->created_by = \Yii::$app->user->identity->id;
         //$payment->created_by = 18; //CINCO
 

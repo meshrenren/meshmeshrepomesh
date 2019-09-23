@@ -66,11 +66,19 @@ use yii\helpers\Html;
             </div>
 
             <?php $this->endBody() ?>
+            <?php 
+                $currentDate = app\helpers\particulars\ParticularHelper::getCurrentDay();
+                $systemDate = date("Y-m-d", strtotime($currentDate));
+            ?>
             <script> 
             window.Yii = {
             'csrfToken': "<?php echo Yii::$app->request->csrfToken; ?>",
             'baseUrl': "<?php echo Yii::$app->request->baseUrl; ?>"
-            }; </script>
+            }; 
+            window.coopData = {
+                'systemDate': "<?php echo $systemDate ?>"
+            }
+            </script>
             <script src = '<?php echo Yii::$app->request->baseUrl; ?>/js/main.js'> </script>
 
 

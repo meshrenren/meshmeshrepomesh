@@ -9,7 +9,7 @@ export default class NumberFormatter{
 		return num
 	}
 
-	formatNumber(number, returnZer0 = false) {
+	formatNumber(number, fixedCount = null) {
 		/*if(number){
             number = parseFloat(number)
             if((number % 1) == 0 ){
@@ -24,6 +24,9 @@ export default class NumberFormatter{
 		return '';*/
 
 		number = Number(number)
+		if(fixedCount){
+			number = Number(number).toFixed(fixedCount)
+		}
 	  	return number.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
 	}
 }

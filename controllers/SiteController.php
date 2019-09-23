@@ -8,11 +8,15 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
-use \Mpdf\Mpdf;
+use app\models\AccountParticulars;
 
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\accounts\ShareHelper;
+
+
+use yii\db\conditions\OrCondition;
+use \Mpdf\Mpdf;
 
 class SiteController extends Controller
 {
@@ -244,5 +248,28 @@ class SiteController extends Controller
             }
         }
         
+    }
+
+    public function actionGetParticulars(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $names = $post['names'];
+
+            $where = [];
+            if(is_array($names)){
+                foreach ($names as $nm) {
+                    array_push($where, ['name' => $nm]);
+                }
+            }
+
+            $getParticulars = AccountParticulars::find()
+                ->where(new OrCondition($where))
+                ->asArray()->all();
+
+            return [ 'data' => $getParticulars];
+        }
     }
 }

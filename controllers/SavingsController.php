@@ -9,12 +9,16 @@ use yii\filters\VerbFilter;
 use app\models\SavingAccounts;
 use \app\models\JournalHeader;
 use \app\models\JournalDetails;
+use \app\models\GeneralVoucher;
+use \app\models\PaymentRecord;
 use kartik\mpdf\Pdf; 
 use \Mpdf\Mpdf;
 
+use app\helpers\particulars\PaymentHelper;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\journal\JournalHelper;
+use app\helpers\voucher\VoucherHelper;
 
 
 class SavingsController extends \yii\web\Controller
@@ -123,6 +127,9 @@ class SavingsController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
 
+            $currentDate = app\helpers\particulars\ParticularHelper::getCurrentDay();
+            $today = date("Y-m-d H:i:s", strtotime($currentDate));
+
         	$accountDetails = $post['account'];
         	$accountDetails = (array)$accountDetails;
 
@@ -141,8 +148,8 @@ class SavingsController extends \yii\web\Controller
 	        	$account->member_id = $accountDetails['member_id'];
 	        	$account->saving_product_id = $accountDetails['saving_product_id'];
 	        	$account->balance = 0;
-	        	$account->date_created = date('Y-m-d H:i:s');
-	        	$account->transacted_date = date('Y-m-d H:i:s');
+	        	$account->date_created = $today;
+	        	$account->transacted_date = $today;
                 $account->type = $accountDetails['type'];
                 if($accountDetails['type'] == "Group"){
                     $account->account_name = $accountDetails['account_name'];
@@ -234,6 +241,7 @@ class SavingsController extends \yii\web\Controller
             	$acct_transaction = $post['accountTransaction'];
                 $product = $post['product'];
                 $product_particularid = $product['particular_id'];
+                $trans_amount = $acct_transaction['amount'];
 
                 //Check Reference Number if exist
                 $ref_no = $acct_transaction['ref_no'];
@@ -246,7 +254,9 @@ class SavingsController extends \yii\web\Controller
                     ];
                 }
 
+                $coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);//Cash on Hand particular id
             	$getSavingsAccount = SavingAccounts::findOne($acct_transaction['fk_savings_id']);
+                $member = \app\models\Member::find()->where(['id' => $getSavingsAccount->member_id])->one();
 
                 $trans_type = "";
                 $coh_entrytype = ""; // entry_type for Cash On Hand
@@ -289,6 +299,77 @@ class SavingsController extends \yii\web\Controller
 
                     //Save to Journal
                     if($success && $saveSD){
+                        $name = $getSavingsAccount->account_name;
+                        $type = "Group";
+                        $member_id = null;
+                        if($member){
+                            $name =  $member->first_name . " " . $member->middle_name . " " . $member->last_name;
+                            $type = "Individual";
+                            $member_id = $member->id;
+                        }
+
+                        //Save to Voucher if Withdrwal
+                        if($acct_transaction['transaction_type'] == 'WITHDRWL'){
+                            
+
+                            $voucher = new GeneralVoucher;
+                            $voucherData = $voucher->getAttributes();
+                            $voucherData['gv_num'] = $ref_no;
+                            $voucherData['name'] = $name;
+                            $voucherData['type'] = $type;
+                            $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+
+                        
+                            $voucherModel = VoucherHelper::saveVoucher($voucherData);
+                            if($voucherModel){
+                                $success = true;
+
+                                $entries = array();
+                                $arr = [
+                                    'member_id'        => $member_id,
+                                    'particular_id'    => $product_particularid, // Savings Deposit
+                                    'debit'            => $saveSD->amount,
+                                    'credit'           => 0,
+                                ];
+                                array_push($entries, $arr);
+
+                                $arr = [
+                                    'member_id'        => $member_id,
+                                    'particular_id'    => $coh_id->id, //Cash on Hand
+                                    'debit'            => 0,
+                                    'credit'           => $saveSD->amount,
+                                ];
+                                array_push($entries, $arr);
+
+                                $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
+                                if($saveEntries){
+                                    $success = true;
+                                }
+                                else{
+                                    $success = false;
+                                    $error = "GV_ERROR";
+                                    $errorMessage = 'Error processing the transaction. Please try again';
+                                    $transaction->rollBack();
+                                }
+                            }else{
+                                $success = false;
+                                $error = "GV_ERROR";
+                                $errorMessage = 'Error processing the transaction. Please try again';
+                                $transaction->rollBack();
+                            } 
+                        }
+                        //Deposit Transaction
+                        else{
+                            $payment = new PaymentRecord;
+                            $paymentData = $payment->getAttributes();
+                            $paymentData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                            $paymentData['or_num'] = $ref_no;
+                            $paymentData['name'] = $name;
+                            $paymentData['type'] = 'Individual';
+                            $paymentData['amount_paid'] = $saveSD->amount;
+                        }
+                    
+                        //Save in Journal
                         $journalHeader = new JournalHeader;
                         $journalHeaderData = $journalHeader->getAttributes();
                         $journalHeaderData['reference_no'] = $saveSD->ref_no;
@@ -305,7 +386,6 @@ class SavingsController extends \yii\web\Controller
                             $journalListAttr = $journalList->getAttributes();
                             $lists = array();
 
-                            $coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);//Cash on Hand particular id
                             // Account
                             $arr = $journalListAttr;
                             $arr['amount'] = $saveSD->amount;
@@ -370,7 +450,6 @@ class SavingsController extends \yii\web\Controller
         	
         }
     }
-    
     
     
 

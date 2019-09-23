@@ -613,6 +613,7 @@ class LoanController extends \yii\web\Controller
                             VoucherHelper::insertEntries($entryList,$saveGV->id, 'LOAN');
                             $success = true;
                         }
+                        //Save in journal entry
 
                     }
                 }

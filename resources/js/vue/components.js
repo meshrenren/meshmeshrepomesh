@@ -55,6 +55,9 @@ Vue.component('time-deposit-create', TimeDepositCreate)
 import TimeDepositList from './components/TimeDeposit/TimeDepositList.vue'
 Vue.component('time-deposit-list', TimeDepositList)
 
+import TimeDepositCalculation from './components/TimeDeposit/TimeDepositCalculation.vue'
+Vue.component('time-deposit-calculation', TimeDepositCalculation)
+
 /* --- END --- */
 
 
@@ -84,6 +87,9 @@ Vue.component('voucher-create', VoucherCreate)
 
 import VoucherView from './components/Voucher/VoucherView.vue'
 Vue.component('voucher-view', VoucherView)
+
+import VoucherViewForm from './components/Voucher/VoucherViewForm.vue'
+Vue.component('voucher-view-form', VoucherViewForm)
 
 /* --- END --- */
 

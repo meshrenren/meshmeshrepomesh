@@ -10,6 +10,10 @@ use kartik\mpdf\Pdf;
 use app\models\TimeDepositAccount;
 use app\models\TimeDepositRateTable;
 
+use app\helpers\accounts\TimeDepositHelper;
+use app\helpers\voucher\VoucherHelper;
+use app\helpers\journal\JournalHelper;
+
 class TimeDepositController extends \yii\web\Controller
 {
     public function actionIndex()
@@ -48,7 +52,7 @@ class TimeDepositController extends \yii\web\Controller
     public function actionShowtd()
     {
     	$model = new TimeDepositAccount();
-    	$model->checkMaturity();
+    	//$model->checkMaturity();
     }
 
     public function actionSaveTdAccount(){
@@ -59,12 +63,13 @@ class TimeDepositController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
 
-        	$today = date("Y-m-d");
+            $today = Yii::$app->user->identity->DateNow;
+            $todayDateTime = Yii::$app->user->identity->DateTimeNow;
+        	//$today = date("Y-m-d");
         	$tdaccount = $post['accountDetails'];
         	$tdaccount = (array)$tdaccount;
         	$model = new \app\models\TimeDepositAccount;
         	$model->attributes = $tdaccount;
-			$model->service_charge = $tdaccount['service_charge'];
         	$product = \app\models\TimeDepositProduct::find()->where(['id' => $tdaccount['fk_td_product']])->one();
 
         	$trans_serial = $product->trans_serial + 1;
@@ -74,11 +79,14 @@ class TimeDepositController extends \yii\web\Controller
         	$mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' days'));
 
         	$model->maturity_date = $mature_days;
-        	$model->date_created = date('Y-m-d H:i:s');
+            $model->open_date = $today;
+        	$model->date_created = $todayDateTime;
         	$model->account_status = 'ACTIVE';
 	        $model->created_by = \Yii::$app->user->identity->id;
+            $model->amount = $tdaccount['amount'];
 	        $model->balance = $tdaccount['amount'];
             $model->type = $tdaccount['type'];
+            $model->interest_rate = $tdaccount['interest_rate'];
             if($tdaccount['type'] == "Group"){
                 $model->account_name = $tdaccount['account_name'];
                 $model->member_id = 0;
@@ -93,7 +101,7 @@ class TimeDepositController extends \yii\web\Controller
         		$tdTransaction->transaction_type = 'TDCASHDEP';
         		$tdTransaction->amount = $model->amount;
         		$tdTransaction->balance = $model->amount;
-        		$tdTransaction->transaction_date = date('Y-m-d H:i:s');
+        		$tdTransaction->transaction_date = $todayDateTime;
         		$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
         		$tdTransaction->save();
 
@@ -140,7 +148,7 @@ class TimeDepositController extends \yii\web\Controller
         $this->layout = 'main-vue';
         
         $date = date("Y-m-d");
-        $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member'])
+        $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member', 'transactions'])
             ->asArray()->all();
         return $this->render('list', [
             'tdAccounts'    => $tdlist,
@@ -230,6 +238,292 @@ class TimeDepositController extends \yii\web\Controller
             return $pdf->render();
         }
         
+    }
+
+    public function actionSavingsCalculation(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $account_id = $post['account_id'];
+        
+            $account = \app\models\TimeDepositAccount::find()->where(['accountnumber' => $account_id])->one();
+            $calculation = 0;
+            if($account){
+                $calculation = TimeDepositHelper::getSavingsCalculation($account);
+            }
+
+            return [
+                'data' => $calculation
+            ] ;
+            
+        }
+    }
+
+    /*
+    Withdraw or Renew account
+    Also has savings transactions for overdue account
+    */
+    public function actionTdVoucher(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $post = \Yii::$app->getRequest()->getBodyParams();
+        }
+    }
+
+    /*
+    Withdraw or Renew account
+    Also has savings transactions for overdue account
+    */
+    public function actionProcessAccount(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $post = \Yii::$app->getRequest()->getBodyParams();
+
+            $success = true;
+            $errorMessage = "";
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+
+                $account_id = $post['account_id'];
+                $total_amount = $post['total_amount'];
+                $savings_transaction = $post['savings_transaction'];
+                $withdraw_amount = $post['withdraw_amount'];
+                $renew_amount = $post['renew_amount'];
+                $voucher = $post['general_voucher'];
+
+                $account = \app\models\TimeDepositAccount::find()->where(['accountnumber' => $account_id])->one();
+                $member = \app\models\Member::find()->where(['id' => $account->member_id])->one();
+                $balance = $account->balance;
+
+                //Add in transaction data
+                if($savings_transaction){
+                    $balance = $balance + $savings_transaction['amount'];
+                    $trans = new \app\models\TimeDepositTransaction;
+                    $trans->fk_account_number = $account->accountnumber;
+                    $trans->transaction_type = $savings_transaction['transaction_type'];
+                    $trans->amount = $savings_transaction['amount'];
+                    $trans->balance = $balance;
+                    $trans->remarks = $savings_transaction['remarks'];
+                    $trans->transaction_date = Yii::$app->user->identity->DateTimeNow;
+                    $trans->transacted_by = \Yii::$app->user->identity->id;
+                    if($trans->save()){
+                        $account->balance = $balance;
+                        $account->save();
+                    }else{
+                        $success = false;
+                    }
+                }
+
+                if($success){
+                    $balance = 0;
+                    $trans = new \app\models\TimeDepositTransaction;
+                    $trans->fk_account_number = $account->accountnumber;
+                    $trans->transaction_type = "TDCASHWITHDRWL";
+                    $trans->amount = $balance;
+                    $trans->balance = 0;
+                    $trans->remarks = '';
+                    $trans->transaction_date = \Yii::$app->user->identity->DateTimeNow;
+                    $trans->transacted_by = \Yii::$app->user->identity->id;
+                    if($trans->save()){
+                        $account->balance = $balance;
+                        $account->account_status = "CLOSED";
+                        $account->save();
+                    }else{
+                        $success = false;
+                    }
+                }
+
+                if($success){
+                    //If has renew amount
+                    //Save in general voucher
+                    if($renew_amount && $renew_amount > 0){
+                        $getModelAttr = $account->getAttributes();
+                        $new_account = (array) $getModelAttr;
+                        $new_account['accountnumber'] = null;
+                        $new_account['amount'] = $renew_amount;
+                        $new_account['term'] = 12; //New policy
+                        $getrate = TimeDepositHelper::getInterestRate(12, $renew_amount);
+                        $new_account['interest_rate'] = $getrate; 
+                        $renewAccount = $this->createNewAccount($new_account);
+                        if($renewAccount == null){
+                            $success = false;
+                        }
+                    }
+                }
+
+                //Save in Genereral Voucher then Journal Entry
+                $gv_num = $voucher['gv_num'];
+                if($success){
+                    $name = $account->account_name;
+                    $type = "Group";
+                    $member_id = null;
+
+                    $checkGV = VoucherHelper::getVoucherByGvNum($gv_num);
+                    if($checkGV){
+                        $success = false;
+                        $errorMessage = "GV Number already exist";
+                    }
+                    else{
+
+                        $voucherData = array();
+                        $voucherData['gv_num'] = $voucher['gv_num'];
+                        if($member){
+                            $name =  $member->first_name . " " . $member->middle_name . " " . $member->last_name;
+                            $type = "Individual";
+                            $member_id = $member->id;
+                        }
+                        $voucherData['name'] = $name;
+                        $voucherData['type'] = $type;
+                        $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+
+                    
+                       $voucherModel = VoucherHelper::saveVoucher($voucherData);
+                        if($voucherModel){
+                            $entries =  $voucher['voucher_entries'];
+                            foreach ($entries as  $key => $ent) {
+                                $entries[$key]['member_id'] = $member_id;
+                            }
+                            $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
+                            if(!$saveEntries){
+                                $success = false;
+                            }
+                        }else{
+                            $success = false;
+                        } 
+                    }
+
+                    
+                }
+
+                //Save in Journal Entry
+                if($success){
+                    $checkGV = JournalHelper::getVoucherByRefNo($gv_num);
+                    if($checkGV){
+                        $success = false;
+                        $errorMessage = "Reference Number already exist";
+                    }
+                    else{
+                        $journal = array();
+                        $journal['reference_no'] = $gv_num;
+                        $journal['posting_date'] = \Yii::$app->user->identity->DateNow;
+                        $journal['total_amount'] = $total_amount;
+                        $journal['trans_type'] = 'GeneralVoucher';
+                        $journal['remarks'] = "";
+                        $journal['transacted_date'] = \Yii::$app->user->identity->DateTimeNow;
+
+                        $journal = JournalHelper::saveJournalHeader($journal);
+                        if($journal){
+                            $journalEntry = [];
+                            $entries =  $voucher['voucher_entries'];
+                            foreach ($entries as  $key => $ent) {
+                                if($ent['credit'] && floatval($ent['credit']) > 0){
+                                    $arr = [
+                                        'amount'        => floatval($ent['credit']),
+                                        'entry_type'    => 'CREDIT',
+                                        'particular_id' => $ent['particular_id']
+
+                                    ];
+                                    array_push($journalEntry, $arr);
+                                }
+
+                                if($ent['debit'] && floatval($ent['debit']) > 0){
+                                    $arr = [
+                                        'amount'        => floatval($ent['debit']),
+                                        'entry_type'    => 'DEBIT',
+                                        'particular_id' => $ent['particular_id']
+
+                                    ];
+                                    array_push($journalEntry, $arr);
+                                }
+                            }
+
+                            $saveEntries = JournalHelper::insertJournal($journalEntry, $journal->reference_no);
+                            if(!$saveEntries){
+                                $success = false;
+                            }
+                        }
+                    }
+                }
+                
+
+                if($success){
+                    $transaction->commit();
+                }else{
+                    $transaction->rollBack();
+                }
+                return [
+                    'success' => $success,
+                    'errorMessage' => $errorMessage
+                ] ;
+
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+            
+            return [
+                'success'   => false,
+                'errorMessage' => ""
+            ];
+            
+        }
+    }
+
+    public function createNewAccount($tdaccount){
+
+        $today = Yii::$app->user->identity->DateNow;
+        $todayDateTime = Yii::$app->user->identity->DateTimeNow;
+
+        $model = new \app\models\TimeDepositAccount;
+        $model->attributes = $tdaccount;
+        $product = \app\models\TimeDepositProduct::find()->where(['id' => $tdaccount['fk_td_product']])->one();
+
+        $trans_serial = $product->trans_serial + 1;
+        $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+        $model->accountnumber = $product->id . "-" . $trans_serial_pad;
+
+        $mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' days'));
+
+        $model->maturity_date = $mature_days;
+        $model->open_date = $today;
+        $model->date_created = $todayDateTime;
+        $model->account_status = 'ACTIVE';
+        $model->created_by = \Yii::$app->user->identity->id;
+        $model->amount = $tdaccount['amount'];
+        $model->balance = $tdaccount['amount'];
+        $model->type = $tdaccount['type'];
+        $model->interest_rate = $tdaccount['interest_rate'];
+        if($tdaccount['type'] == "Group"){
+            $model->account_name = $tdaccount['account_name'];
+            $model->member_id = 0;
+        }
+        //var_dump($model->attributes);
+        if($model->save()){
+            $product->trans_serial = $trans_serial;
+            $product->save();
+            //var_dampa($model is model duhhh!!)
+            $tdTransaction = new \app\models\TimeDepositTransaction;
+            $tdTransaction->fk_account_number = $model->accountnumber;
+            $tdTransaction->transaction_type = 'TDCASHDEP';
+            $tdTransaction->amount = $model->amount;
+            $tdTransaction->balance = $model->amount;
+            $tdTransaction->transaction_date = $todayDateTime;
+            $tdTransaction->transacted_by = \Yii::$app->user->identity->id;
+            $tdTransaction->save();
+
+            return $model;
+        }
+
+        return null;
     }
 
 }
