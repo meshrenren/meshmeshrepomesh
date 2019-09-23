@@ -280,8 +280,6 @@ class ParticularHelper
 			$interest = $personalBalance * $int_rate;
 			$totalBalance = $rows["balance"] + round($interest, 2);
 			
-			
-			
 			if($interest>0)
 			{
 				$mdlAccount = SavingAccounts::findOne(['account_no'=>$rows["account_no"]]);
