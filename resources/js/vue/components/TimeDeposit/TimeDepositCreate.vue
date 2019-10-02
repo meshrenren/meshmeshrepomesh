@@ -83,6 +83,10 @@
 						    		<span slot="append">%</span>
 						    	</el-input-number> -->
 						  	</el-form-item>
+						  	<el-form-item label="Or Number (Ref. No)" prop = "or_number">
+						    	<el-input v-model="tdAccountDetails.or_number" :controls = "false">
+						    	</el-input>
+						  	</el-form-item>
 							  Service Fee: {{ $nf.formatNumber(serviceFee) }} <br/>
 							  Total Amount to be Incurred: {{ $nf.formatNumber(totalIncurred) }} <br/>
 						  	<a class = "click-class" @click="viewRateModal" >View rate list of the selected product here. </a>
@@ -138,6 +142,7 @@ export default {
   		this.dataTimeDepositAccount.forEach(function(detail){
   			account[detail] = null
   		})
+  		account['or_number'] = null
 
 		return{
       		memberDetails			: {id : null, fullname : null},
@@ -188,6 +193,7 @@ export default {
   			account_name : [{ required: true, message: 'Name cannot be blank.', trigger: 'change' },],
   			amount : [{ required: true, message: 'Amount type cannot be blank.', trigger: 'change' },],
   			term : [{ required: true, message: 'Term type cannot be blank.', trigger: 'change' },],
+  			or_number : [{ required: true, message: 'OR Number cannot be blank.', trigger: 'change' },],
   			interest_rate : [{ validator: validateRate, trigger: 'blur' },],
 		}
 

@@ -10,6 +10,7 @@ use kartik\mpdf\Pdf;
 use app\models\TimeDepositAccount;
 use app\models\TimeDepositRateTable;
 
+use app\helpers\accounts\PaymentHelper;
 use app\helpers\accounts\TimeDepositHelper;
 use app\helpers\voucher\VoucherHelper;
 use app\helpers\journal\JournalHelper;
@@ -61,73 +62,199 @@ class TimeDepositController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-            $post = \Yii::$app->getRequest()->getBodyParams();
+            $success = false;
+            $error = '';
+            $errorMessage = '';
+            $data = null;
 
-            $today = Yii::$app->user->identity->DateNow;
-            $todayDateTime = Yii::$app->user->identity->DateTimeNow;
-        	//$today = date("Y-m-d");
-        	$tdaccount = $post['accountDetails'];
-        	$tdaccount = (array)$tdaccount;
-        	$model = new \app\models\TimeDepositAccount;
-        	$model->attributes = $tdaccount;
-        	$product = \app\models\TimeDepositProduct::find()->where(['id' => $tdaccount['fk_td_product']])->one();
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $post = \Yii::$app->getRequest()->getBodyParams();
 
-        	$trans_serial = $product->trans_serial + 1;
-        	$trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
-        	$model->accountnumber = $product->id . "-" . $trans_serial_pad;
+                $today = Yii::$app->user->identity->DateNow;
+                $todayDateTime = Yii::$app->user->identity->DateTimeNow;
 
-        	$mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' days'));
-
-        	$model->maturity_date = $mature_days;
-            $model->open_date = $today;
-        	$model->date_created = $todayDateTime;
-        	$model->account_status = 'ACTIVE';
-	        $model->created_by = \Yii::$app->user->identity->id;
-            $model->amount = $tdaccount['amount'];
-	        $model->balance = $tdaccount['amount'];
-            $model->type = $tdaccount['type'];
-            $model->interest_rate = $tdaccount['interest_rate'];
-            if($tdaccount['type'] == "Group"){
-                $model->account_name = $tdaccount['account_name'];
-                $model->member_id = 0;
-            }
-	        //var_dump($model->attributes);
-	        if($model->save()){
-                $product->trans_serial = $trans_serial;
-                $product->save();
-                //var_dampa($model is model duhhh!!)
-        		$tdTransaction = new \app\models\TimeDepositTransaction;
-        		$tdTransaction->fk_account_number = $model->accountnumber;
-        		$tdTransaction->transaction_type = 'TDCASHDEP';
-        		$tdTransaction->amount = $model->amount;
-        		$tdTransaction->balance = $model->amount;
-        		$tdTransaction->transaction_date = $todayDateTime;
-        		$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
-        		$tdTransaction->save();
-
-                if($model->type == "Group" && isset($post['signatoryList'])){
-                    $signatories = $post['signatoryList'];
-                    foreach ($signatories as $sign) {
-                        $newSign = new \app\models\SaGroupSignatory;
-                        $newSign->td_account = $model->accountnumber;
-                        $newSign->member_id = $sign['id'];
-                        $newSign->save();
-                    }
+                $tdaccount = $post['accountDetails'];
+                $tdaccount = (array)$tdaccount;
+                //Check Reference Number if exist
+                $ref_no = $tdaccount['or_number'];
+                $getJH = JournalHeader::find()->where(['reference_no' => $ref_no])->one();
+                if($getJH){
+                    return [
+                        'success'   => false,
+                        'error'     => 'ERROR_HASRN',
+                        'errorMessage' => 'Reference number exist. Please try again'
+                    ];
                 }
+                //Create new TD account
+                $model = $this->createNewAccount($tdaccount);
 
-        		//var_dump($tdTransaction->getErrors());
-        		return [
-	        		'success'	=> true,
-        				'account' => $tdaccount
-        		
-	        	];
-	        }
-	        else{
-	        	//var_dump($model->getErrors());
-	        	return [
-	        		'success'	=> false
-	        	];
-	        }
+    	        if($model->save()){
+                    $success = true;
+
+                    if($model->type == "Group" && isset($post['signatoryList'])){
+                        $signatories = $post['signatoryList'];
+                        foreach ($signatories as $sign) {
+                            $newSign = new \app\models\SaGroupSignatory;
+                            $newSign->td_account = $model->accountnumber;
+                            $newSign->member_id = $sign['id'];
+                            $newSign->save();
+                        }
+                    }
+
+                    $member = \app\models\Member::find()->where(['id' => $model->member_id])->one();
+                    $name = $model->account_name;
+                    $type = "Group";
+                    $member_id = null;
+                    if($member){
+                        $name =  $member->first_name . " " . $member->middle_name . " " . $member->last_name;
+                        $type = "Individual";
+                        $member_id = $member->id;
+                    }
+
+                    //Save in Payment
+                    $payment = new PaymentRecord;
+                    $paymentData = $payment->getAttributes();
+                    $paymentData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                    $paymentData['or_num'] = $ref_no;
+                    $paymentData['name'] = $name;
+                    $paymentData['type'] = 'Individual';
+                    $paymentData['amount_paid'] = $model->amount;
+
+                    $paymentModel = PaymentHelper::savePayment($paymentData);
+                    if($paymentModel){
+
+                        $entries = array();
+                        $arr = [
+                            'type'          => 'TIME_DEPOSIT', // Time Deposit
+                            'amount'        => $model->amount,
+                            'member_id'     => $member_id,
+                            'particular_id' => $product_particularid,
+                            'product_id'    => $getSavingsAccount->saving_product_id, 
+                            'account_no'    => $getSavingsAccount->account_no,
+                        ];
+                        array_push($entries, $arr);     
+                        $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);
+                        if(!$insertSuccess){
+                            $success = false;
+                            $error = "PAYMENT_ERROR";
+                            $errorMessage = 'Error processing the transaction in saving payment data. Please try again or contact technical support.';
+                            $transaction->rollBack();
+                        }     
+                    }
+                    else{
+                        $success = false;
+                        $error = "PAYMENT_ERROR";
+                        $errorMessage = 'Error processing the transaction in saving payment data. Please try again or contact technical support.';
+                        $transaction->rollBack();
+                    }
+
+                    //Check if success, return false if not
+                    if(!$success){
+                        return [
+                            'success'       => $success,
+                            'error'         => $error,
+                            'errorMessage'  => $errorMessage
+                        ];
+                    }
+                    
+
+                    //Save in Journal
+                    $journalHeader = new JournalHeader;
+                    $journalHeaderData = $journalHeader->getAttributes();
+                    $journalHeaderData['reference_no'] = $saveSD->ref_no;
+                    $journalHeaderData['posting_date'] = $saveSD->transaction_date;
+                    $journalHeaderData['total_amount'] = $saveSD->amount;
+                    $journalHeaderData['trans_type'] = $trans_type;
+                    $journalHeaderData['remarks'] = $saveSD->remarks;
+
+                    $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+                    if($saveJournal){
+                        //Entries
+                        $journalList = new JournalDetails;
+                        $journalListAttr = $journalList->getAttributes();
+                        $lists = array();
+
+                        // Account
+                        $arr = $journalListAttr;
+                        $arr['amount'] = $saveSD->amount;
+                        $arr['particular_id'] = $product['particular_id'];
+                        $arr['entry_type'] = $acct_entrytype;
+                        array_push($lists, $arr);
+
+                        // Cash On Hand                            
+                        $arr = $journalListAttr;
+                        $arr['amount'] = $saveSD->amount;
+                        $arr['particular_id'] = $coh_id->id;
+                        $arr['entry_type'] = $coh_entrytype;
+                        array_push($lists, $arr);
+
+                        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
+                        if($insertSuccess){                                
+                            $success = true;
+                        }
+                        else{
+                            $success = false;
+                            $error = "SD_ERROR";
+                            $errorMessage = 'Error processing the transaction in Journal List. Please try again or contact technical support.';
+                            $transaction->rollBack();
+                        }
+                    }
+                    else{
+                        $success = false;
+                        $error = "SD_ERROR";
+                        $errorMessage = 'Error processing the transaction in Journal Header. Please try again or contact technical support.';
+                        $transaction->rollBack();
+
+                    }
+
+                    //Check if success, return false if not
+                    if(!$success){
+                        return [
+                            'success'       => $success,
+                            'error'         => $error,
+                            'errorMessage'  => $errorMessage
+                        ];
+                    }
+            
+    	        }
+    	        else{
+                    $success = false;
+                    $error = "TD_ERROR";
+                    $errorMessage = 'Error processing the account. Please try again or contact technical support.';
+                    $transaction->rollBack();
+
+    	        	return [
+                        'success'       => $success,
+                        'error'         => $error,
+                        'errorMessage'  => $errorMessage
+                    ];
+    	        }
+
+                if($success){
+                    $transaction->commit();
+                    return [
+                        'success'       => $success,
+                        'error'         => $error,
+                        'errorMessage'  => $errorMessage,
+                        'data'          => $data,
+                    ];
+                }
+                else{
+                    $transaction->rollBack();
+                    return [
+                        'success'       => $success,
+                        'error'         => $error,
+                        'errorMessage'  => $errorMessage,
+                    ];
+                }
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
 	    }
     }
 
@@ -383,7 +510,7 @@ class TimeDepositController extends \yii\web\Controller
                         $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
 
                     
-                       $voucherModel = VoucherHelper::saveVoucher($voucherData);
+                        $voucherModel = VoucherHelper::saveVoucher($voucherData);
                         if($voucherModel){
                             $entries =  $voucher['voucher_entries'];
                             foreach ($entries as  $key => $ent) {

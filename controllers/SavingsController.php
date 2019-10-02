@@ -297,7 +297,6 @@ class SavingsController extends \yii\web\Controller
                         $transaction->rollBack();
     	        	}
 
-                    //Save to Journal
                     if($success && $saveSD){
                         $name = $getSavingsAccount->account_name;
                         $type = "Group";
@@ -348,17 +347,17 @@ class SavingsController extends \yii\web\Controller
                                 else{
                                     $success = false;
                                     $error = "GV_ERROR";
-                                    $errorMessage = 'Error processing the transaction. Please try again';
+                                    $errorMessage = 'Error processing the transaction in saving general voucher data. Please try again';
                                     $transaction->rollBack();
                                 }
                             }else{
                                 $success = false;
                                 $error = "GV_ERROR";
-                                $errorMessage = 'Error processing the transaction. Please try again';
+                                $errorMessage = 'Error processing the transaction in saving general voucher data. Please try again';
                                 $transaction->rollBack();
                             } 
                         }
-                        //Deposit Transaction
+                        //Save to Payment if Deposit Transaction
                         else{
                             $payment = new PaymentRecord;
                             $paymentData = $payment->getAttributes();
@@ -367,6 +366,38 @@ class SavingsController extends \yii\web\Controller
                             $paymentData['name'] = $name;
                             $paymentData['type'] = 'Individual';
                             $paymentData['amount_paid'] = $saveSD->amount;
+
+                            $paymentModel = PaymentHelper::savePayment($paymentData);
+                            if($paymentModel){
+                                $success = true;
+
+                                $entries = array();
+                                $arr = [
+                                    'type'          => 'SAVINGS', // Savings Deposit
+                                    'amount'        => $saveSD->amount,
+                                    'member_id'     => $member_id,
+                                    'particular_id' => $product_particularid,
+                                    'product_id'    => $getSavingsAccount->saving_product_id, 
+                                    'account_no'    => $getSavingsAccount->account_no,
+                                ];
+                                array_push($entries, $arr);     
+                                $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);
+                                if($insertSuccess){
+                                    $success = true;
+                                }  
+                                else{
+                                    $success = false;
+                                    $error = "PAYMENT_ERROR";
+                                    $errorMessage = 'Error processing the transaction in saving payment data. Please try again';
+                                    $transaction->rollBack();
+                                }     
+                            }
+                            else{
+                                $success = false;
+                                $error = "PAYMENT_ERROR";
+                                $errorMessage = 'Error processing the transaction in saving payment data. Please try again';
+                                $transaction->rollBack();
+                            }
                         }
                     
                         //Save in Journal

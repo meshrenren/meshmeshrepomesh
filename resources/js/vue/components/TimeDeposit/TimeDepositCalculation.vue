@@ -131,13 +131,13 @@ export default {
         		list.push(arr)
         	}
 
-        	// If has interest savings. Set as Interest Expense
+        	// If to withdraw, Set cash on hand
         	if(Number(this.withdrawAmt) > 0){
         		let arr = {particular_name: "Cash on Hand", amount: this.withdrawAmt, type : "CREDIT" }
         		list.push(arr)
         	}
 
-        	// If has interest savings. Set as Interest Expense
+        	// If to renew, set TD account
         	if(Number(this.renewAmt) > 0){
         		let arr = {particular_name: "Time Deposit", amount: this.renewAmt, type : "CREDIT" }
         		list.push(arr)
