@@ -4,6 +4,8 @@ config/params.php
 web/index.php
 web/.htaccess
 web/mix-manifest.json
+web/js/main.js*
+web/js/main.min.js
 node_modules
 vendor
 
