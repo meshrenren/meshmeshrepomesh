@@ -1,0 +1,70 @@
+{
+  "name": "meshmeshrepomesh",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "webpack --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch": "webpack --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "watch-poll": "npm run watch -- --watch-poll",
+    "hot": "webpack-dev-server --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
+    "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meshrenren/meshmeshrepomesh.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/moment-duration-format": "^2.2.2",
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "browser-sync": "^2.26.7",
+    "browser-sync-webpack-plugin": "^2.2.2",
+    "exports-loader": "^0.7.0",
+    "imports-loader": "^0.8.0",
+    "laravel-mix": "^2.1.14",
+    "node-env": "^0.1.8",
+    "resolve-url-loader": "^2.3.1",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-cli": "^3.3.6"
+  },
+  "dependencies": {
+    "ant-design-vue": "^1.3.10",
+    "autosize": "^4.0.2",
+    "axios": "^0.16.2",
+    "bower": "^1.8.8",
+    "cross-env": "^5.2.0",
+    "debounce": "^1.2.0",
+    "element-ui": "^2.12.0",
+    "feather-icons": "^3.3.0",
+    "fs": "0.0.1-security",
+    "mark.js": "^8.11.1",
+    "module": "^1.2.5",
+    "moment": "^2.24.0",
+    "moment-duration-format": "^2.3.2",
+    "moment-timezone": "^0.5.26",
+    "moment-with-locales-es6": "^1.0.1",
+    "net": "^1.0.2",
+    "node-sass": "^4.11.0",
+    "noty": "^3.1.4",
+    "sweet-modal-vue": "^2.0.0",
+    "sweetalert2": "^6.11.5",
+    "vue": "^2.6.10",
+    "vue-axios": "^2.1.4",
+    "vue-functional-data-merge": "^1.0.7",
+    "vue-i18n": "^7.8.1",
+    "vue-materialize-datatable": "^0.7.7",
+    "vue-sweetalert2": "^2.1.1",
+    "vue-ui": "^0.1.3"
+  },
+  "bugs": {
+    "url": "https://github.com/meshrenren/meshmeshrepomesh/issues"
+  },
+  "homepage": "https://github.com/meshrenren/meshmeshrepomesh#readme"
+}
