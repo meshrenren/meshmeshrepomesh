@@ -285,14 +285,14 @@ class ParticularHelper
 		        $arr = $journalListAttr;
 		        $arr['amount'] = $totalInterest;
 		        $arr['particular_id'] = 27; //Interest Expense Particular ID
-		        $arr['entry_type'] = "CREDIT";
+		        $arr['entry_type'] = "DEBIT";
 		        array_push($lists, $arr);
 
-		        // Items for Clarification                            
+		        // Time Deposit                            
 		        $arr = $journalListAttr;
 		        $arr['amount'] = $totalInterest;
-		        $arr['particular_id'] = 100; // Items for Clarification Particular ID
-		        $arr['entry_type'] = "DEBIT";
+		        $arr['particular_id'] = 20; // Time Deposit Particular ID
+		        $arr['entry_type'] = "CREDIT";
 		        array_push($lists, $arr);
 
 		        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
@@ -320,14 +320,14 @@ class ParticularHelper
 		        $arr = $journalListAttr;
 		        $arr['amount'] = $totalInterest;
 		        $arr['particular_id'] = 27; //Interest Expense Particular ID
-		        $arr['entry_type'] = "CREDIT";
+		        $arr['entry_type'] = "DEBIT";
 		        array_push($lists, $arr);
 
-		        // Items for Clarification                            
+		        // Savings Deposit                            
 		        $arr = $journalListAttr;
 		        $arr['amount'] = $totalInterest;
-		        $arr['particular_id'] = 100; // Items for Clarification Particular ID
-		        $arr['entry_type'] = "DEBIT";
+		        $arr['particular_id'] = 19; // Savings Deposit Particular ID
+		        $arr['entry_type'] = "CREDIT";
 		        array_push($lists, $arr);
 
 		        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
@@ -446,14 +446,14 @@ class ParticularHelper
 	        $arr = $journalListAttr;
 	        $arr['amount'] = $totalInterest;
 	        $arr['particular_id'] = 27; //Interest Expense Particular ID
-	        $arr['entry_type'] = "CREDIT";
+	        $arr['entry_type'] = "DEBIT";
 	        array_push($lists, $arr);
 
 	        // Savings Deposit                            
 	        $arr = $journalListAttr;
 	        $arr['amount'] = $totalInterest;
 	        $arr['particular_id'] = 19; // Savings Deposit Particular ID
-	        $arr['entry_type'] = "DEBIT";
+	        $arr['entry_type'] = "CREDIT";
 	        array_push($lists, $arr);
 
 	        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);

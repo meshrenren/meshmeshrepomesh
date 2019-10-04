@@ -20,12 +20,12 @@
 								    <el-input v-model="accountDetails.product.description" :disabled = "true"></el-input>
 								</el-form-item>
 								<el-button type = "info"  @click="showSearchModal = true">Search Savings Account</el-button>
-
+								<el-button class = "mt-10" type = "default"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
 	            			</el-form>
 							<hr>
 							<div class = "transaction-list">
 		            			<h4>Transaction List</h4>
-								<el-table :data="accountTransactionList" style="width: 100%" stripe border>
+								<el-table :data="accountTransactionList" style="width: 100%" stripe border height = "400px">
 						            <el-table-column label="Transaction ID">
 						                <template slot-scope="scope">
 						                    <span style="margin-left: 10px">{{ scope.row.id }}</span>
@@ -57,7 +57,7 @@
 						                </template>
 						            </el-table-column>
 						        </el-table>
-						        <el-button class = "mt-10" type = "default"  @click="printForm('pdf')" v-if = "accountDetails.account_no">Print Form</el-button>
+						       
 						    </div>
 	            		</div>
             		</el-col>
@@ -139,7 +139,7 @@ export default {
     },
     methods:{
     	printForm(type){			
-			this.$API.Savings.getFormPDF(this.accountDetails.account_no, type)
+			this.$API.Savings.getFormPDF(this.accountDetails.account_no, amount, type)
 			.then(result => {
 				let res = result.data
 				if(type == 'pdf'){
