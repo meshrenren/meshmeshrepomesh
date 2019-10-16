@@ -280,8 +280,8 @@
 								</el-row>
 				        	</el-form>
 				        	<div style = "margin-top: 10px;">
-		       					<el-button type = "primary" @click = "newLoan()" ref = "newLoan">Apply</el-button> 
-								<el-button type = "primary" @click = "newLoan()" ref = "newLoan">Approve</el-button> 
+		       					<el-button type = "primary" @click = "newLoan()" ref = "newLoan">Verify</el-button> 
+							
 
 		       				</div>
 				        </div>	        			

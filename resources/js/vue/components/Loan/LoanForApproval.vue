@@ -60,34 +60,105 @@
                              </el-col>
 
                              <el-col :span="7">
-                                        <div class="box box-solid">
+                                <div class="box box-solid">
                                             <div class="box-header with-border">
-                                            <h5 class="box-title">Loan Details</h5>
+                                                <h5 class="box-title">Loan Details</h5>
                                             </div>
                                             <!-- /.box-header -->
                                             <div class="box-body box-profile">
-              <img class="profile-user-img img-responsive img-circle" alt="User profile picture">
+                                                    <img class="profile-user-img img-responsive img-circle" alt="User profile picture">
 
-              <h3 class="profile-username text-center">Nina Mcintire</h3>
+                                                    <h3 class="profile-username text-center">{{loanprofile.fullname}}</h3>
 
-              <p class="text-muted text-center">Loan Applicant</p>
+                                                    <p class="text-muted text-center">Loan Applicant</p>
 
-              <ul class="list-group list-group-unbordered">
-                <li class="list-group-item">
-                  <b>Loan Product</b> <a class="pull-right">{{loanprofile.product_name}}</a>
-                </li>
-                <li class="list-group-item">
-                  <b>Principal</b> <a class="pull-right">50,000.00</a>
-                </li>
-                <li class="list-group-item">
-                  <b>Date Created</b> <a class="pull-right">9/22/2019</a>
-                </li>
-              </ul>
+                                                    <ul class="list-group list-group-unbordered">
+                                                        <li class="list-group-item">
+                                                        <b>Loan Product</b> <a class="pull-right">{{loanprofile.product_name}}</a>
+                                                        </li>
+                                                        <li class="list-group-item">
+                                                        <b>Principal</b> <a class="pull-right">{{loanprofile.principal}}</a>
+                                                        </li>
+                                                        <li class="list-group-item">
+                                                        <b>Date Created</b> <a class="pull-right">{{loanprofile.date_created}}</a>
+                                                        </li>
+                                                    </ul>
 
-              <a href="#" @click="approveLoan()" class="btn btn-success btn-block"><b>Approve Loan Application</b></a>
-            </div>
+                                                    <div class="row">
+                                                          <table class="table table-striped table-dark">
+                                                                <thead>
+                                                                    <tr>
+                                                                    <th scope="col">Description</th>
+                                                                    <th scope="col">Debit</th>
+                                                                    <th scope="col">Credit</th>
+                                                                    
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+
+                                                                    <tr>
+                                                                    <th scope="row">LOAN</th>
+                                                                    <td>{{loanprofile.principal}}</td>
+                                                                    <td>{{loanprofile.credit_loan}}</td>
+                                                                    </tr>
+
+                                                                    <tr>
+                                                                    <th scope="row">Interest</th>
+                                                                    <td>0.00</td>
+                                                                    <td>{{loanprofile.credit_interest}}</td>
+                                                                    </tr>
+
+                                                                    <tr>
+                                                                    <th scope="row">Prepaid Int.</th>
+                                                                    <td>0.00</td>
+                                                                    <td>{{loanprofile.credit_preinterest}}</td>
+                                                                    </tr>
+
+
+                                                                    <tr>
+                                                                    <th scope="row">Redemp. Ins.</th>
+                                                                    <td>{{loanprofile.debit_redemption_ins}}</td>
+                                                                    <td>{{loanprofile.redemption_insurance}}</td>
+                                                                    </tr>
+
+                                                                    <tr>
+                                                                    <th scope="row">Service Charge</th>
+                                                                    <td>0.00</td>
+                                                                    <td>{{loanprofile.service_charge}}</td>
+                                                                    </tr>
+
+                                                                    <tr>
+                                                                    <th scope="row">Savings (1%)</th>
+                                                                    <td>0.00</td>
+                                                                    <td>{{loanprofile.savings_retention}}</td>
+                                                                    </tr>
+
+                                                                    <tr>
+                                                                    <th scope="row">Notary</th>
+                                                                    <td>0.00</td>
+                                                                    <td>{{loanprofile.notary_amount}}</td>
+                                                                    </tr>
+
+                                                                    <tr>
+                                                                    <th scope="row">NET CASH</th>
+                                                                    <td>0.00</td>
+                                                                    <th scope="row">{{loanprofile.net_cash}}</th>
+                                                                    </tr>
+                                                                    
+                                                                     <tr>
+                                                                    <th scope="row">TOTAL =</th>
+                                                                    <td>Thornton</td>
+                                                                    <td>@fat</td>
+                                                                    </tr>
+
+                                                                </tbody>
+                                                           </table>
+                                                    </div>
+
+                                                    <a href="#" @click="approveLoan()" class="btn btn-success btn-block"><b>Approve Loan Application</b></a>
+                                             </div>
                                             <!-- /.box-body -->
-                                        </div>
+                                </div>
                              </el-col>
                         </el-row>
                     </div>
@@ -162,8 +233,16 @@ export default {
 				
 				this.$API.Loan.approveLoan(data)
 				.then(result=>{
-					console.log("successresult", result.data);
+					console.log("successresultx", result.data);
 
+                    new Noty({
+				    
+				            type: 'error',
+				            layout: 'topRight',
+				            text: 'An error occured. Please try again or contact administrator',
+				            timeout: 2500
+                        }).show()
+                     
 
 				}).catch(err=>{
 					console.log("apierror", err.message);
