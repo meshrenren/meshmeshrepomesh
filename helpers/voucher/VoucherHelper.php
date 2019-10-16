@@ -14,7 +14,7 @@ class VoucherHelper
         $voucher->name = $data['name'];
         $voucher->type = $data['type'];
         $voucher->date_transact = $data['date_transact'];
-        $voucher->created_date = date('Y-m-d G:i:s');
+        $voucher->created_date = \Yii::$app->user->identity->DateTimeNow;
         $voucher->created_by = \Yii::$app->user->identity->id;
 
         if($voucher->save()){
@@ -26,7 +26,7 @@ class VoucherHelper
         return null;
     }
 
-	public static function insertEntries($list, $voucher_id, $category_type){
+	public static function insertEntries($list, $voucher_id){
         $success = true;
         foreach ($list as $key => $value) {
             $voucher = new VoucherDetails;
@@ -66,5 +66,14 @@ class VoucherHelper
 
         return $voucherList;
 
+    }
+
+    public static function getVoucherByGvNum($gv_num){
+
+        $voucher= GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
+        if($voucher){
+            return $voucher;
+        }
+        return null;
     }
 }

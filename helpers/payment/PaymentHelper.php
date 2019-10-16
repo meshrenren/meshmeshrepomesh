@@ -32,7 +32,7 @@ class PaymentHelper
         $payment->posting_code = $data['posting_code'];
         $payment->check_number = $data['check_number'];
         $payment->amount_paid = $data['amount_paid'];
-        $payment->created_date = date('Y-m-d H:i:s');
+        $payment->created_date = \Yii::$app->user->identity->DateTimeNow;
         $payment->created_by = \Yii::$app->user->identity->id;
         //$payment->created_by = 18; //CINCO
 
@@ -54,12 +54,16 @@ class PaymentHelper
             $payment->type = $value['type'];
             $payment->amount = $value['amount'];
             $payment->member_id = $value['member_id'];
-            if($value['type'] == "OTHERS"){
+            if(isset($value['particular_id'])){
             	$payment->particular_id = $value['particular_id'];
             }
-            else{
-	            $payment->product_id = $value['product_id'];
-	            $payment->account_no = $value['account_no'];
+
+            if(isset($value['product_id'])){
+            	$payment->product_id = $value['product_id'];
+            }
+
+            if(isset($value['account_no'])){
+            	$payment->account_no = $value['account_no'];
             }
 
             if(!$payment->save()){

@@ -55,6 +55,9 @@ Vue.component('time-deposit-create', TimeDepositCreate)
 import TimeDepositList from './components/TimeDeposit/TimeDepositList.vue'
 Vue.component('time-deposit-list', TimeDepositList)
 
+import TimeDepositCalculation from './components/TimeDeposit/TimeDepositCalculation.vue'
+Vue.component('time-deposit-calculation', TimeDepositCalculation)
+
 /* --- END --- */
 
 
@@ -73,6 +76,9 @@ Vue.component('loan-voucher', LoanVoucher)
 import LoanList from './components/Loan/LoanList.vue'
 Vue.component('loan-list', LoanList)
 
+import LoanEvaluationForm from './components/Loan/LoanEvaluationForm.vue'
+Vue.component('loan-evaluation-form', LoanEvaluationForm)
+
 /* --- END --- */
 
 
@@ -84,6 +90,9 @@ Vue.component('voucher-create', VoucherCreate)
 
 import VoucherView from './components/Voucher/VoucherView.vue'
 Vue.component('voucher-view', VoucherView)
+
+import VoucherViewForm from './components/Voucher/VoucherViewForm.vue'
+Vue.component('voucher-view-form', VoucherViewForm)
 
 /* --- END --- */
 
@@ -111,5 +120,18 @@ Vue.component('permission-settings', PermissionSettings)
 
 import ProductSettings from './components/Settings/ProductSettings.vue'
 Vue.component('product-settings', ProductSettings)
+
+/* --- END --- */
+
+
+/* Gloabl */
+/* --- START --- */
+
+import DialogModal from './components/General/DialogModal.vue'
+Vue.component('dialog-modal', DialogModal)
+
+import PrintHeader from './components/General/PrintHeader.vue'
+Vue.component('print-header', PrintHeader)
+
 
 /* --- END --- */

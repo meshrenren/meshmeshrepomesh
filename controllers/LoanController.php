@@ -215,15 +215,14 @@ class LoanController extends \yii\web\Controller
             $acc = \app\models\LoanAccount::find()
                 ->innerJoinWith(['product'])
                 ->joinWith(['loanTransaction'])
-                ->where(['member_id' => $member_id, 'loan_id' => $loan_id, 'status'=>'Current'])
+                //->where(['member_id' => $member_id, 'loan_id' => $loan_id, 'status'=>'Current'])
+                ->where(['member_id' => $member_id, 'loan_id' => $loan_id])
                 ->orderBy('release_date DESC')
                 ->asArray()->one();
             $res = [
                 'success' => true,
                 'data' => $acc
             ];
-            
-			
             
             
             $connection = Yii::$app->getDb();
@@ -256,10 +255,6 @@ class LoanController extends \yii\web\Controller
 				            				'lastTransaction' => $result
 				            		]
 				            ];
-				            
-		    
-				          
-            
 				            
             return $res;
             
@@ -613,6 +608,7 @@ class LoanController extends \yii\web\Controller
                             VoucherHelper::insertEntries($entryList,$saveGV->id, 'LOAN');
                             $success = true;
                         }
+                        //Save in journal entry
 
                     }
                 }

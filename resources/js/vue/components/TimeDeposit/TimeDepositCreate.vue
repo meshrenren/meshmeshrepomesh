@@ -22,7 +22,7 @@
 				            </el-table-column>
 				            <el-table-column label="Amount">
 				                <template slot-scope="scope">
-				                    <span style="margin-left: 10px">{{ $nf.numberFixed(scope.row.amount, 2) }}</span>
+				                    <span style="margin-left: 10px">{{ $nf.formatNumber(scope.row.amount, 2) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Maturity Date">
@@ -69,15 +69,26 @@
 								</el-select>
 						  	</el-form-item>
 						  	<el-form-item label="Interest Rate" prop = "interest_rate">
-						    	<el-input v-model="tdAccountDetails.interest_rate" :disabled = "true">
+						    	<el-input v-model="tdAccountDetails.interest_rate" >
 						    		<span slot="append">%</span>
 						    	</el-input>
 						    	<!-- <el-input-number v-model="tdAccountDetails.interest_rate" controls-position="right" :disabled = "true">
 						    		<span slot="append">%</span>
 						    	</el-input-number> -->
 						  	</el-form-item>
-							  Service Fee: {{serviceFee}} <br/>
-							  Total Amount to be Incurred: {{totalIncurred}} <br/>
+						  	<el-form-item label="Service Charge" prop = "service_amount">
+						    	<el-input-number v-model="tdAccountDetails.service_amount" :controls = "false">
+						    	</el-input-number>
+						    	<!-- <el-input-number v-model="tdAccountDetails.interest_rate" controls-position="right" :disabled = "true">
+						    		<span slot="append">%</span>
+						    	</el-input-number> -->
+						  	</el-form-item>
+						  	<el-form-item label="Or Number (Ref. No)" prop = "or_number">
+						    	<el-input v-model="tdAccountDetails.or_number" :controls = "false">
+						    	</el-input>
+						  	</el-form-item>
+							  Service Fee: {{ $nf.formatNumber(serviceFee) }} <br/>
+							  Total Amount to be Incurred: {{ $nf.formatNumber(totalIncurred) }} <br/>
 						  	<a class = "click-class" @click="viewRateModal" >View rate list of the selected product here. </a>
 
 						  	<div class = "signatory" v-if = "tdAccountDetails.type == 'Group'">
@@ -131,6 +142,7 @@ export default {
   		this.dataTimeDepositAccount.forEach(function(detail){
   			account[detail] = null
   		})
+  		account['or_number'] = null
 
 		return{
       		memberDetails			: {id : null, fullname : null},
@@ -181,6 +193,7 @@ export default {
   			account_name : [{ required: true, message: 'Name cannot be blank.', trigger: 'change' },],
   			amount : [{ required: true, message: 'Amount type cannot be blank.', trigger: 'change' },],
   			term : [{ required: true, message: 'Term type cannot be blank.', trigger: 'change' },],
+  			or_number : [{ required: true, message: 'OR Number cannot be blank.', trigger: 'change' },],
   			interest_rate : [{ validator: validateRate, trigger: 'blur' },],
 		}
 
@@ -288,7 +301,7 @@ export default {
     				this.signatoryList.push(data)
     			}
     		}
-    		//this.memberDetails = data
+    		this.memberDetails = data
     		
     	},
     	productChange(val){
@@ -312,11 +325,17 @@ export default {
 						return Number(term_count) == Number(ci.days) && Number(amount) >= Number(ci.min_amount) && Number(amount) <= Number(ci.max_amount) 
 					})
 					if(rate){
-						
 						this.tdAccountDetails.interest_rate = rate.interest_rate
-						this.serviceFee = (this.tdAccountDetails.amount * (rate.interest_rate/100)) * rate.service_charge_percentage
+						//Associate or Extended
+						this.serviceFee = 0
+						if(this.memberDetails.member_type_id){
+							let interestAmount = Number(this.tdAccountDetails.amount) * (Number(rate.interest_rate)/100)
+							let serviceCharge = interestAmount * (Number(rate.interest_rate)/100)
+							this.serviceFee = this.$nf.numberFixed(serviceCharge, 2)
+						}
 						this.totalIncurred = this.serviceFee + this.tdAccountDetails.amount
-						this.tdAccountDetails.service_charge = this.serviceFee
+						this.tdAccountDetails.service_amount = this.serviceFee
+						
 					}
 				}
     		}

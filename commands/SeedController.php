@@ -44,14 +44,14 @@ class SeedController extends Controller
             		$newMember->member_type_id = 1;
             	}    
 
-            	if($oldmember->DateMem != "---" && $oldmember->DateMem != "")   {
-            		$date = explode("/", $oldmember->DateMem);
-            		$memdate = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
-            		$newMember->mem_date = $memdate;
-            	} 
             	if($oldmember->BDay != "---" && $oldmember->BDay != "")   {
-            		$bday = date("Y-m-d", strtotime($oldmember->BDay)); 
-            		$newMember->birthday = $bday;
+            		$date = explode("/", $oldmember->BDay);
+            		$memdate = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
+            		$newMember->birthday = $memdate;
+            	} 
+            	if($oldmember->DateMem != "---" && $oldmember->DateMem != "")   {
+            		$bday = date("Y-m-d", strtotime($oldmember->DateMem)); 
+            		$newMember->mem_date = $bday;
             	} 	
 
             	$newMember->first_name = $oldmember->FName;
@@ -345,7 +345,7 @@ class SeedController extends Controller
                 foreach ($loanLedgerMember as $key => $loan) {
                     $balance = floatVal(str_replace(",", "", $loan['Balance']));
                     $dateStrpos = strpos($loan['DateTransac'], '2019');
-                    if($balance <= 0 && !$dateStrpos){
+                    if($balance <= 0){
                         continue;
                     }
 
@@ -413,9 +413,11 @@ class SeedController extends Controller
 
                         $release_date = date("Y-m-d");
                         if($loan['DateTransac'] != ""){
-                            $date = explode(" ", $loan['DateTransac']);
-                            $date = explode("/", $date[0]);
-                            $release_date = $date[2] . "-" . $date[1] . "-" . $date[0];
+                            //$date = explode(" ", $loan['DateTransac']);
+                            //$date = explode("/", $date[0]);
+                            //$release_date = $date[2] . "-" . $date[1] . "-" . $date[0];
+                            $date = date("Y-m-d", strtotime($loan['DateTransac']));
+                            $release_date = $date;
                         }
                         $addLoanAccount = new \app\models\LoanAccount;
                         $addLoanAccount->account_no = $product->id . "-" . $trans_serial_pad;
@@ -430,7 +432,9 @@ class SeedController extends Controller
                         $addLoanAccount->service_charge = floatVal(str_replace(",", "", $loan['ServChrg'])) ;
                         $addLoanAccount->prepaid_int = 0;
                         $addLoanAccount->is_active = 1;
-                        $addLoanAccount->status = "Verified";
+                        $addLoanAccount->status = "Current";
+                        $addLoanAccount->principal_amortization_quincena = floatVal(str_replace(",", "", $loan['QuinPrincipal']));
+                        $addLoanAccount->prepaid_amortization_quincena = floatVal(str_replace(",", "", $loan['QuiPrepaid']));
                         $addLoanAccount->qiun_principal = floatVal(str_replace(",", "", $loan['QuinPrincipal']));
                         $addLoanAccount->quin_prepaid = floatVal(str_replace(",", "", $loan['QuiPrepaid']));
                         $addLoanAccount->interest_accum = floatVal(str_replace(",", "", $loan['InterestAccum']));
@@ -448,12 +452,12 @@ class SeedController extends Controller
                     //var_dump($loan);
                 }
 
-                echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " Is Member \n\t Loans: " . $loans . "\n\n";
+                echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " Is Member \n\t Loans: " . $loans . "\n\n";
                 //echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " Is Member \n\n";
                 //break;
             }
             else{
-                echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
+                echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
             }
         }
     }*/
@@ -481,9 +485,10 @@ class SeedController extends Controller
                         if($getTrans != null){
                             continue;
                         }
-                        $date = explode(' ', $ledger['DateTransac']) ;
+                        /*$date = explode(' ', $ledger['DateTransac']) ;
                         $dSub = explode('/', $date[0]) ;
-                        $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+                        $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));*/
+                        $d = date("Y-m-d", strtotime($ledger['DateTransac']));
 
                         $type = "PAYPARTIAL";
                         $amount = 0;
@@ -555,7 +560,7 @@ class SeedController extends Controller
     public function actionSeedShareAccount(){
         $query = new \yii\db\Query;
         $query->select('*');
-        $query->from('zold_sharecapitalledger scl');
+        $query->from('zold_memshare scl');
         $capitalShare = $query->all();
         foreach ($capitalShare as $key => $cs) {
             $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $cs['IDNum'], 'last_name' => $cs['SName'], 'first_name' => $cs['FName']])->one();
@@ -636,9 +641,10 @@ class SeedController extends Controller
                     }
                 }
 
-                $date = explode(' ', $ledger['DateTransac']) ;
+                /*$date = explode(' ', $ledger['DateTransac']) ;
                 $dSub = explode('/', $date[0]) ;
-                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));*/
+                $d = date("Y-m-d", strtotime($ledger['DateTransac']));
 
                 $addTrans = new \app\models\ShareTransaction;
                 $addTrans->fk_share_id = $acc->accountnumber;
@@ -678,14 +684,14 @@ class SeedController extends Controller
             if($cs['IDNum'] != '' && $cs['SName'] != '' && $cs['FName'] != ''){
                 $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $cs['IDNum'], 'last_name' => $cs['SName'], 'first_name' => $cs['FName']])->one();
                 if($getMember){
-                    $getAccount = \app\models\SavingsAccount::find()->where(['member_id' => $getMember->id])->one();
+                    $getAccount = \app\models\SavingAccounts::find()->where(['member_id' => $getMember->id])->one();
                     if($getAccount == null){
                         $product = \app\models\Savingsproduct::find()->where(['id' => 1])->one();
                         $trans_serial = $product->trans_serial + 1;
                         $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 
 
-                        $account = new \app\models\SavingsAccount;
+                        $account = new \app\models\SavingAccounts;
                         $account->account_no = $product->id . "-" . $trans_serial_pad;
                         $account->saving_product_id = $product->id;
                         $account->member_id = $getMember->id;
@@ -719,14 +725,14 @@ class SeedController extends Controller
                 }
             }
             else{
-                $getAccount = \app\models\SavingsAccount::find()->where(['account_name' => $cs['Name']])->one();
+                $getAccount = \app\models\SavingAccounts::find()->where(['account_name' => $cs['Name']])->one();
                 if($getAccount == null){
                     $product = \app\models\Savingsproduct::find()->where(['id' => 1])->one();
                     $trans_serial = $product->trans_serial + 1;
                     $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 
 
-                    $account = new \app\models\SavingsAccount;
+                    $account = new \app\models\SavingAccounts;
                     $account->account_no = $product->id . "-" . $trans_serial_pad;
                     $account->saving_product_id = $product->id;
                     $account->account_name = $cs['Name'];
@@ -756,7 +762,7 @@ class SeedController extends Controller
     }
 
     public function actionSavingsTransaction(){
-        $accounts = \app\models\SavingsAccount::find()->all();
+        $accounts = \app\models\SavingAccounts::find()->all();
 
         foreach ($accounts as $key => $acc) {
             $getTRans = \app\models\SavingsTransaction::find()->where(['fk_savings_id' => $acc->account_no])->count(); 
@@ -805,9 +811,10 @@ class SeedController extends Controller
                     }
                 }
 
-                $date = explode(' ', $ledger['DateTransac']) ;
+                /*$date = explode(' ', $ledger['DateTransac']) ;
                 $dSub = explode('/', $date[0]) ;
-                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));
+                $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));*/
+                $d = date("Y-m-d", strtotime($ledger['DateTransac']));
 
                 $addTrans = new \app\models\SavingsTransaction;
                 $addTrans->fk_savings_id = $acc->account_no;
@@ -852,7 +859,7 @@ class SeedController extends Controller
         foreach ($capitalShare as $key => $cs) {
             $balance = str_replace(",", "", $cs['Balance']);
             $balance = floatval($balance);
-            $getAccount = \app\models\SavingsAccount::find()->joinWith(['member'])->where(['member.last_name' => $cs['SName'], 'member.first_name' => $cs['FName'] ])->orderBy('member.last_name ASC')->one();
+            $getAccount = \app\models\SavingAccounts::find()->joinWith(['member'])->where(['member.last_name' => $cs['SName'], 'member.first_name' => $cs['FName'] ])->orderBy('member.last_name ASC')->one();
             if($getAccount != null){
                 $getAccount->balance = $balance;
                 $getAccount->save(false);
@@ -1671,8 +1678,11 @@ class SeedController extends Controller
             $currYear = date('Y');
         }
         $getLastCalendar = \app\models\Calendar::find()->orderBy('date_id DESC')->one();
-        $calendarDate = $getLastCalendar->date;
-        $newDate = date('Y-m-d', strtotime($calendarDate. ' +1 days'));
+        if($getLastCalendar){
+            $calendarDate = $getLastCalendar->date;
+            $newDate = date('Y-m-d', strtotime($calendarDate. ' +1 days'));
+        }
+        $newDate = date('Y-01-01');
         $count = 1;
 
         //echo date('Y-m-t', strtotime('2019-04-12'));
@@ -1698,6 +1708,157 @@ class SeedController extends Controller
                 else{
                     break;
                 }
+            }
+        }
+    }
+
+    public function actionTimeDepositAccount(){
+        $query = new \yii\db\Query;
+        $query->from('zold_tdtransac');
+        $tdAccs = $query->all();
+        foreach ($tdAccs as $key => $td) {
+            $findAcc = \app\models\TimeDepositAccount::find()->where(['old_td_account' => $td['TDAcctNum']])->one(); 
+            if($findAcc != null){
+                continue;
+            }
+
+            $model = new \app\models\TimeDepositAccount;
+
+            $product = \app\models\TimeDepositProduct::find()->joinWith(['ratetable'])->where(['tdproduct.id' => 1])->one();
+            $trans_serial = $product->trans_serial + 1;
+            $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+            $amount = floatval(str_replace(",", "", $td['AmountOpen']));
+            $balance = floatval(str_replace(",", "", $td['Balance']));
+            $amountMature = floatval(str_replace(",", "", $td['AmountMature']));
+
+            if($balance < 0 || $td['Remarks'] == "CLOSED"){
+                continue;
+            }
+            //Get member
+            $member_id = null;
+            $accountName = null;
+            $toSave = false;
+            if($td['IDNum'] != '' && $td['SName'] != '' && $td['FName'] != ''){
+                $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $td['IDNum'], 'last_name' => $td['SName'], 'first_name' => $td['FName']])->one(); 
+                if($getMember){
+                    $member_id = $getMember->id;
+                    $toSave = true;
+                }
+                else{
+                    $text = $td['IDNum'] . "->" . $td['SName'] . " ".  $td['FName'] . " \tName: " . $td['Name'] . " \t" . $td['TDAcctNum'] .  "\n";
+                    $getMember = \app\models\Member::find()->where(['last_name' => $td['SName'], 'first_name' => $td['FName']])->one();
+
+                    if($getMember){
+                        if ($this->confirm($text . " Save as individual? If no, it will be save as a group.")) {
+                            $member_id = $getMember->id;
+                        } else {
+                            $accountName = $td['Name'];
+                        }
+                        $toSave = true;
+                    }
+                    
+                }
+            }
+            else{
+                $accountName = $td['Name'];
+                $toSave = true;
+            }
+
+            if(!$toSave) continue;
+
+            $dateOpen = "";
+            if($td['DateOpen'] != "---" && $td['DateOpen'] != "")   {
+                /*$dateExplode = explode(" ", $td['DateOpen']);
+                $date = explode("/", $dateExplode[0]);
+                $dateOpen = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] )); */
+                $dateOpen = date("Y-m-d", strtotime($td['DateOpen']));
+            }
+
+            $dateMature = "";
+            if($td['DateMature'] != "---" && $td['DateMature'] != "")   {
+                /*$dateExplode = explode(" ", $td['DateMature']);
+                $date = explode("/", $dateExplode[0]);
+                $dateMature = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] ));*/
+                $dateMature = date("Y-m-d", strtotime($td['DateMature']));          
+            }
+
+            //Manually set interest based on old interes
+            $interest_rate = 0;
+            $service_fee = 0;
+            if(intval($td['Terms']) == 6){
+                if($amount < 49999){
+                   $interest_rate = 4;
+                   $service_fee = 15;
+                }
+            }
+            else if(intval($td['Terms']) == 12){
+                if($amount < 9999){
+                   $interest_rate = 5;
+                   $service_fee = 30;
+                }
+                else if($amount > 10000 && $amount < 29999){
+                   $interest_rate = 5.5;
+                   $service_fee = 30;
+                }
+                else if($amount > 30000 && $amount < 49999){
+                   $interest_rate = 6;
+                   $service_fee = 30;
+                }
+            }
+
+            if($amount > 50000 && $amount < 99999){
+               $interest_rate = 6.5;
+               $service_fee = 30;
+            }
+            else if($amount > 100000 && $amount < 299999){
+               $interest_rate = 7;
+               $service_fee = 30;
+            }
+            else if($amount > 300000 && $amount < 499999){
+               $interest_rate = 7.5;
+               $service_fee = 30;
+            }
+            else if($amount >= 500000){
+               $interest_rate = 8;
+               $service_fee = 30;
+            }
+
+
+            $model->accountnumber = $product->id . "-" . $trans_serial_pad;
+            $model->fk_td_product = $product->id;
+            $model->member_id = $member_id;
+            $model->account_name = $accountName;
+            $model->account_status = 'ACTIVE';
+            $model->term = $td['Terms'];
+            $model->amount = $amount;
+            $model->balance = $amount;
+            $model->open_date = $dateOpen;
+            $model->maturity_date = $dateMature;
+            $model->amount_mature = 0.00;
+            $model->date_created = date('Y-m-d H:i:s', strtotime($dateOpen));
+            $model->interest_rate = $interest_rate;
+
+
+            $model->old_td_account = $td['TDAcctNum'];
+            $model->old_idnum = $td['IDNum'];
+            $model->old_postingcode = $td['Postingcode'];
+
+            if($model->save()){
+                $tdTransaction = new \app\models\TimeDepositTransaction;
+                $tdTransaction->fk_account_number = $model->accountnumber;
+                $tdTransaction->transaction_type = 'TDCASHDEP';
+                $tdTransaction->amount = $model->amount;
+                $tdTransaction->balance = $model->balance;
+                $tdTransaction->transaction_date = $model->date_created;
+                //$tdTransaction->transacted_by = \Yii::$app->user->identity->id;
+                $tdTransaction->save();
+
+                $product->trans_serial = $trans_serial;
+                $product->save();
+            }
+            else{
+                var_dump($model->getErrors());
             }
         }
     }

@@ -8,15 +8,17 @@ use \app\models\Particulars;
 use \app\models\PayrollParticulars;
 use \app\models\Calendar;
 use \app\models\BranchParameters;
-use phpDocumentor\Reflection\Types\Static_;
 use \app\models\SavingAccounts;
 use \app\models\SavingsTransaction;
 use \app\models\TdTransaction;
 use \app\models\TimeDepositAccount;
-use app\models\SavingsAccount;
-use app\models\LoanAccount;
+use \app\models\SavingsAccount;
+use \app\models\LoanAccount;
+use \app\models\JournalHeader;
+use \app\models\JournalDetails;
 
-
+use app\helpers\GlobalHelper;
+use phpDocumentor\Reflection\Types\Static_;
 
 class ParticularHelper 
 {
@@ -158,67 +160,178 @@ class ParticularHelper
 	public static function calculateMaturity($nextday)
 	{
 		
-		$qry = "select * from td_account where maturity_date <='".$nextday['date']."' and account_status='ACTIVE'";
-		$connection = Yii::$app->getDb();
-		$command = $connection->createCommand($qry);
-		$result = $command->queryAll();
+		$result = TimeDepositAccount::find()->where("maturity_date <='".$nextday['date']."' AND account_status='ACTIVE'")->all();
 		$currentDate = date('Y-m-d', strtotime($nextday['date']));
-		
+		$totalInterest = 0;
+		$refNo = "TDIntPost.".date("mdY", strtotime($nextday['date']));
+		$remaks = "TD Auto Interest Posting.".date("mdY", strtotime($nextday['date']));
+
+		$savingsRefNo = "IntPost.".date("mdY", strtotime($nextday['date']));
+
+		$tdTotalInterest = 0;
+		$savingsTotalInterest = 0;
+
 		foreach($result as $rows)
 		{
-			$tdaccount = TimeDepositAccount::findOne($rows['accountnumber']);
-			$interest = $tdaccount->balance * ($tdaccount->interest_rate/100);
-			
-			
-			/*
-			 * Automatically add to savings the interest of TD.
-			 */
-			
-			$savingsAccount = SavingAccounts::findOne(['member_id'=>$tdaccount->member_id, 'saving_product_id'=>1, 'is_active'=>1]);
-			$savingsAccount->balance = round($savingsAccount->balance + $interest, 2);
-			$savingsAccount->update();
-			
-			
-			$savingsTransaction = new SavingsTransaction();
-			
-			$savingsTransaction->fk_savings_id = $savingsAccount->account_no;
-			$savingsTransaction->amount = round($interest, 2);
-			$savingsTransaction->transaction_type = "TDINTEREST";
-			$savingsTransaction->transacted_by = \Yii::$app->user->identity->id;
-			$savingsTransaction->transaction_date = $currentDate;
-			$savingsTransaction->running_balance = $savingsAccount->balance;
-			$savingsTransaction->remarks = "TD Auto Interest Posting.".date("mdY", strtotime($nextday['date']));
-			$savingsTransaction->ref_no = "TDIntPost.".date("mdY", strtotime($nextday['date']));
-			$savingsTransaction->save();
-			
-			
-			
-		//	$tdtransaction = new TdTransaction();
-		//	$tdtransaction->fk_account_number = $rows['accountnumber'];
-		//	$tdtransaction->transaction_type='TDINTEREST';
-		//	$tdtransaction->amount = $interest;
-		//	$tdtransaction->balance = $tdaccount->balance+ $interest;
-		//	$tdtransaction->transaction_date = $nextday['date'];
-		//	$tdtransaction->transacted_by = \Yii::$app->user->identity->id;
-			
-		//	$tdaccount->balance = $tdaccount->balance+ $interest;
-			$tdaccount->account_status = 'MATURED';
-			
-			
-			
-			if($tdaccount->save())
-			{
-				//entry to accounting
+			$transaction = \Yii::$app->db->beginTransaction();
+	        $success = true;
+	        try {
+				$tdaccount = TimeDepositAccount::findOne($rows['accountnumber']);
+				$interest = $tdaccount->balance * ($tdaccount->interest_rate/100);
 				
 				
-			}
-			
-			
-			
-			
-			
-			
-			
+				/*
+				 * Automatically add to savings the interest of TD if balance is equal to max amount (500000)
+				*/
+
+				$isSaveToSaving = false;
+				if($tdaccount->balance >= 500000){
+					$isSaveToSaving = true;
+				}
+				$tdBalance = $tdaccount->balance + $interest;
+				$maturedAmount = $tdaccount->balance + $interest;
+				$tdTransRemarks = "Interest Earned";
+
+				if($isSaveToSaving){
+					$savingsAccount = SavingAccounts::findOne(['member_id'=>$tdaccount->member_id, 'saving_product_id'=>1, 'is_active'=>1]);
+					$savingsAccount->balance = round($savingsAccount->balance + $interest, 2);
+
+					if(!$savingsAccount->save()){
+						$success = false;
+					}
+					
+					$savingsTransaction = new SavingsTransaction();
+					
+					$savingsTransaction->fk_savings_id = $savingsAccount->account_no;
+					$savingsTransaction->amount = round($interest, 2);
+					$savingsTransaction->transaction_type = "TDINTEREST";
+					$savingsTransaction->transacted_by = \Yii::$app->user->identity->id;
+					$savingsTransaction->transaction_date = $currentDate;
+					$savingsTransaction->running_balance = $savingsAccount->balance;
+					$savingsTransaction->remarks = "TD Auto Interest Posting.".date("mdY", strtotime($nextday['date']));
+					$savingsTransaction->ref_no = $savingsRefNo;
+					if(!$savingsTransaction->save()){
+						$success = false;
+					}
+					else{
+						$savingsTotalInterest += $savingsTransaction->amount;
+					}
+
+					$tdTransRemarks .= ": Posted as Savings Deposit";
+					$tdBalance = $tdaccount->balance;
+				}
+				
+				$tdtransaction = new TdTransaction();
+				$tdtransaction->fk_account_number = $rows['accountnumber'];
+				$tdtransaction->transaction_type='TDINTEREST';
+				$tdtransaction->amount = $interest;
+				$tdtransaction->balance = $tdBalance;
+				$tdtransaction->remarks = $tdTransRemarks;
+				$tdtransaction->transaction_date = $nextday['date'];
+				$tdtransaction->transacted_by = \Yii::$app->user->identity->id;
+				$tdtransaction->ref_no = $refNo;
+				if(!$tdtransaction->save()){
+					$success = false;
+				}
+				else{
+					$tdTotalInterest += $tdtransaction->amount;
+				}
+				
+				$tdaccount->balance = $tdBalance;
+				$tdaccount->amount_mature = $maturedAmount;
+				$tdaccount->account_status = 'MATURED';
+				
+				if($tdaccount->save())
+				{
+					//entry account is called in afterSave function
+				}
+				else{
+					$success = false;
+				}
+
+				if($success){
+                    $transaction->commit();
+                }
+                else{
+                    $transaction->rollBack();
+                }
+			} catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+		}
+
+		//Save in Journal the total TD Interest
+		if($tdTotalInterest > 0){
+			$journalHeader = new JournalHeader;
+		    $journalHeaderData = $journalHeader->getAttributes();
+		    $journalHeaderData['reference_no'] = $refNo;
+		    $journalHeaderData['posting_date'] = $currentDate;
+		    $journalHeaderData['total_amount'] = $tdTotalInterest;
+		    $journalHeaderData['trans_type'] = "Interest";
+		    $journalHeaderData['remarks'] = $refNo;
+
+			$saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+		    if($saveJournal){
+		        //Entries
+		        $journalList = new JournalDetails;
+		        $journalListAttr = $journalList->getAttributes();
+		        $lists = array();
+
+		        // Interest Expense
+		        $arr = $journalListAttr;
+		        $arr['amount'] = $totalInterest;
+		        $arr['particular_id'] = 27; //Interest Expense Particular ID
+		        $arr['entry_type'] = "DEBIT";
+		        array_push($lists, $arr);
+
+		        // Time Deposit                            
+		        $arr = $journalListAttr;
+		        $arr['amount'] = $totalInterest;
+		        $arr['particular_id'] = 20; // Time Deposit Particular ID
+		        $arr['entry_type'] = "CREDIT";
+		        array_push($lists, $arr);
+
+		        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
+		    }
+		}
+	    
+	    //Save in Journal the total Savings Interest
+		if($savingsTotalInterest > 0){
+			$journalHeader = new JournalHeader;
+		    $journalHeaderData = $journalHeader->getAttributes();
+		    $journalHeaderData['reference_no'] = $savingsRefNo;
+		    $journalHeaderData['posting_date'] = $currentDate;
+		    $journalHeaderData['total_amount'] = $savingsTotalInterest;
+		    $journalHeaderData['trans_type'] = "Interest";
+		    $journalHeaderData['remarks'] = $refNo;
+
+			$saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+		    if($saveJournal){
+		        //Entries
+		        $journalList = new JournalDetails;
+		        $journalListAttr = $journalList->getAttributes();
+		        $lists = array();
+
+		        // Interest Expense
+		        $arr = $journalListAttr;
+		        $arr['amount'] = $totalInterest;
+		        $arr['particular_id'] = 27; //Interest Expense Particular ID
+		        $arr['entry_type'] = "DEBIT";
+		        array_push($lists, $arr);
+
+		        // Savings Deposit                            
+		        $arr = $journalListAttr;
+		        $arr['amount'] = $totalInterest;
+		        $arr['particular_id'] = 19; // Savings Deposit Particular ID
+		        $arr['entry_type'] = "CREDIT";
+		        array_push($lists, $arr);
+
+		        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
+		    }
 		}
 	}
 	
@@ -240,7 +353,8 @@ class ParticularHelper
 		$currentDate = date('Y-m-d', strtotime($nextday['date']));
 		
 		
-		
+		$totalInterest = 0;
+		$refNo = "IntPost.".date("mdY", strtotime($nextday['date']));
 		foreach($result as $rows)
 		{
 			$personalBalance = 0;
@@ -277,16 +391,10 @@ class ParticularHelper
 			
 			$personalBalance = $personalBalance/$daycount;
 			
-			
-		
-			
-			
-			
+			$int_rate = GlobalHelper::getSAInterest();
 			$interest = 0;
-			$interest = $personalBalance * 0.005;
+			$interest = $personalBalance * $int_rate;
 			$totalBalance = $rows["balance"] + round($interest, 2);
-			
-			
 			
 			if($interest>0)
 			{
@@ -305,16 +413,51 @@ class ParticularHelper
 				$mdlTrans->transacted_by = \Yii::$app->user->identity->id;
 				$mdlTrans->transaction_date = $currentDate;
 				$mdlTrans->running_balance = $totalBalance;
-				$mdlTrans->remarks = "IntPost.".date("mdY", strtotime($nextday['date']));
-				$mdlTrans->ref_no = "IntPost.".date("mdY", strtotime($nextday['date']));
+				$mdlTrans->remarks = $refNo;
+				$mdlTrans->ref_no = $refNo;
 				
+				if($mdlTrans->save()){
+					$totalInterest += $mdlTrans->amount;
+				}
 				
-				$mdlTrans->save();
 			}
 			
 			echo "   ".$interest."<br/>";
 			
 		}
+
+		//Save in Journal
+	    $journalHeader = new JournalHeader;
+	    $journalHeaderData = $journalHeader->getAttributes();
+	    $journalHeaderData['reference_no'] = $refNo;
+	    $journalHeaderData['posting_date'] = $currentDate;
+	    $journalHeaderData['total_amount'] = $totalInterest;
+	    $journalHeaderData['trans_type'] = "Interest";
+	    $journalHeaderData['remarks'] = $refNo;
+
+		$saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
+	    if($saveJournal){
+	        //Entries
+	        $journalList = new JournalDetails;
+	        $journalListAttr = $journalList->getAttributes();
+	        $lists = array();
+
+	        // Interest Expense
+	        $arr = $journalListAttr;
+	        $arr['amount'] = $totalInterest;
+	        $arr['particular_id'] = 27; //Interest Expense Particular ID
+	        $arr['entry_type'] = "DEBIT";
+	        array_push($lists, $arr);
+
+	        // Savings Deposit                            
+	        $arr = $journalListAttr;
+	        $arr['amount'] = $totalInterest;
+	        $arr['particular_id'] = 19; // Savings Deposit Particular ID
+	        $arr['entry_type'] = "CREDIT";
+	        array_push($lists, $arr);
+
+	        $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
+	    }
 		
 		return true;
 		

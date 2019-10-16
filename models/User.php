@@ -2,6 +2,7 @@
 
 namespace app\models;
 use Yii;
+use app\helpers\particulars\ParticularHelper;
 
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -180,4 +181,19 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         return 0;
         
     }
+
+    public function getDateNow() {
+        $currentDate = ParticularHelper::getCurrentDay();
+        $today = date("Y-m-d", strtotime($currentDate));
+       
+        return $today;
+    }  
+
+    public function getDateTimeNow() {
+        $currentDate = ParticularHelper::getCurrentDay();
+        $todayDateTime = date("Y-m-d H:i:s", strtotime($currentDate));
+       
+        return $todayDateTime;
+    }   
+
 }

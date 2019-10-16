@@ -6,13 +6,15 @@ export default {
 		return axios.post('/savings/create-account', params)
 	},
 
-	getFormPDF(account_no, type){
+	getFormPDF(account_no, amount, type){
 		if(type == 'pdf'){
 			return axios({
 				method: 'post',
 				url: $baseUrl + '/savings/print-withdraw',
 				data: {
-					account_no : account_no
+					account_no : account_no,
+					amount : amount,
+					type : type
 				},
 				responseType: 'blob'
 			})
@@ -23,6 +25,7 @@ export default {
 				url: $baseUrl + '/savings/print-withdraw',
 				data: {
 					account_no : account_no,
+					amount : amount,
 					type : type
 				},
 			})

@@ -242,8 +242,9 @@ class ShareaccountController extends Controller
                 $trans_type = "Payment";
                 $coh_entrytype = "DEBIT"; // entry_type for Cash On Hand
                 $acct_entrytype = "CREDIT"; // entry_type for the Account
+                $amount = $acct_transaction['amount'];
                 
-                $running_balance = $getShareAccount->balance + $acct_transaction['amount'];
+                $running_balance = $getShareAccount->balance + $amount;
                 $acct_transaction['running_balance'] = $running_balance;
                 
                 if($running_balance >= 0)
@@ -267,8 +268,56 @@ class ShareaccountController extends Controller
                         $transaction->rollBack();
                     }
 
-                    //Save to Journal
+                    
                     if($success && $saveSD){
+
+                        $member = \app\models\Member::find()->where(['id' => $getShareAccount->fk_memid])->one();
+                        $name = "";
+                        $type = "Individual";
+                        $member_id = $getShareAccount->fk_memid;
+                        if($member){
+                            $name =  $member->first_name . " " . $member->middle_name . " " . $member->last_name;
+                        }
+
+                        //Save in Payment
+                        $payment = new PaymentRecord;
+                        $paymentData = $payment->getAttributes();
+                        $paymentData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                        $paymentData['or_num'] = $saveSD->reference_number;
+                        $paymentData['name'] = $name;
+                        $paymentData['type'] = 'Individual';
+                        $paymentData['amount_paid'] = $saveSD->amount;
+
+                        $paymentModel = PaymentHelper::savePayment($paymentData);
+                        if($paymentModel){
+
+                            $entries = array();
+                            $arr = [
+                                'type'          => 'SHARE', // Share
+                                'amount'        => $saveSD->amount,
+                                'member_id'     => $member_id,
+                                'particular_id' => $product_particularid,
+                                'product_id'    => $getSavingsAccount->saving_product_id, 
+                                'account_no'    => $getSavingsAccount->account_no,
+                            ];
+                            array_push($entries, $arr);   
+
+                            $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);
+                            if(!$insertSuccess){
+                                $success = false;
+                                $error = "PAYMENT_ERROR";
+                                $errorMessage = 'Error processing the transaction in saving payment data. Please try again or contact technical support.';
+                                $transaction->rollBack();
+                            }     
+                        }
+                        else{
+                            $success = false;
+                            $error = "PAYMENT_ERROR";
+                            $errorMessage = 'Error processing the transaction in saving payment data. Please try again or contact technical support.';
+                            $transaction->rollBack();
+                        }
+
+                        //Save to Journal
                         $journalHeader = new JournalHeader;
                         $journalHeaderData = $journalHeader->getAttributes();
                         $journalHeaderData['reference_no'] = $saveSD->reference_number;

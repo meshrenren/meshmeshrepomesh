@@ -32,7 +32,7 @@ class TimeDepositTransaction extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fk_account_number', 'transaction_type', 'amount', 'balance', 'transaction_date', 'transacted_by'], 'required'],
+            [['fk_account_number', 'transaction_type', 'amount', 'balance', 'transaction_date'], 'required'],
             [['amount', 'balance'], 'number'],
             [['tran_date', 'cancelled_date'], 'safe'],
             [['transacted_by'], 'integer'],
@@ -57,4 +57,5 @@ class TimeDepositTransaction extends \yii\db\ActiveRecord
             'cancelled_date' => 'Cancelled Date',
         ];
     }
+
 }

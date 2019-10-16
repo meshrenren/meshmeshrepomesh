@@ -54,4 +54,13 @@ class JournalHelper
         return $success;
 	}
 
+    public static function getVoucherByRefNo($reference_no){
+
+        $voucher= JournalHeader::find()->where(['reference_no' => $reference_no])->one();
+        if($voucher){
+            return $voucher;
+        }
+        return null;
+    }
+
 }
