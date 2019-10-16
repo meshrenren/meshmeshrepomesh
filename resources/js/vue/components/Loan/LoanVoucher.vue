@@ -164,7 +164,7 @@ export default {
                     }
                     else if(res.error == 'ERROR_GV'){
                         title = 'Error: General Voucher not saved'
-                        text = "Loan release transaction successfully posted but General Voucher not saved. Please add General Voucher manually in the link menu 'General Voucher' -> <a href = '/general-voucher/' target = '_blank'>'Create'</a>. Please contact administrator and developer too."
+                        text = "Loan release transaction successfully posted but General Voucher not saved. Please add General Voucher manually in the link menu 'General Voucher' -> <a href = '"+this.$baseUrl+"/general-voucher/' target = '_blank'>'Create'</a>. Please contact administrator and developer too."
                         type = "error"
                     }
 

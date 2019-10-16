@@ -139,7 +139,7 @@ export default {
     },
     methods:{
     	printForm(type){			
-			this.$API.Savings.getFormPDF(this.accountDetails.account_no, amount, type)
+			this.$API.Savings.getFormPDF(this.accountDetails.account_no, this.savingTransactionForm.amount, type)
 			.then(result => {
 				let res = result.data
 				if(type == 'pdf'){

@@ -38,7 +38,7 @@ class Membersold extends \yii\db\ActiveRecord
      */
     public static function tableName()
     {
-        return 'zold_memberprofile';
+        return 'zold_memperprof';
     }
 
     /**

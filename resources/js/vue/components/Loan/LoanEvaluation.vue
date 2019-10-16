@@ -281,8 +281,8 @@
 				        	</el-form>
 				        	<div style = "margin-top: 10px;">
 		       					<el-button type = "primary" @click = "newLoan()" ref = "newLoan">Apply</el-button> 
-								<el-button type = "primary" @click = "newLoan()" ref = "newLoan">Approve</el-button> 
-
+								<!-- <el-button type = "primary" @click = "newLoan()" ref = "newLoan">Approve</el-button> -->
+								<el-button type = "default" @click = "printLoan()" ref = "print">Print</el-button> 
 		       				</div>
 				        </div>	        			
 	        		</el-col>
@@ -291,6 +291,19 @@
 		</div>
 		<search-member :show-modal = "showSearchModal" :data-includes = "['shareaccount']" @select="populateField" @close = "showSearchModal = false" >
 	  	</search-member>
+
+	  	<dialog-modal 
+	  		title-header = ""
+	  		width = "80%"
+            v-if="showFormModal"
+            :visible.sync="showFormModal"
+            @close="showFormModal = false">
+            <loan-evaluation-form
+            	:page-data = "loanEvalFormData"
+            	:to-print = "true"
+            	>
+            </loan-evaluation-form>
+        </dialog-modal>
 	</div>
 </template>
 
@@ -300,8 +313,11 @@
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
 
+	import {dialogComponent} from '../../mixins/dialogComponent.js'
+
 export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
+	mixins: [dialogComponent],
 	data: function () {
 		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : true, savings_retention: null}
 		let durationList = [ {value : 6, label : 6},
@@ -322,10 +338,13 @@ export default {
 			disabledBox 			: true,
 			isLoading				: false,
 			LoanToRenew				: null,
-			durationList
+			durationList 			:  durationList,
+			showFormModal 			: false,
+			loanEvalFormData 		: {}
 		}
 	},
 	created(){
+
 		this.evaluationForm.product_loan_id = this.loanProduct[0].id
 		var validateDuration = (rule, value, callback) => {
 
@@ -365,8 +384,30 @@ export default {
   			amount : [{ required: true, message: 'Amount cannot be blank.', trigger: 'blur' },
   				{ validator: validateAmount, trigger: 'blur', trigger: 'blur' },],
 		}
+
+		this.$EventDispatcher.listen('CLOSE_LOAN_EVALUATION_FORM', data => {
+			this.showFormModal = false 
+		})
 	},
 	methods:{		
+		printLoan(){
+			if(this.evaluationForm.product_loan_id == null || this.evaluationForm.product_loan_id == "")
+				return
+
+			let getLoan = this.loanProduct.find(rs => {return Number(rs.id) == Number(this.evaluationForm.product_loan_id)})
+			this.loanEvalFormData = {
+				evaluationForm : this.evaluationForm, 
+				memberDetails : this.memberDetails, 
+				shareDetails : this.memberDetails.shareaccount ? this.memberDetails.shareaccount : null, 
+				latestLoan : this.LoanToRenew,
+				loanProduct : getLoan
+			}
+			//this.$htmlToPaper('printMe');
+			setTimeout(() => {
+                this.showFormModal = true
+            }, 500);
+			
+		},
 		savingsChange(value){
 			console.log("value", value)
 			this.evaluateLoan()
@@ -694,7 +735,9 @@ export default {
 				this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 				this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
 				this.evaluationForm.member_id = this.memberDetails.id
-				this.evaluationForm.principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
+
+				let principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
+				this.evaluationForm.principal_amortization_quincena = Number(principal_amortization_quincena).toFixed(2)
 								
 				this.evaluationForm.prepaid_amortization_quincena = this.calculatePrepaidInterest(Number(this.evaluationForm.amount), Number(this.evaluationForm.duration), getProduct.prepaid_monthly_interest, getProduct.id);
 				return [];
@@ -755,7 +798,10 @@ export default {
 
 			this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
 			this.evaluationForm.member_id = this.memberDetails.id
-			this.evaluationForm.principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
+
+			let principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
+			this.evaluationForm.principal_amortization_quincena = Number(principal_amortization_quincena).toFixed(2)
+			
 
 			this.evaluationForm.prepaid_amortization_quincena = this.calculatePrepaidInterest(Number(this.evaluationForm.amount), Number(this.evaluationForm.duration), getProduct.prepaid_monthly_interest, getProduct.id);
 			//this.evaluationForm.principal_amortization_quincena = 100

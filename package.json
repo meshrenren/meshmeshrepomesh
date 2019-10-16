@@ -58,6 +58,7 @@
     "vue": "^2.6.10",
     "vue-axios": "^2.1.4",
     "vue-functional-data-merge": "^1.0.7",
+    "vue-html-to-paper": "^1.1.1",
     "vue-i18n": "^7.8.1",
     "vue-materialize-datatable": "^0.7.7",
     "vue-sweetalert2": "^2.1.1",

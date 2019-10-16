@@ -76,6 +76,9 @@ Vue.component('loan-voucher', LoanVoucher)
 import LoanList from './components/Loan/LoanList.vue'
 Vue.component('loan-list', LoanList)
 
+import LoanEvaluationForm from './components/Loan/LoanEvaluationForm.vue'
+Vue.component('loan-evaluation-form', LoanEvaluationForm)
+
 /* --- END --- */
 
 
@@ -117,5 +120,18 @@ Vue.component('permission-settings', PermissionSettings)
 
 import ProductSettings from './components/Settings/ProductSettings.vue'
 Vue.component('product-settings', ProductSettings)
+
+/* --- END --- */
+
+
+/* Gloabl */
+/* --- START --- */
+
+import DialogModal from './components/General/DialogModal.vue'
+Vue.component('dialog-modal', DialogModal)
+
+import PrintHeader from './components/General/PrintHeader.vue'
+Vue.component('print-header', PrintHeader)
+
 
 /* --- END --- */

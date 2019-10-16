@@ -15,7 +15,7 @@ $this->title = 'Login';
 
     <div class="login-box-body">
         <div class="login-logo">        
-            <img src = "/images/coop_logo.png" />
+            <img src = "<?php echo Yii::$app->request->baseUrl; ?>/images/coop_logo.png" />
             <b>DILG XI</b> - EMPC
         </div>
 

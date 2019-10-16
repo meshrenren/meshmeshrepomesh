@@ -5,7 +5,7 @@
             <template slot = "title">
                 <i class="icon fa fa-warning"></i> Note
             </template>
-            For <a href = "/savings/withdraw">Savings Deposit Withdrawal</a>, <a href = "/loan/release">Loan Release</a> and <a href = "/tim-deposit/widthdraw">Time Deposit Withdrawal</a>, please process those transaction to their respective links.
+            For <a :href = "$baseUrl+'/savings/withdraw'">Savings Deposit Withdrawal</a>, <a :href = "$baseUrl+'/loan/release'">Loan Release</a> and <a :href = "$baseUrl+'/tim-deposit/widthdraw'">Time Deposit Withdrawal</a>, please process those transaction to their respective links.
         </el-alert>
         <el-row :gutter="40" class = "mt-10">
             <el-col :span="16">
