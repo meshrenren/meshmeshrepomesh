@@ -178,7 +178,15 @@ export default {
             if (filterKey) {
                 if(datalist){
                     datalist = datalist.filter(function (row) {
-                        return String(row.fullname).toLowerCase().indexOf(filterKey) > -1
+                    	let toShow = false
+                    	if(row.member && row.member.fullname && String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1 ){
+                    		toShow = true
+                    	}
+                    	else if(row.account_name && String(row.account_name).toLowerCase().indexOf(filterKey) > -1){
+                    		toShow = true
+                    	}
+
+                        return toShow
                     })
                 }
             }

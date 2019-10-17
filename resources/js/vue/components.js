@@ -109,6 +109,9 @@ Vue.component('payment-payroll', PaymentPayroll)
 import PaymentList from './components/Payment/PaymentList.vue'
 Vue.component('payment-list', PaymentList)
 
+import PaymentRecordList from './components/Payment/PaymentRecordList.vue'
+Vue.component('payment-record-list', PaymentRecordList)
+
 /* --- END --- */
 
 

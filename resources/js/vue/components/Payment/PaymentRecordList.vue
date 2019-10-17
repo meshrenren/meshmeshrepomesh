@@ -10,10 +10,16 @@
                 label="Name">                            
             </el-table-column>
             <el-table-column v-for="item in setUpColumn"
+            	:key = "item.key"
                 :prop="item.key"
                 :label="item.product_name">                            
             </el-table-column>
+            <el-table-column
+                prop="total"
+                label="Total">                            
+            </el-table-column>
         </el-table>
+
 	</div>
 </template>
 
@@ -23,23 +29,26 @@
 
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
+    import _reduce from 'lodash/reduce'
 
 export default {
 	props:{
-		dataAccountList : {
-			type : Array,
+		/* should include  accountList, allTotalAccount*/
+		pageData : {
+			type : Object,
 			require : true
 		},
-		dataAllTotalAccount : {
-			type : Array,
-			require : true
-		}
 	},
 	data(){
 		return{
-			accountList 		: this.dataAccountList,
-			allTotalAccount 	: this.dataAllTotalAccount
+			accountList 		: this.pageData.accountList,
+			allTotalAccount 	: this.pageData.allTotalAccount,
+			groupMemAccounts 	: [],
+			loadingPage 		: false
 		}
+	},
+	created(){
+		this.groupAllAccount()
 	},
 	computed:{
 		setUpColumn(){
@@ -64,10 +73,26 @@ export default {
 		},
 		setTableData(){
 			let accounts = this.accountList
-			let totalList = this.allTotalAccount
+			let memAccount = this.groupMemAccounts
 			let list = []
 
-			_forEach(accounts, acc=>{
+			_forEach(memAccount, acc=>{
+				let arr = {
+					account_no : acc.account_no,
+					account_name : acc.fullname,
+					member_id : acc.member_id,
+				}
+
+				//Accounts
+				let totalPayment = 0
+				_forEach(acc.payments, mem => {
+					arr[mem.type + "_" + mem.product_id] = Number(mem.amount)
+					totalPayment = Number(totalPayment) + Number(mem.amount)
+				})
+
+				arr['total'] = totalPayment
+
+				list.push(arr)
 
 			})
 
@@ -75,7 +100,29 @@ export default {
 		}
 	},
 	methods:{
+		groupAllAccount(){
+			let totalList = cloneDeep(this.allTotalAccount)
+			let resultList = _reduce(totalList, (result, value, key) => {
+				let fnAccIndex = result.findIndex(rs => {return String(rs.member_id)== String(value.member_id)})
+				if(fnAccIndex >= 0){
+					result[fnAccIndex].payments.push(value)
+				}
+				else{
+					let arr = {
+						account_no : value.account_no,
+						fullname : value.fullname,
+						member_id : value.member_id,
+						payments : [value]
+					}
 
+					result.push(arr)
+				}
+				return result
+
+			}, [])
+
+			this.groupMemAccounts = resultList
+		}
 	}
 }
 

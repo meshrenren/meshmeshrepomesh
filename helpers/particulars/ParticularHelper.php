@@ -111,11 +111,8 @@ class ParticularHelper
 		//calculate td maturity here
 		static::calculateMaturity($nextDay);
 		
-		
-		if(!static::performMakeLoanCurrent())
-		{
-			return false;
-		}
+		//Update loan status
+		static::performMakeLoanCurrent();
 		
 		//move to next day
 		$calendar = Calendar::findOne(['date_id'=>$currentDay['date_id'], 'date'=>$currentDay['date']]);
@@ -144,14 +141,13 @@ class ParticularHelper
 	
 	public static function performMakeLoanCurrent()
 	{
-		$loanaccount = LoanAccount::find(['status'=>'Released']);
-		$loanaccount->status="Current";
-		if($loanaccount->save())
-		{
-			return true;
+		$loanaccounts = LoanAccount::find()->where(['status'=>'Released'])->all();
+		foreach ($loanaccounts as $loanaccount) {
+			$loanaccount->status="Current";
+			$loanaccount->save();
 		}
 		
-		else return false;
+		return true;
 		
 		
 	}

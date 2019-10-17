@@ -159,7 +159,7 @@
                                             <el-table-column
                                               label="Amount">
                                                 <template slot-scope="scope">
-                                                    <el-input type="number" :min = "0" v-model="scope.row.amount" :disabled = "Number(scope.row.balance) <= 0" @keyup.enter.native = "addEntry"></el-input>
+                                                    <el-input type="number" :min = "0" v-model="scope.row.amount" :disabled = "Number(scope.row.balance) <= 0" @keyup.enter.native = "addAccounts"></el-input>
                                                 </template>
                                             </el-table-column>
                                         </el-table>
@@ -207,6 +207,7 @@
                         <div class="box-tools pull-right">
                             <el-button class = "auto-width pull-right ml-5" size = "small" type = "danger" @click = "cancelPayment()">CANCEL</el-button>
                             <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "finishPayment()">SAVE</el-button>
+                            <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "showAllList()">SHOW ALL</el-button>
                         </div>
                     </div>
                     <div class="box-body payment-entry-list mt-5">
@@ -236,7 +237,18 @@
                     </div>
                 </div>
             </el-col>
-        </el-row>        
+        </el-row> 
+        <dialog-modal 
+            title-header = ""
+            width = "95%"
+            v-if="showListModal"
+            :visible.sync="showListModal"
+            @close="showListModal = false">
+            <payment-record-list
+                :page-data = "pytRecListData"
+                >
+            </payment-record-list>
+        </dialog-modal>       
 	</div>
 </template>
 
@@ -276,6 +288,8 @@ export default {
             loadingPage         : false,
             memberSelectList    : [],
             nameSearch          : '',
+            pytRecListData      : {},
+            showListModal       : false
     	}
     },
     created(){
@@ -330,6 +344,16 @@ export default {
         }
     },
     methods: {
+        showAllList(){
+            this.pytRecListData = {
+                accountList : this.totalAccounts,
+                allTotalAccount : this.allTotalAccount
+            }
+
+            setTimeout(() => {
+                this.showListModal = true
+            }, 500);
+        },
         getMemberName(member_id){
             let member = this.memberList.find(rs => {return String(rs.id) == String(member_id)})
             console.log("member", member)
