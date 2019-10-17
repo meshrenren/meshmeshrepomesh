@@ -240,7 +240,6 @@
 	</div>
 </template>
 
-
 <script>
 	window.noty = require('noty')
     import Noty from 'noty'  

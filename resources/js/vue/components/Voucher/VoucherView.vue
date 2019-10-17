@@ -20,18 +20,18 @@
                     </el-col> -->
                     <el-col :span="24">
                         
-                        <div class = "voucher-sample-form" v-loading = "loadingTable">
+                        <div class = "voucher-sample-form" id = "voucherSampleForm" v-loading = "loadingTable">
                             <h3>GENERAL VOUCHER</h3>
-                            <table class = "voucher-detail">
+                            <table class = "voucher-detail pcr-details">
                                 <tr>
-                                    <th class = "tlabel">Name: </th>
+                                    <th class = "tlabel" style="text-align: left;">Name: </th>
                                     <td class = "tvalue">{{ voucher.name }}</td>
                                     <td style="width:50px"></td>
-                                    <th class = "tlabel">Date Transact: </th>
+                                    <th class = "tlabel" style="text-align: left;">Date Transact: </th>
                                     <td class = "tvalue">{{ $df.formatDate(voucher.date_transact, "YYYY-MM-DD")}}</td>
                                 </tr>
                                 <tr>
-                                    <th class = "tlabel">GV Number: </th>
+                                    <th class = "tlabel" style="text-align: left;">GV Number: </th>
                                     <td class = "tvalue">{{ voucher.gv_num }}</td>
                                 </tr>
                             </table>
@@ -41,6 +41,7 @@
                                 style="width: 100%"
                                 height = "400px">
                                 <el-table-column
+                                    style="text-align: left;"
                                     prop="particular.name"
                                     label="Description">
                                 </el-table-column>
@@ -75,7 +76,22 @@
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
 
-    import AllVouchers from '../General/AllVouchers.vue'    
+    import AllVouchers from '../General/AllVouchers.vue'  
+    import VueHtmlToPaper from 'vue-html-to-paper';
+
+    const printOptions = {
+        name: '_blank',
+        specs: [
+            'fullscreen=yes',
+            'titlebar=yes',
+            'scrollbars=yes'
+        ],
+        styles: [
+            'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
+        ]
+    }
+    console.log(printOptions)
+    Vue.use(VueHtmlToPaper, printOptions);  
 
 export default {
     components: { AllVouchers },
@@ -86,14 +102,14 @@ export default {
       		voucherList		: [],
             gv_num          : '',
             loadingTable    : false,
-            showModal       : false    
+            showModal       : false  ,
       	}
   	},
     created(){
     },
     methods:{
         selectVoucher(val){
-            console.log(val)
+            console.log(val) 
             if(val){
                 this.gv_num = val.gv_num
             }
@@ -141,7 +157,7 @@ export default {
             })
         },
         printVoucher(){
-
+            this.$htmlToPaper('voucherSampleForm');
         },
     }
   }

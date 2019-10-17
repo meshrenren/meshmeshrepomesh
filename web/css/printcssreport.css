@@ -1,0 +1,16 @@
+/*
+CSS For Report
+*/
+
+table.pcr-details th {
+	text-align: left;
+	padding: 0px 10px;
+}
+
+table.pcr-reporttable{
+
+}
+
+table.pcr-reporttable th {
+	text-align: left;
+}

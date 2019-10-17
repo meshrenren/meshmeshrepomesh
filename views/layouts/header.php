@@ -55,6 +55,10 @@ use yii\helpers\Html;
                                 'url'       => ['general-voucher/'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_add")
                             ],
+                            [
+                                'label'     => 'View Voucher', 
+                                'url'       => ['general-voucher/view']
+                            ],
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_view")
                     ],
