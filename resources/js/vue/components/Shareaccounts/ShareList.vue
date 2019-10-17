@@ -26,7 +26,7 @@
 				            </el-table-column>
 				            <el-table-column label="Balance">
 				                <template slot-scope="scope">
-				                   	<span >{{ scope.row.balance }}</span>
+				                   	<span >{{ $nf.formatNumber(scope.row.balance) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Action">
@@ -57,7 +57,7 @@
 		            				</tr>
 		            				<tr>
 		            					<th>Balance: </th> 
-		            					<td v-if = "accountSelected" class = "pl-10">{{ accountSelected.balance }} </td>
+		            					<td v-if = "accountSelected" class = "pl-10">{{ $nf.formatNumber(accountSelected.balance) }} </td>
 		            				</tr>
 		            			</table>
 		            		</el-col>
@@ -77,12 +77,12 @@
 				            </el-table-column>
 				            <el-table-column label="In">
 				                <template slot-scope="scope">
-				                    <span>{{ scope.row.amount_in }}</span>
+				                    <span>{{ $nf.formatNumber(scope.row.amount_in) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Out">
 				                <template slot-scope="scope">
-				                    <span>{{ scope.row.amount_out }}</span>
+				                    <span>{{ $nf.formatNumber(scope.row.amount_out) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Transaction Type">
@@ -97,7 +97,7 @@
 				            </el-table-column>
 				            <el-table-column label="Running Balance">
 				                <template slot-scope="scope">
-				                    <span>{{ scope.row.running_balance }}</span>
+				                    <span>{{ $nf.formatNumber(scope.row.running_balance) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Remarks">

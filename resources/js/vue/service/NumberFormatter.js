@@ -22,11 +22,22 @@ export default class NumberFormatter{
         }
 
 		return '';*/
+		if(number == null || number == ""){
+			return ""
+		}
 
 		number = Number(number)
 		if(fixedCount){
 			number = Number(number).toFixed(fixedCount)
 		}
-	  	return number.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+
+		let splitNum = number.toString().split(".");
+		let num = splitNum[0]
+		num = num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+
+		if(splitNum.length > 1){
+			num = num+"."+splitNum[1]
+		}
+	  	return num
 	}
 }

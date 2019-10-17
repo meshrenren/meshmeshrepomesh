@@ -327,7 +327,7 @@ class SeedController extends Controller
     }*/
 
     //Done Seeding loan. Please don't uncomment or run this unless necessary
-    /*public function actionSeedLoanTransacMember(){
+    public function actionSeedLoanTransacMember(){
         $query = new \yii\db\Query;
         $query->select('*');
         $query->from('zold_loantransacmember llm');
@@ -460,7 +460,7 @@ class SeedController extends Controller
                 echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
             }
         }
-    }*/
+    }
 
     public function actionLoanLedger(){
 
@@ -595,10 +595,10 @@ class SeedController extends Controller
 
                 }
                 
-            }/*
+            }
             else{
                 echo $cs['IDNum'] . "->" . $cs['SName'] . " ".  $cs['FName'] . " No Member" . "\n";
-            }*/
+            }
         }
     }
 
@@ -814,7 +814,13 @@ class SeedController extends Controller
                 /*$date = explode(' ', $ledger['DateTransac']) ;
                 $dSub = explode('/', $date[0]) ;
                 $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));*/
-                $d = date("Y-m-d", strtotime($ledger['DateTransac']));
+                if($ledger['DateTransac'] == '0000-00-00 00:00:00.000000'){
+                    $d = '2010-06-01';
+                }
+                else{
+                    $d = date("Y-m-d", strtotime($ledger['DateTransac']));
+                }
+                
 
                 $addTrans = new \app\models\SavingsTransaction;
                 $addTrans->fk_savings_id = $acc->account_no;

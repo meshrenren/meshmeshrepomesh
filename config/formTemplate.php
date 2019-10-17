@@ -30,6 +30,15 @@ COOPERATIVE
 			<td><span style="font-size: 8pt;">&nbsp;Remarks:</span></td>
 			<td><span style="font-size: 8pt;">&nbsp;[transaction_remarks]</span></td>
 		</tr>
+
+
+		<tr>
+			<td></td>
+			<td style = "text-align: center;">
+				<div style = "width 100%; border-bottom: 2px solid #000"></div><br>
+				<span>Approved By</span>
+			</td>
+		</tr>
 	</tbody>
 </table>',
 
@@ -61,6 +70,18 @@ COOPERATIVE
 		<tr>
 			<td><span style="font-size: 8pt;">Penalty:</span></td>
 			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[penalty]</span></td>
+		</tr>
+
+		<tr>
+			<td colspan = "2"  style = "padding-top : 40px;"></td>
+		</td>
+
+		<tr style = margin-top = "40px;">
+			<td></td>
+			<td style = "text-align: center;">
+				<div style = "border-bottom: 1px solid #000; width = "100%"></div>
+				<span>Approved By</span>
+			</td>
 		</tr>
 	</tbody>
 </table>',

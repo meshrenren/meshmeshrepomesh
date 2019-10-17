@@ -24,7 +24,7 @@
                             </el-table-column>
                             <el-table-column label="Balance">
                                 <template slot-scope="scope">
-                                    <span>{{ $nf.numberFixed(scope.row.balance, 2) }}</span>
+                                    <span>{{ $nf.formatNumber(scope.row.balance, 2) }}</span>
                                 </template>
                             </el-table-column>
                         </el-table>

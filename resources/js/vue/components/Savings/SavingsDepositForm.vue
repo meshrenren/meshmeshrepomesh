@@ -33,7 +33,7 @@
 						            </el-table-column>
 						            <el-table-column label="Amount">
 						                <template slot-scope="scope">
-						                    <span>{{ scope.row.amount }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.amount) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Reference No">
@@ -48,7 +48,7 @@
 						            </el-table-column>
 						            <el-table-column label="Running Balance">
 						                <template slot-scope="scope">
-						                    <span>{{ scope.row.running_balance }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.running_balance) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Remarks">
