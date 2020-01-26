@@ -207,12 +207,12 @@
                         <div class="box-tools pull-right">
                             <el-button class = "auto-width pull-right ml-5" size = "small" type = "danger" @click = "cancelPayment()">CANCEL</el-button>
                             <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "finishPayment()">SAVE</el-button>
-                            <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "showAllList()">SHOW ALL</el-button>
+                            <!-- <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "showAllList()">SHOW ALL</el-button> -->
                         </div>
                     </div>
                     <div class="box-body payment-entry-list mt-5">
-                        <el-table
-                            :data="allTotalAccount.filter(data => !nameSearch || data.fullname.toLowerCase().includes(nameSearch.toLowerCase()))"
+                        <!-- <el-table
+                            :data="allAccountList.filter(data => !nameSearch || data.fullname.toLowerCase().includes(nameSearch.toLowerCase()))"
                             border striped
                             style="width: 100%"
                             max-height = "480px">
@@ -222,23 +222,25 @@
                                 </template>                       
                             </el-table-column>
                             <el-table-column
-                                prop="product_name"
-                                label="Account">                            
+                                v-for="item in totalAccounts"
+                                :key="item.table_key"
+                                :prop="item.table_key"
+                                :label="item.product_name">                            
                             </el-table-column>
                             <el-table-column
-                                prop="amount"
-                                label="Amount">
+                                prop="sum_total"
+                                label="Total">
                             </el-table-column>
-                            <el-table-column
-                                prop="type"
-                                label="Type"> 
-                            </el-table-column>
-                        </el-table>
+                        </el-table> -->
+                        <payment-record-list
+                            :page-data = "pytRecListData"
+                            >
+                        </payment-record-list>
                     </div>
                 </div>
             </el-col>
         </el-row> 
-        <dialog-modal 
+       <!--  <dialog-modal 
             title-header = ""
             width = "95%"
             v-if="showListModal"
@@ -248,7 +250,7 @@
                 :page-data = "pytRecListData"
                 >
             </payment-record-list>
-        </dialog-modal>       
+        </dialog-modal> -->       
 	</div>
 </template>
 
@@ -257,6 +259,7 @@
     import Noty from 'noty'  
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
+    import _reduce from 'lodash/reduce'
 
     import {getNameList} from '../../mixins/getNameList.js'
     import swalAlert from '../../mixins/swalAlert.js'
@@ -288,7 +291,6 @@ export default {
             loadingPage         : false,
             memberSelectList    : [],
             nameSearch          : '',
-            pytRecListData      : {},
             showListModal       : false
     	}
     },
@@ -322,8 +324,16 @@ export default {
 
             _forEach(list, rs =>{
                 let acct = cloneDeep(rs)
+                acct['table_key'] = rs.type + "_" + rs.product_id
+                let getInd = -1
 
-                let getInd = account.findIndex(rs => { return rs.type == acct.type && rs.product_id == acct.product_id})
+                if(rs.is_prepaid !== undefined && rs.is_prepaid){
+                    acct['table_key'] = rs.type + "_PI" + "_" + rs.product_id
+                    getInd = account.findIndex(ac => { return ac.is_prepaid !== undefined && ac.is_prepaid && ac.type == acct.type && ac.product_id == acct.product_id})
+                }else{
+                    getInd = account.findIndex(ac => { return ac.type == acct.type && ac.product_id == acct.product_id})
+                }
+
                 if(getInd >= 0){
                     let amt = cloneDeep(Number(account[getInd].amount)) + Number(acct.amount)
                     account[getInd].amount = amt
@@ -333,18 +343,71 @@ export default {
                 }
             })
 
+
+
             _forEach(account, rs =>{
-                rs.amount = Number(rs.amount).toFixed(2)
-                totalAmt += Number(rs.amount).toFixed(2)
+                let accAmount = parseFloat(rs.amount).toFixed(2)
+                rs.amount = accAmount
+                totalAmt = parseFloat(totalAmt) + parseFloat(accAmount)
             })
+
             this.paymentModel.amount_paid = totalAmt
             this.totalAmount = totalAmt
 
             return account 
+        },
+        accMemList(){
+            let totalAccnt = cloneDeep(this.allTotalAccount)
+            let arrMem = []
+            if(totalAccnt.length > 0){
+                arrMem = Array.from(new Set(totalAccnt.map(t => { return t.member_id})))
+                arrMem = arrMem.map(id => {
+                    let getMem = totalAccnt.find(s => { return s.member_id == id})
+                    return { id : id, fullname : getMem.fullname}
+                })
+            }
+            
+            return arrMem
+        },
+        allAccountList(){
+            let allTotals = cloneDeep(this.allTotalAccount)
+            let accMem = cloneDeep(this.accMemList)
+            let accTotal = cloneDeep(this.totalAccounts)
+            let memRows = []
+
+            _forEach(accMem, mem => {
+                let arr = mem
+                let sumTotal = 0
+                _forEach(accTotal, acc => {
+                    console.log("arr", arr)
+                    let getAccAmount = allTotals.filter(rs => { return rs.type == acc.type && rs.product_id == acc.product_id && mem.id == rs.member_id})
+                    let sumAcc = _reduce(getAccAmount, function(result, val) {
+                      return result + parseFloat(val.amount) ;
+                    }, 0);
+
+                    let key = acc.table_key
+                    console.log("key", key)
+                    arr[key] = parseFloat(sumAcc)
+                    sumTotal = parseFloat(sumTotal) + parseFloat(sumAcc)
+                })
+                arr['sum_total'] = sumTotal
+                memRows.push(arr)
+            })
+
+            return memRows
+        },
+        pytRecListData(){
+            let totalAcc = this.totalAccounts
+            let allTotalAcc  = this.allTotalAccount
+            return {
+                accountList : totalAcc,
+                allTotalAccount  : allTotalAcc
+            }
+
         }
     },
     methods: {
-        showAllList(){
+        /*showAllList(){
             this.pytRecListData = {
                 accountList : this.totalAccounts,
                 allTotalAccount : this.allTotalAccount
@@ -353,7 +416,7 @@ export default {
             setTimeout(() => {
                 this.showListModal = true
             }, 500);
-        },
+        },*/
         getMemberName(member_id){
             let member = this.memberList.find(rs => {return String(rs.id) == String(member_id)})
             console.log("member", member)
@@ -479,18 +542,19 @@ export default {
         },
         mergeAccount(loans = null, savings = null, shares = null){
             let allAccounts = []
-            if(loans && loans.length > 0){
-                _forEach(loans, rs =>{
+
+            if(shares && shares.length > 0){
+                _forEach(shares, rs =>{
 
                     let arr = cloneDeep(this.accountModel)
-                    arr.member_id = rs.member_id
-                    arr.fullname = this.getMemberName(rs.member_id)
-                    arr.key = "LOAN_" + rs.account_no
-                    arr.account_no = rs.account_no
-                    arr.product_id = rs.loan_id
-                    arr.product_name = rs.product.product_name
-                    arr.type = "LOAN"
-                    arr.balance = parseFloat(rs.principal_balance).toFixed(2)
+                    arr.member_id = rs.fk_memid
+                    arr.fullname = this.getMemberName(rs.fk_memid)
+                    arr.key = "SHARE_" + rs.accountnumber
+                    arr.account_no = rs.accountnumber
+                    arr.product_id = rs.fk_share_product
+                    arr.product_name = rs.product.name
+                    arr.type = "SHARE"
+                    arr.balance = parseFloat(rs.balance).toFixed(2)
                     arr.particular_id = rs.product.particular_id
 
                     let amount = this.getAmount(arr.key)
@@ -521,26 +585,49 @@ export default {
                 })
             }
 
-            if(shares && shares.length > 0){
-                _forEach(shares, rs =>{
+            if(loans && loans.length > 0){
+                _forEach(loans, rs =>{
 
                     let arr = cloneDeep(this.accountModel)
-                    arr.member_id = rs.fk_memid
-                    arr.fullname = this.getMemberName(rs.fk_memid)
-                    arr.key = "SHARE_" + rs.accountnumber
-                    arr.account_no = rs.accountnumber
-                    arr.product_id = rs.fk_share_product
-                    arr.product_name = rs.product.name
-                    arr.type = "SHARE"
-                    arr.balance = parseFloat(rs.balance).toFixed(2)
+                    arr.member_id = rs.member_id
+                    arr.fullname = this.getMemberName(rs.member_id)
+                    arr.key = "LOAN_" + rs.account_no
+                    arr.account_no = rs.account_no
+                    arr.product_id = rs.loan_id
+                    arr.product_name = rs.product.product_name
+                    arr.type = "LOAN"
+                    arr.balance = parseFloat(rs.principal_balance).toFixed(2)
                     arr.particular_id = rs.product.particular_id
 
                     let amount = this.getAmount(arr.key)
                     arr.amount = amount
 
                     allAccounts.push(arr)
+
+
+                    //Add PI for Loan that has pi particular field
+                    if(Number(rs.product.pi_particular_id) > 0){
+                        let arr = cloneDeep(this.accountModel)
+                        arr.member_id = rs.member_id
+                        arr.fullname = this.getMemberName(rs.member_id)
+                        arr.key = "LOAN_PI_" + rs.account_no
+                        arr.account_no = rs.account_no
+                        arr.product_id = rs.loan_id
+                        arr.product_name = "PI " + rs.product.product_name
+                        arr.type = "LOAN"
+                        arr.balance = parseFloat(rs.prepaid_amortization_quincena).toFixed(2)
+                        arr.particular_id = rs.product.pi_particular_id
+                        arr.is_prepaid = true
+
+                        let amount = this.getAmount(arr.key)
+                        arr.amount = amount
+
+                        allAccounts.push(arr)
+                    }
                 })
             }
+
+            
 
             this.accountSelected.list = allAccounts
             
@@ -607,13 +694,6 @@ export default {
             let getParticular = this.getParticular(mdl.particular_id)
             if(getParticular){
                 let arr = cloneDeep(this.accountModel)
-                arr.key = "OTHERS_" + mdl.particular_id
-                arr.account_no = null
-                arr.product_id = mdl.particular_id // Particular
-                arr.particular_id = mdl.particular_id
-                arr.product_name = getParticular.name
-                arr.type = "OTHERS"
-                arr.amount = Number(mdl.amount)
                 if(mdl.member_id){
                     arr.member_id = mdl.member_id
                     arr.fullname = this.getMemberName(mdl.member_id)
@@ -621,7 +701,22 @@ export default {
                     arr.fullname = this.paymentModel.name_id
                 }
 
-                this.allTotalAccount.push(arr)
+                let key = "OTHERS_" + mdl.particular_id
+                let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == key && rs.member_id == arr.member_id})
+                if(getInd >= 0){
+                    this.allTotalAccount[getInd].amount = Number(mdl.amount)
+                }
+                else{
+                    arr.key = "OTHERS_" + mdl.particular_id
+                    arr.account_no = null
+                    arr.product_id = mdl.particular_id // Particular
+                    arr.particular_id = mdl.particular_id
+                    arr.product_name = getParticular.name
+                    arr.type = "OTHERS"
+                    arr.amount = Number(mdl.amount)
+                    
+                    this.allTotalAccount.push(arr)
+                }
             }  
 
             this.otherModel.particular_id = null

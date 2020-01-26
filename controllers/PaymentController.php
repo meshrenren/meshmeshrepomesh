@@ -2,13 +2,19 @@
 
 namespace app\controllers;
 
+use Yii;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\LoanHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\accounts\ShareHelper;
 use app\helpers\accounts\TimeDepositHelper;
-
 use app\helpers\payment\PaymentHelper;
+
+use \app\models\LoanProduct;
+use \app\models\LoanAccount;
+use \app\models\PaymentRecord;
+use \app\models\PaymentRecordList;
+
 
 class PaymentController extends \yii\web\Controller
 {
@@ -89,6 +95,63 @@ class PaymentController extends \yii\web\Controller
     public function actionPostPayment($id)
     {
     	PaymentHelper::postPayment($id);
+    }
+
+    public function actionTest(){
+
+        $ref_id = '3';
+        $account_no = '2-000483';
+        $paymentHeader = PaymentRecord::findOne(['id'=>$ref_id]);
+        $payments = PaymentRecordList::findAll(['payment_record_id'=>$ref_id]);
+        //var_dump($payments);
+
+        $neededObject = array_filter(
+            $payments,
+            function ($e) use (&$account_no) {
+                return $e->is_prepaid === 1 && $e->account_no == $account_no;
+            }
+        );
+        $getPrepaid = null;
+        if($neededObject > 0){
+            foreach ($neededObject as $pyt) {
+                if($pyt->account_no == $account_no){
+                    $getPrepaid = $pyt;
+                }
+            }
+        }
+        //var_dump($neededObject->amount);
+        var_dump($getPrepaid);
+        $prouct_id = 1;
+        /*$account_no = '1-000262';
+        $product = LoanProduct::findOne($prouct_id);
+        $account = LoanAccount::findOne($account_no);
+
+        $connection = Yii::$app->getDb();
+
+        $command = $connection->createCommand("
+                    select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' AND is_cancelled=0 order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $account_no]);
+        $lastTransaction = $command->queryOne();
+        
+        echo $lastTransaction['lasttrandate']." | <br/>-";
+        $noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($lastTransaction['lasttrandate']));
+        
+        $noOfDaysPassed = $noOfDaysPassed->format("%a");
+        var_dump($noOfDaysPassed);
+
+        $command = $connection->createCommand("SELECT ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
+            loan_account=:accountnumber and left(transaction_type,3)='PAY'), 0) - ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
+            loan_account=:accountnumber and left(transaction_type,2)='CN'), 0) AS totalPrepaidPaid", [':accountnumber' => $account_no]);
+        $totalPrepaidPaid = $command->queryOne();
+        var_dump($totalPrepaidPaid);
+        var_dump($account->prepaid_amortization_quincena);
+        $PIMustPay = ($noOfDaysPassed / 15) * $account->prepaid_amortization_quincena;
+        echo 'PIMustPay: ' . $PIMustPay . "<br>";;
+
+        $accumulatedPrepaid = $PIMustPay - $totalPrepaidPaid['totalPrepaidPaid'];
+        $prepaidInterest= $accumulatedPrepaid < 0 ? 0 : $accumulatedPrepaid;
+
+        echo 'accumulatedPrepaid: ' . $accumulatedPrepaid . "<br>";
+        echo 'prepaidInterest: ' . $prepaidInterest . "<br>";;*/
     }
 
     public function actionSavePaymentList(){
@@ -322,6 +385,7 @@ class PaymentController extends \yii\web\Controller
                     }
 
                     $paymentList[$key]['productData'] = $getProduct;
+                    $paymentList[$key]['fullname'] = $list['member']['fullname'];
                 }
                 $success = true;
             }

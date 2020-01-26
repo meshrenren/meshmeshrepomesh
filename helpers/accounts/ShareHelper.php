@@ -42,9 +42,9 @@ class ShareHelper
         if($model->save()){
             return $model;
         }
-        else{
-        	var_dump($model->getErrors());
-        }
+        /*else{
+        	return $model->getErrors();
+        }*/
         return null;
                 
     }

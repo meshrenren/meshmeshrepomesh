@@ -319,7 +319,7 @@ export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	mixins: [dialogComponent],
 	data: function () {
-		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : true, savings_retention: null}
+		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : false, savings_retention: null}
 		let durationList = [ {value : 6, label : 6},
 			{value : 12, label : 12},
 			{value : 24, label : 24},
@@ -730,7 +730,7 @@ export default {
 				this.calculateMiscDeductions(getProduct, evalForm);	
 
 
-				this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.amount) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
+				this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.debit_loan) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
 							
 				this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 				this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)

@@ -2,12 +2,12 @@
 	<div class = "loan-list">
 		<div class="box box-info" v-loading = "pageLoading">
             <div class="box-header with-border">
-              	<h3 class="box-title">View slfjbjldsbfjlfssLoans</h3>
+              	<h3 class="box-title">View Payment List</h3>
             </div>
 	        <div class = "box-body">
 	        	<el-row :gutter = "20">
-	        		<el-col :span="10">
-	        			<el-input v-model="or_number" @keyup.enter.native ="searchPayment">
+	        		<el-col :span="8">
+	        			<el-input v-model="or_number" @keyup.enter.native ="searchPayment" placeholder = "OR Number">
 		                    <el-button slot="append" type = "default" @click="searchPayment()">Search</el-button>
 		                </el-input>
 		                <table class = "mt-10">
@@ -17,10 +17,10 @@
 		                		<th>Status: </th>
 		                		<td class = "pl-10" v-if = "paymentRecord">
 		                			<template v-if = "paymentRecord.posted_date">
-		                				UNPOSTED
+		                				POSTED - {{ $df.formatDate(paymentRecord.posted_date, "MMM DD, YYYY") }}
 		                			</template>
-		                			<template v-if = "paymentRecord.posted_date">
-		                				POSTED
+		                			<template v-else>
+		                				UNPOSTED
 		                			</template>
 		                		</td>
 		                	</tr>
@@ -55,17 +55,17 @@
 		                    </div>
 		                </div>
 	        		</el-col>
-	        		<el-col :span="14">
+	        		<el-col :span="16">
 						<div class="box">
 		                    <div class="box-header">
 		                        <h3 class="box-title">ALL ACCOUNTS</h3>
-		                        <!-- <div class="box-tools pull-right">
-		                            <el-button class = "auto-width pull-right ml-5" size = "small" type = "danger" @click = "cancelPayment()">CANCEL</el-button>
-		                            <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "finishPayment()">SAVE</el-button>
-		                        </div> -->
+		                        <div class="box-tools pull-right">
+		                            <!-- <el-button class = "auto-width pull-right ml-5" size = "small" type = "danger" @click = "cancelPayment()">CANCEL</el-button> -->
+		                            <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "finishPayment()" v-if = "paymentRecord.id && !paymentRecord.posted_date">POST</el-button>
+		                        </div>
 		                    </div>
 		                    <div class="box-body payment-entry-list mt-5">
-		                        <el-table
+		                        <!-- <el-table
 		                            :data="allTotalAccount.filter(data => !nameSearch || (data.member && data.member.fullname.toLowerCase().includes(nameSearch.toLowerCase())))"
 		                            border striped
 		                            style="width: 100%"
@@ -87,7 +87,9 @@
 		                                prop="type"
 		                                label="Type"> 
 		                            </el-table-column>
-		                        </el-table>
+		                        </el-table> -->
+		                        <payment-record-list :page-data = "pytRecListData" >
+		                        </payment-record-list>
 		                    </div>
 		                </div>
 	        		</el-col>
@@ -129,6 +131,7 @@ export default {
             _forEach(list, rs =>{
                 let acct = cloneDeep(rs)
                 let getInd = -1
+
                 if(acct.type == "OTHERS"){
                 	getInd = account.findIndex(rs => { return rs.type == acct.type && rs.particular_id == acct.particular_id})
                 }else{
@@ -139,6 +142,7 @@ export default {
                     account[getInd].amount = amt
                 }
                 else{
+                	acct['product_name'] = rs.productData ? rs.productData.name : ""
                     account.push(acct)
                 }
             })
@@ -148,6 +152,15 @@ export default {
             })
 
             return account 
+        },
+        pytRecListData(){
+            let totalAcc = this.totalAccounts
+            let allTotalAcc  = this.allTotalAccount
+            return {
+                accountList : totalAcc,
+                allTotalAccount  : allTotalAcc
+            }
+
         }
     },
 	methods:{	
@@ -174,6 +187,44 @@ export default {
                 this.pageLoading = false
             })
     	},
+    	finishPayment(){
+    		if(this.paymentRecord){
+    			let payment_id = this.paymentRecord.id
+	    		var winFeature = 'location=no,toolbar=no,menubar=no,scrollbars=yes,resizable=yes';
+				window.open(this.$baseUrl + "/payment/post-payment?id="+payment_id, 'null', winFeature);
+
+				location.reload();
+    		}
+    		else{
+    			 new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: "No record to post.",
+                    timeout: 3000
+                }).show();
+    		}
+    		 
+
+    		/*let payment_id = this.paymentRecord.id 
+    		this.$API.Payment.getPaymentDetails(this.or_number)
+            .then(result => {
+                let res = result.data
+                if(res.success){
+                	this.paymentRecord = res.paymentRecord
+                	this.allTotalAccount = res.paymentList
+                }
+                else{
+                	this.getSwalAlert("error", "OR Number Not Found")
+                }
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .then(_ => { 
+                this.pageLoading = false
+            })*/
+    	}
     }
 }
 

@@ -46,7 +46,7 @@ class SeedController extends Controller
 
             	if($oldmember->BDay != "---" && $oldmember->BDay != "")   {
             		$date = explode("/", $oldmember->BDay);
-            		$memdate = date("Y-m-d", strtotime($date[2] . '-' . $date[1] . '-' . $date[0] )); 
+            		$memdate = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] )); 
             		$newMember->birthday = $memdate;
             	} 
             	if($oldmember->DateMem != "---" && $oldmember->DateMem != "")   {
@@ -66,7 +66,8 @@ class SeedController extends Controller
             	$newMember->civil_status = $oldmember->CivilStatus;
             	$newMember->gsis_no = $oldmember->GSISNum;
             	$newMember->telephone = $oldmember->ContactNum;
-                $newMember->old_db_idnum = $oldmember->IDNum;
+                $newMember->old_db_idnum = intval($oldmember->IDNum) ;
+                $newMember->old_db_idnum_zero = $oldmember->IDNum;
 
             	if($newMember->save()){
             		$newUser = new \app\models\User;
@@ -84,7 +85,7 @@ class SeedController extends Controller
             		$newUser->save();
 
             		$newMember->user_id = $newUser->id;
-            		$newMember->update();
+            		$newMember->save(false);
 
 
             		if($oldmember->CityAddr != "---" && $oldmember->CityAddr != "" ){
@@ -690,15 +691,15 @@ class SeedController extends Controller
                         $trans_serial = $product->trans_serial + 1;
                         $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 
-
+                        $d = date("Y-m-d H:i:s", strtotime($cs['DateOpen']));
                         $account = new \app\models\SavingAccounts;
                         $account->account_no = $product->id . "-" . $trans_serial_pad;
                         $account->saving_product_id = $product->id;
                         $account->member_id = $getMember->id;
                         $account->balance = 0;
                         $account->is_active = 1;
-                        $account->date_created = date('Y-m-d H:i:s');
-                        $account->transacted_date = date('Y-m-d H:i:s');
+                        $account->date_created = $d;
+                        $account->transacted_date = $d;
                         $account->old_db_name = $cs['Name'];
                         $account->old_db_idnum_zero = $cs['IDNum'];
                         $account->old_db_sname = $cs['SName'];
@@ -732,6 +733,7 @@ class SeedController extends Controller
                     $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
 
 
+                    $d = date("Y-m-d H:i:s", strtotime($cs['DateOpen']));
                     $account = new \app\models\SavingAccounts;
                     $account->account_no = $product->id . "-" . $trans_serial_pad;
                     $account->saving_product_id = $product->id;
@@ -739,8 +741,8 @@ class SeedController extends Controller
                     $account->member_id = null;
                     $account->balance = 0;
                     $account->is_active = 1;
-                    $account->date_created = date('Y-m-d H:i:s');
-                    $account->transacted_date = date('Y-m-d H:i:s');
+                    $account->date_created = $d;
+                    $account->transacted_date = $d;
                     $account->old_db_name = $cs['Name'];
 
 

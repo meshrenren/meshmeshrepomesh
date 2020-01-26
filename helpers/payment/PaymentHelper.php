@@ -15,8 +15,13 @@ use \app\models\Savingsproduct;
 use \app\models\ShareProduct;
 use \app\models\TimeDepositProduct;
 use \app\models\AccountParticulars;
+use \app\models\Shareaccount;
+use \app\models\ShareTransaction;
+
+
 
 use app\helpers\journal\JournalHelper;
+use app\helpers\particulars\ParticularHelper;
 
 class PaymentHelper 
 {
@@ -66,11 +71,35 @@ class PaymentHelper
             	$payment->account_no = $value['account_no'];
             }
 
+            if(isset($value['is_prepaid'])){
+            	$payment->is_prepaid = $value['is_prepaid'] === 1|| $value['is_prepaid'] === "1" || $value['is_prepaid'] === true || $value['is_prepaid'] === "true" ? 1 : 0;
+            }
+
             if(!$payment->save()){
             	$success = false;
             }
         }
         return $success;
+	}
+
+	public static function getPrepaid($list, $payment){
+		$getPrepaid = null;
+
+		$getPrepaidList = array_filter( $list,
+            function ($e) use ($payment) {
+                return $e->is_prepaid === 1 && $e->account_no == $payment['account_no'];
+            }
+        );
+        if($getPrepaidList > 0){
+        	foreach ($getPrepaidList as $pyt) {
+				if($pyt->account_no == $payment['account_no']){
+					$getPrepaid = $pyt;
+				}
+			}
+        }
+
+        return $getPrepaid;
+		
 	}
 	
 	//posting of payment
@@ -84,15 +113,22 @@ class PaymentHelper
 			$dateToday = date('Y-m-d');
 			$payments = PaymentRecordList::findAll(['payment_record_id'=>$ref_id]);
 			$paymentHeader = PaymentRecord::findOne(['id'=>$ref_id]);
-			
+
+			$coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);//Cash on Hand particular id
+			$cashOnHandId = $coh_id->id;
 			
 			//2. prepare header for accounting entry
+			$posted_date = date('Y-m-d');
 			$journalheader['reference_no'] = $paymentHeader->or_num;
-			$journalheader['posting_date'] = date('Y-m-d');
+			$journalheader['posting_date'] = $posted_date;
 			$journalheader['total_amount'] = 0;
 			$journalheader['remarks'] = "Payment made by ".$paymentHeader->name;
 			$journalheader['trans_type'] = 'Payment';
 			
+			if($paymentHeader->posted_date){
+				echo "Payment with OR Number " . $paymentHeader['or_num'] . ' for ' . $paymentHeader['name'] . ' is already posted.<br/>';
+				echo "<h3> Please close the window </h3>";
+			}die;
 			
 			
 			$journaldetails = [];
@@ -113,11 +149,16 @@ class PaymentHelper
 				
 				//processing rule no. 1, identify loan product parameters
 				
-				echo $row['type'].'<br/>';
+				echo "Posting " . $row['type'].' ......<br/>';
 				
 				
 				if($row['type']=='LOAN')
 				{
+					//If prepaid paid skip as it will be included on adding the loan
+					if($row['is_prepaid'] === 1){
+						continue;
+					}
+
 					$product = LoanProduct::findOne($row['product_id']);
 					$account = LoanAccount::findOne($row['account_no']);
 					
@@ -138,10 +179,15 @@ class PaymentHelper
 					
 					//0. identifying deductions or payment distributions, if loan is appliance or regular loan, mothly prepaid interest should be paid.
 					$prepaidInterest = 0;
-					
+
 					if($product->id == 1 || $product->id == 2)
 					{
-						$command = $connection->createCommand("SELECT ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
+						//Get prepaid from the payment
+						$getPrepaid = static::getPrepaid($payments, $row);
+						if($getPrepaid){
+							$prepaidInterest = $getPrepaid['amount'] < 0 ? 0 : $getPrepaid['amount'];
+						}
+						/*$command = $connection->createCommand("SELECT ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
 							loan_account=:accountnumber and left(transaction_type,3)='PAY'), 0) - ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
 							loan_account=:accountnumber and left(transaction_type,2)='CN'), 0) AS totalPrepaidPaid", [':accountnumber' => $row['account_no']]);
 						$totalPrepaidPaid = $command->queryOne();
@@ -149,7 +195,7 @@ class PaymentHelper
 						$PIMustPay = ($noOfDaysPassed / 15) * $account->prepaid_amortization_quincena;
 						
 						$accumulatedPrepaid = $PIMustPay - $totalPrepaidPaid['totalPrepaidPaid'];
-						$prepaidInterest= $accumulatedPrepaid < 0 ? 0 : $accumulatedPrepaid;
+						$prepaidInterest= $accumulatedPrepaid < 0 ? 0 : $accumulatedPrepaid;*/
 						
 						
 					}
@@ -190,9 +236,8 @@ class PaymentHelper
 					{
 						$success = false;
 						$transaction->rollBack();
-						return "achieved negative. might want to proceed to close payment.";
+						echo "Achieved negative. Might want to proceed to close payment.";
 						break;
-						
 					}
 					
 					//3. update loan balance
@@ -205,7 +250,7 @@ class PaymentHelper
 						array_push($journaldetails, [
 								'amount' => $loanTransaction->prepaid_intpaid + $loanTransaction->principal_paid + $loanTransaction->arrears_paid + $loanTransaction->interest_paid,
 								'entry_type'=>'DEBIT',
-								'particular_id'=>67 //67 is cash on hand
+								'particular_id'=>$cashOnHandId //cash on hand
 						]);
 						
 				
@@ -243,9 +288,6 @@ class PaymentHelper
 							]);
 							
 						}
-						
-						
-						
 						
 					}
 					
@@ -285,7 +327,7 @@ class PaymentHelper
 						array_push($journaldetails, [
 								'amount'=> $savingstransaction->amount,
 								'entry_type' => 'DEBIT',
-								'particular_id' => 67
+								'particular_id' => $cashOnHandId
 						]);
 						
 						
@@ -307,10 +349,49 @@ class PaymentHelper
 					
 					
 				}
-				
-				
-				
-				
+
+				else if($row['type']=='SHARE')
+				{
+					$shareaccount = Shareaccount::findOne(['accountnumber'=>$row['account_no']]);
+					$sharetransaction = new ShareTransaction();
+					$shareproduct = ShareProduct::findOne($shareaccount->fk_share_product);
+					
+					
+					$sharetransaction->fk_share_id = $row['account_no'];
+					$sharetransaction->amount = $row['amount'];
+					$sharetransaction->transaction_type = 'CASHDEP';
+					$sharetransaction->transacted_by = \Yii::$app->user->identity->id;
+					$sharetransaction->transaction_date = date('Y-m-d H:i:s');
+					$sharetransaction->running_balance = $shareaccount->balance + $row['amount'];
+					$sharetransaction->remarks = "posted as Payment from ".$paymentHeader->or_num;
+					$sharetransaction->reference_number = $paymentHeader->or_num;
+					
+					$shareaccount->balance = $shareaccount->balance + $row['amount'];
+					
+					if($shareaccount->save() && $sharetransaction->save())
+					{
+						array_push($journaldetails, [
+								'amount'=> $sharetransaction->amount,
+								'entry_type' => 'DEBIT',
+								'particular_id' => $cashOnHandId
+						]);
+						
+						
+						array_push($journaldetails, [
+								'amount'=> $sharetransaction->amount,
+								'entry_type' => 'CREDIT',
+								'particular_id' => $shareproduct->particular_id
+						]);
+					}
+					
+					else
+					{
+						$success = false;
+						break;
+					}	 
+					
+					
+				}
 				
 				
 			}
@@ -318,7 +399,7 @@ class PaymentHelper
 			//post to journal entry
 			if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
 			{
-				
+				$success = true;
 			}
 			
 			else $success = false;
@@ -327,18 +408,25 @@ class PaymentHelper
 			
 			
 			
-			if($success)
-			{
+			if($success){
+				$paymentHeader->posted_date = $posted_date;
+				$paymentHeader->save();
+
 				$transaction->commit();
-				echo "<br/>saved";
+				//$transaction->rollBack(); // Rollback for now
+				echo "<br/><h3>Saved</h3>";
 			}
 			
-			else {$transaction->rollBack();
-			echo "<br/>UNsaved";
+			else {
+				$transaction->rollBack();
+				echo "<br/><h3>Unsaved. Please contact admin or the developer</h3>";
 			}
+
+			echo "<br/><h3>Close Window.</h3>";
 			
 			
 		} catch (\Exception $e) {
+			var_dump($e);
 			echo $e->getMessage();
 		}
 		
