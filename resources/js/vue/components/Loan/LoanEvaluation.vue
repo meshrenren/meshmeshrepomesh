@@ -413,6 +413,7 @@ export default {
 			this.evaluateLoan()
 		},
     	populateField(data){
+    		this.resetEvaluationForm()
     		this.memberDetails = data
     		this.memberDetails.share_capital = null
     		if(data.shareaccount != null){
@@ -462,7 +463,7 @@ export default {
     		}
     	},
     	resetEvaluationForm(){
-
+    		this.$refs['evaluationForm'].resetFields();
     	},
     	getLatestLoan(loan_id, member_id){
     		console.log("Here33333")

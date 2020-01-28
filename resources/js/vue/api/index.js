@@ -6,6 +6,7 @@ import Savings from './Savings.js'
 import Share from './Share.js'
 import General from './General.js'
 import TimeDeposit from './TimeDeposit.js'
+import Settings from './Settings.js'
 
 
 export default {
@@ -16,5 +17,6 @@ export default {
 	Savings,
 	Share,
 	General,
-	TimeDeposit
+	TimeDeposit,
+	Settings
 }

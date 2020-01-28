@@ -112,4 +112,28 @@ class SettingsController extends \yii\web\Controller
         return $this->render('product', ['pageData' => $pageData]);
     }
 
+    public function actionSaveLoanProduct(){
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $details = $post['data'];
+
+            $loanProduct  = \app\models\loanProduct::findOne($details['id']);
+            $loanProduct->int_rate = $details['int_rate'];
+            $loanProduct->prepaid_interest = $details['prepaid_interest'];
+            $loanProduct->redemption_insurance = $details['redemption_insurance'];
+            $loanProduct->notary_fee = $details['notary_fee'];
+
+            $loanProduct->save();
+
+            $getProd  = \app\models\loanProduct::find()->where(['id' => $loanProduct->id])->asArray()->one();
+            return [
+                'data' => $getProd
+            ];
+
+        }
+    }
+
 }
