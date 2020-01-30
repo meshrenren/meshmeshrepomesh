@@ -18,6 +18,7 @@ use \app\models\JournalHeader;
 use \app\models\JournalDetails;
 
 use app\helpers\GlobalHelper;
+use app\helpers\journal\JournalHelper;
 use phpDocumentor\Reflection\Types\Static_;
 
 class ParticularHelper 
