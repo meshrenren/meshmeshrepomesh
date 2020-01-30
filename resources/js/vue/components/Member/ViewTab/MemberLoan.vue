@@ -148,10 +148,10 @@ export default {
             .then(result => {
                 let res = result.data
                 if(type == 'pdf'){
-                    this.exporter(type, 'Savings Deposit Transaction', res)
+                    this.exporter(type, 'Loan Summary', res)
                 }
                 else if(type == 'print'){
-                    this.winPrint(res.data, 'Savings Deposit Transaction')
+                    this.winPrint(res.data, 'Loan Summary')
                 }
             })
             .catch(err => { console.log(err)})

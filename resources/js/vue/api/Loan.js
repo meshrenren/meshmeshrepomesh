@@ -32,6 +32,10 @@ export default {
 		return axios.post($baseUrl + '/loan/get-latest-info', params)
 	},
 
+	updateLoanStatus(params){
+		return axios.post($baseUrl + '/loan/update-loan-status', params)
+	},
+
 	evaluateLoan(params){
 		return axios.post($baseUrl + '/loan/evaluate-loan', params)
 	},

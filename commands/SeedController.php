@@ -528,6 +528,7 @@ class SeedController extends Controller
                         $addLoanAccount->interest_paid = $Interest;
                         $addLoanAccount->OR_no = $ledger['GVORNum'];
                         $addLoanAccount->principal_paid = $AmtPaid;
+                        $addLoanAccount->redemption_insurance = $AmtPaid;
                         $addLoanAccount->arrears_paid = 0;
                         $addLoanAccount->date_posted = $d;
                         $addLoanAccount->interest_earned = $Interest_earn;
@@ -1867,6 +1868,28 @@ class SeedController extends Controller
             }
             else{
                 var_dump($model->getErrors());
+            }
+        }
+    }
+
+    public function actionLoanRedemption(){
+
+        $loanAccount = \app\models\LoanAccount::find()->all();
+        foreach ($loanAccount as $key => $accs) {
+            //Add redemption to Appliance and Regualr Loan
+            if($accs->loan_id == 1 || $accs->loan_id == 2){
+                //if($accs->redemption_insurance == null || $accs->redemption_insurance == 0){
+                    $getProd = \app\models\LoanProduct::findOne($accs->loan_id);
+                    $insurance = ($accs->principal * $getProd->redemption_insurance) * ($accs->term / 12);
+                    $accs->redemption_insurance = $insurance;
+                    if($accs->save()){
+                        echo "Account: \t" . $accs->account_no . "\t success \n";
+                    }
+                    else{
+                        echo "Account: \t" . $accs->account_no . "\t not success \n";
+                    }
+                //}
+                
             }
         }
     }

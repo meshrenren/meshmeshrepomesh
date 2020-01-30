@@ -100,7 +100,7 @@ class SettingsController extends \yii\web\Controller
 
     	$this->layout = 'main-vue';
 
-    	$loanProduct = ProductHelper::getActiveLoanProducts();
+    	$loanProduct = ProductHelper::getActiveLoanProducts(null, ['serviceCharge']);
     	$loanData = [
     		'productList' => $loanProduct
     	];

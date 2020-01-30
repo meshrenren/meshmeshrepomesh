@@ -38,3 +38,8 @@
 	  padding-right: 5px !important;
 	}
 }
+
+.el-input--mini .el-input__inner {
+    height: 24px;
+    line-height: 24px;
+}

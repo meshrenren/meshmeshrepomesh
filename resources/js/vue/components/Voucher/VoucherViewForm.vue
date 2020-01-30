@@ -5,7 +5,7 @@
 			<el-row :gutter = "5">
 				<el-col :span = "24">
 					<label>GV Number</label>
-					<el-input v-model="gvNumber"></el-input>
+					<el-input v-model="gvNumber" :required = "gvRequired"></el-input>
 				</el-col>
 			</el-row>
 			<el-table
@@ -58,7 +58,12 @@ export default {
     	dataList:{
     		type: Array,
     		required: true
-    	}
+    	},
+        gvRequired:{
+            type: Boolean,
+            required: false,
+            default: false
+        },
     },
     mixins: [dialogComponent, _message],
     data(){
@@ -88,7 +93,7 @@ export default {
     			}
 
     			_forEach(this.voucherData, vd=>{
-    				if(pt.name == vd.particular_name){
+    				if(pt.name.toLowerCase() == vd.particular_name.toLowerCase()){
     					if(vd.type == "CREDIT"){
     						arr.credit = Number(arr.credit) + Number(vd.amount)
     					}

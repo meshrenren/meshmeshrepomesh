@@ -280,6 +280,7 @@
 								</el-row>
 				        	</el-form>
 				        	<div style = "margin-top: 10px;">
+		       					<el-button @click = "printLoan()" ref = "printLoan">Print</el-button> 
 		       					<el-button type = "primary" @click = "newLoan()" ref = "newLoan">Verify</el-button> 
 							
 
@@ -691,18 +692,21 @@ export default {
 			let amountFee = Number(dbtLoan) - Number(crdtLoan)
 			let srvCharge = 0
 
+			console.log("getProduct", getProduct, evalForm, amountFee)
 			if(amountFee > 0 && evalForm.service_charge){
 
-    			let getServiceFee = getProduct.serviceCharge.find(sc => { return Number(sc.month_term) == Number(evalForm.duration) && evalForm.amount < Number(sc.max_amount) && evalForm.amount > Number(sc.min_amount)})
+    			let getServiceFee = getProduct.serviceCharge.find(sc => { 
+    				return Number(sc.month_term) == Number(evalForm.duration) && Number(evalForm.amount) >= Number(sc.min_amount) && Number(evalForm.amount) <= Number(sc.max_amount)
+    			})
+    			console.log("getServiceFee", getServiceFee, amountFee)
 				if(getServiceFee){
     				srvCharge = amountFee * (Number(getServiceFee.percentage) / 100)
+    				console.log("srvCharge", srvCharge, getServiceFee.percentage)
     			}
 
 			}
 			return srvCharge
 		},
-
-
     	calculateLoan(getProduct, dataneeded){
 			let latestLoan = dataneeded.latestLoan;
 			let lastTran = dataneeded.lastTransaction;
@@ -710,10 +714,10 @@ export default {
 			let evalForm = cloneDeep(this.evaluationForm)
 			let service_charge = 0	
 
+			this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
 			if(!latestLoan)
 			{
 				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
-				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)
 				this.evaluationForm.credit_redemption_ins = parseFloat(0).toFixed(2)
 				this.evaluationForm.debit_redemption_ins = parseFloat(0).toFixed(2)
@@ -749,15 +753,20 @@ export default {
 			let dayend = moment(lastTran.last_tran_date, "YYYY-MM-DD"); //usd against the latest TRANSACTION.
 			let monthend = moment(latestLoan.release_date, "YYYY-MM-DD"); //used against the latest loan.
 			let rangeNoOfDays = moment.duration(daystart.diff(dayend)).asDays(); 
-			let rangeNoOfMonths = moment.duration(daystart.diff(monthend)).asMonths(); //to be used for calculating unused redemption insurance.
+			let rangeNoOfMonths = moment.duration(daystart.diff(monthend)).asMonths(); //to be used for calculating unused redemption insurance. // 7
+			rangeNoOfMonths = Math.floor(rangeNoOfMonths) // the downward nearest integer
 
     		//To calculate redemption insurance (redemp * year)
     		let redemptionInsurance = parseFloat(this.evaluationForm.amount * getProduct.redemption_insurance) * (parseFloat(evalForm.duration)/12)
-			let unusedRedemption = parseFloat(Math.round(rangeNoOfMonths)/latestLoan.term)
+    		console.log("rangeNoOfMonths", rangeNoOfMonths, latestLoan.term)
+			//let unusedRedemption = parseFloat(Math.round(rangeNoOfMonths)/latestLoan.term) //30
+			let unusedRedemption = latestLoan.term - rangeNoOfMonths
+			console.log("unusedRedemption", unusedRedemption, latestLoan.redemption_insurance)
 			let redemptionInsuranceDebit = 0
-			if(unusedRedemption<1)
+			if(unusedRedemption>=1)
 			{
-				redemptionInsuranceDebit = latestLoan.redemption_insurance - (latestLoan.redemption_insurance * unusedRedemption)
+				redemptionInsuranceDebit = (latestLoan.redemption_insurance / latestLoan.term) * unusedRedemption
+				console.log("redemptionInsuranceDebit", unusedRedemption, latestLoan.redemption_insurance)
 			}
 			
 			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
@@ -786,6 +795,7 @@ export default {
 
 			//Service Charge
 			service_charge = this.calculateServiceCharge(getProduct, evalForm) 
+			console.log("service_charge", service_charge)
 			this.evaluationForm.service_charge_amount = parseFloat(service_charge).toFixed(2)
 
 			//Calculate Prepaid Credit Interest 
@@ -809,34 +819,65 @@ export default {
 			//this.evaluationForm.prepaid_amortization_quincena = 250
 			
     	},
+
     	newLoan(){
     		if(this.memberDetails.id != null){
-    			this.disabledBox = false
-			//	this.$refs.product_loan_id.focus()
 
-				let data = new FormData()
+    			this.$swal({
+	                title: 'Apply Loan',
+	                text: "Are you sure you want to apply loan?",
+	                type: 'warning',
+	                showCancelButton: true,
+	                cancelButtonColor: '#d33',
+	                confirmButtonText: 'Proceed',
+	                focusConfirm: false,
+	                focusCancel: true,
+	                cancelButtonText: 'Cancel',
+	                reverseButtons: true,
+	                customClass: {
+	                    container: 'loan-product-form-swal'
+	                }
+	            }).then(result => {
+	            	if (result.value) {
+		    			this.disabledBox = false
 
-				let loandata = {
-					evaluationFormss: this.evaluationForm,
-					loanToRenew: this.LoanToRenew == null ? null : {
-						account_number: this.LoanToRenew.account_no,
-						product_id:  this.LoanToRenew.loan_id,
+						let loandata = {
+							evaluationFormss: this.evaluationForm,
+							loanToRenew: this.LoanToRenew == null ? null : {
+								account_number: this.LoanToRenew.account_no,
+								product_id:  this.LoanToRenew.loan_id,
+							}
+						}
+
+						this.isLoading = true
+						
+						this.$API.Loan.applyLoan(loandata)
+						.then(result=>{
+							console.log("successresult", result.data);
+							new Noty({
+		                        theme: 'relax',
+		                        type: 'success',
+		                        layout: 'topRight',
+		                        text: "New loan successfully applied. See 'Pending List'",
+		                        timeout: 5000
+		                    }).show();
+		                    location.reload();
+
+						}).catch(err=>{
+							console.log("apierror", err.message);
+							new Noty({
+		                        theme: 'relax',
+		                        type: 'error',
+		                        layout: 'topRight',
+		                        text: 'An error occured. Please try again or contact administrator',
+		                        timeout: 5000
+		                    }).show();
+						})
+						.then(_ => { 
+							this.isLoading = false
+						})
 					}
-				}
-
-				data.set('applyLoan', JSON.stringify(loandata))
-				
-				this.$API.Loan.applyLoan(data)
-				.then(result=>{
-					console.log("successresult", result.data);
-
-
-				}).catch(err=>{
-					console.log("apierror", err.message);
 				})
-
-
-
     		} 
     		else{
     			new Noty({

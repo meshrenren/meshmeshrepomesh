@@ -19,11 +19,15 @@ class ProductHelper
 	 * @param $select string|array
 	 * @return $products array
 	 */
-	public static function getActiveLoanProducts($select = null) 
+	public static function getActiveLoanProducts($select = null, $joinWith = null) 
 	{
 		$products = \app\models\LoanProduct::find()->where(['is_active' => 1]);
 	    if ($select) {
 	    	$products->select($select);
+	    }
+
+	    if($joinWith){
+	    	$products = $products->joinWith($joinWith);
 	    }
 
 	   	return $products->asArray()->all();

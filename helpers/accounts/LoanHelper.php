@@ -26,6 +26,7 @@ class LoanHelper
                     ->innerJoinWith(['product'])
                     //->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']]) -->giusab sa nako ni ren para maview tanang loans. :)
                		 ->where(['member_id' => $member_id, 'account_no' => $loan['account_no']])
+                     ->andWhere('status != "Cancel" AND status != "Verified" ')
                     ->orderBy('release_date DESC')
                     ->asArray()->one();
                 array_push($accountList, $acc);
@@ -38,6 +39,7 @@ class LoanHelper
         $acc = \app\models\LoanAccount::find()
             ->innerJoinWith(['product'])
             ->where(['member_id' => $member_id, 'loan_id' =>  $loan_id])
+            ->andWhere('status != "Cancel"')
             ->orderBy('release_date DESC');
         if($joinWith){
             $acc->joinWith($joinWith);

@@ -88,6 +88,11 @@ use yii\helpers\Html;
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_add")
                             ],
                             [
+                                'label'     => 'Pending List', 
+                                'url'       => ['loan/pending-list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
+                            ],
+                            [
                                 'label'     => 'List', 
                                 'url'       => ['loan/list'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_loan_account_", "_view")
