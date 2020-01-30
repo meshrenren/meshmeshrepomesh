@@ -356,14 +356,14 @@ class ParticularHelper
 			$personalBalance = 0;
 			
 			//GETTING THE AVERAGE DAILY BALANCE
-			$dayfirst = "2019-".date("m", strtotime($nextday['date']))."-01";
-			$daylast = "2019-".date("m", strtotime($nextday['date']))."-".date("t", strtotime($nextday['date']));
+			$dayfirst = "2020-".date("m", strtotime($nextday['date']))."-01";
+			$daylast = "2020-".date("m", strtotime($nextday['date']))."-".date("t", strtotime($nextday['date']));
 			$dayfirst = strtotime($dayfirst);
 			$daylast = strtotime($daylast);
 			$daycount = 1;
 			while($dayfirst < $daylast)
 			{
-				$dateselect = "2019-".date("m", strtotime($nextday['date']))."-".str_pad($daycount, 2, "0", STR_PAD_LEFT);
+				$dateselect = "2020-".date("m", strtotime($nextday['date']))."-".str_pad($daycount, 2, "0", STR_PAD_LEFT);
 				//echo "2019-".date("m", strtotime($nextDay['date']))."-".str_pad($daycount, 2, "0", STR_PAD_LEFT)." <br/>";
 				
 				$daycount++;

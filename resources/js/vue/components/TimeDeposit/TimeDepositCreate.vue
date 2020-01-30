@@ -87,8 +87,8 @@
 						    	<el-input v-model="tdAccountDetails.or_number" :controls = "false">
 						    	</el-input>
 						  	</el-form-item>
-							  Service Fee: {{ $nf.formatNumber(serviceFee) }} <br/>
-							  Total Amount to be Incurred: {{ $nf.formatNumber(totalIncurred) }} <br/>
+							  Service Fee: {{ $nf.formatNumber(serviceFee, 2) }} <br/>
+							  Total Amount to be Incurred: {{ $nf.formatNumber(totalIncurred, 2) }} <br/>
 						  	<a class = "click-class" @click="viewRateModal" >View rate list of the selected product here. </a>
 
 						  	<div class = "signatory" v-if = "tdAccountDetails.type == 'Group'">
@@ -330,10 +330,10 @@ export default {
 						this.serviceFee = 0
 						if(this.memberDetails.member_type_id){
 							let interestAmount = Number(this.tdAccountDetails.amount) * (Number(rate.interest_rate)/100)
-							let serviceCharge = interestAmount * (Number(rate.interest_rate)/100)
+							let serviceCharge =  this.$nf.numberFixed(interestAmount, 2) * (Number(rate.interest_rate)/100)
 							this.serviceFee = this.$nf.numberFixed(serviceCharge, 2)
 						}
-						this.totalIncurred = this.serviceFee + this.tdAccountDetails.amount
+						this.totalIncurred = Number(this.serviceFee) + this.tdAccountDetails.amount
 						this.tdAccountDetails.service_amount = this.serviceFee
 						
 					}
@@ -424,14 +424,14 @@ export default {
 						            text: message,
 						            timeout: 2500
 						        }).show()
-				                location.reload()
+				              //  location.reload()
 				                  
 				            }).catch(function (error) {
 				            
 				                console.log(error);
 
-				                if(error.response && error.response.status == 403)
-				                    location.reload()
+				                if(error.response && error.response.status == 403) {}
+				                 //   location.reload()
 				            })
 				        }
 

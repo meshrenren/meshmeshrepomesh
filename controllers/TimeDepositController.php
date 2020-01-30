@@ -14,6 +14,9 @@ use app\helpers\accounts\PaymentHelper;
 use app\helpers\accounts\TimeDepositHelper;
 use app\helpers\voucher\VoucherHelper;
 use app\helpers\journal\JournalHelper;
+use app\models\JournalHeader;
+use app\models\PaymentRecord;
+use app\models\JournalDetails;
 
 class TimeDepositController extends \yii\web\Controller
 {
@@ -113,7 +116,7 @@ class TimeDepositController extends \yii\web\Controller
                     }
 
                     //Save in Payment
-                    $payment = new PaymentRecord;
+                    $payment = new PaymentRecord();
                     $paymentData = $payment->getAttributes();
                     $paymentData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
                     $paymentData['or_num'] = $ref_no;
@@ -121,7 +124,7 @@ class TimeDepositController extends \yii\web\Controller
                     $paymentData['type'] = 'Individual';
                     $paymentData['amount_paid'] = $model->amount;
 
-                    $paymentModel = PaymentHelper::savePayment($paymentData);
+                    $paymentModel = \app\helpers\payment\PaymentHelper::savePayment($paymentData);
                     if($paymentModel){
 
                         $entries = array();
@@ -129,12 +132,12 @@ class TimeDepositController extends \yii\web\Controller
                             'type'          => 'TIME_DEPOSIT', // Time Deposit
                             'amount'        => $model->amount,
                             'member_id'     => $member_id,
-                            'particular_id' => $product_particularid,
-                            'product_id'    => $getSavingsAccount->saving_product_id, 
-                            'account_no'    => $getSavingsAccount->account_no,
+                            'particular_id' => 1,
+                        	'product_id'    => $tdaccount['fk_td_product'], 
+                        	'account_no'    => $model->accountnumber,
                         ];
                         array_push($entries, $arr);     
-                        $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);
+                        $insertSuccess = \app\helpers\payment\PaymentHelper::insertAccount($entries, $paymentModel->id);
                         if(!$insertSuccess){
                             $success = false;
                             $error = "PAYMENT_ERROR";
@@ -162,31 +165,38 @@ class TimeDepositController extends \yii\web\Controller
                     //Save in Journal
                     $journalHeader = new JournalHeader;
                     $journalHeaderData = $journalHeader->getAttributes();
-                    $journalHeaderData['reference_no'] = $saveSD->ref_no;
-                    $journalHeaderData['posting_date'] = $saveSD->transaction_date;
-                    $journalHeaderData['total_amount'] = $saveSD->amount;
-                    $journalHeaderData['trans_type'] = $trans_type;
-                    $journalHeaderData['remarks'] = $saveSD->remarks;
+                    $journalHeaderData['reference_no'] = $tdaccount['or_number'];
+                    $journalHeaderData['posting_date'] = $today;
+                    $journalHeaderData['total_amount'] = $tdaccount['amount'] + $tdaccount['service_amount'];
+                    $journalHeaderData['trans_type'] = 'Payment';
+                    $journalHeaderData['remarks'] = 'TD Application';
 
                     $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
                     if($saveJournal){
                         //Entries
-                        $journalList = new JournalDetails;
+                        $journalList = new JournalDetails();
                         $journalListAttr = $journalList->getAttributes();
                         $lists = array();
 
                         // Account
+                        
                         $arr = $journalListAttr;
-                        $arr['amount'] = $saveSD->amount;
-                        $arr['particular_id'] = $product['particular_id'];
-                        $arr['entry_type'] = $acct_entrytype;
+                        $arr['amount'] = $tdaccount['amount'] + $tdaccount['service_amount'];
+                        $arr['particular_id'] = 99; //--> 99 is cash on hand
+                        $arr['entry_type'] = 'DEBIT';
                         array_push($lists, $arr);
-
-                        // Cash On Hand                            
+                        
+                        
                         $arr = $journalListAttr;
-                        $arr['amount'] = $saveSD->amount;
-                        $arr['particular_id'] = $coh_id->id;
-                        $arr['entry_type'] = $coh_entrytype;
+                        $arr['amount'] = $tdaccount['amount'];
+                        $arr['particular_id'] = 20; //--> time deposit
+                        $arr['entry_type'] = 'CREDIT';
+                        array_push($lists, $arr);
+                        
+                        $arr = $journalListAttr;
+                        $arr['amount'] = $tdaccount['service_amount'];
+                        $arr['particular_id'] = 7; //--> service fee
+                        $arr['entry_type'] = 'CREDIT';
                         array_push($lists, $arr);
 
                         $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
