@@ -35,7 +35,7 @@ class LoanHelper
 		return $accountList;
 	}
 
-    public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = nul, $isAll = false){
+    public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = null, $isAll = false){
         $acc = \app\models\LoanAccount::find()
             ->innerJoinWith(['product'])
             ->where(['member_id' => $member_id, 'loan_id' =>  $loan_id])
@@ -64,10 +64,16 @@ class LoanHelper
         
         return $accountList->asArray()->all();
     }
-    
-    
-    
-    
+
+    public static function getProduct($filter, $asArray = false){
+        $getProduct= LoanProduct::find()->where($filter);
+        if($asArray){
+            $getProduct = $getProduct->asArray();
+        }
+        $getProduct = $getProduct->one();
+
+        return $getProduct;
+    }
     
     
     public static function closeAccountDueToRenewal($loanDetails)
@@ -138,15 +144,6 @@ class LoanHelper
     	}
     	//end of start of hell
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
 
     public static function printLoanSummary($dataLoan){

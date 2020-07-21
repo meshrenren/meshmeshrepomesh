@@ -9,7 +9,7 @@ use \app\models\ShareTransaction;
 class ShareHelper 
 {
 
-	public static function getAccountShareInfo($member_id = null, $asArray = true){
+	public static function getAccountShareInfo($member_id = null, $asArray = true, $isAll = true){
     
         $accountList = Shareaccount::find()->innerJoinWith(['product', 'member']);
         if($member_id != null){
@@ -17,9 +17,13 @@ class ShareHelper
         }
 
         if($asArray){
-            return $accountList->asArray()->all();
+            $accountList = $accountList->asArray();
         }
         
+        if(!$isAll){
+            return $accountList->one();
+        }
+
         return $accountList->all();
 	}
 

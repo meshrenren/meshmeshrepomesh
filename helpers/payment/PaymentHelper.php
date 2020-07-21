@@ -90,7 +90,8 @@ class PaymentHelper
                 return $e->is_prepaid === 1 && $e->account_no == $payment['account_no'];
             }
         );
-        if($getPrepaidList > 0){
+        
+        if(count($getPrepaidList) > 0){
         	foreach ($getPrepaidList as $pyt) {
 				if($pyt->account_no == $payment['account_no']){
 					$getPrepaid = $pyt;
@@ -111,7 +112,7 @@ class PaymentHelper
 			$transaction = \Yii::$app->db->beginTransaction();
 			
 			$dateToday = date('Y-m-d');
-			$payments = PaymentRecordList::findAll(['payment_record_id'=>$ref_id]);
+			$payments = PaymentRecordList::find()->joinWith(['member'])->where(['payment_record_id'=>$ref_id])->all();
 			$paymentHeader = PaymentRecord::findOne(['id'=>$ref_id]);
 
 			$coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);//Cash on Hand particular id
@@ -128,6 +129,8 @@ class PaymentHelper
 			if($paymentHeader->posted_date){
 				echo "Payment with OR Number " . $paymentHeader['or_num'] . ' for ' . $paymentHeader['name'] . ' is already posted.<br/>';
 				echo "<h3> Please close the window </h3>";
+
+				die;
 			}die;
 			
 			
@@ -148,8 +151,9 @@ class PaymentHelper
 				
 				
 				//processing rule no. 1, identify loan product parameters
+				$memberName = $row['member'] ? $row['member']['fullname'] : "";
 				
-				echo "Posting " . $row['type'].' ......<br/>';
+				echo "Posting " . $row['type'].' for ' . $memberName . ' ......<br/>';
 				
 				
 				if($row['type']=='LOAN')
@@ -232,11 +236,12 @@ class PaymentHelper
 					$account->principal_balance = $loanTransaction->running_balance;
 					$account->interest_balance = $account->interest_balance + $interestEarned;
 					
+					//Account will close
 					if($loanTransaction->running_balance<=0)
 					{
 						$success = false;
 						$transaction->rollBack();
-						echo "Achieved negative. Might want to proceed to close payment.";
+						echo "Achieved negative on prinicipal balance. Please check amount.";
 						break;
 					}
 					

@@ -112,6 +112,9 @@ Vue.component('payment-list', PaymentList)
 import PaymentRecordList from './components/Payment/PaymentRecordList.vue'
 Vue.component('payment-record-list', PaymentRecordList)
 
+import PaymentImport from './components/Payment/PaymentImport.vue'
+Vue.component('payment-import', PaymentImport)
+
 /* --- END --- */
 
 

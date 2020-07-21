@@ -66,14 +66,19 @@ use yii\helpers\Html;
                         'label'     => 'Collection',
                         'items'      => [
                             [
+                                'label'     => 'View Payments', 
+                                'url'       => ['payment/list'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
+                            ],
+                            [
                                 'label'     => 'Payment', 
                                 'url'       => ['payment/'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
                             ],
                             [
-                                'label'     => 'View Payments', 
-                                'url'       => ['payment/list'], 
-                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
+                                'label'     => 'Import Payment', 
+                                'url'       => ['payment/import-payment'], 
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
                             ],
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")

@@ -8,6 +8,25 @@ use \app\models\SavingsTransaction;
 
 class SavingsHelper 
 {
+    public static function getProduct($filter, $asArray = false){
+        $getProduct= Savingsproduct::find()->where($filter);
+        if($asArray){
+            $getProduct = $getProduct->asArray();
+        }
+        $getProduct = $getProduct->one();
+
+        return $getProduct;
+    }
+
+    public static function getMemberSavings($member_id, $asArray = true){
+        $account = SavingAccounts::find()->innerJoinWith(['product', 'member'])
+            ->where(['member_id' => $member_id]);
+
+        if($asArray){
+            return $account->asArray()->one();
+        }
+        return $account->one();
+    }
 
 	public static function getAccountSavingsInfo($filter = [], $asArray = true){
 
