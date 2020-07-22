@@ -52,12 +52,17 @@
 						            </el-table-column>
 						            <el-table-column label="Principal">
 						                <template slot-scope="scope">
-						                    <span>{{ $nf.formatNumber(scope.row.principal) }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.principal, 2) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Balance">
 						                <template slot-scope="scope">
-						                    <span>{{ $nf.formatNumber(scope.row.principal_balance)  }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.principal_balance, 2)  }}</span>
+						                </template>
+						            </el-table-column>
+						            <el-table-column label="Arrears">
+						                <template slot-scope="scope">
+						                    <span v-if = "scope.row.arrears && scope.row.arrears > 0">{{ $nf.formatNumber(scope.row.arrears, 2)  }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Duration">

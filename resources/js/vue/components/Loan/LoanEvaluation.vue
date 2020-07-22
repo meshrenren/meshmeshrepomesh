@@ -52,12 +52,17 @@
 						            </el-table-column>
 						            <el-table-column label="Principal Loan">
 						                <template slot-scope="scope">
-						                    <span>{{ parseFloat(scope.row.principal).toFixed(2) }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.principal, 2) }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Balance">
 						                <template slot-scope="scope">
-						                    <span>{{ parseFloat(scope.row.principal_balance).toFixed(2)  }}</span>
+						                    <span>{{ $nf.formatNumber(scope.row.principal_balance, 2) }}</span>
+						                </template>
+						            </el-table-column>
+						            <el-table-column label="Arrears">
+						                <template slot-scope="scope">
+						                    <span v-if = "scope.row.arrears && scope.row.arrears > 0">{{ $nf.formatNumber(scope.row.arrears, 2)  }}</span>
 						                </template>
 						            </el-table-column>
 						            <el-table-column label="Duration">
@@ -71,7 +76,6 @@
 						                </template>
 						            </el-table-column -->>
 			       				</el-table>
-			       				
 			       			</div>
 		       			</div>
 					</el-col>
@@ -603,41 +607,24 @@ export default {
 		
 		calculateMiscDeductions(getProduct, evalForm)
 		{
-			/*
-				regardless if loan is latest or not: consider these factors
-				1. is loan product add in or prepaid something?
-
-				----- start of doing consideration #1 ------
-			*/
-			
-			if(Number(getProduct.interest_type_id) ==2) //2 stands for add in
-			{
-				console.log("add in");
-			  	let principal_amt = this.evaluationForm.amount
-			  	this.evaluationForm.credit_preinterest = parseFloat(principal_amt * getProduct.prepaid_interest).toFixed(2);
-			  	this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
-			  	console.log("prep int yohooa");
-
-			}
 
 		
 
 			/*
-				----- end of doing consideration #1 ------
 
-				2. is loan eGadget Loan nga samok kaayo?
+				1. is loan eGadget Loan nga samok kaayo?
 
-				---start of doing consideration #2---
+				---start of doing consideration #1---
 			*/
 
-			else if(Number(getProduct.id) == 14 || getProduct.product_name.includes("GADGET"))
+			if(Number(getProduct.id) == 14 || getProduct.product_name.includes("GADGET"))
 			{
 				if(evalForm.duration>=24)
 				{
-				 let accumulated_prepaid =  parseFloat((evalForm.amount * getProduct.prepaid_interest) * (evalForm.duration/12)).toFixed(2);
-				 let eddedToPrincipal = accumulated_prepaid / (evalForm.duration/12); //assuming loan is 2 years
-				 this.evaluationForm.credit_preinterest = parseFloat(accumulated_prepaid).toFixed(2);
-				 this.evaluationForm.debit_loan = parseFloat(Number(evalForm.amount) + Number(eddedToPrincipal)).toFixed(2);
+				 	let accumulated_prepaid =  parseFloat((evalForm.amount * getProduct.prepaid_interest) * (evalForm.duration/12)).toFixed(2);
+				 	let eddedToPrincipal = accumulated_prepaid / (evalForm.duration/12); //assuming loan is 2 years
+				 	this.evaluationForm.credit_preinterest = parseFloat(accumulated_prepaid).toFixed(2);
+				 	this.evaluationForm.debit_loan = parseFloat(Number(evalForm.amount) + Number(eddedToPrincipal)).toFixed(2);
 
 
 				}
@@ -651,6 +638,46 @@ export default {
 				}
 
 				
+			}
+
+			/*
+				----- end of doing consideration #1 ------
+
+				2. is Buy out Loan nga samok kaayo?
+				annual ang addon interest.
+
+				---start of doing consideration #2---
+			*/
+			else if(Number(getProduct.id) == 12 || getProduct.product_name.includes("BUY-OUT"))
+			{
+				console.log('BUY-OUT', evalForm)
+				let accumulated_prepaid = parseFloat(evalForm.amount * getProduct.prepaid_interest).toFixed(2)
+				if(evalForm.duration>=24)
+				{
+				 	accumulated_prepaid =  parseFloat((evalForm.amount * getProduct.prepaid_interest) * (evalForm.duration/12)).toFixed(2);
+				}
+
+				let principal_amt = this.evaluationForm.amount
+				this.evaluationForm.credit_preinterest = accumulated_prepaid;
+				this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+				
+			}
+			/*
+				----- end of doing consideration #2 ------
+				regardless if loan is latest or not: consider these factors
+				3. is loan product add in or prepaid something?
+
+				----- start of doing consideration #3 ------
+			*/
+			
+			else if(Number(getProduct.interest_type_id) ==2) //2 stands for add in
+			{
+				console.log("add in");
+			  	let principal_amt = this.evaluationForm.amount
+			  	this.evaluationForm.credit_preinterest = parseFloat(principal_amt * getProduct.prepaid_interest).toFixed(2);
+			  	this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+			  	console.log("prep int yohooa");
+
 			}
 
 			/*

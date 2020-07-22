@@ -586,6 +586,11 @@ class PaymentController extends \yii\web\Controller
                                             $arr['error_status']  = 'balance_zero';
                                             //$toSavings = $amount;
                                         }
+                                        //GetArrear
+                                        $getArrears = LoanHelper::getArrears($loanAccount['account_no']);
+                                        if($getArrears['arrearAmount'] > 0){
+                                            $arr['arrears'] = $getArrears['arrearAmount'];
+                                        }
                                         //Need to think if I will process it here or in the vue files
                                     }
                                     //If no account then no loan to pay. Add in savings account
@@ -664,4 +669,11 @@ class PaymentController extends \yii\web\Controller
 
     }
 
+    public function actionTestLoan(){
+        $getArrear = LoanHelper::getArrears('12-000185');
+
+        $getArrear2 = LoanHelper::getArrears('1-000265');
+        
+
+    }
 }

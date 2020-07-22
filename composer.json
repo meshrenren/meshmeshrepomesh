@@ -22,7 +22,8 @@
         "phpoffice/phpspreadsheet": "^1.6",
         "mpdf/mpdf": "^7.1",
         "reportico/yii2-reportico": "dev-master",
-        "yidas/yii2-composer-bower-skip": "^2.0"
+        "yidas/yii2-composer-bower-skip": "^2.0",
+        "koolreport/core": "^4.7"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

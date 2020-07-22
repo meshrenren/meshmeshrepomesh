@@ -85,11 +85,11 @@
                                         :label="item.column_label">   
                                         <template slot-scope="scope">
                                             {{ scope.row[item.column_prop] }} 
-                                            <span v-if = "scope.row[item.column_prop+'_haserror']">
+                                            <span v-if = "scope.row[item.column_prop+'_haserror']" class="ml-5">
                                                  <el-tooltip effect="dark" 
                                                     placement="top-start"
                                                     :content="hasError(item, scope.row.memberToPay)">
-                                                    <div class="error-info"><i class="fa fa-info-circle"></i></div>
+                                                    <span class="error-info"><i class="fa fa-info-circle"></i></span>
                                                 </el-tooltip>
                                             </span> 
                                            
@@ -251,6 +251,9 @@ export default {
 
                                 allAcc.push(arrAcc)
                             }
+                            if(pay.arrears && pay.arrears > 0){
+                                arr['particular_'+pay.particular_id+"_haserror"] = true
+                            }
                         }
                         
 
@@ -313,6 +316,9 @@ export default {
                 }
                 else{
                     msg = "Has an error validating the account. Please contact administrator."
+                    if(getPayment.arrears && getPayment.arrears > 0){
+                        msg = "Has Arrear: " + this.$nf.formatNumber(getPayment.arrears, 2)
+                    }
                 }
                 return msg
             }

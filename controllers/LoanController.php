@@ -187,6 +187,10 @@ class LoanController extends \yii\web\Controller
                         ->andWhere('status != "Cancel" AND status != "Verified" ')
                         ->orderBy('release_date DESC')
                         ->asArray()->one();
+
+                    //Getarrear
+                    $getArrear = LoanHelper::getArrears($acc['account_no']);
+                    $acc['arrears'] = $getArrear['arrearAmount'];
                     array_push($accountList, $acc);
                 }
             }

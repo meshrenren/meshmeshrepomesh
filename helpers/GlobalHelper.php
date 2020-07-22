@@ -6,12 +6,6 @@ use Yii;
 
 use \app\models\Savingsproduct;
 
-/**
- * Organization class holds static functions
- * that'll provide reusable methods to retrieve
- * orgs utility data such as List of employees
- * or departments.
- */
 class GlobalHelper
 {
 	/**
@@ -44,6 +38,13 @@ class GlobalHelper
 		$int_rate = $getProduct->int_rate;
 
 	   	return $int_rate;
+	}
+
+	public static function addDate($date, $add, $type = 'day', $format = 'Y-m-d h:i:s'){
+		$date = new \DateTime($date);
+		$date->modify('+'.$add.' '.$type.''); // or you can use '-90 day' for deduct
+		$date = $date->format($format);
+		return $date;
 	}
 
 }

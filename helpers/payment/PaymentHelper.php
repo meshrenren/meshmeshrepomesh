@@ -492,25 +492,18 @@ class PaymentHelper
 
 		return $product;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
-   
+	public static function getPayments($account_no, $type){
+		$payment_record = PaymentRecordList::find()->innerJoinWith(['paymentRecord'])
+			->select([ 'payment_record_list.*',
+				'payment_record.posted_date'
+			])
+			->where(['account_no' => $account_no, 'payment_record_list.type' => $type])
+			->andWhere('payment_record.posted_date IS NOT NULL')
+			->orderBy('payment_record.posted_date')
+			->asArray()->all();
+        
+        return $payment_record;
+	}
 }
+	
