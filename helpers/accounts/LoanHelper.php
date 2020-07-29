@@ -68,10 +68,14 @@ class LoanHelper
     }
 
 
-    public static function getLoanTransaction($loan_account, $filter=null){
+    public static function getLoanTransaction($loan_account, $filter=null, $orderBy = null){
         $accountList = LoanTransaction::find();
         if($loan_account != null){
             $accountList = $accountList->where(['loan_account' => $loan_account]);
+        }
+
+        if($orderBy != null){
+            $accountList = $accountList->orderBy($orderBy);
         }
         
         return $accountList->asArray()->all();

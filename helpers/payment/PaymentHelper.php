@@ -165,6 +165,12 @@ class PaymentHelper
 
 					$product = LoanProduct::findOne($row['product_id']);
 					$account = LoanAccount::findOne($row['account_no']);
+
+					$isNewLoanPolicy = false;
+					//New policy was updates. Eg. No prepaid monthly for Applicance and interest earned calculcation
+					if($account->release_date >= "2020-07-24"){
+						$isNewLoanPolicy = true;
+					}
 					
 					
 					//$prepaid_interest_pay = $product->prepaid_monthly_interest==1 ? $account->principal * ($product->prepaid_interest/100) : 0;
@@ -184,41 +190,44 @@ class PaymentHelper
 					//0. identifying deductions or payment distributions, if loan is appliance or regular loan, mothly prepaid interest should be paid.
 					$prepaidInterest = 0;
 
-					if($product->id == 1 || $product->id == 2)
+					if($product->id == 1 || ($product->id == 2 && !$isNewLoanPolicy) //No quiencena prepaid for appliance loan 
 					{
 						//Get prepaid from the payment
 						$getPrepaid = static::getPrepaid($payments, $row);
 						if($getPrepaid){
 							$prepaidInterest = $getPrepaid['amount'] < 0 ? 0 : $getPrepaid['amount'];
 						}
-						/*$command = $connection->createCommand("SELECT ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
-							loan_account=:accountnumber and left(transaction_type,3)='PAY'), 0) - ifnull((SELECT sum(prepaid_intpaid) FROM `loan_transaction` where
-							loan_account=:accountnumber and left(transaction_type,2)='CN'), 0) AS totalPrepaidPaid", [':accountnumber' => $row['account_no']]);
-						$totalPrepaidPaid = $command->queryOne();
-						
-						$PIMustPay = ($noOfDaysPassed / 15) * $account->prepaid_amortization_quincena;
-						
-						$accumulatedPrepaid = $PIMustPay - $totalPrepaidPaid['totalPrepaidPaid'];
-						$prepaidInterest= $accumulatedPrepaid < 0 ? 0 : $accumulatedPrepaid;*/
 						
 						
 					}
-					
 					echo "i am interest prepaid .. ".$prepaidInterest." | <br/>";
-					
-					
 					$principal_pay = $row['amount'] - $prepaidInterest;
 					
-					
-					
-					$interestEarned = ($account->principal_balance * ($product->int_rate/100))/30;
-					$interestEarned = $interestEarned * $noOfDaysPassed;
-					
+					if($product->id == 1){//Regular loan base on diminishing amount
+						$interestEarned = ($account->principal_balance * ($account->int_rate/100))/30;
+						$interestEarned = $interestEarned * $noOfDaysPassed;
+					}
+					else{
+						//New policy has no add in. So interest earned directly base on amount paid and interest rate
+						if($isNewLoanPolicy){
+							if($account->int_rate > 0){//Other policy will base on amount paid
+								$interestEarned = ($row['amount'] * ($account->int_rate/100));
+							}
+						}
+						else{
+							if($account->int_rate > 0){//Other policy will base on amount paid
+								$interestEarned = ($row['amount'] * ($account->int_rate/100));
+							}
+						}
+						
+					}
 					
 					
 					//1. insert to payment transaction
 					$loanTransaction = new LoanTransaction();
 					$loanTransaction->loan_account = $row['account_no'];
+					$loanTransaction->loan_id = $product->id;
+					$loanTransaction->member_id = $account->member_id;
 					$loanTransaction->amount = round($row['amount'], 2);
 					$loanTransaction->transaction_type='PAYPARTIAL';
 					$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
@@ -235,6 +244,7 @@ class PaymentHelper
 					
 					$account->principal_balance = $loanTransaction->running_balance;
 					$account->interest_balance = $account->interest_balance + $interestEarned;
+					$account->interest_accum = $account->interest_accum + $interestEarned;
 					
 					//Account will close
 					if($loanTransaction->running_balance<=0)

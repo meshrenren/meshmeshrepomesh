@@ -556,47 +556,64 @@ export default {
 			this.evaluationForm.prepaid_amortization_quincena = ''
 
 		},
-
+		/*
+		This prepaid calculation is for quincena
+		*/
 		calculatePrepaidInterest(principal, term, prepaid_int, loantype)
 		{	let prepaid = 0
 
 			//NOTICE: Result of this function implies prepaid interest per quincena. i repeat, per quincena.
 
+			//*---* = July 24, 2020 : New loan policy updates. Check documentation
+
+			/*
+			/*---*
 			if(loantype==1)
 			{
 				prepaid  = principal * prepaid_int;
 				prepaid = prepaid / 2;
-			}
+			}*/
 
-			else if(loantype==2)
+			if(loantype==2)
 			{
-					if(term<=12)
-					{
-						prepaid = (principal * prepaid_int) / 5;
-						prepaid = prepaid * 7;
-						prepaid = prepaid / 24;
-					}
+				prepaid = (principal * prepaid_int) / 12;
+				prepaid = prepaid * 12;
+				prepaid = prepaid / (term * 2);
 
-					else if(term<=18)
-					{
-						prepaid = (principal * prepaid_int) / 7.5;
-						prepaid = prepaid * 11.5;
-						prepaid = prepaid / 36;
-					}
+				/* 
+				*---*
+				prepaid = (principal * prepaid_int) / 10;
+				prepaid = prepaid * 14;
+				prepaid = prepaid / (term * 2);
+				*/
 
-					else if(term<=24)
-					{
-						prepaid = (principal * prepaid_int) / 10;
-						prepaid = prepaid * 14;
-						prepaid = prepaid / 48;
-					}
+				/*if(term<=12)
+				{
+					prepaid = (principal * prepaid_int) / 5;
+					prepaid = prepaid * 7;
+					prepaid = prepaid / 24;
+				}
 
-					else if(term<=36)
-					{
-						prepaid = (principal * prepaid_int) / 5;
-						prepaid = prepaid * 7;
-						prepaid = prepaid / 24;
-					}
+				else if(term<=18)
+				{
+					prepaid = (principal * prepaid_int) / 7.5;
+					prepaid = prepaid * 11.5;
+					prepaid = prepaid / 36;
+				}
+
+				else if(term<=24)
+				{
+					prepaid = (principal * prepaid_int) / 10;
+					prepaid = prepaid * 14;
+					prepaid = prepaid / 48;
+				}
+
+				else if(term<=36)
+				{
+					prepaid = (principal * prepaid_int) / 15;
+					prepaid = prepaid * 21;
+					prepaid = prepaid / 72;
+				}*/
 			}
 
 
@@ -604,11 +621,46 @@ export default {
 
 
 		},
-		
+		/*
+		Prepaid calculation on actual loan
+		*/
 		calculateMiscDeductions(getProduct, evalForm)
 		{
 
-		
+			//*---* = July 24, 2020 : New loan policy updates. Check documentation
+
+			/*
+
+				1. Interest type id 1 is the normal credit prepaid interest
+
+				---start of doing consideration #1---
+			*/
+
+			if(Number(getProduct.interest_type_id) == 1)
+			{
+				this.evaluationForm.credit_preinterest = parseFloat(Number(this.evaluationForm.amount) * Number(getProduct.prepaid_interest)).toFixed(2) ;
+				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
+
+			}
+
+			/*
+				----- end of doing consideration #1 ------
+
+				2. Interest type id 2 means the prepaid is add in to the debit loan
+
+				----- start of doing consideration #2 ------
+			*/
+			
+			else if(Number(getProduct.interest_type_id) ==2) //2 stands for add in
+			{
+			  	let principal_amt = this.evaluationForm.amount
+			  	this.evaluationForm.credit_preinterest = parseFloat(principal_amt * getProduct.prepaid_interest).toFixed(2);
+			  	this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+			}
+			/*
+				----- end of doing consideration #1 ------
+			*/
+
 
 			/*
 
@@ -617,7 +669,7 @@ export default {
 				---start of doing consideration #1---
 			*/
 
-			if(Number(getProduct.id) == 14 || getProduct.product_name.includes("GADGET"))
+			/*if(Number(getProduct.id) == 14 || getProduct.product_name.includes("GADGET"))
 			{
 				if(evalForm.duration>=24)
 				{
@@ -638,7 +690,7 @@ export default {
 				}
 
 				
-			}
+			}*/
 
 			/*
 				----- end of doing consideration #1 ------
@@ -648,7 +700,7 @@ export default {
 
 				---start of doing consideration #2---
 			*/
-			else if(Number(getProduct.id) == 12 || getProduct.product_name.includes("BUY-OUT"))
+			/*else if(Number(getProduct.id) == 12 || getProduct.product_name.includes("BUY-OUT"))
 			{
 				console.log('BUY-OUT', evalForm)
 				let accumulated_prepaid = parseFloat(evalForm.amount * getProduct.prepaid_interest).toFixed(2)
@@ -661,7 +713,7 @@ export default {
 				this.evaluationForm.credit_preinterest = accumulated_prepaid;
 				this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
 				
-			}
+			}*/
 			/*
 				----- end of doing consideration #2 ------
 				regardless if loan is latest or not: consider these factors
@@ -670,7 +722,7 @@ export default {
 				----- start of doing consideration #3 ------
 			*/
 			
-			else if(Number(getProduct.interest_type_id) ==2) //2 stands for add in
+			/*else if(Number(getProduct.interest_type_id) ==2) //2 stands for add in
 			{
 				console.log("add in");
 			  	let principal_amt = this.evaluationForm.amount
@@ -678,7 +730,7 @@ export default {
 			  	this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
 			  	console.log("prep int yohooa");
 
-			}
+			}*/
 
 			/*
 				----- end of doing consideration #2 ------
@@ -688,12 +740,12 @@ export default {
 				---start of doing consideration #3---
 			*/
 
-			else if(Number(getProduct.id) == 2)
+			/*else if(Number(getProduct.id) == 2)
 			{
 				this.evaluationForm.credit_preinterest = parseFloat(Number(this.evaluationForm.amount) * Number(getProduct.prepaid_interest)).toFixed(2) ;
 				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
 
-			}
+			}*/
 
 			/*
 				---end of doing consideration #3---
@@ -704,12 +756,12 @@ export default {
 				---Others---
 
 			*/
-			else
+			/*else
 			{
 				this.evaluationForm.credit_preinterest = 0 ;
 				this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2);
 
-			}
+			}*/
 
 		},
 		calculateServiceCharge(getProduct, evalForm){
@@ -722,9 +774,19 @@ export default {
 			console.log("getProduct", getProduct, evalForm, amountFee)
 			if(amountFee > 0 && evalForm.service_charge){
 
-    			let getServiceFee = getProduct.serviceCharge.find(sc => { 
-    				return Number(sc.month_term) == Number(evalForm.duration) && Number(evalForm.amount) >= Number(sc.min_amount) && Number(evalForm.amount) <= Number(sc.max_amount)
-    			})
+				//From last calculation of service fee. Just don't delete just in case
+    			/*let getServiceFee = getProduct.serviceCharge.find(sc => { 
+    				if(sc.month_term && sc.min_amount && sc.max_amount){
+    					return Number(sc.month_term) == Number(evalForm.duration) && Number(evalForm.amount) >= Number(sc.min_amount) && Number(evalForm.amount) <= Number(sc.max_amount)
+    				}
+    				return false
+    				
+    			})*/
+    			let getServiceFee = null
+    			if(getProduct.serviceCharge.length > 0){
+    				getServiceFee = getProduct.serviceCharge[0]
+    			}
+
     			console.log("getServiceFee", getServiceFee, amountFee)
 				if(getServiceFee){
     				srvCharge = amountFee * (Number(getServiceFee.percentage) / 100)
@@ -740,96 +802,92 @@ export default {
 
 			let evalForm = cloneDeep(this.evaluationForm)
 			let service_charge = 0	
+			console.log('dataneeded', dataneeded)
 
 			this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
 			if(!latestLoan)
 			{
 				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)
-				this.evaluationForm.credit_redemption_ins = parseFloat(0).toFixed(2)
 				this.evaluationForm.debit_redemption_ins = parseFloat(0).toFixed(2)
 				this.evaluationForm.debit_interest = 0;
 				this.evaluationForm.credit_interest = 0;
 				this.evaluationForm.debit_preinterest = 0;
 
-				this.evaluationForm.notary_amount = getProduct.notary_fee
-				
-				//Service Charge
-				service_charge = this.calculateServiceCharge(getProduct, evalForm)
-				this.evaluationForm.service_charge_amount = parseFloat(service_charge).toFixed(2)
-
-				//Calculate Prepaid Credit Interest 
-				this.calculateMiscDeductions(getProduct, evalForm);	
-
-
-				this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.debit_loan) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
-							
-				this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
-				this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
-				this.evaluationForm.member_id = this.memberDetails.id
-
-				let principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
-				this.evaluationForm.principal_amortization_quincena = Number(principal_amortization_quincena).toFixed(2)
-								
-				this.evaluationForm.prepaid_amortization_quincena = this.calculatePrepaidInterest(Number(this.evaluationForm.amount), Number(this.evaluationForm.duration), getProduct.prepaid_monthly_interest, getProduct.id);
-				return [];
 			}
+			else{
+    			this.evaluationForm.credit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
 
+    			let calVersion = this.$ch.checkVersion(latestLoan.release_date)
 
-			let daystart = moment(lastTran.datenow, "YYYY-MM-DD");
-			let dayend = moment(lastTran.last_tran_date, "YYYY-MM-DD"); //usd against the latest TRANSACTION.
-			let monthend = moment(latestLoan.release_date, "YYYY-MM-DD"); //used against the latest loan.
-			let rangeNoOfDays = moment.duration(daystart.diff(dayend)).asDays(); 
-			let rangeNoOfMonths = moment.duration(daystart.diff(monthend)).asMonths(); //to be used for calculating unused redemption insurance. // 7
-			rangeNoOfMonths = Math.floor(rangeNoOfMonths) // the downward nearest integer
+    			/* CREDIT INTEREST -START- */
+    			let credit_interest = 0
+    			if(getProduct.id == 2 || (calVersion == "1" && getProduct.id == 1)){ //2: Regular Loan, 1 Appliance Loan
+    				credit_interest = parseFloat(lastTran.interest_accum).toFixed(2);
+    			}
+    			else{
+    				credit_interest = this.getInterestLoan(lastTran.total_amount_paid, latestLoan, getProduct)
+    			}
+				this.evaluationForm.credit_interest = parseFloat(credit_interest).toFixed(2);
+				/* CREDIT INTEREST -END- */
 
-    		//To calculate redemption insurance (redemp * year)
-    		let redemptionInsurance = parseFloat(this.evaluationForm.amount * getProduct.redemption_insurance) * (parseFloat(evalForm.duration)/12)
-    		console.log("rangeNoOfMonths", rangeNoOfMonths, latestLoan.term)
-			//let unusedRedemption = parseFloat(Math.round(rangeNoOfMonths)/latestLoan.term) //30
-			let unusedRedemption = latestLoan.term - rangeNoOfMonths
-			console.log("unusedRedemption", unusedRedemption, latestLoan.redemption_insurance)
-			let redemptionInsuranceDebit = 0
-			if(unusedRedemption>=1)
-			{
-				redemptionInsuranceDebit = (latestLoan.redemption_insurance / latestLoan.term) * unusedRedemption
-				console.log("redemptionInsuranceDebit", unusedRedemption, latestLoan.redemption_insurance)
+				//If has existing account for the loan product
+				let daystart = moment(this.$systemDate, "YYYY-MM-DD");
+				let dayend = moment(lastTran.last_tran_date, "YYYY-MM-DD"); //usd against the latest TRANSACTION.
+				let monthend = moment(latestLoan.release_date, "YYYY-MM-DD"); //used against the latest loan.
+				let rangeNoOfDays = moment.duration(daystart.diff(dayend)).asDays(); 
+				let rangeNoOfMonths = moment.duration(daystart.diff(monthend)).asMonths(); //to be used for calculating unused redemption insurance. // 7
+				rangeNoOfMonths = Math.floor(rangeNoOfMonths) // the downward nearest integer
+
+				/* DEBIT REDEMPTION INSURANCE -START- */
+				console.log("rangeNoOfMonths", rangeNoOfMonths, latestLoan.term)
+				let unusedRedemption = latestLoan.term - rangeNoOfMonths
+				console.log("unusedRedemption", unusedRedemption, latestLoan.redemption_insurance)
+				let redemptionInsuranceDebit = 0
+				if(unusedRedemption>=1)
+				{
+					redemptionInsuranceDebit = (latestLoan.redemption_insurance / latestLoan.term) * unusedRedemption
+					console.log("redemptionInsuranceDebit", unusedRedemption, latestLoan.redemption_insurance)
+				}
+				this.evaluationForm.debit_redemption_ins = parseFloat(redemptionInsuranceDebit).toFixed(2)
+				/* DEBIT REDEMPTION INSURANCE -END- */
+
+				/* DEBIT PREPAID INTEREST -START- */
+				this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
+				/* DEBIT PREPAID INTEREST -END- */
 			}
-			
-			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
-
-
-    		//Set Amount
-    		
-    		this.evaluationForm.credit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
-			this.evaluationForm.credit_redemption_ins = parseFloat(redemptionInsurance).toFixed(2)
-			this.evaluationForm.debit_redemption_ins = parseFloat(redemptionInsuranceDebit).toFixed(2)
-
-			let saving_retention = 0
-			let redemption_insurance = 0
-			let duration  = 20
-			//calculate interest
-			let rangeInterest = 0;
-			
-			console.log("harold " + rangeNoOfDays);
-			let numerator = (latestLoan.principal_balance * (latestLoan.product.int_rate/100))/30;
 			this.evaluationForm.debit_interest = 0;
-			this.evaluationForm.credit_interest = parseFloat(lastTran.interest_accum).toFixed(2);
-			this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
 
+    		/* CREDIT REDEMPTION INSURRANCE -START- */
+    		//let redemptionInsurance = parseFloat(this.evaluationForm.amount * getProduct.redemption_insurance) * (parseFloat(evalForm.duration)/12)
+    		let redemptionInsurance = 0
+    		if(Number(getProduct.redemption_insurance) == 1){
+    			redemptionInsurance = this.calculateRedemptionInsurance(this.evaluationForm.amount, evalForm.duration)
+    		} 
+    		console.log("redemptionInsurance", redemptionInsurance)
+			this.evaluationForm.credit_redemption_ins = parseFloat(redemptionInsurance).toFixed(2)
+    		/* CREDIT REDEMPTION INSURRANCE -END- */
+
+    	
+			/* CREDIT SAVING RETENTION -START- */
+			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
+			/* CREDIT SAVING RETENTION -END- */
+	
+
+			/* CREDIT NOTARY FEE -START- */
 			this.evaluationForm.notary_amount = getProduct.notary_fee
+			/* CREDIT NOTARY FEE -END- */
 
 
-			//Service Charge
+			/* CREDIT SERVICE CHARG -START- */
 			service_charge = this.calculateServiceCharge(getProduct, evalForm) 
-			console.log("service_charge", service_charge)
 			this.evaluationForm.service_charge_amount = parseFloat(service_charge).toFixed(2)
+			/* CREDIT SERVICE CHARG -END- */
 
-			//Calculate Prepaid Credit Interest 
+			/* CREDIT PREPAID INTEREST -START- */
 			this.calculateMiscDeductions(getProduct, evalForm);
+			/* CREDIT PREPAID INTEREST -END- */
 
-			//this.evaluationForm.saving_retention_amount = saving_retention
-			//this.evaluationForm.redemption_insurance_amount = redemption_insurance
 			this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.debit_loan) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
 						
 			this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
@@ -845,8 +903,41 @@ export default {
 			//this.evaluationForm.principal_amortization_quincena = 100
 			//this.evaluationForm.prepaid_amortization_quincena = 250
 			
-    	},
+    	}, 
+    	/*
+    	This is just given to me. I'm not really sure why the calculation is like this.
+    	Some numbers are just static.
+    	*/
+    	calculateRedemptionInsurance(principal, term){
+    		console.log('calculateRedemptionInsurance', principal, term)
+    		let redemption = (parseFloat(principal) / 1000)  * 0.6 
+    		redemption = redemption * parseFloat(term)
 
+    		return redemption
+
+    	},
+    	/*
+    	Interest before August 2020
+    	*/
+    	getInterestLoan(totalPaid, account, product){
+    		let amt = 0
+    		let calVersion = this.$ch.checkVersion(account.release_date)
+
+    		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
+    			if(product.id != 1){
+	    			amt = totalAmount * floatVal(account.prepaid_int)
+	    		}
+    		}
+    		else{
+    			if([3,5,6,8,12,14].indexOf(product.id) >= 0){
+	    			amt = totalAmount * floatVal(account.prepaid_int) + (1 + parseFloat(account.prepaid_int))
+	    		}
+	    		else{
+	    			amt = totalAmount * floatVal(account.prepaid_int)
+	    		}
+    		}
+    		
+    	},
     	newLoan(){
     		if(this.memberDetails.id != null){
 

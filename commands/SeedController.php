@@ -45,8 +45,9 @@ class SeedController extends Controller
             	}    
 
             	if($oldmember->BDay != "---" && $oldmember->BDay != "")   {
-            		$date = explode("/", $oldmember->BDay);
-            		$memdate = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] )); 
+            		/*$date = explode("/", $oldmember->BDay);
+            		$memdate = date("Y-m-d", strtotime($date[2] . '-' . $date[0] . '-' . $date[1] )); */
+                    $memdate = date("Y-m-d", strtotime($oldmember->BDay)); 
             		$newMember->birthday = $memdate;
             	} 
             	if($oldmember->DateMem != "---" && $oldmember->DateMem != "")   {
@@ -346,62 +347,110 @@ class SeedController extends Controller
                 foreach ($loanLedgerMember as $key => $loan) {
                     $balance = floatVal(str_replace(",", "", $loan['Balance']));
                     $dateStrpos = strpos($loan['DateTransac'], '2019');
-                    if($balance <= 0){
-                        continue;
+                    $dateYear = date('Y', strtotime($loan['DateTransac']));
+                    $skip = true;
+                    if($balance > 0){
+                        $skip = false;
+                    }
+                    else if($dateYear >= 2015){
+                        $skip = false;
                     }
 
+                    if($skip) continue;
                     $loanType = strtoupper($loan['LoanType']);
+                    $term = floatVal(str_replace(",", "", $loan['Duration']));
                     $loan_id = 0;
+                    $prepaid_rate = 0;
+                    $interest_rate = 0;
                     if(strpos($loanType, "APPLIANCE")){
                         $loan_id = 1;
+                        $prepaid_rate = 0;
+                        $interest_rate = 2;
                     }
                     else if(strpos( $loanType, "REGULAR")){
                         $loan_id = 2;
+                        $prepaid_rate = 0;
+                        $interest_rate = 1.25;
                     }
                     else if(strpos($loanType, "EDUCATIONAL")){
                         $loan_id = 3;
+                        $prepaid_rate = 0.06;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "EMERGENCY")){
                         $loan_id = 4;
+                        $prepaid_rate = 0.0687;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "HOSPITALIZATION")){
                         $loan_id = 5;
+                        $prepaid_rate = 0.06;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "HOUSE")){
                         $loan_id = 6;
+                        $prepaid_rate = 0.12;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "MEDICAL")){
                         $loan_id = 7;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "BUSINESS")){
                         $loan_id = 8;
+                        $prepaid_rate = 0.12;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "CELLPHONE")){
                         $loan_id = 10;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "CELLCARD")){
                         $loan_id = 11;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "BUY-OUT")){
                         $loan_id = 12;
+                        $prepaid_rate = floatval($term)/100;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "MEMORIAL")){
                         $loan_id = 13;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "GADGET")){
                         $loan_id = 14;
+                        $prepaid_rate = floatval($term)/100;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "DOMESTIC")){
                         $loan_id = 15;
+                        if($term == 12){
+                            $prepaid_rate = 0.2;
+                        }
+                        else if($term == 6){
+                            $prepaid_rate = 0.1;
+                        }
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "RADIATION")){
                         $loan_id = 16;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "CASSEROLE") || $loanType == "CASSEROLE"){
                         $loan_id = 17;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     else if(strpos($loanType, "KEYBOARD") || $loanType == "KEYBOARD"){
                         $loan_id = 18;
+                        $prepaid_rate = 0;
+                        $interest_rate = 0;
                     }
                     if($loan_id == 0){
                        $loans .= "No type: " . $loan['LoanType'] . ", "; 
@@ -431,7 +480,8 @@ class SeedController extends Controller
                         $addLoanAccount->prepaid = floatVal(str_replace(",", "", $loan['PrePaidInt'])) ;
                         $addLoanAccount->release_date = $release_date ;
                         $addLoanAccount->service_charge = floatVal(str_replace(",", "", $loan['ServChrg'])) ;
-                        $addLoanAccount->prepaid_int = 0;
+                        $addLoanAccount->int_rate = $interest_rate;
+                        $addLoanAccount->prepaid_int = $prepaid_rate;
                         $addLoanAccount->is_active = 1;
                         $addLoanAccount->status = "Current";
                         $addLoanAccount->principal_amortization_quincena = floatVal(str_replace(",", "", $loan['QuinPrincipal']));
@@ -519,6 +569,8 @@ class SeedController extends Controller
                         $addLoanAccount = new \app\models\LoanTransaction;
                         $addLoanAccount->loan_account = $accs->account_no;
                         $addLoanAccount->amount = $amount;
+                        $addLoanAccount->loan_id = $accs->loan_id;
+                        $addLoanAccount->member_id = $accs->member_id;
                         $addLoanAccount->transaction_type = $type;
                         $addLoanAccount->transacted_by = 18;
                         $addLoanAccount->transaction_date = $d;
@@ -528,7 +580,6 @@ class SeedController extends Controller
                         $addLoanAccount->interest_paid = $Interest;
                         $addLoanAccount->OR_no = $ledger['GVORNum'];
                         $addLoanAccount->principal_paid = $AmtPaid;
-                        $addLoanAccount->redemption_insurance = $AmtPaid;
                         $addLoanAccount->arrears_paid = 0;
                         $addLoanAccount->date_posted = $d;
                         $addLoanAccount->interest_earned = $Interest_earn;
@@ -1880,7 +1931,7 @@ class SeedController extends Controller
             if($accs->loan_id == 1 || $accs->loan_id == 2){
                 //if($accs->redemption_insurance == null || $accs->redemption_insurance == 0){
                     $getProd = \app\models\LoanProduct::findOne($accs->loan_id);
-                    $insurance = ($accs->principal * $getProd->redemption_insurance) * ($accs->term / 12);
+                    $insurance = ($accs->principal * 0.0120) * ($accs->term / 12);
                     $accs->redemption_insurance = $insurance;
                     if($accs->save()){
                         echo "Account: \t" . $accs->account_no . "\t success \n";
