@@ -1,5 +1,7 @@
-var $systemDate = window.systemDate // Is from the current date set in the beginning of the day
 
+import DateFormatter from './../service/DateFormatter'
+
+var $systemDate = window.systemDate // Is from the current date set in the beginning of the day
 var $df = new DateFormatter()
 export default class CalculationHelper{
 
@@ -9,7 +11,7 @@ export default class CalculationHelper{
 		let release_date = $df.formatDate(date, "X")
 
     	let new_policy = $df.formatDate("2020-08-01", "X")
-		if(release_date >= 0){
+		if(release_date >= new_policy){
 			vr = '1-2020.08' //New policy update from August 2020. Check documentatoin of the new policy
 		}
 

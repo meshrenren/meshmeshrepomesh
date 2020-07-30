@@ -131,7 +131,7 @@ class PaymentHelper
 				echo "<h3> Please close the window </h3>";
 
 				die;
-			}die;
+			}
 			
 			
 			$journaldetails = [];
@@ -190,7 +190,7 @@ class PaymentHelper
 					//0. identifying deductions or payment distributions, if loan is appliance or regular loan, mothly prepaid interest should be paid.
 					$prepaidInterest = 0;
 
-					if($product->id == 1 || ($product->id == 2 && !$isNewLoanPolicy) //No quiencena prepaid for appliance loan 
+					if($product->id == 1 || ($product->id == 2 && !$isNewLoanPolicy)) //No quiencena prepaid for appliance loan 
 					{
 						//Get prepaid from the payment
 						$getPrepaid = static::getPrepaid($payments, $row);
@@ -203,6 +203,7 @@ class PaymentHelper
 					echo "i am interest prepaid .. ".$prepaidInterest." | <br/>";
 					$principal_pay = $row['amount'] - $prepaidInterest;
 					
+					$interestEarned = 0;
 					if($product->id == 1){//Regular loan base on diminishing amount
 						$interestEarned = ($account->principal_balance * ($account->int_rate/100))/30;
 						$interestEarned = $interestEarned * $noOfDaysPassed;

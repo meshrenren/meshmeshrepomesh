@@ -224,7 +224,7 @@ class LoanController extends \yii\web\Controller
             $acc = \app\models\LoanAccount::find()
                 ->innerJoinWith(['product'])
                 ->joinWith(['loanTransaction'])
-                ->where(['member_id' => $member_id, 'loan_id' => $loan_id])
+                ->where(['loanaccount.member_id' => $member_id, 'loanaccount.loan_id' => $loan_id])
                 ->andWhere('status != "Cancel" AND status != "Verified" ')
                 //->where(['member_id' => $member_id, 'loan_id' => $loan_id])
                 ->orderBy('release_date DESC')
@@ -252,9 +252,12 @@ class LoanController extends \yii\web\Controller
                 $prepaid_interest = 0;
                 $last_tran_date = $acc['release_date'];
                 $total_amount_paid = 0;
+                $balance_after_cutoff = 0;
                 $cutOff = date('Y-01-01');
+                $balance_after_cutoff = $acc['principal_balance'];
                 foreach ($getTransactions as $transaction) {
                     if($transaction['date_posted'] < $cutOff){
+                        $balance_after_cutoff = $transaction['running_balance'];
                         continue;
                     }
                     
@@ -275,6 +278,7 @@ class LoanController extends \yii\web\Controller
                 $result['interest_accum'] = $interest_accum;
                 $result['last_tran_date'] = $last_tran_date;
                 $result['total_amount_paid'] = $total_amount_paid;
+                $result['balance_after_cutoff'] = $balance_after_cutoff;
 
                 if($acc['loan_id'] == 2) {// Regular loan
                     $currentDate = ParticularHelper::getCurrentDay();

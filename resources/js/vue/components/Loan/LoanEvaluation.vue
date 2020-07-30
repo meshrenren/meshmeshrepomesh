@@ -854,6 +854,9 @@ export default {
 
 				/* DEBIT PREPAID INTEREST -START- */
 				this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
+				debit_prepaid = this.getPrepaidDebit(lastTran.balance_after_cutoff, account, product)
+				this.evaluationForm.debit_preinterest = parseFloat(debit_prepaid).toFixed(2); 
+
 				/* DEBIT PREPAID INTEREST -END- */
 			}
 			this.evaluationForm.debit_interest = 0;
@@ -922,20 +925,47 @@ export default {
     	getInterestLoan(totalPaid, account, product){
     		let amt = 0
     		let calVersion = this.$ch.checkVersion(account.release_date)
+    		console.log("getInterestLoan", totalPaid, account, product)
 
     		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
     			if(product.id != 1){
-	    			amt = totalAmount * floatVal(account.prepaid_int)
+	    			amt = totalPaid * parseFloat(account.prepaid_int)
 	    		}
     		}
     		else{
-    			if([3,5,6,8,12,14].indexOf(product.id) >= 0){
-	    			amt = totalAmount * floatVal(account.prepaid_int) + (1 + parseFloat(account.prepaid_int))
+    			if([3,5,6,8,12,14].indexOf(Number(product.id)) >= 0){
+	    			amt = totalPaid * parseFloat(account.prepaid_int) / (1 + parseFloat(account.prepaid_int))
 	    		}
 	    		else{
-	    			amt = totalAmount * floatVal(account.prepaid_int)
+	    			amt = totalPaid * parseFloat(account.prepaid_int)
 	    		}
     		}
+
+    		return amt
+    		
+    	},
+    	/*
+    	Prepaid before August 2020
+    	*/
+    	getPrepaidDebit(balanceCutOff, account, product){
+    		let amt = 0
+    		let calVersion = this.$ch.checkVersion(account.release_date)
+
+    		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
+    			if(product.id != 1){
+	    			amt = balanceCutOff * parseFloat(account.prepaid_int)
+	    		}
+    		}
+    		else{
+    			if([3,5,6,8,12,14].indexOf(Number(product.id)) >= 0){
+	    			amt = balanceCutOff * parseFloat(account.prepaid_int) / (1 + parseFloat(account.prepaid_int))
+	    		}
+	    		else{
+	    			amt = balanceCutOff * parseFloat(account.prepaid_int)
+	    		}
+    		}
+
+    		return amt
     		
     	},
     	newLoan(){
