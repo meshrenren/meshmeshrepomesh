@@ -188,12 +188,32 @@ export default {
             })
     	},
     	finishPayment(){
+    		let vm = this
     		if(this.paymentRecord){
-    			let payment_id = this.paymentRecord.id
-	    		var winFeature = 'location=no,toolbar=no,menubar=no,scrollbars=yes,resizable=yes';
-				window.open(this.$baseUrl + "/payment/post-payment?id="+payment_id, 'null', winFeature);
+    			vm.$swal({
+	                title: "POst Payment",
+	                text: "Are you sure you want to save payment list? This can't be undone",
+	                type: 'warning',
+	                showCancelButton: true,
+	                cancelButtonColor: '#d33',
+	                confirmButtonText: 'Proceed',
+	                focusConfirm: false,
+	                focusCancel: true,
+	                cancelButtonText: 'Cancel',
+	                reverseButtons: true,
+	                width: '400px',
+	            }).then( result => {
+	            	console.log('result', result)
+	                if (result.value) {
+	                    let payment_id = this.paymentRecord.id
+			    		var winFeature = 'location=no,toolbar=no,menubar=no,scrollbars=yes,resizable=yes';
+						window.open(this.$baseUrl + "/payment/post-payment?id="+payment_id, 'null', winFeature);
 
-				location.reload();
+						location.reload();
+	                }
+	            })
+
+    			
     		}
     		else{
     			 new Noty({

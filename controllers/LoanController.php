@@ -187,6 +187,10 @@ class LoanController extends \yii\web\Controller
                         ->andWhere('status != "Cancel" AND status != "Verified" ')
                         ->orderBy('release_date DESC')
                         ->asArray()->one();
+
+                    //Getarrear
+                    $getArrear = LoanHelper::getArrears($acc['account_no']);
+                    $acc['arrears'] = $getArrear['arrearAmount'];
                     array_push($accountList, $acc);
                 }
             }
@@ -220,7 +224,7 @@ class LoanController extends \yii\web\Controller
             $acc = \app\models\LoanAccount::find()
                 ->innerJoinWith(['product'])
                 ->joinWith(['loanTransaction'])
-                ->where(['member_id' => $member_id, 'loan_id' => $loan_id])
+                ->where(['loanaccount.member_id' => $member_id, 'loanaccount.loan_id' => $loan_id])
                 ->andWhere('status != "Cancel" AND status != "Verified" ')
                 //->where(['member_id' => $member_id, 'loan_id' => $loan_id])
                 ->orderBy('release_date DESC')
@@ -230,26 +234,69 @@ class LoanController extends \yii\web\Controller
                 'data' => $acc
             ];
             
-            
-            $connection = Yii::$app->getDb();
+
+            /*$connection = Yii::$app->getDb();
             $command = $connection->createCommand("
 				    SELECT sum(prepaid_intpaid) as prepaid_interest, sum(interest_earned) as interest_accum, DATE_FORMAT(NOW(), '%Y-%m-%d') as datenow,
 					ifnull((select date_posted from loan_transaction where loan_account=:accountnumber and LEFT(transaction_type,3)='PAY' and is_cancelled=0 order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber)) as last_tran_date
 					FROM `loan_transaction` lt where loan_account=:accountnumber and LEFT(transaction_type,3) in ('PAY', 'REL') and is_cancelled=0
 					order by id, date_posted", [':accountnumber' => $acc['account_no'] ]);				            
-			$result = $command->queryOne();
+			$result = $command->queryOne();*/
 				            
+            $result = array();
+            $getTransactions = [];
             if($acc != null)
             {
-            	$product = LoanProduct::findOne($acc['loan_id']);
-            	$noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($result['last_tran_date']));
-            	
-            	$noOfDaysPassed = $noOfDaysPassed->format("%a");
-            	
-            	$interestEarned = ($acc['principal_balance'] * ($product->int_rate/100))/30;
-            	$interestEarned = round($interestEarned * $noOfDaysPassed, 2);
-            	
-            	$result['interest_accum'] = $result['interest_accum'] + $interestEarned;
+                $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'id, date_posted');
+                $prepaid_interest = 0;
+                $interest_accum = 0;
+                $prepaid_interest = 0;
+                $last_tran_date = $acc['release_date'];
+                $total_amount_paid = 0;
+                $balance_after_cutoff = 0;
+                $cutOff = date('Y-01-01');
+                $balance_after_cutoff = $acc['principal_balance'];
+                foreach ($getTransactions as $transaction) {
+                    if($transaction['date_posted'] < $cutOff){
+                        $balance_after_cutoff = $transaction['running_balance'];
+                        continue;
+                    }
+                    
+                    if($transaction['transaction_type'] == "RELEASE" && $transaction['is_cancelled'] == 0){
+                        $last_tran_date = $transaction['date_posted'];
+                    }
+
+                    if($transaction['transaction_type'] == "PAYPARTIAL" && $transaction['is_cancelled'] == 0){
+                        $last_tran_date = $transaction['date_posted'];
+                        if($transaction['amount'] > 0){
+                            $total_amount_paid = $total_amount_paid + $transaction['amount'];
+                            $interest_accum = $interest_accum + $transaction['interest_earned'];
+                            $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+                        }
+                    }
+                }
+                $result['prepaid_interest'] = $prepaid_interest;
+                $result['interest_accum'] = $interest_accum;
+                $result['last_tran_date'] = $last_tran_date;
+                $result['total_amount_paid'] = $total_amount_paid;
+                $result['balance_after_cutoff'] = $balance_after_cutoff;
+
+                if($acc['loan_id'] == 2) {// Regular loan
+                    $currentDate = ParticularHelper::getCurrentDay();
+                    $systemDate = date("Y-m-d", strtotime($currentDate));
+
+                	$product = LoanProduct::findOne($acc['loan_id']);
+                	$noOfDaysPassed = date_diff(date_create($systemDate), date_create($result['last_tran_date']));
+                	
+                	$noOfDaysPassed = $noOfDaysPassed->format("%a");
+                	
+                	$interestEarned = ($acc['principal_balance'] * ($product->int_rate/100))/30;
+                	$interestEarned = round($interestEarned * $noOfDaysPassed, 2);
+                	
+                	$result['interest_accum'] = $result['interest_accum'] + $interestEarned;
+                }
+
+                //Get payment
             	
             }
             
@@ -258,7 +305,8 @@ class LoanController extends \yii\web\Controller
             		'success' => true,
             		'data' => [
             				'latestLoan' => $acc,
-            				'lastTransaction' => $result
+            				'lastTransaction' => $result,
+                            'loanTransaction' => $getTransactions
             		]
             ];
 				            

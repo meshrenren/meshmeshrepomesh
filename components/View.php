@@ -38,6 +38,31 @@ class View extends \yii\web\View
 
         return $pdf;
     }
+
+    //This is a current date base on system date from calendar Table
+    public function current_date() {
+
+        $calendar = \app\models\Calendar::find()->where(['is_current' => 1])->one();
+        if($calendar){
+            return $calendar->date;
+        }
+
+        return date('Y-m-d'); //Just ue the current date in case
+    }
+
+    public function convertIntToExcelColumn($num = 1){
+        $count = intdiv($num, 26);
+        $char = $num - ($count * 26);
+        $isLastChar = false;
+
+        if($char == 0){
+            $char = 26;
+
+            $count--;
+        }
+
+        return $count > 0 ? chr($count + 64) . chr($char+64) : chr($char+64);
+    }
 }
 
 ?>

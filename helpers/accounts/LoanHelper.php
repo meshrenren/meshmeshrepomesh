@@ -7,6 +7,10 @@ use \app\models\LoanAccount;
 use \app\models\LoanTransaction;
 use app\models\LoanProduct;
 
+
+use app\helpers\payment\PaymentHelper;
+use app\helpers\GlobalHelper;
+
 class LoanHelper 
 {
 
@@ -35,7 +39,7 @@ class LoanHelper
 		return $accountList;
 	}
 
-    public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = nul, $isAll = false){
+    public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = null, $isAll = false){
         $acc = \app\models\LoanAccount::find()
             ->innerJoinWith(['product'])
             ->where(['member_id' => $member_id, 'loan_id' =>  $loan_id])
@@ -55,19 +59,37 @@ class LoanHelper
         return $acc->one();
     }
 
+    public static function getLoanAccount($account_no){
+        $acc = \app\models\LoanAccount::find()
+            ->innerJoinWith(['product'])
+            ->where(['account_no' => $account_no]);
 
-    public static function getLoanTransaction($loan_account, $filter=null){
+        return $acc->one();
+    }
+
+
+    public static function getLoanTransaction($loan_account, $filter=null, $orderBy = null){
         $accountList = LoanTransaction::find();
         if($loan_account != null){
             $accountList = $accountList->where(['loan_account' => $loan_account]);
         }
+
+        if($orderBy != null){
+            $accountList = $accountList->orderBy($orderBy);
+        }
         
         return $accountList->asArray()->all();
     }
-    
-    
-    
-    
+
+    public static function getProduct($filter, $asArray = false){
+        $getProduct= LoanProduct::find()->where($filter);
+        if($asArray){
+            $getProduct = $getProduct->asArray();
+        }
+        $getProduct = $getProduct->one();
+
+        return $getProduct;
+    }
     
     
     public static function closeAccountDueToRenewal($loanDetails)
@@ -139,15 +161,6 @@ class LoanHelper
     	//end of start of hell
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
     public static function printLoanSummary($dataLoan){
         $details = $dataLoan['details'];
@@ -203,6 +216,51 @@ class LoanHelper
         $listTemplate = $listTemplate . $transTable;
 
         return $listTemplate;
+    }
+    /*
+    To get arrear, count the month that the member hasn't paid yet
+    eg; Loan: 100,000; 5,000/mo
+    Last Payment: 2019-12; balance as of that date is 50,000
+    Current Date: 2020-04; 
+    Arrears: 15,000; Member hasn't paid for 3 month (5,000 x 3)
+    */
+    public static function getArrears($account_no){
+        $loanAccount = static::getLoanAccount($account_no);
+        $arrearAmount = 0;
+        if($loanAccount && $loanAccount->principal_balance > 0){
+            $principal = floatval($loanAccount->principal);
+            $principal_balance = floatval($loanAccount->principal_balance);
+            $principal_paid = $principal - $principal_balance;
+            $release_date = $loanAccount->release_date;
+            //get payment
+            $getPayments = PaymentHelper::getPayments($loanAccount->account_no, 'LOAN');
+
+            $getLoanMaturity = GlobalHelper::addDate($release_date, $loanAccount->term, 'month', 'Y-m-d');
+
+            $curSystemDate = date("Y-m-d", strtotime(\Yii::$app->user->identity->getDateNow()));
+            if(strtotime($getLoanMaturity) < strtotime($curSystemDate)){ //If lampas na sa maturity date
+                $curSystemDate = $getLoanMaturity;
+                $arrearAmount = $principal - $principal_paid;
+            }
+            else{
+                $diffDays = GlobalHelper::getDiffDays($release_date, $curSystemDate);
+
+                $moPrin = ($diffDays - 30) / 30; //deduct 1 mo then divide to get the months;
+                $moPrin = intval($moPrin);
+
+                $principal_pay = (floatval($loanAccount->principal_amortization_quincena) * 2) * $moPrin;
+
+                $arrearAmount = $principal_pay - $principal_paid;
+
+            }
+            if($arrearAmount <= 0){
+                $arrearAmount = 0;
+            }
+        }
+
+        $return = ['arrearAmount' => $arrearAmount];
+
+        return $return;
     }
 
 }

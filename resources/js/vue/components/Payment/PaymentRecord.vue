@@ -211,27 +211,6 @@
                         </div>
                     </div>
                     <div class="box-body payment-entry-list mt-5">
-                        <!-- <el-table
-                            :data="allAccountList.filter(data => !nameSearch || data.fullname.toLowerCase().includes(nameSearch.toLowerCase()))"
-                            border striped
-                            style="width: 100%"
-                            max-height = "480px">
-                            <el-table-column prop = "fullname"> 
-                                <template slot="header" slot-scope="scope">
-                                    <el-input v-model="nameSearch" size="mini" placeholder="Search Member"/>
-                                </template>                       
-                            </el-table-column>
-                            <el-table-column
-                                v-for="item in totalAccounts"
-                                :key="item.table_key"
-                                :prop="item.table_key"
-                                :label="item.product_name">                            
-                            </el-table-column>
-                            <el-table-column
-                                prop="sum_total"
-                                label="Total">
-                            </el-table-column>
-                        </el-table> -->
                         <payment-record-list
                             :page-data = "pytRecListData"
                             >

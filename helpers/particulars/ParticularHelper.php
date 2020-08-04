@@ -18,6 +18,7 @@ use \app\models\JournalHeader;
 use \app\models\JournalDetails;
 
 use app\helpers\GlobalHelper;
+use app\helpers\journal\JournalHelper;
 use phpDocumentor\Reflection\Types\Static_;
 
 class ParticularHelper 
@@ -64,15 +65,19 @@ class ParticularHelper
 	public static function getParticular($filter, $asArray = false){
 		$getParticular = AccountParticulars::find()->where($filter);
 		if($asArray){
-			$getParticular = $getParticular->asArray;
+			$getParticular = $getParticular->asArray();
 		}
 		$getParticular = $getParticular->one();
 
 		return $getParticular;
 	}
 
-	public static function getPayrollParticulars(){
-		$getParticular = AccountParticulars::find()->asArray()->all();
+	public static function getPayrollParticulars($orderBy = null){
+		$getParticular = AccountParticulars::find();
+		if($orderBy){
+			$getParticular = $getParticular->orderBy($orderBy);
+		}
+		$getParticular = $getParticular->asArray()->all();
 		return $getParticular;		
 	}
 	
@@ -115,10 +120,10 @@ class ParticularHelper
 		static::performMakeLoanCurrent();
 		
 		//move to next day
-		$calendar = Calendar::findOne(['date_id'=>$currentDay['date_id'], 'date'=>$currentDay['date']]);
+		$calendar = Calendar::find()->where(['date_id'=>$currentDay['date_id'], 'date'=>$currentDay['date']])->one();
 		$calendar->is_current = 0;
 		
-		$tomcalendar = Calendar::findOne(['date_id'=>$nextDay['date_id'], 'date'=>$nextDay['date']]);
+		$tomcalendar = Calendar::find()->where(['date_id'=>$nextDay['date_id'], 'date'=>$nextDay['date']])->one();
 		$tomcalendar->is_current = 1;
 		
 		if($calendar->save() && $tomcalendar->save())
