@@ -106,6 +106,7 @@ class PaymentHelper
 	public static function postPayment($ref_id)
 	{
 		try {
+
 			
 			$success = true;
 			$transaction = \Yii::$app->db->beginTransaction();
@@ -128,7 +129,8 @@ class PaymentHelper
 			if($paymentHeader->posted_date){
 				echo "Payment with OR Number " . $paymentHeader['or_num'] . ' for ' . $paymentHeader['name'] . ' is already posted.<br/>';
 				echo "<h3> Please close the window </h3>";
-			}die;
+				die;
+			}
 			
 			
 			$journaldetails = [];
@@ -236,7 +238,7 @@ class PaymentHelper
 					{
 						$success = false;
 						$transaction->rollBack();
-						echo "Achieved negative. Might want to proceed to close payment.";
+						echo " ";
 						break;
 					}
 					
@@ -486,6 +488,42 @@ class PaymentHelper
 		}
 
 		return $product;
+	}
+	
+	
+	public static function getCurrentInterest($accountnumber, $interest_rate)
+	{
+		try {
+			$account = LoanAccount::findOne($accountnumber);
+			
+			
+			$connection = Yii::$app->getDb();
+			$command = $connection->createCommand("
+				    select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' AND is_cancelled=0 order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $accountnumber]);
+			$lastTransaction = $command->queryOne();
+			
+			
+			$noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($lastTransaction['lasttrandate']));
+			
+			$noOfDaysPassed = $noOfDaysPassed->format("%a");
+			
+			
+			
+			$interestEarned = ($account->principal_balance * ($interest_rate/100))/30;
+			$interestEarned = $interestEarned * $noOfDaysPassed;
+			
+			return [
+					'interest_earned' => $interestEarned,
+					'noOfDaysPassed' => $noOfDaysPassed
+			];
+		} catch (\Exception $e) {
+			
+			return [
+					'status'=>'error',
+					'message'=>$e->getMessage()
+			];
+		}
+		
 	}
 	
 	
