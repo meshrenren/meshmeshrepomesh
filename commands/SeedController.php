@@ -334,10 +334,11 @@ class SeedController extends Controller
         $query->select('*');
         $query->from('zold_loantransacmember llm');
         $loanMember = $query->all();
+        $memberCount = 0;
         foreach ($loanMember as $key => $llm) {
-            $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum']])->one();
+            $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum'], 'last_name' => $llm['Sname']])->one();
             if($getMember){
-
+                $memberCount++;
                 $query2 = new \yii\db\Query;
                 $query2->select(['*']);
                 $query2->from('zold_loantransac ll')->where(['IDNum' => $llm['IDNum']])->andWhere("PrincipalLoan != ''");
@@ -456,7 +457,7 @@ class SeedController extends Controller
                        $loans .= "No type: " . $loan['LoanType'] . ", "; 
                     }
                     else{
-                        //$loans .= "Loan ID: " . $loan_id . ", ";
+                        $loans .= "Loan ID: " . $loan_id . ", ";
                         $product = \app\models\LoanProduct::find()->where(['id' => $loan_id])->one();
                         $trans_serial = $product->trans_serial + 1;
                         $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
@@ -502,7 +503,7 @@ class SeedController extends Controller
                     
                     //var_dump($loan);
                 }
-
+                
                 echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " Is Member \n\t Loans: " . $loans . "\n\n";
                 //echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " Is Member \n\n";
                 //break;

@@ -34,6 +34,11 @@
 									  	</el-form-item>
 									  	<span v-if = "memberDetails.shareaccount && memberDetails.share_capital == null"> No Share Account</span>
 									</el-col>
+				        			<el-col :span="24">
+									  	<el-form-item label="Maximum Loan Amount">
+									    	<el-input v-model="memberDetails.max_loan_amount" :disabled = "true"></el-input>
+									  	</el-form-item>
+									</el-col>
 								</el-row>
 							</el-form>
 							<hr>
@@ -421,8 +426,10 @@ export default {
     		this.resetEvaluationForm()
     		this.memberDetails = data
     		this.memberDetails.share_capital = null
+    		this.memberDetails.max_loan_amount = 0
     		if(data.shareaccount != null){
     			this.memberDetails.share_capital = data.shareaccount.balance
+    			this.memberDetails.max_loan_amount = parseFloat(this.memberDetails.share_capital) * 4
     		}
     		this.disabledBox = false
     		this.$refs.product_loan_id.focus() 
@@ -854,7 +861,7 @@ export default {
 
 				/* DEBIT PREPAID INTEREST -START- */
 				this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
-				debit_prepaid = this.getPrepaidDebit(lastTran.balance_after_cutoff, account, product)
+				let debit_prepaid = this.getPrepaidDebit(lastTran.balance_after_cutoff, latestLoan, getProduct)
 				this.evaluationForm.debit_preinterest = parseFloat(debit_prepaid).toFixed(2); 
 
 				/* DEBIT PREPAID INTEREST -END- */
@@ -870,11 +877,6 @@ export default {
     		console.log("redemptionInsurance", redemptionInsurance)
 			this.evaluationForm.credit_redemption_ins = parseFloat(redemptionInsurance).toFixed(2)
     		/* CREDIT REDEMPTION INSURRANCE -END- */
-
-    	
-			/* CREDIT SAVING RETENTION -START- */
-			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
-			/* CREDIT SAVING RETENTION -END- */
 	
 
 			/* CREDIT NOTARY FEE -START- */
@@ -895,7 +897,14 @@ export default {
 						
 			this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 
+			/* CREDIT SAVING RETENTION -START- */
+			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.net_cash) * 0.01).toFixed(2) : 0 ;
+			/* CREDIT SAVING RETENTION -END- */
+
+			this.evaluationForm.net_cash = this.evaluationForm.net_cash - this.evaluationForm.savings_retention
+
 			this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
+
 			this.evaluationForm.member_id = this.memberDetails.id
 
 			let principal_amortization_quincena = parseFloat(this.evaluationForm.debit_loan)/ parseFloat(evalForm.duration * 2)
@@ -968,6 +977,9 @@ export default {
     		return amt
     		
     	},
+    	/*preIntCalculation(loanTransaction){
+    		_forEach(loanTransaction, )
+    	},*/
     	newLoan(){
     		if(this.memberDetails.id != null){
 

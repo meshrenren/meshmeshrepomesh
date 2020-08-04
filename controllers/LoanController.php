@@ -244,6 +244,7 @@ class LoanController extends \yii\web\Controller
 			$result = $command->queryOne();*/
 				            
             $result = array();
+            $getTransactions = [];
             if($acc != null)
             {
                 $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'id, date_posted');
@@ -304,7 +305,8 @@ class LoanController extends \yii\web\Controller
             		'success' => true,
             		'data' => [
             				'latestLoan' => $acc,
-            				'lastTransaction' => $result
+            				'lastTransaction' => $result,
+                            'loanTransaction' => $getTransactions
             		]
             ];
 				            
