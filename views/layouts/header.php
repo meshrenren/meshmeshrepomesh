@@ -80,6 +80,12 @@ use yii\helpers\Html;
                                 'url'       => ['payment/import-payment'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
                             ],
+                        	[
+                        		 'label'     => 'Loan Closure Payments',
+                        		 'url'       => ['loan/loan-closure'],
+                        		 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
+                        	],
+                        		
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                     ],

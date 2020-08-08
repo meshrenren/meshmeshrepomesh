@@ -77,4 +77,13 @@ export default {
 			})
 		}*/
 	},
+
+	getCurrentLoanInterestSincePreviousTransaction(accountnumber, interest_rate) {
+		let params = {
+			accountnumber: accountnumber,
+			int_rate: interest_rate
+		}
+
+		return axios.post($baseUrl + '/loan/get-current-loan-interest', params)
+	}
 }

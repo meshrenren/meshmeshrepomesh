@@ -9,6 +9,9 @@ Vue.component('member-view', MemberView)
 import SearchMember from './components/General/SearchMember.vue'
 Vue.component('search-member', SearchMember)
 
+import SearchCurrentLoans from './components/General/SearchCurrentLoans.vue'
+Vue.component('search-current-loans', SearchCurrentLoans)
+
 import BeginningOfDay from './components/General/BeginningOfDay.vue'
 Vue.component('beginning-of-day', BeginningOfDay)
 
@@ -78,6 +81,9 @@ Vue.component('loan-list', LoanList)
 
 import LoanEvaluationForm from './components/Loan/LoanEvaluationForm.vue'
 Vue.component('loan-evaluation-form', LoanEvaluationForm)
+
+import LoanClosure from './components/Loan/LoanClosure.vue'
+Vue.component('loan-closure', LoanClosure)
 
 /* --- END --- */
 

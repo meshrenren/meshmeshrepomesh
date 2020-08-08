@@ -748,4 +748,55 @@ class LoanController extends \yii\web\Controller
         }
         
     }
+    
+    
+    public function actionGetCurrentLoans()
+    {
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	
+    	$post = \Yii::$app->getRequest()->getBodyParams();
+    	
+    	$loans = LoanAccount::find()->innerJoinWith('product')
+							    	->innerJoinWith('member')
+							    	->innerJoinWith('loanTransaction')
+							    	->where(['in', 'status', ['Current']])
+							    	->andWhere(['like', "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name)", $post['nameInput'].'%', false])->asArray()->all();
+    	
+    	return $loans;
+    	
+    }
+    
+    public function actionGetCurrentLoanInterest()
+    {
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	$post = \Yii::$app->getRequest()->getBodyParams();
+    	
+    	if($post)
+    	{
+    		$interest = PaymentHelper::getCurrentInterest($post['accountnumber'], $post['int_rate']);
+    		
+    		return $interest;
+    	}
+    	
+ 
+    }
+    
+    
+    public function actionLoanClosure() {
+    	$this->layout = 'main-vue';
+    	
+    	
+    	
+    	/*$voucher = new \app\models\GeneralVoucher;
+    	$voucherModel = $voucher->attributes();
+    	
+    	$details = new \app\models\VoucherDetails;
+    	$detailsModel = $details->attributes();
+    	
+    	$filter  = ['category' => ['LOAN', 'OTHERS']];
+    	$getParticular = ParticularHelper::getParticulars($filter); */
+    	
+    	return $this->render('loan-closure', []);
+    	
+    }
 }
