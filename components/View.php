@@ -63,6 +63,13 @@ class View extends \yii\web\View
 
         return $count > 0 ? chr($count + 64) . chr($char+64) : chr($char+64);
     }
+
+    public function getCutOff() {
+        $lastYear = intval(date('Y')) - 1;
+        $cutOff = date($lastYear.'-12-31');
+       
+        return $cutOff;
+    } 
 }
 
 ?>

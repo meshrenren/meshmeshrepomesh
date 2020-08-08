@@ -69,6 +69,7 @@ use yii\helpers\Html;
             <?php 
                 $currentDate = app\helpers\particulars\ParticularHelper::getCurrentDay();
                 $systemDate = date("Y-m-d", strtotime($currentDate));
+                $cutOff = Yii::$app->view->getCutOff();
             ?>
             <script> 
             window.Yii = {
@@ -76,7 +77,8 @@ use yii\helpers\Html;
             'baseUrl': "<?php echo Yii::$app->request->baseUrl; ?>"
             }; 
             window.coopData = {
-                'systemDate': "<?php echo $systemDate ?>"
+                'systemDate': "<?php echo $systemDate ?>",
+                'cutOffDate': "<?php echo $cutOff ?>"
             }
             </script>
             <script src = '<?php echo Yii::$app->request->baseUrl; ?>/js/main.js'> </script>
