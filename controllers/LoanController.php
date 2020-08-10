@@ -254,10 +254,10 @@ class LoanController extends \yii\web\Controller
                 $last_tran_date = $acc['release_date'];
                 $total_amount_paid = 0;
                 $balance_after_cutoff = 0;
-                $cutOff = date('Y-01-01');
+                $cutOff = Yii::$app->view->getCutOff();
                 $balance_after_cutoff = $acc['principal_balance'];
                 foreach ($getTransactions as $transaction) {
-                    if($transaction['date_posted'] < $cutOff){
+                    if($transaction['date_posted'] <= $cutOff){
                         $balance_after_cutoff = $transaction['running_balance'];
                         continue;
                     }

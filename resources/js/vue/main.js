@@ -26,6 +26,7 @@ Vue.prototype.$df = new DateFormatter()
 Vue.prototype.$ch = new CalculationHelper()
 Vue.prototype.$baseUrl = window.Yii.baseUrl
 Vue.prototype.$systemDate = window.coopData.systemDate
+Vue.prototype.$cutOffDate = window.coopData.cutOffDate
 
 Vue.use(Element, { size: 'mini', locale });
 Vue.use(VueSweetalert2);

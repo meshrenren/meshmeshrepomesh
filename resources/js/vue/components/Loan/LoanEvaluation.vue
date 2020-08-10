@@ -865,6 +865,8 @@ export default {
 				this.evaluationForm.debit_preinterest = parseFloat(debit_prepaid).toFixed(2); 
 
 				/* DEBIT PREPAID INTEREST -END- */
+
+				this.preIntCalculation(latestLoan, dataneeded.loanTransaction)
 			}
 			this.evaluationForm.debit_interest = 0;
 
@@ -977,9 +979,106 @@ export default {
     		return amt
     		
     	},
-    	/*preIntCalculation(loanTransaction){
-    		_forEach(loanTransaction, )
-    	},*/
+    	preIntCalculation(account, loanTransaction, product){
+    		let intCredit = 0
+    		let preIntDedit = 0
+    		let loanCutOff = this.$cutOffDate
+    		let loanCutOffX = this.$df.formatDate(loanCutOff, 'X') 
+    		let tmpTransDate = account.release_date
+
+    		let strRL1 = 0
+    		let strRL2 = 0
+    		let firstPi = 0
+    		let firstInt = 0
+    		let intCount = 0
+    		console.log("loanTransaction", loanTransaction)
+    		_forEach(loanTransaction, lt =>{
+    			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
+    			if(lt.transaction_type == "PAYPARTIAL"){
+	    			if(dateTransacX > loanCutOffX){
+	    				if(lt.interest_earned ){
+	    					intCredit = intCredit + parseFloat(lt.interest_earned)
+	    					if(parseFloat(lt.running_balance) < 0){
+	    						intCredit = intCredit - parseFloat(lt.interest_earned)
+	    					}
+	    					if(intCount == 0){ firstInt = parseFloat(lt.interest_earned)}
+	    				}
+
+	    				if(lt.prepaid_intpaid ){
+	    					preIntDedit = preIntDedit + parseFloat(lt.prepaid_intpaid)
+	    					if(intCount == 0){ firstPi = parseFloat(lt.prepaid_intpaid)}
+
+	    				}
+	    				intCount++
+	    			}
+	    			if(dateTransacX <= loanCutOffX){
+	    				strRL1 = strRL1 + parseFloat(lt.prepaid_intpaid)
+	    				strRL2 = strRL2 + parseFloat(lt.interest_earned)
+	    			}
+	    		}
+    		})
+    		console.log('preIntCalculation', cloneDeep(intCredit), cloneDeep(preIntDedit), strRL1, strRL2)
+    		console.log('preIntCalculation FIRST', firstInt, firstPi)
+
+    		if(strRL1 >= strRL2){
+    			let str = strRL1 - strRL2
+    			preIntDedit = preIntDedit + str
+    		}
+
+    		if(strRL2 >= strRL1){
+    			let str = strRL2 - strRL1
+    			intCredit = intCredit + str
+    		}
+
+    		/*let tempAmountPaid = 0
+    		let firstPi = 0
+    		let firstInt = 0
+    		let intCount = 0
+    		_forEach(loanTransaction, lt =>{
+    			if(lt.amount > 0 && lt.transaction_type == "PAYPARTIAL"){
+    				tempAmountPaid = tempAmountPaid + parseFloat(lt.amount)
+    			}
+    			if(lt.transaction_type == "PAYPARTIAL"){
+    				if(lt.interest_earned ){
+    					intCredit = intCredit + parseFloat(lt.interest_earned)
+    					if(parseFloat(lt.running_balance) < 0){
+    						intCredit = intCredit - parseFloat(lt.interest_earned)
+    					}
+    					if(intCount == 0){ firstInt = parseFloat(lt.interest_earned)}
+    				}
+
+    				if(lt.prepaid_intpaid ){
+    					preIntDedit = preIntDedit + parseFloat(lt.prepaid_intpaid)
+    					if(intCount == 0){ firstPi = parseFloat(lt.prepaid_intpaid)}
+    				}
+    				intCount++
+    			}
+    		})
+    		console.log('preIntCalculation', intCredit, preIntDedit)
+    		intCredit = intCredit + firstInt
+    		preIntDedit = preIntDedit + firstPi
+    		console.log('preIntCalculation 2', intCredit, preIntDedit, firstInt, firstPi)
+
+    		let intCredit2 = 0
+    		let preIntDedit2 = 0
+    		_forEach(loanTransaction, lt =>{
+    			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
+    			if(dateTransacX > loanCutOffX){
+    				if(lt.interest_earned ){
+    					intCredit2 = intCredit2 + parseFloat(lt.interest_earned)
+    					if(parseFloat(lt.running_balance) < 0){
+    						intCredit2 = intCredit2 - parseFloat(lt.interest_earned)
+    					}
+    				}
+
+    				if(lt.prepaid_intpaid ){
+    					preIntDedit2 = preIntDedit2 + parseFloat(lt.prepaid_intpaid)
+    				}
+    			}
+    		})
+
+    		console.log('preIntCalculation 3', intCredit2, preIntDedit2)*/
+    	},
     	newLoan(){
     		if(this.memberDetails.id != null){
 
