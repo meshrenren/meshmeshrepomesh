@@ -205,19 +205,19 @@ class PaymentHelper
 					
 					$interestEarned = 0;
 					if($product->id == 1){//Regular loan base on diminishing amount
-						$interestEarned = ($account->principal_balance * ($account->int_rate/100))/30;
+						$interestEarned = ($account->principal_balance * ($product->int_rate/100))/30;
 						$interestEarned = $interestEarned * $noOfDaysPassed;
 					}
 					else{
 						//New policy has no add in. So interest earned directly base on amount paid and interest rate
 						if($isNewLoanPolicy){
-							if($account->int_rate > 0){//Other policy will base on amount paid
-								$interestEarned = ($row['amount'] * ($account->int_rate/100));
+							if($product->int_rate > 0){//Other policy will base on amount paid
+								$interestEarned = ($row['amount'] * ($product->int_rate/100));
 							}
 						}
 						else{
-							if($account->int_rate > 0){//Other policy will base on amount paid
-								$interestEarned = ($row['amount'] * ($account->int_rate/100));
+							if($product->int_rate > 0){//Other policy will base on amount paid
+								$interestEarned = ($row['amount'] * ($product->int_rate/100));
 							}
 						}
 						
@@ -227,8 +227,8 @@ class PaymentHelper
 					//1. insert to payment transaction
 					$loanTransaction = new LoanTransaction();
 					$loanTransaction->loan_account = $row['account_no'];
-					$loanTransaction->loan_id = $product->id;
-					$loanTransaction->member_id = $account->member_id;
+					//$loanTransaction->loan_id = $product->id;
+					//$loanTransaction->member_id = $account->member_id;
 					$loanTransaction->amount = round($row['amount'], 2);
 					$loanTransaction->transaction_type='PAYPARTIAL';
 					$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
@@ -543,6 +543,348 @@ class PaymentHelper
 	}
 	
 	
+	public static function unpostPayment($ref_id)
+	{
+		//echo 'wow';
+		try {
+			
+			$success = true;
+			$transaction = \Yii::$app->db->beginTransaction();
+			
+			$dateToday = date('Y-m-d');
+			$paymentHeader = PaymentRecord::findOne(['or_num'=>$ref_id, 'is_cancelled'=>0]);
+			
+			if(!$paymentHeader){
+				echo "Payment with OR Number maybe already cancelled or not found";
+				echo "<h3> Please close the window </h3>";
+				die;
+			}
+			
+			
+			$payments = PaymentRecordList::find()->joinWith(['member'])->where(['payment_record_id'=>$paymentHeader->id])->all();
+			
+			
+			
+			
+			$coh_id= ParticularHelper::getParticular(['name' => 'Cash On Hand']);//Cash on Hand particular id
+			$cashOnHandId = $coh_id->id;
+			
+			//2. prepare header for accounting entry
+			$posted_date = date('Y-m-d');
+			$journalheader['reference_no'] = "CN-".$paymentHeader->or_num;
+			$journalheader['posting_date'] = $posted_date;
+			$journalheader['total_amount'] = 0;
+			$journalheader['remarks'] = "Payment Cancellation of ".$paymentHeader->name;
+			$journalheader['trans_type'] = 'CancelBatchPayment';
+			
+			$journaldetails = [];
+			
+			
+			
+			foreach ($payments as $row)
+			{
+				$memberName = $row['member'] ? $row['member']['fullname'] : "";
+				
+				echo "Cancelling " . $row['type'].' for ' . $memberName . ' ......<br/>';
+				
+				if($row['type']=='LOAN')
+				{
+					
+					$product = LoanProduct::findOne($row['product_id']);
+					$account = LoanAccount::findOne($row['account_no']);
+					
+					//skip all the computations and go straight ahead to cancellation
+					//be sure to get the latest transaction, cancellation MUST FAIL if the "to be" cancelled payment is NOT ALREADY THE LATEST OR LAST TRANSACTION
+					$lastTransactionId = \app\models\LoanTransaction::find()->select('MAX(id) AS idcount')->where([
+							'loan_account'=>$row['account_no'], 'is_cancelled'=> 0
+					])->andWhere(['in', 'LEFT(transaction_type,3)', 'PAY'])->asArray()->one();
+					
+					
+					$loanTransaction = \app\models\LoanTransaction::find()->where(
+							['OR_no'=>$paymentHeader->or_num, 'loan_account'=>$row['account_no'], 'is_cancelled'=> 0,
+									'id'=> $lastTransactionId['idcount']
+							]
+							)->andWhere(['in', 'LEFT(transaction_type,3)', 'PAY'])->one();
+							
+					if(!$loanTransaction)
+					{
+						echo "Payment for Loan with OR Number is UNCANCELLABLE";
+						echo "<h3> Please close the window </h3>";
+						die;
+					}
+					
+					$loanTransaction->is_cancelled = 1;
+					
+					if(!$loanTransaction->save())
+					{
+						echo var_dump($loanTransaction->errors);
+						$success = false;
+						die;
+					}
+					
+					//insert cancellation to loanTransaction
+					$newloanTransaction = new LoanTransaction();
+					$newloanTransaction->loan_account = $row['account_no'];
+					$newloanTransaction->amount = round($row['amount'], 2) * -1;
+					$newloanTransaction->transaction_type='CANPAYPARTIAL';
+					$newloanTransaction->transacted_by = \Yii::$app->user->identity->id;
+					$newloanTransaction->transaction_date = date('Y-m-d');
+					$newloanTransaction->running_balance = round($account->principal_balance + $loanTransaction->principal_paid, 2);
+					$newloanTransaction->remarks="cancelled thru payment cancellation facility";
+					$newloanTransaction->prepaid_intpaid = 0;
+					$newloanTransaction->interest_paid = 0;
+					$newloanTransaction->OR_no= "CN-".$paymentHeader->or_num;
+					$newloanTransaction->principal_paid = 0;
+					$newloanTransaction->arrears_paid = 0;
+					$newloanTransaction->date_posted = date('Y-m-d');
+					$newloanTransaction->interest_earned = 0;
+					
+					if(!$newloanTransaction->save())
+					{
+						echo var_dump($newloanTransaction->errors);
+						$success = false;
+						die;
+					}
+					
+					$account->principal_balance = $newloanTransaction->running_balance;
+					$account->interest_balance = round($account->interest_balance + $loanTransaction->interest_earned, 2);
+					$account->interest_accum = round($account->interest_accum+ $loanTransaction->interest_earned, 2);
+					
+					if(!$account->save())
+					{
+						echo var_dump($account->errors);
+						$success = false;
+						die;
+					}
+					
+					
+					
+					
+					
+					array_push($journaldetails, [
+							'amount' => $loanTransaction->prepaid_intpaid + $loanTransaction->principal_paid + $loanTransaction->arrears_paid + $loanTransaction->interest_paid,
+							'entry_type'=>'CREDIT',
+							'particular_id'=>$cashOnHandId //cash on hand
+					]);
+					
+					//credit part, reverse to debit
+					if($loanTransaction->prepaid_intpaid>0)
+					{
+						
+						array_push($journaldetails, [
+								'amount'=> $loanTransaction->prepaid_intpaid,
+								'entry_type' => 'DEBIT',
+								'particular_id' => $product->pi_particular_id
+						]);
+						
+					}
+					
+					if($loanTransaction->principal_paid>0)
+					{
+						
+						array_push($journaldetails, [
+								'amount'=> $loanTransaction->principal_paid,
+								'entry_type' => 'DEBIT',
+								'particular_id' => $product->particular_id
+						]);
+						
+					}
+					
+					
+					if($loanTransaction->interest_paid>0)
+					{
+						
+						array_push($journaldetails, [
+								'amount'=> $loanTransaction->interest_paid,
+								'entry_type' => 'DEBIT',
+								'particular_id' => $product->int_particular_id
+						]);
+						
+					}
+					
+
+				}
+				
+				
+				else if($row['type']=='SAVINGS')
+				{
+					$savingsaccount = SavingAccounts::findOne(['account_no'=>$row['account_no']]);
+					$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
+					
+					$lastSavingsTransactionId = \app\models\SavingsTransaction::find()->select('MAX(id) as idcount')->where([
+							'fk_savings_id' => $row['account_no'], 'is_cancelled'=> 0
+					])->andWhere(['not in', 'LEFT(transaction_type,3)', 'CAN'])->asArray()->one();
+					
+					
+					
+					$savingstransaction = \app\models\SavingsTransaction::find()->where(['fk_savings_id' => $row['account_no'], 'is_cancelled'=> 0,
+							'id' => $lastSavingsTransactionId['idcount']
+					])->andWhere(['not in', 'LEFT(transaction_type,3)', 'CAN'])->one();
+					
+					if(!$savingstransaction)
+					{
+						echo "Deposit for this Savings with OR Number is UNCANCELLABLE. Make sure this is the latest deposit or transaction made.";
+						echo "<h3> Please close the window </h3>";
+						die;
+					}
+					
+					
+					$savingstransaction->is_cancelled = 1;
+					
+					if(!$savingstransaction->save())
+					{
+						echo var_dump($savingstransaction->errors);
+						$success = false;
+						die;
+					}
+					
+					$newsavingstransaction = new SavingsTransaction();
+					
+					$newsavingstransaction->fk_savings_id = $row['account_no'];
+					$newsavingstransaction->amount = $row['amount'] * -1;
+					$newsavingstransaction->transaction_type = 'CAN'.$savingstransaction->transaction_type;
+					$newsavingstransaction->transacted_by = \Yii::$app->user->identity->id;
+					$newsavingstransaction->transaction_date = date('Y-m-d H:i:s');
+					$newsavingstransaction->running_balance = $savingsaccount->balance - $row['amount'];
+					$newsavingstransaction->remarks = "posted as cancel deposit from ".$paymentHeader->or_num;
+					$newsavingstransaction->ref_no = 'CN-'.$paymentHeader->or_num;
+					
+					if(!$newsavingstransaction->save())
+					{
+						echo var_dump($newsavingstransaction->errors);
+						$success = false;
+						die;
+					}
+					
+					$savingsaccount->balance = $savingsaccount->balance - $row['amount'];
+					
+					if(!$savingsaccount->save())
+					{
+						echo var_dump($savingsaccount->errors);
+						$success = false;
+						die;
+					}
+					
+					
+					array_push($journaldetails, [
+							'amount'=> $savingstransaction->amount,
+							'entry_type' => 'CREDIT',
+							'particular_id' => $cashOnHandId
+					]);
+					
+					
+					array_push($journaldetails, [
+							'amount'=> $savingstransaction->amount,
+							'entry_type' => 'DEBIT',
+							'particular_id' => $savingsproduct->particular_id
+					]);
+					
+					
+					
+					
+				}
+				
+				
+				else if($row['type']=='SHARE')
+				{
+					$shareaccount = \app\models\Shareaccount::findOne(['accountnumber'=>$row['account_no']]);
+					$shareproduct = \app\models\ShareProduct::findOne($shareaccount->fk_share_product);
+					
+					$lastSharesTransactionId = \app\models\ShareTransaction::find()->select('MAX(id) as idcount')->where([
+							'fk_share_id' => $row['account_no'], 'is_cancelled' => 0
+					])->andWhere(['not in', 'LEFT(transaction_type,3)', 'CAN'])->asArray()->one();
+					
+					$sharetransaction = \app\models\ShareTransaction::find()->where(['fk_share_id' => $row['account_no'], 'is_cancelled' => 0])
+					->andWhere(['not in', 'LEFT(transaction_type,3)', 'CAN'])->one();
+					
+					$sharetransaction->is_cancelled = 0;
+					
+					if(!$sharetransaction->save())
+					{
+						echo var_dump($sharetransaction->errors);
+						$success = false;
+						die;
+					}
+					
+					$newsharetransaction = new \app\models\ShareTransaction();
+					$newsharetransaction->fk_share_id = $row['account_no'];
+					$newsharetransaction->amount = $row['amount'] * -1;
+					$newsharetransaction->transaction_type = 'CAN'.$sharetransaction->transaction_type;
+					$newsharetransaction->transacted_by = \Yii::$app->user->identity->id;
+					$newsharetransaction->transaction_date = date('Y-m-d H:i:s');
+					$newsharetransaction->running_balance = $shareaccount->balance - $row['amount'];
+					$newsharetransaction->remarks = "posted as cancel deposit from ".$paymentHeader->or_num;
+					$newsharetransaction->reference_number = 'CN-'.$paymentHeader->or_num;
+					
+					if(!$newsharetransaction->save())
+					{
+						echo var_dump($sharetransaction->errors);
+						$success = false;
+						die;
+					}
+					
+					
+					$shareaccount->balance = $shareaccount->balance - $row['amount'];
+					
+					if(!$shareaccount->save())
+					{
+						echo var_dump($shareaccount->errors);
+						$success = false;
+						die;
+					}
+					
+					
+					array_push($journaldetails, [
+							'amount'=> $sharetransaction->amount,
+							'entry_type' => 'CREDIT',
+							'particular_id' => $cashOnHandId
+					]);
+					
+					
+					array_push($journaldetails, [
+							'amount'=> $sharetransaction->amount,
+							'entry_type' => 'DEBIT',
+							'particular_id' => $shareproduct->particular_id
+					]);
+					
+				}
+				
+				
+			}
+			
+			//post to journal entry
+			if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
+			{
+				$success = true;
+			}
+			
+			
+			else $success = false;
+			
+			if($success){
+				$paymentHeader->date_cancelled = $posted_date;
+				$paymentHeader->is_cancelled = 1;
+				$paymentHeader->save();
+				
+				$transaction->commit();
+				//$transaction->rollBack(); // Rollback for now
+				echo "<br/><h3>Saved</h3>";
+			}
+			
+			else {
+				$transaction->rollBack();
+				echo "<br/><h3>Unsaved. Please contact admin or the developer</h3>";
+			}
+			
+			echo "<br/><h3>Close Window.</h3>";
+			
+			
+		} catch (\Exception $e) {
+			var_dump($e);
+			echo $e->getMessage();
+		}
+		
+	}
 	
 	
 	
@@ -559,9 +901,7 @@ class PaymentHelper
 	
 	
 	
-	
-=======
->>>>>>> 2f935197eda578d1396101b1e7d206c582b8b6d2
+
 
 	public static function getPayments($account_no, $type){
 		$payment_record = PaymentRecordList::find()->innerJoinWith(['paymentRecord'])

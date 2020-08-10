@@ -52,4 +52,11 @@ class PaymentRecord extends \yii\db\ActiveRecord
             'check_number' => 'Check Number',
         ];
     }
+    
+    
+    
+    public function getPaymentlist() {
+    	return $this->hasMany(PaymentRecordList::className(), ['payment_record_id'=>'id']);
+    	//$this->hasOne(LoanProduct::className(), ['id' => 'loan_id'] );
+    }
 }

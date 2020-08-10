@@ -676,4 +676,29 @@ class PaymentController extends \yii\web\Controller
         
 
     }
+    
+    public function actionGetPaymentListWithReference()
+    {
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	$post = \Yii::$app->getRequest()->getBodyParams();
+    	
+    	if($post)
+    	{
+    		//$interest = PaymentHelper::getCurrentInterest($post['accountnumber'], $post['int_rate']);
+    		
+    		$payments = \app\models\PaymentRecord::find()->where(['or_num'=>$post['or_num']])->andWhere(['not', ['posted_date' => null]])
+    					->innerJoinWith('paymentlist')
+    					->asArray()->all();
+    		
+    		return $payments;
+    	}
+    	
+    }
+    
+    public function actionProcessPaymentCancellation($ref_id)
+    {
+    	//\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	
+    	PaymentHelper::unpostPayment($ref_id);
+    }
 }
