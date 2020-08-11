@@ -799,4 +799,11 @@ class LoanController extends \yii\web\Controller
     	return $this->render('loan-closure', []);
     	
     }
+    
+    public function actionCancelPayments() {
+    	
+    	$this->layout = 'main-vue';
+    	
+    	return $this->render('payment-cancellation', []);
+    }
 }

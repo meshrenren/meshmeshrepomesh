@@ -31,5 +31,20 @@ export default {
 			or_num: or_num
 		}
 		return axios.post($baseUrl + '/payment/get-payment-details', params)
+	},
+
+	getPaymentForCancellation(or_num) {
+		let params = {
+			or_num: or_num
+		}
+		return axios.post($baseUrl + '/payment/get-payment-list-with-reference', params)
+	},
+
+	cancelPaymentCollection(payments) {
+		let params = {
+			payments: payments
+		}
+
+		return axios.post($baseUrl + '/payment/get-payment-list-with-reference', params)
 	}
 }

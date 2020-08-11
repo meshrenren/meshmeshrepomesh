@@ -86,6 +86,12 @@ use yii\helpers\Html;
                         		 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                         	],
                         		
+                        	[
+                        	  'label'     => 'Payment Cancellation',
+                        	  'url'       => ['loan/cancel-payments'],
+                        	  'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
+                        	],
+                        		
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                     ],
