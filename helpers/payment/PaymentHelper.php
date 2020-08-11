@@ -37,8 +37,8 @@ class PaymentHelper
         $payment->posting_code = $data['posting_code'];
         $payment->check_number = $data['check_number'];
         $payment->amount_paid = $data['amount_paid'];
-        $payment->created_date = \Yii::$app->user->identity->DateTimeNow;
-        $payment->created_by = \Yii::$app->user->identity->id;
+        $payment->created_date = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->DateTimeNow : $data['date_transact'];
+        $payment->created_by = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->id : 18;
         //$payment->created_by = 18; //CINCO
 
         if($payment->save()){
@@ -59,6 +59,7 @@ class PaymentHelper
             $payment->type = $value['type'];
             $payment->amount = $value['amount'];
             $payment->member_id = $value['member_id'];
+            $payment->name = isset($value['name']) ? $value['name'] : "";
             if(isset($value['particular_id'])){
             	$payment->particular_id = $value['particular_id'];
             }
@@ -541,27 +542,6 @@ class PaymentHelper
 		}
 		
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-=======
->>>>>>> 2f935197eda578d1396101b1e7d206c582b8b6d2
 
 	public static function getPayments($account_no, $type){
 		$payment_record = PaymentRecordList::find()->innerJoinWith(['paymentRecord'])

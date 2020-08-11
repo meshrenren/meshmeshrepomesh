@@ -4,6 +4,7 @@ namespace app\helpers\accounts;
 
 use Yii;
 use \app\models\Shareaccount;
+use \app\models\ShareProduct;
 use \app\models\ShareTransaction;
 
 class ShareHelper 
@@ -51,6 +52,16 @@ class ShareHelper
         }*/
         return null;
                 
+    }
+
+    public static function getProduct($filter, $asArray = false){
+        $getProduct= ShareProduct::find()->where($filter);
+        if($asArray){
+            $getProduct = $getProduct->asArray();
+        }
+        $getProduct = $getProduct->one();
+
+        return $getProduct;
     }
 
     public static function printList($postData){

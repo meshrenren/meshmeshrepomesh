@@ -4,6 +4,7 @@ namespace app\helpers\accounts;
 
 use Yii;
 use \app\models\SavingAccounts;
+use \app\models\Savingsproduct;
 use \app\models\SavingsTransaction;
 
 class SavingsHelper 

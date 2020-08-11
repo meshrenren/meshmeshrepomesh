@@ -20,7 +20,7 @@ class JournalHelper
         }else{
             $journal->transacted_date = date('Y-m-d H:i:s');
         }
-        $journal->transacted_by = \Yii::$app->user->identity->id;
+        $journal->transacted_by = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->id : 18;
         //$journal->transacted_by = 18; //CINCO
 
         if($journal->save()){

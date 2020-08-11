@@ -14,8 +14,8 @@ class VoucherHelper
         $voucher->name = $data['name'];
         $voucher->type = $data['type'];
         $voucher->date_transact = $data['date_transact'];
-        $voucher->created_date = \Yii::$app->user->identity->DateTimeNow;
-        $voucher->created_by = \Yii::$app->user->identity->id;
+        $voucher->created_date = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->DateTimeNow : $data['date_transact'];
+        $voucher->created_by = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->id : 18;
 
         if($voucher->save()){
             return $voucher;
