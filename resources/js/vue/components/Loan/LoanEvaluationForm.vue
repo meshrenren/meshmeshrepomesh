@@ -118,7 +118,7 @@
 						  		<p>&nbsp;</p>
 						  	</td>
 						  	<th>
-		        				<p>Savings(1%)</p>
+		        				<p>Retention</p>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.savings_retention) }}</span>
@@ -204,6 +204,61 @@
 	        					<span v-if = "latestLoan">{{ latestLoan.release_date }}</span>
 	        				</td>
 	        			</tr>
+	        			<tr>
+	        				<th>Term: </th>
+	        				<td>
+	        					<span>{{ $nf.formatNumber(evaluationForm.term) }}</span>
+	        				</td>
+	        			</tr>
+	        		</table>
+	        	</div>
+	        	<div class = "col-md-12" style = "margin-top: 20px;">
+	        		<h3>OTHER LOANS:</h3>
+	        		<table style="text-align: left;">
+	        			<thead>
+	        				<tr>
+		        				<th>Loan Type </th>
+		        				<th>Total Arrears</th>
+		        				<th>Loan Amount</th>
+		        				<th>Balance</th>
+		        				<th>Date of Loan</th>
+		        			</tr>
+	        			</thead>
+	        			<tbody>
+	        				<tr v-for = "loan in otherLoans">
+	        					<td>{{ loan.product.product_name}}</td>
+	        					<td>{{ $nf.formatNumber(loan.arrears, 2) }}</td>
+	        					<td>{{ $nf.formatNumber(loan.principal, 2) }}</td>
+	        					<td>{{ $nf.formatNumber(loan.principal_balance, 2) }}</td>
+	        					<td>{{ loan.release_date }}</td>
+	        				</tr>
+	        			</tbody>
+	        			
+	        		</table>
+	        	</div>
+
+	        	<div class = "col-md-12" style = "margin-top: 20px;">
+	        		<h3>Payments:</h3>
+	        		<table style="text-align: left;">
+	        			<thead>
+	        				<tr>
+		        				<th>DateType </th>
+		        				<th>GV / OR Num</th>
+		        				<th>Amount Paid</th>
+		        				<th>Balance</th>
+		        				<th>Remarks</th>
+		        			</tr>
+	        			</thead>
+	        			<tbody>
+	        				<tr v-for = "trans in loanTransaction">
+	        					<td>{{ trans.date_posted}}</td>
+	        					<td>{{ trans.OR_no }}</td>
+	        					<td>{{ $nf.formatNumber(trans.principal_paid, 2) }}</td>
+	        					<td>{{ $nf.formatNumber(trans.running_balance, 2) }}</td>
+	        					<td>{{ trans.remarks }}</td>
+	        				</tr>
+	        			</tbody>
+	        			
 	        		</table>
 	        	</div>
 	        </div>
@@ -254,6 +309,8 @@ export default {
 			shareAccount 			: shareAccount,
 			latestLoan 				: this.pageData.latestLoan,
 			loanProduct 			: this.pageData.loanProduct,
+			otherLoans 				: this.pageData.otherLoans,
+			loanTransaction 		: this.pageData.loanTransaction,
 			pageLoading 			: false,
 			printOptions 			: {
 			 	name: '_blank',
@@ -264,6 +321,7 @@ export default {
 			  	],
 			  	styles: [
 			    	'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
+			    	"https://unpkg.com/kidlat-css/css/kidlat.css",
 			  	]
 			},
 		}
@@ -274,7 +332,7 @@ export default {
 	mounted(){
 		if(this.toPrint){
 			setTimeout(() => {
-                this.printPage()
+                //this.printPage()
             }, 500);
 		}
 	},

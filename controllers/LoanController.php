@@ -84,11 +84,15 @@ class LoanController extends \yii\web\Controller
         $acc = \app\models\LoanAccount::find()->innerJoinWith(['member', 'product'])
             ->where(['status' => 'Verified'])
             ->asArray()->all();
+
+        $filter  = ['category' => ['LOAN', 'OTHERS']];
+        $getParticular = ParticularHelper::getParticulars($filter);
+        $pageData = ['particulars' => $getParticular];
     	
     	/*
     	 * end
     	 */
-    	return $this->render('pending-list', ['ForApprovalLoans'=>$acc]);
+    	return $this->render('pending-list', ['pageData' => $pageData, 'ForApprovalLoans'=>$acc]);
     }
 
     public function actionList()
@@ -247,7 +251,7 @@ class LoanController extends \yii\web\Controller
             $getTransactions = [];
             if($acc != null)
             {
-                $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'id, date_posted');
+                $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'date_posted');
                 $prepaid_interest = 0;
                 $interest_accum = 0;
                 $prepaid_interest = 0;
@@ -295,8 +299,6 @@ class LoanController extends \yii\web\Controller
                 	
                 	$result['interest_accum'] = $result['interest_accum'] + $interestEarned;
                 }
-
-                //Get payment
             	
             }
             
@@ -469,10 +471,11 @@ class LoanController extends \yii\web\Controller
     		$success = true;
     		$transaction = \Yii::$app->db->beginTransaction();
     		
-    		$loanaccount_array  = $post['applyLoan'];
-    		$loanaccount = $loanaccount_array['evaluationFormss'];
+    		$loanaccount_array  = $post;
+    		$loanaccount = (object) $post['evaluationFormss'];
             $gv_num = $post['gv_num'];
             $voucherDetails = $post['voucherDetails'];
+            $otherLoanToPay = $post['otherLoanToPay'];
     		
     		
     		/* For renewal, go give these parameters to close the loan.
@@ -480,14 +483,15 @@ class LoanController extends \yii\web\Controller
     		 */
     		if($loanaccount_array['loanToRenew'])
     		{
+                $loanToRenew = (object) $post['loanToRenew'];
     			$closeDetails = [];
-    			$closeDetails['accountnumber'] = $loanaccount_array['loanToRenew']->account_number;
-    			$closeDetails['product_id'] = $loanaccount_array['loanToRenew']->product_id;
+    			$closeDetails['accountnumber'] = $loanToRenew->account_number;
+    			$closeDetails['product_id'] = $loanToRenew->product_id;
     			$closeDetails['interest_pay'] = $loanaccount->credit_interest;
     			$closeDetails['principal_pay'] = $loanaccount->credit_loan;
     		//	$closeDetails['prepaid_int_return'] = $loanaccount->debit_preinterest;
     			$closeDetails['prepaid_int_pay'] = $loanaccount->credit_preinterest;
-    			$closeDetails['reference'] = "GV123.sample";
+    			$closeDetails['reference'] = $gv_num;
     			
     			$closeLoan =  LoanHelper::closeAccountDueToRenewal($closeDetails);
     			
@@ -521,7 +525,7 @@ class LoanController extends \yii\web\Controller
     		$loanTransaction->remarks = "loan release";
     		$loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
     		$loanTransaction->interest_paid = 0;
-    		$loanTransaction->OR_no = "";
+    		$loanTransaction->OR_no = $gv_num;
     		$loanTransaction->principal_paid = 0;
     		$loanTransaction->arrears_paid = 0;
     		$loanTransaction->date_posted = date('Y-m-d');
@@ -531,7 +535,51 @@ class LoanController extends \yii\web\Controller
     		
     		if(/*$loanproduct->save() && */$loanmodel->save() && $loanTransaction->save())
     		{
-    			if($loanaccount->savings_retention>0)
+                //Update other paid loan
+                if($otherLoanToPay && count($otherLoanToPay) > 0){
+                    foreach ($otherLoanToPay as $lnKey => $ln) {
+                        if($ln['amountToPay'] > 0){
+                            $amountToPay = $ln['amountToPay'];
+                            $otherLoanModel = LoanAccount::findOne($ln['account_no']);
+                            $running_balance = $otherLoanModel->principal_balance - $amountToPay;
+                            $otherLoanModel->principal_balance = $running_balance;
+
+                            $transaction_type = 'PAYPARTIAL';
+                            if($running_balance == 0){
+                                $loanmodel->status='Closed';
+                                $transaction_type="PAYCLOSE";
+                            }
+                        
+                            $otherLoanTransaction = new LoanTransaction();
+                            $otherLoanTransaction->loan_account = $otherLoanModel->account_no;
+                            $otherLoanTransaction->amount = $amountToPay;
+                            $otherLoanTransaction->transaction_type=$transaction_type;
+                            $otherLoanTransaction->transacted_by = \Yii::$app->user->identity->id;
+                            $otherLoanTransaction->transaction_date = date('Y-m-d');
+                            $otherLoanTransaction->running_balance = $running_balance;
+                            $otherLoanTransaction->remarks = "loan payment by regular loan";
+                            $otherLoanTransaction->prepaid_intpaid = 0;
+                            $otherLoanTransaction->interest_paid = 0;
+                            $otherLoanTransaction->OR_no = $gv_num;
+                            $otherLoanTransaction->principal_paid = $amountToPay;
+                            $otherLoanTransaction->arrears_paid = 0;
+                            $otherLoanTransaction->date_posted = date('Y-m-d');
+                            $otherLoanTransaction->interest_earned = 0;
+
+                            if($otherLoanModel->save() && $otherLoanTransaction->save())
+                            {
+                                $success = true;    
+                            }
+                            else{
+                                $success = false;
+                                break;
+                            }
+                        }
+                        
+                    }
+                }
+
+    			if($loanaccount->savings_retention>0 && $success)
     			{
     				$savingsaccount = SavingAccounts::findOne(['member_id'=>$loanaccount->member_id, 'is_active'=>1]);
     				$savingstransaction = new SavingsTransaction();
@@ -550,81 +598,74 @@ class LoanController extends \yii\web\Controller
     				
     				if($savingsaccount->save() && $savingstransaction->save())
     				{
-
-                        //Save in voucher
-                        $voucherData = array();
-                        $voucherData['gv_num'] = $gv_num;
-                        if($member){
-                            $name =  $member->first_name . " " . $member->middle_name . " " . $member->last_name;
-                            $type = "Individual";
-                            $member_id = $member->id;
-                        }
-                        $voucherData['name'] = $name;
-                        $voucherData['type'] = $type;
-                        $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
-
-                    
-                        $voucherModel = VoucherHelper::saveVoucher($voucherData);
-                        if($voucherModel){
-                            $entries =  $voucherDetails;
-                            foreach ($entries as  $key => $ent) {
-                                $entries[$key]['member_id'] = $member_id;
-                            }
-                            $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
-                            if(!$saveEntries){
-                                $success = false;
-                            }
-                        }else{
-                            $success = false;
-                        }
-
-                        if($success){
-                            $transaction->commit();
-                            return $loanaccount;
-                        }else{
-                            $transaction->rollBack();
-                            return [
-                                'status'=>'not saved'
-                            ];
-                        }
-    					
-    					
+                        $success = true;	
     				}
-    				
-    				else
-    				{
-    					$transaction->rollBack();
-    					return [
-							'status'=>'not saved',
-							'errors'=> [
-									'saError' => $savingsaccount->getErrors(),
-									'stError' => $savingstransaction->getErrors(),	
-							]
-						];
-    							
-    				}
-    				
     				
     			}
-    			
-    			$transaction->commit();
-    			return $loanaccount;
+
+                if($success){
+                    //Save in voucher
+                    $voucherData = array();
+                    $voucherData['gv_num'] = $gv_num;
+                    if($member){
+                        $name =  $member->first_name . " " . $member->middle_name . " " . $member->last_name;
+                        $type = "Individual";
+                        $member_id = $member->id;
+                    }
+                    $voucherData['name'] = $name;
+                    $voucherData['type'] = $type;
+                    $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+
+                
+                    $voucherModel = VoucherHelper::saveVoucher($voucherData);
+                    if($voucherModel){
+                        $entries =  $voucherDetails;
+                        foreach ($entries as  $key => $ent) {
+                            $entries[$key]['member_id'] = $member_id;
+                        }
+                        $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
+                        if(!$saveEntries){
+                            $success = false;
+                        }
+                    }else{
+                        $success = false;
+                    }
+                }
+
+                
+
+                if($success){
+                    $transaction->commit();
+                    return [
+                        'success' => true,
+                        'loanaccount' => $loanaccount
+                            
+                    ];
+                }else{
+                    $transaction->rollBack();
+                    return [
+                        'success' => false,
+                        'status'=>'not saved'
+                    ];
+                }
     			
     		} else
     		{
     			$transaction->rollBack();
     			return [
-    					'status'=>'not saved',
-    					'errors'=> [
-    							'lpError' => $loanproduct->getErrors(),
-    							'lmError' => $loanmodel->getErrors(),
-    							'ltError' => $loanTransaction->getErrors()
-    					]
+                    'success' => false,
+					'status'=>'not saved',
+					'errors'=> [
+							'lmError' => $loanmodel->getErrors(),
+							'ltError' => $loanTransaction->getErrors()
+					]
     					
     			];
     		}
     		
-    		return $loanaccount;
+            return [
+                'success' => false
+            ];
     		
     	}
     }

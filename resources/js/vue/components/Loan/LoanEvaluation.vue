@@ -221,7 +221,7 @@
 										  		<p>&nbsp;</p>
 										  	</el-col>
 										  	<el-col :span="4">
-						        				<p>Savings(1%)</p>
+						        				<p>Retention</p>
 										  	</el-col>
 										  	<el-col :span="10">
 						        				<el-form-item props = "savings_retention">
@@ -350,7 +350,8 @@ export default {
 			LoanToRenew				: null,
 			durationList 			:  durationList,
 			showFormModal 			: false,
-			loanEvalFormData 		: {}
+			loanEvalFormData 		: {},
+			loanTransaction 		: []
 		}
 	},
 	created(){
@@ -410,7 +411,9 @@ export default {
 				memberDetails : this.memberDetails, 
 				shareDetails : this.memberDetails.shareaccount ? this.memberDetails.shareaccount : null, 
 				latestLoan : this.LoanToRenew,
-				loanProduct : getLoan
+				loanProduct : getLoan,
+				otherLoans : this.accountLoanList,
+				loanTransaction : this.loanTransaction,
 			}
 			//this.$htmlToPaper('printMe');
 			setTimeout(() => {
@@ -523,6 +526,7 @@ export default {
 				    			let res = result.data
 								console.log("resRES", res)
 								vm.LoanToRenew = res.data.latestLoan;
+								vm.loanTransaction = res.data.loanTransaction;
 				    			this.calculateLoan(getProduct, res.data)
 				    			
 				    			this.isLoading = false
@@ -979,6 +983,7 @@ export default {
     		return amt
     		
     	},
+    	//Do not forget the last interest
     	preIntCalculation(account, loanTransaction, product){
     		let intCredit = 0
     		let preIntDedit = 0
@@ -991,9 +996,44 @@ export default {
     		let firstPi = 0
     		let firstInt = 0
     		let intCount = 0
+    		let firstPayAfter = loanCutOff
     		console.log("loanTransaction", loanTransaction)
     		_forEach(loanTransaction, lt =>{
     			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
+    			if(lt.transaction_type == "PAYPARTIAL"){
+	    			if(dateTransacX > loanCutOffX){
+	    				if(lt.interest_earned ){
+	    					intCredit = intCredit + parseFloat(lt.interest_earned)
+	    					if(parseFloat(lt.running_balance) < 0){
+	    						intCredit = intCredit - parseFloat(lt.interest_earned)
+	    					}
+	    					if(intCount == 0){ firstInt = parseFloat(lt.interest_earned)}
+	    				}
+
+	    				if(lt.prepaid_intpaid ){
+	    					preIntDedit = preIntDedit + parseFloat(lt.prepaid_intpaid)
+	    					if(intCount == 0){ firstPi = parseFloat(lt.prepaid_intpaid)}
+
+	    				}
+	    				if(intCount == 0){firstPayAfter = lt.transaction_date}
+	    				intCount++
+	    			}
+	    		}
+    		})
+    		console.log('preIntCalculation', cloneDeep(intCredit), cloneDeep(preIntDedit), strRL1, strRL2)
+    		console.log('preIntCalculation FIRST', firstInt, firstPi)
+
+    		let firstPayAfterX = this.$df.formatDate(this.$df.formatDate(firstPayAfter, 'YYYY-MM-DD'), 'X') 
+    		_forEach(loanTransaction, lt =>{
+    			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
+    			if(dateTransacX < firstPayAfterX){
+    				if(dateTransacX > loanCutOffX){
+
+    				}
+    				else{
+
+    				}
+    			}
     			if(lt.transaction_type == "PAYPARTIAL"){
 	    			if(dateTransacX > loanCutOffX){
 	    				if(lt.interest_earned ){
@@ -1017,18 +1057,6 @@ export default {
 	    			}
 	    		}
     		})
-    		console.log('preIntCalculation', cloneDeep(intCredit), cloneDeep(preIntDedit), strRL1, strRL2)
-    		console.log('preIntCalculation FIRST', firstInt, firstPi)
-
-    		if(strRL1 >= strRL2){
-    			let str = strRL1 - strRL2
-    			preIntDedit = preIntDedit + str
-    		}
-
-    		if(strRL2 >= strRL1){
-    			let str = strRL2 - strRL1
-    			intCredit = intCredit + str
-    		}
 
     		/*let tempAmountPaid = 0
     		let firstPi = 0

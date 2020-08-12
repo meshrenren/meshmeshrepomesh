@@ -140,8 +140,16 @@ export default {
 
         },
     	processAccount(){
+            console.log('processAccount')
     		if(!this.gvNumber){
-    			this.showMessage('error', 'Please enter GV Number')
+                new Noty({
+                    type: 'error',
+                    layout: 'topRight',
+                    text: 'Please enter GV ',
+                    timeout: 2500
+                }).show()
+
+                console.log('here')
     			return
     		}
     		let params = {

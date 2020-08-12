@@ -21,7 +21,7 @@ class LoanHelper
 		//$query->select('DISTINCT(loan_id) as loan_id') -->giusab sa nako ren para maview tanang loans
         $query->select('account_no')
             ->from('loanaccount la')
-            ->where('member_id = '. $member_id);
+            ->where('la.member_id = '. $member_id);
         $loanAccounts = $query->all();
         $accountList = array();
         if(count($loanAccounts) >= 1){
@@ -29,7 +29,7 @@ class LoanHelper
                 $acc = \app\models\LoanAccount::find()
                     ->innerJoinWith(['product'])
                     //->where(['member_id' => $member_id, 'loan_id' =>  $loan['loan_id']]) -->giusab sa nako ni ren para maview tanang loans. :)
-               		 ->where(['member_id' => $member_id, 'account_no' => $loan['account_no']])
+               		 ->where(['loanaccount.member_id' => $member_id, 'account_no' => $loan['account_no']])
                      ->andWhere('status != "Cancel" AND status != "Verified" ')
                     ->orderBy('release_date DESC')
                     ->asArray()->one();
@@ -42,7 +42,7 @@ class LoanHelper
     public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = null, $isAll = false){
         $acc = \app\models\LoanAccount::find()
             ->innerJoinWith(['product'])
-            ->where(['member_id' => $member_id, 'loan_id' =>  $loan_id])
+            ->where(['loanaccount.member_id' => $member_id, 'loanaccount.loan_id' =>  $loan_id])
             ->andWhere('status != "Cancel"')
             ->orderBy('release_date DESC');
         if($joinWith){

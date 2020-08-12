@@ -105,6 +105,11 @@
 					                    <span>{{ scope.row.OR_no }}</span>
 					                </template>
 					            </el-table-column>
+					            <el-table-column label="Running Balance">
+					                <template slot-scope="scope">
+					                    <span>{{ $nf.formatNumber(scope.row.running_balance) }}</span>
+					                </template>
+					            </el-table-column>
 					            <el-table-column label="Principal Paid">
 					                <template slot-scope="scope">
 					                    <span>{{ $nf.formatNumber(scope.row.principal_paid) }}</span>

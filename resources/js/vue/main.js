@@ -32,6 +32,7 @@ Vue.use(Element, { size: 'mini', locale });
 Vue.use(VueSweetalert2);
 
 import './assets/main.scss'
+import 'noty/src/noty.scss'
 const app = new Vue({
     el: '#vue-app'
 });
