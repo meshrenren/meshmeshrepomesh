@@ -521,6 +521,7 @@ class SavingsController extends \yii\web\Controller
             $postData = \Yii::$app->getRequest()->getBodyParams();
             $account_no = $postData['account_no'];
             $type = $postData['type'];
+            $amount = $postData['amount'];
             $model = \app\models\SavingAccounts::find()->where(['savingsaccount.account_no' => $account_no])->joinWith(['member'])->one();
             if($model){
                 $transaction = \app\models\SavingAccounts::find()->where(['account_no' => $model->account_no])->one();
@@ -542,6 +543,7 @@ class SavingsController extends \yii\web\Controller
                 $template = str_replace('[last_transaction]', $last_transaction , $template);
                 $template = str_replace('[balance]', $balance, $template);
                 $template = str_replace('[penalty]', "", $template);
+                $template = str_replace('[amount]', $amount, $template);
 
 
                 if($type == "pdf"){

@@ -1128,6 +1128,8 @@ export default {
 	            	if (result.value) {
 		    			this.disabledBox = false
 
+		    			console.log("this.evaluationForm", this.evaluationForm)
+
 						let loandata = {
 							evaluationFormss: this.evaluationForm,
 							loanToRenew: this.LoanToRenew == null ? null : {

@@ -20,7 +20,6 @@
 								    <el-input v-model="accountDetails.product.description" :disabled = "true"></el-input>
 								</el-form-item>
 								<el-button type = "info"  @click="showSearchModal = true">Search Savings Account</el-button>
-								<el-button class = "mt-10" type = "default"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
 	            			</el-form>
 							<hr>
 							<div class = "transaction-list">
@@ -79,6 +78,8 @@
 									</el-input>
 								</el-form-item>	
 								<el-form-item>
+
+									<el-button class = "mt-10" type = "default"  @click="printForm('print')" v-if = "accountDetails.account_no">Print Form</el-button>
 									<el-button class = "pull-right" type = "primary" @click = "saveTransaction" :disabled = "accountDetails.account_no == null">Process</el-button>
 								</el-form-item>
             				</el-form>

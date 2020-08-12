@@ -65,7 +65,7 @@ COOPERATIVE
 		</tr>
 		<tr>
 			<td><span style="font-size: 8pt;">Desired Withdrawal Amount:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[amount]</span></td>
 		</tr>
 		<tr>
 			<td><span style="font-size: 8pt;">Penalty:</span></td>
