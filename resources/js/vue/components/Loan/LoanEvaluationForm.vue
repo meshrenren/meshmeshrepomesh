@@ -332,7 +332,7 @@ export default {
 	mounted(){
 		if(this.toPrint){
 			setTimeout(() => {
-                //this.printPage()
+                this.printPage()
             }, 500);
 		}
 	},
