@@ -70,6 +70,7 @@ class SeedController extends Controller
             	$newMember->telephone = $oldmember->ContactNum;
                 $newMember->old_db_idnum = intval($oldmember->IDNum) ;
                 $newMember->old_db_idnum_zero = $oldmember->IDNum;
+                $newMember->old_db_name = $oldmember->Name;
 
             	if($newMember->save()){
             		$newUser = new \app\models\User;
@@ -211,6 +212,38 @@ class SeedController extends Controller
         }
     }
 
+    public function actionUpdateMemberName()
+    {
+        $oldmembers = \app\models\Membersold::find()->orderBy('IDNum ASC')->select(["*"])->all();
+        foreach ($oldmembers as $oldmember) {
+            $getMember = \app\models\Member::find()->where(['first_name' => $oldmember->FName, 'last_name' =>  $oldmember->SName, 'middle_name' =>  $oldmember->MName])->one();
+            if($getMember != null){
+                $getMember->old_db_name = $oldmember['Name'];
+                $getMember->save(false);
+            }
+        }
+
+        $nullmembers = \app\models\Member::find()->where('old_db_name IS NULL')->all();
+        foreach ($nullmembers as $nullmember) {
+            $newUser = new \app\models\User;
+            $newUser->username = $nullmember->last_name . "_" . $nullmember->id;
+
+            $em = str_replace(" ", "", $nullmember->last_name);
+            $em = str_replace("Ñ", "N", $em);
+
+            $rand = substr(md5(microtime()), rand(0,26), 10);
+            $newUser->password = sha1($rand);
+            $newUser->email = $em . "@yahoo.com";
+            $newUser->level_id = 5;
+            $newUser->is_member = 1;
+            $newUser->password_text = $rand;
+            $newUser->save();
+
+            $nullmember->user_id = $newUser->id;
+            $nullmember->update();
+        }
+    }
+
     /*public function actionSeedLoanLedgerMember(){
         $query = new \yii\db\Query;
         $query->select('*');
@@ -329,6 +362,51 @@ class SeedController extends Controller
         }
     }*/
 
+    public function actionCheckLoan(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loantransacmember llm');
+        $loanMember = $query->all();
+        $memberCount = 0;
+        foreach ($loanMember as $key => $llm) {
+            //$getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum'], 'last_name' => $llm['Sname']])->one();
+            $getMember = \app\models\Member::find()->where(['old_db_name' => $llm['Name']])->one();
+            if($getMember){
+                $query2 = new \yii\db\Query;
+                $query2->select(['*']);
+                $query2->from('zold_loantransac ll')->where(['Name' => $llm['Name']])->andWhere("PrincipalLoan != ''");
+                $query2->groupBy(['LoanType']);
+                $loanLedgerMember = $query2->all();
+                $loanLedgerMemberCount = 0;
+                foreach ($loanLedgerMember as $key => $loan) {
+                    $balance = floatVal(str_replace(",", "", $loan['Balance']));
+                    $dateStrpos = strpos($loan['DateTransac'], '2019');
+                    $dateYear = date('Y', strtotime($loan['DateTransac']));
+                    $skip = true;
+                    if($balance > 0){
+                        $skip = false;
+                    }
+                    else if($dateYear >= 2015){
+                        $skip = false;
+                    }
+                    if(!$skip){
+                        $loanLedgerMemberCount++;
+                    }
+                }
+
+
+                $query3 = new \yii\db\Query;
+                $query3->select(['*']);
+                $query3->from('loanaccount ll')->where(['member_id' => $getMember->id]);
+                $loanAccount = $query3->all();
+                if((int)$loanLedgerMemberCount != (int)count($loanAccount)){
+                    echo $getMember['last_name'] . "\t" . $llm['Name'] . ":\t " . $loanLedgerMemberCount . " - " . count($loanAccount). "\n\n"; 
+                }
+
+            }
+        }
+    }
+
     //Done Seeding loan. Please don't uncomment or run this unless necessary
     public function actionSeedLoanTransacMember(){
         $query = new \yii\db\Query;
@@ -337,12 +415,13 @@ class SeedController extends Controller
         $loanMember = $query->all();
         $memberCount = 0;
         foreach ($loanMember as $key => $llm) {
-            $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum'], 'last_name' => $llm['Sname']])->one();
+            //$getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum'], 'last_name' => $llm['Sname']])->one();
+            $getMember = \app\models\Member::find()->where(['old_db_name' => $llm['Name']])->one();
             if($getMember){
                 $memberCount++;
                 $query2 = new \yii\db\Query;
                 $query2->select(['*']);
-                $query2->from('zold_loantransac ll')->where(['IDNum' => $llm['IDNum']])->andWhere("PrincipalLoan != ''");
+                $query2->from('zold_loantransac ll')->where(['Name' => $llm['Name']])->andWhere("PrincipalLoan != ''");
                 $query2->groupBy(['LoanType']);
                 $loanLedgerMember = $query2->all();
                 $loans = "";
@@ -515,6 +594,7 @@ class SeedController extends Controller
         }
     }
 
+    //Done Seeding loan. Please don't uncomment or run this unless necessary
     public function actionLoanLedger(){
 
         $loanAccount = \app\models\LoanAccount::find()->all();
@@ -2115,15 +2195,15 @@ class SeedController extends Controller
             $member_id = null;
             $accountName = null;
             $toSave = false;
-            if($td['IDNum'] != '' && $td['SName'] != '' && $td['FName'] != ''){
-                $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $td['IDNum'], 'last_name' => $td['SName'], 'first_name' => $td['FName']])->one(); 
+            if($td['IDNum'] != '' && $td['Name'] != ''){
+                $getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $td['IDNum'], 'old_db_name' => $td['Name']])->one(); 
                 if($getMember){
                     $member_id = $getMember->id;
                     $toSave = true;
                 }
                 else{
                     $text = $td['IDNum'] . "->" . $td['SName'] . " ".  $td['FName'] . " \tName: " . $td['Name'] . " \t" . $td['TDAcctNum'] .  "\n";
-                    $getMember = \app\models\Member::find()->where(['last_name' => $td['SName'], 'first_name' => $td['FName']])->one();
+                    $getMember = \app\models\Member::find()->where(['old_db_name' => $td['Name']])->one();
 
                     if($getMember){
                         if ($this->confirm($text . " Save as individual? If no, it will be save as a group.")) {

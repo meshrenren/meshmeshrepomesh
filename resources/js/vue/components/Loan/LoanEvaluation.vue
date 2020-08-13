@@ -123,10 +123,8 @@
 									    		<el-button slot="append" type = "primary" @click="evaluateLoan()">EVALUATE</el-button>
 									    	</el-input>
 									  	</el-form-item>
-
-										<el-checkbox @change = "savingsChange" v-model="evaluationForm.is_savings">1% Savings Retention?</el-checkbox>
-
-
+									  	<!-- Retention is actually for Share -->
+										<el-checkbox @change = "savingsChange" v-model="evaluationForm.is_savings">1% Retention?</el-checkbox>
 									</el-col>
 									<el-col :span="24">
 										<el-row :gutter = "20">
@@ -779,7 +777,7 @@ export default {
 			let dbtLoan = cloneDeep(this.evaluationForm.debit_loan)
 			let crdtLoan = cloneDeep(this.evaluationForm.credit_loan)
 
-			let amountFee = Number(dbtLoan) - Number(crdtLoan)
+			let amountFee = Number(dbtLoan) //Number(dbtLoan) - Number(crdtLoan)
 			let srvCharge = 0
 
 			console.log("getProduct", getProduct, evalForm, amountFee)
