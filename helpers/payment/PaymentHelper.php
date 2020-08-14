@@ -172,9 +172,10 @@ class PaymentHelper
 
 					$isNewLoanPolicy = false;
 					//New policy was updates. Eg. No prepaid monthly for Applicance and interest earned calculcation
-					if($account->release_date >= "2020-07-24"){
-						$isNewLoanPolicy = true;
-					}
+                	$calVersion = Yii::$app->view->getVersion($acc['release_date']);
+                	if($calVersion !== "1"){
+                		$isNewLoanPolicy = true;
+                	}
 					
 					
 					//$prepaid_interest_pay = $product->prepaid_monthly_interest==1 ? $account->principal * ($product->prepaid_interest/100) : 0;

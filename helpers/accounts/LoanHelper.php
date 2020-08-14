@@ -307,4 +307,52 @@ class LoanHelper
         return $return;
     }
 
+    public static function getInterest($currentDate, $lastDate, $balance, $int_rate){
+        $currentDate = date("Y-m-d", strtotime($currentDate));
+
+        $noOfDaysPassed = date_diff(date_create($currentDate), date_create($lastDate));
+        
+        $noOfDaysPassed = $noOfDaysPassed->format("%a");
+        
+        $interestEarned = (floatval($balance) * ($int_rate/100))/30;
+        $interestEarned = round($interestEarned * $noOfDaysPassed, 2);
+        return $interestEarned;
+    }
+
+
+    public static function calculateBeforeCutOff($loan_account){
+        $getCutOff = Yii::$app->view->getCutOff();
+        $accountList = LoanTransaction::find()->where(['loan_account' => $loan_account])
+            ->andWhere('date_posted <= ' . $getCutOff)
+            ->asArray()->all();
+        $totalPi = 0;
+        $totalInt = 0;
+        foreach ($accountList as $acc) {
+            if(($transaction['transaction_type'] == "RELEASE" || $transaction['transaction_type'] == "PAYPARTIAL" )&& $transaction['is_cancelled'] == 0){
+
+                if(floatval($transaction['prepaid_intpaid']) == 0){
+                    $totalPi += floatval($transaction['prepaid_intpaid']);
+                }
+
+                if(floatval($transaction['interest_earned']) == 0){
+                    $totalInt += floatval($transaction['interest_earned']);
+                }
+            }
+        }
+
+        $cutOffPi = 0;
+        $cutOffInt = 0;
+        if($totalPi > $totalInt){
+            $cutOffPi = $totalPi - $totalInt;
+        }
+        else{
+            $cutOffInt = $totalInt - $totalPi;
+        }
+
+        return [
+            'cutOffPi' => $cutOffPi,
+            'cutOffInt' => $cutOffInt
+        ];
+    }
+
 }

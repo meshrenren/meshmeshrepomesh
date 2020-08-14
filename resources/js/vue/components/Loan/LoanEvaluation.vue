@@ -818,7 +818,7 @@ export default {
 			{
 				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)
-				this.evaluationForm.debit_redemption_ins = parseFloat(0).toFixed(2)
+				this.evaluationForm.debit_redemption_ins = parseFloat(0).to-printFixed(2)
 				this.evaluationForm.debit_interest = 0;
 				this.evaluationForm.credit_interest = 0;
 				this.evaluationForm.debit_preinterest = 0;
@@ -828,6 +828,7 @@ export default {
     			this.evaluationForm.credit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
 
     			let calVersion = this.$ch.checkVersion(latestLoan.release_date)
+    			console.log("calVersion", calVersion)
 
     			/* CREDIT INTEREST -START- */
     			let credit_interest = 0
@@ -862,8 +863,15 @@ export default {
 				/* DEBIT REDEMPTION INSURANCE -END- */
 
 				/* DEBIT PREPAID INTEREST -START- */
-				this.evaluationForm.debit_preinterest = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
-				let debit_prepaid = this.getPrepaidDebit(lastTran.balance_after_cutoff, latestLoan, getProduct)
+				let debit_prepaid = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
+				if(getProduct.id == 2 || (calVersion == "1" && getProduct.id == 1)){ //2: Regular Loan, 1 Appliance Loan
+    				debit_prepaid = lastTran.prepaid_interest==null ? 0 :  lastTran.prepaid_interest;
+    			}
+    			else{
+    				debit_prepaid = this.getPrepaidDebit(lastTran.balance_after_cutoff, latestLoan, getProduct)
+    			}
+
+    			console.log("debit_prepaid", debit_prepaid)
 				this.evaluationForm.debit_preinterest = parseFloat(debit_prepaid).toFixed(2); 
 
 				/* DEBIT PREPAID INTEREST -END- */
@@ -963,13 +971,15 @@ export default {
     	getPrepaidDebit(balanceCutOff, account, product){
     		let amt = 0
     		let calVersion = this.$ch.checkVersion(account.release_date)
+			console.log("'balanceCutOff'", balanceCutOff, account, product, calVersion)
 
     		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
     			if(product.id != 1){
 	    			amt = balanceCutOff * parseFloat(account.prepaid_int)
-	    		}
+	    		} 
     		}
     		else{
+    			console.log("'balanceCutOff'", balanceCutOff)
     			if([3,5,6,8,12,14].indexOf(Number(product.id)) >= 0){
 	    			amt = balanceCutOff * parseFloat(account.prepaid_int) / (1 + parseFloat(account.prepaid_int))
 	    		}

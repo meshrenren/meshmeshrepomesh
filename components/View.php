@@ -75,6 +75,18 @@ class View extends \yii\web\View
         $format_number = number_format($num, 2, '.', ',');
         return $format_number;
     }
+
+    public function getVersion($date){
+        $vr = '1'; // For old calculation
+
+        $release_date = $date;
+        $new_policy = "2020-08-10";
+        if($release_date >= $new_policy){
+            $vr = '1-2020.08'; //New policy update from August 2020. Check documentatoin of the new policy
+        }
+
+        return $vr;
+    }
 }
 
 ?>

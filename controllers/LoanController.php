@@ -249,17 +249,24 @@ class LoanController extends \yii\web\Controller
 				            
             $result = array();
             $getTransactions = [];
+            $currentDate = ParticularHelper::getCurrentDay();
+            $systemDate = date("Y-m-d", strtotime($currentDate));
             if($acc != null)
             {
-                $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'date_posted');
                 $prepaid_interest = 0;
                 $interest_accum = 0;
-                $prepaid_interest = 0;
                 $last_tran_date = $acc['release_date'];
                 $total_amount_paid = 0;
                 $balance_after_cutoff = 0;
                 $cutOff = Yii::$app->view->getCutOff();
-                $balance_after_cutoff = $acc['principal_balance'];
+                $balance_after_cutoff = $acc['principal'];
+
+                $calVersion = Yii::$app->view->getVersion($acc['release_date']);
+
+                $lastPayment = $acc['release_date'];
+                $lastRunningBal = $acc['principal'];
+
+                $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'date_posted');
                 foreach ($getTransactions as $transaction) {
                     if($transaction['date_posted'] <= $cutOff){
                         $balance_after_cutoff = $transaction['running_balance'];
@@ -268,6 +275,14 @@ class LoanController extends \yii\web\Controller
                     
                     if($transaction['transaction_type'] == "RELEASE" && $transaction['is_cancelled'] == 0){
                         $last_tran_date = $transaction['date_posted'];
+                        //var_dump($transaction);
+                        if($transaction['interest_earned'] && floatval($transaction['interest_earned']) > 0){
+                            $interest_accum = $interest_accum + $transaction['interest_earned'];
+                        }
+
+                        if($transaction['prepaid_intpaid'] && floatval($transaction['prepaid_intpaid']) > 0){
+                            $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+                        }
                     }
 
                     if($transaction['transaction_type'] == "PAYPARTIAL" && $transaction['is_cancelled'] == 0){
@@ -276,27 +291,48 @@ class LoanController extends \yii\web\Controller
                             $total_amount_paid = $total_amount_paid + $transaction['amount'];
                             $interest_accum = $interest_accum + $transaction['interest_earned'];
                             $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+
+                            if($acc['loan_id'] == 1 && $calVersion == "1" ){
+                                if(!$transaction['interest_earned'] || $transaction['interest_earned'] == "" || floatval($transaction['interest_earned']) == 0){
+                                    $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['date_posted'], $lastRunningBal, $acc['int_rate']);
+                                    $interest_accum = $interest_accum + $interestEarned;
+                                    //var_dump($lastPayment, $transaction['date_posted'], $lastRunningBal, $interestEarned);
+                                }
+                            }
+                            /*else if($acc['loan_id'] == 2){
+
+                                $nextPayment = $systemDate;
+                                if(!$transaction['interest_earned'] || $transaction['interest_earned'] == "" || floatval($transaction['interest_earned']) == 0){
+                                    $interestEarned = LoanHelper::getInterest($transaction['date_posted'],  , $lastRunningBal, $acc['int_rate']);
+                                    $interest_accum = $interest_accum + $interestEarned;
+                                    var_dump($lastPayment, $transaction['date_posted'], $lastRunningBal, $interestEarned);
+                                }
+                            }*/
+                            
                         }
                     }
+
+                    $lastPayment = $transaction['date_posted'];
+                    $lastRunningBal = $transaction['running_balance'];
                 }
+
+                //CUT OF PI AND INTEREST
+                if($acc['loan_id'] == 2 || ($acc['loan_id'] == 1 && $calVersion == "1") ) {// Regular loan
+                    $beforeCutOff = LoanHelper::calculateBeforeCutOff($acc['account_no']);
+                    if($beforeCutOff){
+                        $interest_accum += $beforeCutOff['cutOffInt'];
+                        $prepaid_interest += $beforeCutOff['cutOffPi'];
+                    }
+                }
+
                 $result['prepaid_interest'] = $prepaid_interest;
                 $result['interest_accum'] = $interest_accum;
                 $result['last_tran_date'] = $last_tran_date;
                 $result['total_amount_paid'] = $total_amount_paid;
                 $result['balance_after_cutoff'] = $balance_after_cutoff;
 
-                if($acc['loan_id'] == 2) {// Regular loan
-                    $currentDate = ParticularHelper::getCurrentDay();
-                    $systemDate = date("Y-m-d", strtotime($currentDate));
-
-                	$product = LoanProduct::findOne($acc['loan_id']);
-                	$noOfDaysPassed = date_diff(date_create($systemDate), date_create($result['last_tran_date']));
-                	
-                	$noOfDaysPassed = $noOfDaysPassed->format("%a");
-                	
-                	$interestEarned = ($acc['principal_balance'] * ($product->int_rate/100))/30;
-                	$interestEarned = round($interestEarned * $noOfDaysPassed, 2);
-                	
+                if($acc['loan_id'] == 2 || $acc['loan_id'] == 1 && $calVersion == "1" ) {// Regular loan
+                    $interestEarned = LoanHelper::getInterest($systemDate, $result['last_tran_date'], $acc['principal_balance'], $acc['int_rate']);
                 	$result['interest_accum'] = $result['interest_accum'] + $interestEarned;
                 }
             	

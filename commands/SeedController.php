@@ -470,7 +470,7 @@ class SeedController extends Controller
                     }
                     else if(strpos($loanType, "HOUSE")){
                         $loan_id = 6;
-                        $prepaid_rate = 0.12;
+                        $prepaid_rate = 0.2;
                         $interest_rate = 0;
                     }
                     else if(strpos($loanType, "MEDICAL")){
@@ -480,7 +480,7 @@ class SeedController extends Controller
                     }
                     else if(strpos($loanType, "BUSINESS")){
                         $loan_id = 8;
-                        $prepaid_rate = 0.12;
+                        $prepaid_rate = 0.2;
                         $interest_rate = 0;
                     }
                     else if(strpos($loanType, "CELLPHONE")){

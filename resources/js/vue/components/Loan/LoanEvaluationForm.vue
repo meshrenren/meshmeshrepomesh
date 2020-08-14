@@ -349,6 +349,7 @@ export default {
 
 </script>
 <style lang="scss">
+	@import '../../assets/mpdf.scss'; 
   	@import '../../assets/site.scss';
   	@import '~noty/src/noty.scss';
 

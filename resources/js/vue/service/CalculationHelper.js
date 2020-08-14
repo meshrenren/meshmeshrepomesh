@@ -10,7 +10,7 @@ export default class CalculationHelper{
 
 		let release_date = $df.formatDate(date, "X")
 
-    	let new_policy = $df.formatDate("2020-08-01", "X")
+    	let new_policy = $df.formatDate("2020-08-10", "X")
 		if(release_date >= new_policy){
 			vr = '1-2020.08' //New policy update from August 2020. Check documentatoin of the new policy
 		}
