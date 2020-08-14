@@ -214,7 +214,7 @@
 	        	</div>
 	        	<div class = "col-md-12" style = "margin-top: 20px;">
 	        		<h3>OTHER LOANS:</h3>
-	        		<table style="text-align: left;">
+	        		<table class = "table table-bordered" style="text-align: left;">
 	        			<thead>
 	        				<tr>
 		        				<th>Loan Type </th>
@@ -239,7 +239,7 @@
 
 	        	<div class = "col-md-12" style = "margin-top: 20px;">
 	        		<h3>Payments:</h3>
-	        		<table style="text-align: left;">
+	        		<table class = "table table-bordered" style="text-align: left;">
 	        			<thead>
 	        				<tr>
 		        				<th>DateType </th>

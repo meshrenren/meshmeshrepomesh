@@ -40,6 +40,9 @@ class PaymentHelper
         $payment->created_date = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->DateTimeNow : $data['date_transact'];
         $payment->created_by = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->id : 18;
         //$payment->created_by = 18; //CINCO
+        if(isset($data['posted_date'])){
+        	$payment->posted_date = $data['posted_date'];
+        }
 
         if($payment->save()){
             return $payment;

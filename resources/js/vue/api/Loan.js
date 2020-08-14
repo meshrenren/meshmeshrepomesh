@@ -68,14 +68,14 @@ export default {
 				data: params,
 				responseType: 'blob'
 			})
-		}/*
+		}
 		else if(type == 'print'){
 			return axios({
 				method: 'post',
-				url: '/site/print-list',
+				url: '/loan/print-summary',
 				data: params,
 			})
-		}*/
+		}
 	},
 
 	getCurrentLoanInterestSincePreviousTransaction(accountnumber, interest_rate) {

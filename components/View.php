@@ -70,6 +70,11 @@ class View extends \yii\web\View
        
         return $cutOff;
     } 
+
+    public function formatNumber($num){
+        $format_number = number_format($num, 2, '.', ',');
+        return $format_number;
+    }
 }
 
 ?>

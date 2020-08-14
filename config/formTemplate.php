@@ -1,6 +1,18 @@
 <?php
 
 return [
+	'header_layout'  	=> '<table class = "no-border" width = "100%">
+            <tr>
+            	<td>
+            		<img width = "100px" src = "/images/coop_logo.png" />
+            	</td>
+            	<td>
+            		<p style="font-size: 12pt; font-weight: bold;">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<p>
+            		<p style="font-size: 10pt;">DILG Regional Office, #58 McArthur Highway, Davao City </p>
+            		<p style="font-size: 10pt;">Tel #: 297-27-01 / 297-26-06 / 297-2604 </p>
+            	</tr>
+        </table>',
+
 	'savings_deposit' 	=> '<div style="text-align: center;"><span style="font-size: 8pt;"><img width = "20px" src = "/images/coop_logo.png" /> DILG XI EMPLOYEES MULTI-PURPOSE
 COOPERATIVE 
 </span></div>
@@ -79,6 +91,7 @@ COOPERATIVE
 		<tr style = margin-top = "40px;">
 			<td></td>
 			<td style = "text-align: center;">
+				<span>Charito L. Cinco</span>
 				<div style = "border-bottom: 1px solid #000; width = "100%"></div>
 				<span>Approved By</span>
 			</td>

@@ -37,9 +37,14 @@
 								</el-row>
 							</el-form>
 							<hr>
-							<div class = "Loan List">
-			        			<h4>Member's List of Loan</h4>
-								<el-table :data="accountLoanList"height = "350px" stripe border>
+							<div class = "member-loan">
+								<div>
+			        				<h4>Member's List of Loan</h4>
+			        			</div>
+			        			<div class = "toolbar-right">
+			        				<el-button class = "mt-5" size="mini" @click="printLoanSummary('print')">Print Summary</el-button>
+			        			</div>
+								<el-table class = "mt-20" :data="accountLoanList" height = "350px" stripe border>
 						            <el-table-column label="Date">
 						                <template slot-scope="scope">
 						                    <span>{{ scope.row.release_date }}</span>
@@ -86,9 +91,14 @@
 			       		</div>
 			       	</el-col>
 			       	<el-col :span = "14">
-			       		<div class = "Loan List">
+			       		<div class = "loan-ledger">
 		        			<!-- <h4>Transactions</h4> -->
-		        			<label>Loan Account : </label> <span v-if = "selectedAccount && selectedAccount.product"> {{ selectedAccount.product.product_name}}</span>
+		        			<label>Loan Account : </label> 
+		        			<span v-if = "selectedAccount && selectedAccount.product"> {{ selectedAccount.product.product_name}}</span>
+		        			<!-- <div class = "toolbar-right">
+		        				<el-button class = "mt-5" size="mini" @click="printLedger(scope.index, scope.row)">Print Ledger</el-button>
+		        			</div> -->
+
 							<el-table :data="getAllHistory"height = "450px" stripe border>
 					            <el-table-column label="Date">
 					                <template slot-scope="scope">
@@ -144,6 +154,8 @@
     import _forEach from 'lodash/forEach' 
     import _concat from 'lodash/concat'
 
+    import fileExport from '../../mixins/fileExport'
+
 export default {
 	props: [],
 	data: function () {
@@ -157,6 +169,7 @@ export default {
 			allLoanAccount 			: []
 		}
 	},
+	mixins: [fileExport],
 	created(){
 	},
 	computed:{
@@ -172,7 +185,53 @@ export default {
 			return transaction;
 		}
 	},
-	methods:{		
+	methods:{	
+		printLoanSummary(type){
+            if(this.accountLoanList.length == 0){
+                new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: "No loan to export.",
+                    timeout: 3000
+                }).show();
+                return
+            }
+
+            let dataLoan = {}
+            let dataAccount = {}
+            dataAccount['fullname'] = this.memberDetails.last_name + " "  + this.memberDetails.first_name + " " + this.memberDetails.middle_name
+            dataAccount['station'] = ""
+            if(this.memberDetails.station){
+                dataAccount['station']  = this.memberDetails.station.name
+            }
+            let totalPrincipal = 0
+            let totalBalance = 0
+            _forEach(cloneDeep(this.accountLoanList), rs=>{
+                totalPrincipal = parseFloat(totalPrincipal) + parseFloat(rs.principal)
+                totalBalance = parseFloat(totalBalance) + parseFloat(rs.principal_balance)
+            })
+            dataAccount['totalPrincipal'] = totalPrincipal
+            dataAccount['totalBalance'] = totalBalance
+
+            dataLoan['details'] = dataAccount
+            dataLoan['loanList'] = this.accountLoanList
+            dataLoan['member'] = this.memberDetails
+
+
+            this.$API.Loan.printSummary(dataLoan, 'print')
+            .then(result => {
+                let res = result.data
+                if(type == 'pdf'){
+                    this.exporter(type, 'Loan Summary', res)
+                }
+                else if(type == 'print'){
+                    this.winPrint(res.data, 'Loan Summary')
+                }
+            })
+            .catch(err => { console.log(err)})
+            .then(_ => { this.pageLoading = false })
+        },
     	populateField(data){
     		this.memberDetails = data
     		this.memberDetails.share_capital = null
@@ -248,6 +307,13 @@ export default {
 	  		.el-form-item{
 			    margin-bottom: 0px !important;
 			}
+		}
+		.member-loan{
+			position: relative;
+		}
+
+		.loan-ledger{
+			position: relative;
 		}
 	}
 </style>

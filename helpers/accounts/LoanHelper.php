@@ -33,6 +33,11 @@ class LoanHelper
                      ->andWhere('status != "Cancel" AND status != "Verified" ')
                     ->orderBy('release_date DESC')
                     ->asArray()->one();
+
+                //Getarrear
+                $getArrear = static::getArrears($acc['account_no']);
+                $acc['arrears'] = $getArrear['arrearAmount'];
+
                 array_push($accountList, $acc);
             }
         }
@@ -165,13 +170,11 @@ class LoanHelper
     public static function printLoanSummary($dataLoan){
         $details = $dataLoan['details'];
         $loanList = $dataLoan['loanList'];
+        $member = isset($dataLoan['member']) && $dataLoan['member'] ? $dataLoan['member'] : null;
 
-        $listTemplate = '<table width = "100%">
-            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
-            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Loan Summary</div></tr>
-        </table>';
+        $listTemplate = Yii::$app->params['formTemplate']['header_layout'];
 
-        $listTemplate .= '<table>
+        $listTemplate .= '<table class = "no-border mt-20">
             <tr>
                 <td style = "font-weight: bold;">NAME: </td> 
                 <td><span>[account_name]</span></td>
@@ -181,37 +184,78 @@ class LoanHelper
                 <td>[account_station] </td>
             </tr> 
         </table>';
-        $listTemplate .= '<table style = "margin-top:10px;">
+        if($member){
+            $share_deposit = $member && isset($member['share_capital']) ? floatval($member['share_capital']) : 0;
+            $max = $share_deposit * 4;
+            $listTemplate .= '<table class = "no-border mt-20">
+                <tr>
+                    <td style = "font-weight: bold;">Share Deposit: </td> 
+                    <td><span>'.Yii::$app->view->formatNumber($share_deposit).'</span></td>
+                </tr> 
+                <tr>
+                    <td style = "font-weight: bold;">Maximum Loan Amount: </td> 
+                    <td>'.Yii::$app->view->formatNumber($max).' </td>
+                </tr> 
+            </table>';
+        }
+        
+        $listTemplate .= '<table class = "no-border" style = "margin-top:10px;">
             <tr>
                 <td style = "font-weight: bold;">TOTAL AMOUNT OF LOANS:</td> 
                 <td>[total_principal]</td>
+                <td></td>
+
+                <td style = "font-weight: bold;">TOTAL LOAN ARREAR:</td> 
+                <td>[total_arrears]</td>
             </tr> 
             <tr>
                 <td style = "font-weight: bold;">TOTAL AMOUNT OF LOAN BALANCES:</td> 
                 <td><span>[total_balance]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">LOAN SUMMARY AS OF:</td> 
+                <td><span>[summry_as_of]</span></td>
             </tr> 
         </table>';
         $listTemplate = str_replace('[account_name]', $details['fullname'], $listTemplate);
         $listTemplate = str_replace('[account_station]', $details['station'], $listTemplate);
         $listTemplate = str_replace('[total_principal]', $details['totalPrincipal'], $listTemplate);
         $listTemplate = str_replace('[total_balance]', $details['totalBalance'], $listTemplate);
+        $listTemplate = str_replace('[summry_as_of]', Yii::$app->view->getCutOff(), $listTemplate);
 
+        $transTable = "";
         if(count($loanList) > 0){
-            $transTable = '<table width = "100%" style = "margin-top: 20px; border-collapse: collapse !important:">
+            $total_arrears = 0;
+            $transTable = '<table width = "100%" style = "margin-top: 20px;">
                 <tr>
                     <th style = "font-weight: bold; border: 1px solid #000;">Loan Type</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Principal Loan</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Loan Balance Type</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Date of Loan</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Loan Balance</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Last Payment</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Loan Arrears</th> 
                 </tr>';
             foreach ($loanList as $trans) {
+                $arrears = "";
+                if(isset($trans['arrears']) && $trans['arrears'] && floatval($trans['arrears']) > 0){
+                    $total_arrears += floatval($trans['arrears']);
+                    $arrears = Yii::$app->view->formatNumber($trans['arrears']);
+                }
                 $transTable .= '<tr>
                     <td style = "border: 1px solid #000;">'.$trans['product']['product_name'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['principal'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['principal_balance'].'</td> 
+                    <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal']).'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['release_date'].'</td> 
+                    <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal_balance']).'</td>
+                    <td style = "border: 1px solid #000;"> </td>
+                    <td style = "border: 1px solid #000;">'.$arrears.'</td> 
                 </tr>';
+
             }
 
             $transTable .= '</table>';
+
+            $total_arrears_dis = $total_arrears && floatval($total_arrears) > 0 ? Yii::$app->view->formatNumber($total_arrears) : "";
+            $listTemplate = str_replace('[total_arrears]', $total_arrears_dis, $listTemplate);
         }
         $listTemplate = $listTemplate . $transTable;
 
