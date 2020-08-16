@@ -61,7 +61,13 @@ export default {
         }
     },
     created(){
-        this.getAllVoucher()
+        
+    },
+    mounted(){
+        setTimeout(() => {
+            this.getAllVoucher()
+        }, 1000);
+        
     },
     computed: {
         voucherList(){            

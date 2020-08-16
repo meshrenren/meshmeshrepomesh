@@ -38,7 +38,7 @@
             </el-table-column> -->
 
         </el-table>
-        <el-dialog title="Savings Transaction" top = "10px" v-if="dialogVisible"  :visible.sync="dialogVisible" width="80%" @close = "dialogVisible = false">
+        <el-dialog title="Loan Transaction" top = "10px" v-if="dialogVisible"  :visible.sync="dialogVisible" width="80%" @close = "dialogVisible = false">
             <loan-transactions 
                 :account-selected = "selectAccountDetails"
                 :account-transaction-list = "selectAccountTrans"> 

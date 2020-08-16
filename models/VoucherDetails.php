@@ -36,8 +36,7 @@ class VoucherDetails extends \yii\db\ActiveRecord
         return [
             [['voucher_id', 'member_id', 'particular_id'], 'integer'],
             [['amount', 'debit', 'credit'], 'number'],
-            [['entry_type'], 'string'],
-            [['voucher_id'], 'exist', 'skipOnError' => true, 'targetClass' => GeneralVoucher::className(), 'targetAttribute' => ['voucher_id' => 'id']],
+            [['gv_num'], 'string'],
         ];
     }
 

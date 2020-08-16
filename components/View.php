@@ -71,7 +71,14 @@ class View extends \yii\web\View
         return $cutOff;
     } 
 
+    public function getCutOffThisYear() {
+        $cutOff = date('Y-12-31');
+       
+        return $cutOff;
+    } 
+
     public function formatNumber($num){
+        $num = floatval($num);
         $format_number = number_format($num, 2, '.', ',');
         return $format_number;
     }

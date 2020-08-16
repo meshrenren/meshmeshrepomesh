@@ -120,7 +120,7 @@
 										</el-row>
 									  	<el-form-item label="Loan Amount" prop = "amount" label-width="200px">
 									    	<el-input v-model="evaluationForm.amount" @keyup.enter.native = "enterLoanAmount" ref = "amount" :disabled = "disabledBox">
-									    		<el-button slot="append" type = "primary" @click="evaluateLoan()">EVALUATE</el-button>
+									    		<el-button slot="append" type = "primary" @click="evaluateLoan(true)">EVALUATE</el-button>
 									    	</el-input>
 									  	</el-form-item>
 									  	<!-- Retention is actually for Share -->
@@ -495,13 +495,12 @@ export default {
     				console.log("Has Error")
     			}
     			else{
-    				console.log("Valid Amount")
     				this.evaluationForm.loan_amount = this.evaluationForm.amount
-    				this.evaluateLoan()
+    				this.evaluateLoan(true)
     			}
     		})
     	},
-    	evaluateLoan(){    		
+    	evaluateLoan(first = false){    		
     		let vm = this	
 
     		this.$refs.evaluationForm.validate((valid) => {
@@ -509,6 +508,14 @@ export default {
     		
 		    		if(this.evaluationForm.product_loan_id && this.evaluationForm.duration && this.evaluationForm.amount){
 
+			    		if(first){
+			    			if((Number(this.evaluationForm.product_loan_id) == 1 || Number(this.evaluationForm.product_loan_id) == 2)){
+				    			this.evaluationForm.is_savings = true
+			    			}
+			    			else{
+			    				this.evaluationForm.is_savings = false
+			    			}
+			    		}
 
 		    		//	console.log("Calculate")
 		    			let getProduct = this.loanProduct.find(lp => { return Number(lp.id) == Number(this.evaluationForm.product_loan_id) })
@@ -811,7 +818,6 @@ export default {
 
 			let evalForm = cloneDeep(this.evaluationForm)
 			let service_charge = 0	
-			console.log('dataneeded', dataneeded)
 
 			this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
 			if(!latestLoan)
@@ -847,17 +853,14 @@ export default {
 				let monthend = moment(latestLoan.release_date, "YYYY-MM-DD"); //used against the latest loan.
 				let rangeNoOfDays = moment.duration(daystart.diff(dayend)).asDays(); 
 				let rangeNoOfMonths = moment.duration(daystart.diff(monthend)).asMonths(); //to be used for calculating unused redemption insurance. // 7
-				rangeNoOfMonths = Math.floor(rangeNoOfMonths) // the downward nearest integer
+				rangeNoOfMonths = Math.round(rangeNoOfMonths) // the downward nearest integer
 
 				/* DEBIT REDEMPTION INSURANCE -START- */
-				console.log("rangeNoOfMonths", rangeNoOfMonths, latestLoan.term)
 				let unusedRedemption = latestLoan.term - rangeNoOfMonths
-				console.log("unusedRedemption", unusedRedemption, latestLoan.redemption_insurance)
 				let redemptionInsuranceDebit = 0
 				if(unusedRedemption>=1)
 				{
 					redemptionInsuranceDebit = (latestLoan.redemption_insurance / latestLoan.term) * unusedRedemption
-					console.log("redemptionInsuranceDebit", unusedRedemption, latestLoan.redemption_insurance)
 				}
 				this.evaluationForm.debit_redemption_ins = parseFloat(redemptionInsuranceDebit).toFixed(2)
 				/* DEBIT REDEMPTION INSURANCE -END- */
@@ -871,7 +874,6 @@ export default {
     				debit_prepaid = this.getPrepaidDebit(lastTran.balance_after_cutoff, latestLoan, getProduct)
     			}
 
-    			console.log("debit_prepaid", debit_prepaid)
 				this.evaluationForm.debit_preinterest = parseFloat(debit_prepaid).toFixed(2); 
 
 				/* DEBIT PREPAID INTEREST -END- */
@@ -886,7 +888,6 @@ export default {
     		if(Number(getProduct.redemption_insurance) == 1){
     			redemptionInsurance = this.calculateRedemptionInsurance(this.evaluationForm.amount, evalForm.duration)
     		} 
-    		console.log("redemptionInsurance", redemptionInsurance)
 			this.evaluationForm.credit_redemption_ins = parseFloat(redemptionInsurance).toFixed(2)
     		/* CREDIT REDEMPTION INSURRANCE -END- */
 	
@@ -913,7 +914,7 @@ export default {
 			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.net_cash) * 0.01).toFixed(2) : 0 ;
 			/* CREDIT SAVING RETENTION -END- */
 
-			this.evaluationForm.net_cash = this.evaluationForm.net_cash - this.evaluationForm.savings_retention
+			this.evaluationForm.net_cash = parseFloat(this.evaluationForm.net_cash - this.evaluationForm.savings_retention).toFixed(2);
 
 			this.evaluationForm.credit_total = parseFloat(Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount) + Number(this.evaluationForm.net_cash)).toFixed(2)
 

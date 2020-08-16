@@ -594,6 +594,287 @@ class SeedController extends Controller
         }
     }
 
+
+    //Done Seeding loan. Please don't uncomment or run this unless necessary
+    public function actionSeedLoanAccounts(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loantransacmember llm');
+        $loanMember = $query->all();
+        $memberCount = 0;
+        foreach ($loanMember as $key => $llm) {
+            //$getMember = \app\models\Member::find()->where(['old_db_idnum_zero' => $llm['IDNum'], 'last_name' => $llm['Sname']])->one();
+            $getMember = \app\models\Member::find()->where(['old_db_name' => $llm['Name']])->one();
+            if($getMember){
+                $memberCount++;
+                $query2 = new \yii\db\Query;
+                $query2->select(['*']);
+                $query2->from('zold_loantransac ll')->where(['Name' => $llm['Name']])->andWhere("PrincipalLoan != ''");
+                $query2->groupBy(['LoanType']);
+                $loanLedgerMember = $query2->all();
+                $loans = "";
+                foreach ($loanLedgerMember as $key => $loan) {
+                    $queryLedger = new \yii\db\Query;
+                    $queryLedger->select(['*']);
+                    $queryLedger->from('zold_loanledger ll')->where("TransacNum = '".$loan['TransactNum']."'")->orderBy('EntryNum');
+                    $ledgerMember = $queryLedger->all();
+
+                    $loanAcc = null;
+                    foreach ($ledgerMember as $key => $ledger) {
+                        if($ledger['PrincipalLoan']  != ''){
+                            //Create loan account
+                            $loanAcc = $this->createLoan($loan, $ledger, $getMember);
+                        }
+
+                        if($loanAcc){
+                           $loanTrans = $this->createTransaction($ledger, $loanAcc); 
+                        }
+                    }
+                    
+                    //var_dump($loan);
+                }
+                
+                echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " Is Member \n\t Loans: " . $loans . "\n\n";
+                //echo $llm['IDNum'] . "->" . $llm['SName'] . " ".  $llm['Fname'] . " Is Member \n\n";
+                //break;
+            }
+            else{
+                echo $llm['IDNum'] . "->" . $llm['Sname'] . " ".  $llm['Fname'] . " No Member" . "\n\n";
+            }
+        }
+    }
+
+    public function createLoan($loan, $ledger, $getMember){
+
+        $balance = floatVal(str_replace(",", "", $loan['Balance']));
+        $dateYear = date('Y', strtotime($ledger['DateTransac']));
+        $loanStatus = 'Current';
+        $is_active = 1;
+        $ServChrg = $loan['ServChrg'];
+        $Duration = $loan['Duration'];
+        $PrePaidInt = $loan['PrePaidInt'];
+        $PrincipalLoan = $loan['PrincipalLoan'];
+
+        //Get last Loan Release
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loanledger ll')->where("TransacNum = '".$loan['TransactNum']."' AND PrincipalLoan != ''")->orderBy('EntryNum DESC');
+        $getLastRelease = $query->one();
+        if($getLastRelease){
+            echo "Has Latest\t" . $getLastRelease['EntryNum'] . " : " . $ledger['EntryNum'] . "\n";
+            if(floatval($ledger['EntryNum']) < floatval($getLastRelease['EntryNum']) ){
+                $balance = 0;
+                $loanStatus = 'Closed';
+                $is_active = 0;
+                $ServChrg = $ledger['ServChg'];
+                $Duration = $loan['Duration'];
+                $PrePaidInt = $ledger['Prepaid'];
+                $PrincipalLoan = $ledger['PrincipalLoan'];
+            }
+        }
+
+        $loanType = strtoupper($loan['LoanType']);
+        $term = floatVal(str_replace(",", "", $Duration));
+        $loan_id = 0;
+        $prepaid_rate = 0;
+        $interest_rate = 0;
+        if(strpos($loanType, "APPLIANCE")){
+            $loan_id = 1;
+            $prepaid_rate = 0;
+            $interest_rate = 2;
+        }
+        else if(strpos( $loanType, "REGULAR")){
+            $loan_id = 2;
+            $prepaid_rate = 0;
+            $interest_rate = 1.25;
+        }
+        else if(strpos($loanType, "EDUCATIONAL")){
+            $loan_id = 3;
+            $prepaid_rate = 0.06;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "EMERGENCY")){
+            $loan_id = 4;
+            $prepaid_rate = 0.0687;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "HOSPITALIZATION")){
+            $loan_id = 5;
+            $prepaid_rate = 0.06;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "HOUSE")){
+            $loan_id = 6;
+            $prepaid_rate = 0.2;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "MEDICAL")){
+            $loan_id = 7;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "BUSINESS")){
+            $loan_id = 8;
+            $prepaid_rate = 0.2;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "CELLPHONE")){
+            $loan_id = 10;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "CELLCARD")){
+            $loan_id = 11;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "BUY-OUT")){
+            $loan_id = 12;
+            $prepaid_rate = floatval($term)/100;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "MEMORIAL")){
+            $loan_id = 13;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "GADGET")){
+            $loan_id = 14;
+            $prepaid_rate = floatval($term)/100;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "DOMESTIC")){
+            $loan_id = 15;
+            if($term == 12){
+                $prepaid_rate = 0.2;
+            }
+            else if($term == 6){
+                $prepaid_rate = 0.1;
+            }
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "RADIATION")){
+            $loan_id = 16;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "CASSEROLE") || $loanType == "CASSEROLE"){
+            $loan_id = 17;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        else if(strpos($loanType, "KEYBOARD") || $loanType == "KEYBOARD"){
+            $loan_id = 18;
+            $prepaid_rate = 0;
+            $interest_rate = 0;
+        }
+        if($loan_id == 0){
+        }
+        else{
+            $product = \app\models\LoanProduct::find()->where(['id' => $loan_id])->one();
+            $trans_serial = $product->trans_serial + 1;
+            $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+            if($loan['DateTransac'] != ""){
+                $date = date("Y-m-d", strtotime($ledger['DateTransac']));
+                $release_date = $date;
+            }
+            $addLoanAccount = new \app\models\LoanAccount;
+            $addLoanAccount->account_no = $product->id . "-" . $trans_serial_pad;
+            $addLoanAccount->loan_id = $loan_id;
+            $addLoanAccount->member_id = $getMember->id;
+            $addLoanAccount->principal = floatVal(str_replace(",", "", $ledger['PrincipalLoan'])) ;
+            //$addLoanAccount->interest_balance = floatVal(str_replace(",", "", $loan['Interest']));
+            $addLoanAccount->principal_balance = floatVal(str_replace(",", "", $balance));
+            $addLoanAccount->term = floatVal(str_replace(",", "", $Duration)) ;
+            $addLoanAccount->prepaid = floatVal(str_replace(",", "", $PrePaidInt)) ;
+            $addLoanAccount->release_date = $release_date ;
+            $addLoanAccount->service_charge = floatVal(str_replace(",", "", $ServChrg)) ;
+            $addLoanAccount->int_rate = $interest_rate;
+            $addLoanAccount->prepaid_int = $prepaid_rate;
+            $addLoanAccount->is_active = $is_active;
+            $addLoanAccount->status = $loanStatus;
+            $addLoanAccount->principal_amortization_quincena = floatVal(str_replace(",", "", $loan['QuinPrincipal']));
+            $addLoanAccount->prepaid_amortization_quincena = floatVal(str_replace(",", "", $loan['QuiPrepaid']));
+            $addLoanAccount->qiun_principal = floatVal(str_replace(",", "", $loan['QuinPrincipal']));
+            $addLoanAccount->quin_prepaid = floatVal(str_replace(",", "", $loan['QuiPrepaid']));
+            $addLoanAccount->interest_accum = floatVal(str_replace(",", "", $loan['InterestAccum']));
+            $addLoanAccount->prepaid_accum = floatVal(str_replace(",", "", $loan['PrepaidAccum']));
+            $addLoanAccount->olddb_transacnum = $loan['TransactNum'];
+            if(!$addLoanAccount->save()){
+                var_dump($addLoanAccount->getErrors());
+            }
+            else{
+                $product->trans_serial = $trans_serial;
+                $product->save();
+                return $addLoanAccount;
+            }
+        }
+        return null;
+    }
+
+    public function createTransaction($ledger, $accs){
+        $d = date("Y-m-d", strtotime($ledger['DateTransac']));
+
+        //YATI! Naay mga date transac nga mas gamay pa sa release date oi
+        /*if($d < $accs['release_date']){
+            continue;
+        }*/
+
+        $type = "PAYPARTIAL";
+        $amount = 0;
+        $AmtPaid = 0;
+        $Prepaid = 0;
+        $Interest = 0;
+        $Interest_earn = 0;
+        $Balance = floatval(str_replace(",", "", $ledger['Balance']));
+        if($ledger['PrincipalLoan'] != ''){
+            $type = "RELEASE";
+            $amount = floatval(str_replace(",", "", $ledger['PrincipalLoan']));
+            $Prepaid = floatval(str_replace(",", "", $ledger['Prepaid']));
+            $Interest = floatval(str_replace(",", "", $ledger['Interest']));
+        }else{
+            $AmtPaid = floatval(str_replace(",", "", $ledger['AmtPaid']));
+            $Prepaid = floatval(str_replace(",", "", $ledger['Prepaid']));
+            $Interest = floatval(str_replace(",", "", $ledger['Interest']));
+            $Interest_earn = $Interest;
+            $amount = $AmtPaid + $Prepaid;
+
+            if($ledger['Remarks'] == 'End'){
+                $amount = $AmtPaid + $Prepaid + $Interest;
+                $Interest_earn = 0;
+            }else{
+                $Interest = 0;
+            }                       
+        }
+
+        $addLoanAccount = new \app\models\LoanTransaction;
+        $addLoanAccount->loan_account = $accs->account_no;
+        $addLoanAccount->amount = $amount;
+        $addLoanAccount->loan_id = $accs->loan_id;
+        $addLoanAccount->member_id = $accs->member_id;
+        $addLoanAccount->transaction_type = $type;
+        $addLoanAccount->transacted_by = 18;
+        $addLoanAccount->transaction_date = $d;
+        $addLoanAccount->running_balance = $Balance;
+        $addLoanAccount->remarks = "Migrate from old db";
+        $addLoanAccount->prepaid_intpaid = $Prepaid;
+        $addLoanAccount->interest_paid = $Interest;
+        $addLoanAccount->OR_no = $ledger['GVORNum'];
+        $addLoanAccount->principal_paid = $AmtPaid;
+        $addLoanAccount->arrears_paid = 0;
+        $addLoanAccount->date_posted = $d;
+        $addLoanAccount->interest_earned = $Interest_earn;
+        $addLoanAccount->olddb_entrynum = $ledger['EntryNum'];
+
+        if($addLoanAccount->save()){
+            echo $ledger['EntryNum'] . "\tSuccess Save \n";
+        }
+        else{
+            var_dump($addLoanAccount->getErrors());
+        }
+    }
+
     //Done Seeding loan. Please don't uncomment or run this unless necessary
     public function actionLoanLedger(){
 
@@ -614,14 +895,19 @@ class SeedController extends Controller
                 if(count($getLegder) > 0){
                     echo "\tList Ledger: \t" .  count($getLegder) . "\n";
                     foreach ($getLegder as $key2 => $ledger) {
-                        $getTrans = \app\models\LoanTransaction::find()->where(['olddb_entrynum' => $ledger['EntryNum'], 'loan_account' => $accs->account_no])->one();
+                        /*$getTrans = \app\models\LoanTransaction::find()->where(['olddb_entrynum' => $ledger['EntryNum'], 'loan_account' => $accs->account_no])->one();
                         if($getTrans != null){
                             continue;
-                        }
+                        }*/
                         /*$date = explode(' ', $ledger['DateTransac']) ;
                         $dSub = explode('/', $date[0]) ;
                         $d = date('Y-m-d', strtotime($dSub[2] . '-' . $dSub[1] . '-' .$dSub[0]));*/
                         $d = date("Y-m-d", strtotime($ledger['DateTransac']));
+
+                        //YATI! Naay mga date transac nga mas gamay pa sa release date oi
+                        /*if($d < $accs['release_date']){
+                            continue;
+                        }*/
 
                         $type = "PAYPARTIAL";
                         $amount = 0;
@@ -633,6 +919,8 @@ class SeedController extends Controller
                         if($ledger['PrincipalLoan'] != ''){
                             $type = "RELEASE";
                             $amount = floatval(str_replace(",", "", $ledger['PrincipalLoan']));
+                            $Prepaid = floatval(str_replace(",", "", $ledger['Prepaid']));
+                            $Interest = floatval(str_replace(",", "", $ledger['Interest']));
                         }else{
                             $AmtPaid = floatval(str_replace(",", "", $ledger['AmtPaid']));
                             $Prepaid = floatval(str_replace(",", "", $ledger['Prepaid']));
@@ -1254,7 +1542,7 @@ class SeedController extends Controller
                         $totalpayroll += $ShareDeposit + $RL + $PIonRL + $PCL + $EduL + $HL + $SD + $MCL + $HIL + $AL + $PIonAL + $HC + $Mortuary + $OBL + $BUL + $EG + $DML + $CPL + $CCL + $AntiRad + $Casserole + $Keyboard + $LGCode + $RaffleTicket + $Catering + $RiceLoan + $TShirt + $NotarialFee + $Misc;
                     }
 
-                    $res = $this->paymentList($member_id, $list, $rec3['Name']);
+                    $res = $this->paymentList($member_id, $list, $rec3['Name'], $rec3['ORNum']);
                     $totalCredit += $res['totalCredit'];
                     $totalDebit += $res['totalDebit'];
 
@@ -1281,6 +1569,7 @@ class SeedController extends Controller
                 $paymentRecAttr = $paymentRec->getAttributes();
                 $paymentRecAttr['member_id'] = $member_id ? $member_id : null;
                 $paymentRecAttr['name'] = $rec['Name'];
+                $paymentRecAttr['or_num'] = $rec['ORNum'];
 
                 $journal = new \app\models\JournalDetails;
                 $journalListAttr = $journal->getAttributes();
@@ -1467,12 +1756,11 @@ class SeedController extends Controller
                 }
 
             }
-
             
         }
     }
 
-    public function paymentList($member_id, $list, $name){
+    public function paymentList($member_id, $list, $name, $or_num){
         $recordList = [];
         $journalList = [];
         $totalCredit = 0;
@@ -1482,6 +1770,7 @@ class SeedController extends Controller
         $paymentRecAttr = $paymentRec->getAttributes();
         $paymentRecAttr['member_id'] = $member_id ? $member_id : null;
         $paymentRecAttr['name'] = $name;
+        $paymentRecAttr['or_num'] = $or_num;
 
         $journal = new \app\models\JournalDetails;
         $journalListAttr = $journal->getAttributes();
@@ -2070,7 +2359,6 @@ class SeedController extends Controller
         $payrollRec = $query->all();
 
         foreach ($payrollRec as $key => $rec) {
-
             $getOR = \app\models\GeneralVoucher::find()->where(['gv_num' => $rec['GVNum']])->one();
             if($getOR != null){
                 echo 'Voucher exist: ' . $rec['GVNum'] . "\n";
@@ -2095,6 +2383,7 @@ class SeedController extends Controller
             $query3->from('zold_voucher')->where(['GVNum' => $rec['GVNum']]);
             $payrollRec3 = $query3->all();
             foreach ($payrollRec3 as $key3 => $rec3) {
+
                 $getMember = \app\models\Member::find()->where("CONCAT(last_name, ', ', first_name, ' ', middle_name) = '" . $rec3['Name'] . "'")->one();
                 $member_id = null;
                 if($getMember){
@@ -2109,6 +2398,8 @@ class SeedController extends Controller
                 
                 $gvArr = $voucherDetAttr;
                 $gvArr['member_id'] = $member_id ? $member_id : null;
+                $gvArr['gv_num'] = $rec['GVNum'];
+                $gvArr['particular_id'] = $particular_id;
 
                 if($rec3['Debit']){
                     $Amount = floatval(str_replace(",", "", $rec3['Debit']));
@@ -2138,6 +2429,7 @@ class SeedController extends Controller
 
                 array_push($recordList, $gvArr);
             }
+
             $totalVoucher = $totalDebit;
             if($totalCredit > $totalDebit){
                 $totalVoucher = $totalCredit;
@@ -2426,6 +2718,91 @@ class SeedController extends Controller
                     }
                 //}
                 
+            }
+        }
+    }
+
+    public function actionSeedCutOff(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loanledger ll')->where("CutPI != '' OR CutInt != ''");
+        $getPLegder = $query->all();
+        foreach ($getPLegder as $key2 => $ledger) {
+            if(floatval($ledger['CutPI']) <= 0 && floatval($ledger['CutPI']) <= 0){
+                continue;
+            }
+            $getMember = \app\models\Member::find()->where(['old_db_name' => $ledger['Name']])->one();
+            if($getMember){
+
+                $loanType = strtoupper($ledger['LoanType']);
+                $loan_id = null;
+                if(strpos($loanType, "APPLIANCE")){
+                    $loan_id = 1; }
+                else if(strpos( $loanType, "REGULAR")){
+                    $loan_id = 2;}
+                else if(strpos($loanType, "EDUCATIONAL")){
+                    $loan_id = 3;}
+                else if(strpos($loanType, "EMERGENCY")){
+                    $loan_id = 4;}
+                else if(strpos($loanType, "HOSPITALIZATION")){
+                    $loan_id = 5;}
+                else if(strpos($loanType, "HOUSE")){
+                    $loan_id = 6;}
+                else if(strpos($loanType, "MEDICAL")){
+                    $loan_id = 7;}
+                else if(strpos($loanType, "BUSINESS")){
+                    $loan_id = 8;}
+                else if(strpos($loanType, "CELLPHONE")){
+                    $loan_id = 10;}
+                else if(strpos($loanType, "CELLCARD")){
+                    $loan_id = 11;}
+                else if(strpos($loanType, "BUY-OUT")){
+                    $loan_id = 12;}
+                else if(strpos($loanType, "MEMORIAL")){
+                    $loan_id = 13;}
+                else if(strpos($loanType, "GADGET")){
+                    $loan_id = 14;}
+                else if(strpos($loanType, "DOMESTIC")){
+                    $loan_id = 15; }
+                else if(strpos($loanType, "RADIATION")){
+                    $loan_id = 16;}
+                else if(strpos($loanType, "CASSEROLE") || $loanType == "CASSEROLE"){
+                    $loan_id = 17;}
+                else if(strpos($loanType, "KEYBOARD") || $loanType == "KEYBOARD"){
+                    $loan_id = 18;}
+
+
+                $trans_date = null;
+                if($ledger['DateTransac'] != ""){
+                    $date = date("Y-m-d", strtotime($ledger['DateTransac']));
+                    $trans_date = $date;
+                }
+
+                if($loan_id && $trans_date){
+                    $year = date("Y", strtotime($trans_date));
+                    $CutPI = floatval(str_replace(",", "", $ledger['CutPI']));
+                    $CutInt = floatval(str_replace(",", "", $ledger['CutInt']));
+                    $getCutOff = \app\models\LoanCutoff::find()->where(['member_id' => $getMember->id, 'loan_id' => $loan_id, 'year' => $year])->one();
+                    if($getCutOff){
+                        echo "Has CutOff: " . $ledger['Name'] . " \t" . $year . " \t" . $loanType . "\n";
+                        continue;
+                    }
+
+                    $cutOff = new \app\models\LoanCutoff;
+                    $cutOff->member_id = $getMember->id;
+                    $cutOff->loan_id = $loan_id;
+                    $cutOff->prepaid_interest = $CutPI;
+                    $cutOff->interest_earned = $CutInt;
+                    $cutOff->year = $year;
+                    $cutOff->date_created = $trans_date;
+                    $cutOff->created_by = 18; //CINCO
+                    if(!$cutOff->save()){
+                        echo "Error on: \n";
+                        var_dump($cutOff->errors);
+                    }
+                    echo $ledger['Name'] . " \t" . $cutOff->year . " \t" . $ledger['CutPI'] . " : " . $ledger['CutInt'] . "\n";
+                }
+
             }
         }
     }

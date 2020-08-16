@@ -174,7 +174,9 @@
 	        				<td>
 	        					<span>{{ $nf.formatNumber(evaluationForm.amount) }}</span>
 	        				</td>
-
+	        				<td>
+	        					&nbsp;&nbsp;&nbsp;&nbsp;
+	        				</td>
 	        				<th>Previous Loan Amount: </th>
 	        				<td>
 	        					<span v-if = "latestLoan">{{ $nf.formatNumber(latestLoan.principal) }}</span>
@@ -185,8 +187,9 @@
 	        				<td>
 	        					<span>{{ $nf.formatNumber(evaluationForm.principal_amortization_quincena) }}</span>
 	        				</td>
-
-
+	        				<td>
+	        					&nbsp;&nbsp;&nbsp;&nbsp;
+	        				</td>
 	        				<th>Previous Loan Balance: </th>
 	        				<td>
 	        					<span v-if = "latestLoan">{{ $nf.formatNumber(latestLoan.principal_balance) }}</span>
@@ -198,7 +201,9 @@
 	        				<td>
 	        					<span>{{ $nf.formatNumber(evaluationForm.prepaid_amortization_quincena) }}</span>
 	        				</td>
-
+	        				<td>
+	        					&nbsp;&nbsp;&nbsp;&nbsp;
+	        				</td>
 	        				<th>Date of Last Loan: </th>
 	        				<td>
 	        					<span v-if = "latestLoan">{{ latestLoan.release_date }}</span>
@@ -207,7 +212,7 @@
 	        			<tr>
 	        				<th>Term: </th>
 	        				<td>
-	        					<span>{{ $nf.formatNumber(evaluationForm.term) }}</span>
+	        					<span>{{ $nf.formatNumber(evaluationForm.duration) }}</span>
 	        				</td>
 	        			</tr>
 	        		</table>
@@ -280,7 +285,21 @@ import fileExport from '../../mixins/fileExport'
 import swalAlert from '../../mixins/swalAlert.js'
 
 import VueHtmlToPaper from 'vue-html-to-paper';
-Vue.use(VueHtmlToPaper);
+var printOptions =  {
+ 	name: '_blank',
+  	specs: [
+    	'fullscreen=yes',
+    	'titlebar=yes',
+    	'scrollbars=yes'
+  	],
+  	styles: [
+    	//"https://unpkg.com/kidlat-css/css/kidlat.css",
+    	window.Yii.baseUrl + "/css/bootstrap.min.css",
+    	window.Yii.baseUrl + "/css/mpdf.css"
+  	]
+}
+console.log('printOptions', printOptions)
+Vue.use(VueHtmlToPaper, printOptions);
 
 export default { 
 	props: { 
@@ -312,18 +331,6 @@ export default {
 			otherLoans 				: this.pageData.otherLoans,
 			loanTransaction 		: this.pageData.loanTransaction,
 			pageLoading 			: false,
-			printOptions 			: {
-			 	name: '_blank',
-			  	specs: [
-			    	'fullscreen=yes',
-			    	'titlebar=yes',
-			    	'scrollbars=yes'
-			  	],
-			  	styles: [
-			    	'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
-			    	"https://unpkg.com/kidlat-css/css/kidlat.css",
-			  	]
-			},
 		}
 	},
 	created(){

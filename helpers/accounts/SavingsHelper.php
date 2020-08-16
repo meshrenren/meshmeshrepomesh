@@ -106,29 +106,31 @@ class SavingsHelper
         </table>';
         $listTemplate = str_replace('[account_name]', $account_name, $listTemplate);
         $listTemplate = str_replace('[account_no]', $account_no, $listTemplate);
-        $listTemplate = str_replace('[balance]', $balance, $listTemplate);
+        $listTemplate = str_replace('[balance]', Yii::$app->view->formatNumber($balance), $listTemplate);
 
         if(count($transaction) > 0){
-            $transTable = '<table width = "100%" style = "margin-top: 20px; border-collapse: collapse !important:">
+            $transTable = '<table class = "table table-bordered mt-10" width = "100%">
                 <tr>
-                    <th style = "font-weight: bold; border: 1px solid #000;">Date Transact</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">In</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Out</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Transaction Type</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Reference No</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Running Balance</th> 
-                    <th style = "font-weight: bold; border: 1px solid #000;">Remarks</th> 
+                    <th>Date Transact</th> 
+                    <th>In</th> 
+                    <th>Out</th> 
+                    <th>Transaction Type</th> 
+                    <th>Reference No</th> 
+                    <th>Running Balance</th> 
+                    <th>Remarks</th> 
                 </tr>';
             foreach ($transaction as $trans) {
                 $transDate = date('Y-m-d', strtotime($trans['transaction_date']));
+                $amount_in = $trans['amount_in'] && floatval($trans['amount_in']) > 0 ? Yii::$app->view->formatNumber($trans['amount_in']) : "";
+                $amount_out = $trans['amount_out'] && floatval($trans['amount_out']) > 0 ? Yii::$app->view->formatNumber($trans['amount_out']) : "";
                 $transTable .= '<tr>
-                    <td style = "border: 1px solid #000;">'.$transDate.'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['amount_in'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['amount_out'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['transaction_type'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['ref_no'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['running_balance'].'</td> 
-                    <td style = "border: 1px solid #000;">'.$trans['remarks'].'</td> 
+                    <td>'.$transDate.'</td> 
+                    <td>'.$amount_in.'</td> 
+                    <td>'.$amount_out.'</td> 
+                    <td>'.$trans['transaction_type'].'</td> 
+                    <td>'.$trans['ref_no'].'</td> 
+                    <td>'.Yii::$app->view->formatNumber($trans['running_balance']).'</td> 
+                    <td>'.$trans['remarks'].'</td> 
                 </tr>';
             }
 

@@ -36,6 +36,7 @@
                                 </tr>
                             </table>
                             <el-table
+                                class = "mt-20 el-table-bordered"
                                 :data="voucherList"
                                 border striped
                                 style="width: 100%"
@@ -49,14 +50,14 @@
                                     prop="debit"
                                     label="Debit">
                                     <template slot-scope="scope">
-                                        {{ Number(scope.row.debit).toFixed(2) }}
+                                        {{ $nf.formatNumber(scope.row.debit, 2) }}
                                     </template>
                                 </el-table-column>
                                 <el-table-column
                                     prop="credit"
                                     label="Credit">
                                     <template slot-scope="scope">
-                                        {{ Number(scope.row.credit).toFixed(2) }}
+                                        {{ $nf.formatNumber(scope.row.credit, 2) }}
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -87,10 +88,10 @@
             'scrollbars=yes'
         ],
         styles: [
-            'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css',
+            window.Yii.baseUrl + "/css/bootstrap.min.css",
+            window.Yii.baseUrl + "/css/mpdf.css"
         ]
     }
-    console.log(printOptions)
     Vue.use(VueHtmlToPaper, printOptions);  
 
 export default {

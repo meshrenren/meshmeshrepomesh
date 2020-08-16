@@ -33,12 +33,11 @@ class GeneralVoucher extends \yii\db\ActiveRecord
     {
         return [
             [['date_transact', 'created_date'], 'safe'],
-            [['gv_num', 'name'], 'required'],
+            [['gv_num'], 'required'],
             [['type'], 'string'],
             [['created_by'], 'integer'],
             [['gv_num'], 'string', 'max' => 100],
             [['name', 'posting_code'], 'string', 'max' => 1000],
-            [['gv_num'], 'unique'],
         ];
     }
 

@@ -59,6 +59,7 @@ class PaymentHelper
         foreach ($list as $key => $value) {
             $payment = new PaymentRecordList;
             $payment->payment_record_id = $payment_record_id;
+        	$payment->or_num = $value['or_num'];
             $payment->type = $value['type'];
             $payment->amount = $value['amount'];
             $payment->member_id = $value['member_id'];
@@ -116,7 +117,7 @@ class PaymentHelper
 			$success = true;
 			$transaction = \Yii::$app->db->beginTransaction();
 			
-			$dateToday = date('Y-m-d');
+			$dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
 			$payments = PaymentRecordList::find()->joinWith(['member'])->where(['payment_record_id'=>$ref_id])->all();
 			$paymentHeader = PaymentRecord::findOne(['id'=>$ref_id]);
 
@@ -124,7 +125,7 @@ class PaymentHelper
 			$cashOnHandId = $coh_id->id;
 			
 			//2. prepare header for accounting entry
-			$posted_date = date('Y-m-d');
+			$posted_date = $dateToday;
 			$journalheader['reference_no'] = $paymentHeader->or_num;
 			$journalheader['posting_date'] = $posted_date;
 			$journalheader['total_amount'] = 0;
@@ -140,6 +141,7 @@ class PaymentHelper
 			
 			$journaldetails = [];
 			
+			$debitCOH = 0;
 			foreach ($payments as $row)
 			{
 				/*
@@ -187,13 +189,14 @@ class PaymentHelper
 					$lastTransaction = $command->queryOne();
 					
 					echo $lastTransaction['lasttrandate']." | <br/>-";
-					$noOfDaysPassed = date_diff(date_create(date('Y-m-d')), date_create($lastTransaction['lasttrandate']));
+					$noOfDaysPassed = date_diff(date_create($dateToday), date_create($lastTransaction['lasttrandate']));
 					
 					$noOfDaysPassed = $noOfDaysPassed->format("%a");
 					
 					
 					//0. identifying deductions or payment distributions, if loan is appliance or regular loan, mothly prepaid interest should be paid.
 					$prepaidInterest = 0;
+					$amount = $row['amount'];
 
 					if($product->id == 1 || ($product->id == 2 && !$isNewLoanPolicy)) //No quiencena prepaid for appliance loan 
 					{
@@ -201,12 +204,13 @@ class PaymentHelper
 						$getPrepaid = static::getPrepaid($payments, $row);
 						if($getPrepaid){
 							$prepaidInterest = $getPrepaid['amount'] < 0 ? 0 : $getPrepaid['amount'];
+							$amount += $prepaidInterest;
 						}
 						
 						
 					}
 					echo "i am interest prepaid .. ".$prepaidInterest." | <br/>";
-					$principal_pay = $row['amount'] - $prepaidInterest;
+					$principal_pay = $row['amount']/* - $prepaidInterest*/;
 					
 					$interestEarned = 0;
 					if($product->id == 1){//Regular loan base on diminishing amount
@@ -234,10 +238,10 @@ class PaymentHelper
 					$loanTransaction->loan_account = $row['account_no'];
 					//$loanTransaction->loan_id = $product->id;
 					//$loanTransaction->member_id = $account->member_id;
-					$loanTransaction->amount = round($row['amount'], 2);
+					$loanTransaction->amount = round($amount, 2);
 					$loanTransaction->transaction_type='PAYPARTIAL';
 					$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
-					$loanTransaction->transaction_date = date('Y-m-d');
+					$loanTransaction->transaction_date = $dateToday;
 					$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
 					$loanTransaction->remarks="payment thru payment facility";
 					$loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
@@ -245,7 +249,7 @@ class PaymentHelper
 					$loanTransaction->OR_no= $paymentHeader->or_num;
 					$loanTransaction->principal_paid = round($principal_pay, 2);
 					$loanTransaction->arrears_paid = 0;
-					$loanTransaction->date_posted = date('Y-m-d');
+					$loanTransaction->date_posted = $dateToday;
 					$loanTransaction->interest_earned = round($interestEarned, 2);
 					
 					$account->principal_balance = $loanTransaction->running_balance;
@@ -269,17 +273,23 @@ class PaymentHelper
 						//accounting entry goes here...
 						
 						//debit part
-						array_push($journaldetails, [
+						/*array_push($journaldetails, [
 								'amount' => $loanTransaction->prepaid_intpaid + $loanTransaction->principal_paid + $loanTransaction->arrears_paid + $loanTransaction->interest_paid,
 								'entry_type'=>'DEBIT',
 								'particular_id'=>$cashOnHandId //cash on hand
-						]);
+						]);*/
 						
-				
+						$debitCOH +=  floatval($loanTransaction->amount);
+
+						array_push($journaldetails, [
+								'amount'=> $loanTransaction->amount,
+								'entry_type' => 'CREDIT',
+								'particular_id' => $product->pi_particular_id
+						]);
+
 						//credit part		
-						if($loanTransaction->prepaid_intpaid>0)
+						/*if($loanTransaction->prepaid_intpaid>0)
 						{
-							
 							array_push($journaldetails, [
 									'amount'=> $loanTransaction->prepaid_intpaid,
 									'entry_type' => 'CREDIT',
@@ -309,7 +319,7 @@ class PaymentHelper
 									'particular_id' => $product->int_particular_id
 							]);
 							
-						}
+						}*/
 						
 					}
 					
@@ -337,7 +347,7 @@ class PaymentHelper
 					$savingstransaction->amount = $row['amount'];
 					$savingstransaction->transaction_type = 'CASHDEP';
 					$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
-					$savingstransaction->transaction_date = date('Y-m-d H:i:s');
+					$savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($dateToday));
 					$savingstransaction->running_balance = $savingsaccount->balance + $row['amount'];
 					$savingstransaction->remarks = "posted as Payment from ".$paymentHeader->or_num;
 					$savingstransaction->ref_no = $paymentHeader->or_num;
@@ -346,13 +356,13 @@ class PaymentHelper
 					
 					if($savingsaccount->save() && $savingstransaction->save())
 					{
-						array_push($journaldetails, [
+						/*array_push($journaldetails, [
 								'amount'=> $savingstransaction->amount,
 								'entry_type' => 'DEBIT',
 								'particular_id' => $cashOnHandId
-						]);
+						]);*/
 						
-						
+						$debitCOH +=  floatval($savingstransaction->amount);
 						array_push($journaldetails, [
 								'amount'=> $savingstransaction->amount,
 								'entry_type' => 'CREDIT',
@@ -383,7 +393,7 @@ class PaymentHelper
 					$sharetransaction->amount = $row['amount'];
 					$sharetransaction->transaction_type = 'CASHDEP';
 					$sharetransaction->transacted_by = \Yii::$app->user->identity->id;
-					$sharetransaction->transaction_date = date('Y-m-d H:i:s');
+					$sharetransaction->transaction_date = date('Y-m-d H:i:s', strtotime($dateToday));
 					$sharetransaction->running_balance = $shareaccount->balance + $row['amount'];
 					$sharetransaction->remarks = "posted as Payment from ".$paymentHeader->or_num;
 					$sharetransaction->reference_number = $paymentHeader->or_num;
@@ -392,13 +402,14 @@ class PaymentHelper
 					
 					if($shareaccount->save() && $sharetransaction->save())
 					{
-						array_push($journaldetails, [
+						/*array_push($journaldetails, [
 								'amount'=> $sharetransaction->amount,
 								'entry_type' => 'DEBIT',
 								'particular_id' => $cashOnHandId
-						]);
+						]);*/
 						
 						
+						$debitCOH +=  floatval($sharetransaction->amount);
 						array_push($journaldetails, [
 								'amount'=> $sharetransaction->amount,
 								'entry_type' => 'CREDIT',
@@ -414,9 +425,30 @@ class PaymentHelper
 					
 					
 				}
+				else{
+					/*array_push($journaldetails, [
+							'amount'=> $row['amount'],
+							'entry_type' => 'DEBIT',
+							'particular_id' => $cashOnHandId
+					]);*/
+					
+					$debitCOH +=  floatval($row['amount']);
+					array_push($journaldetails, [
+							'amount'=> $row['amount'],
+							'entry_type' => 'CREDIT',
+							'particular_id' => $row['particular_id'],
+					]);
+				}
 				
 				
 			}
+
+			//debit part
+			array_push($journaldetails, [
+					'amount' => $debitCOH,
+					'entry_type'=>'DEBIT',
+					'particular_id'=>$cashOnHandId //cash on hand
+			]);
 			
 			//post to journal entry
 			if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
@@ -425,10 +457,6 @@ class PaymentHelper
 			}
 			
 			else $success = false;
-			
-			
-			
-			
 			
 			if($success){
 				$paymentHeader->posted_date = $posted_date;
@@ -555,7 +583,7 @@ class PaymentHelper
 			$success = true;
 			$transaction = \Yii::$app->db->beginTransaction();
 			
-			$dateToday = date('Y-m-d');
+			$dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
 			$paymentHeader = PaymentRecord::findOne(['or_num'=>$ref_id, 'is_cancelled'=>0]);
 			
 			if(!$paymentHeader){

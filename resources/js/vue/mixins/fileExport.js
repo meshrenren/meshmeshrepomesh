@@ -12,18 +12,22 @@ export default {
 		},
     	winPrint(data, title){
     		let win = window.open("");
+    		let bootstrap = this.$baseUrl + "/css/bootstrap.min.css"
+    		let mpdf = this.$baseUrl + "/css/mpdf.css"
     		console.log('css', this.$baseUrl + 'css/mpdf.css')
+    		
     		let html = "<html><head>"
 				html += "<style>"
 				html += "table, th, td {"
-				html += "border: 1px solid black;"
+				/*html += "border: 1px solid black;"
  	 			html += "border-collapse: collapse;}"
 				html += "table.no-border, .no-border th, .no-border td {"
 				html += "border: 0px solid black;"
- 	 			html += "border-collapse: collapse;}"
+ 	 			html += "border-collapse: collapse;}"*/
 				html += "</style>"
 				html += `<title> ${title} </title>` 
-				html += `<link rel="stylesheet" type="text/css" href="http://dilgcoop.localhost/css/mpdf.css">`
+				html += `<link rel="stylesheet" type="text/css" href="${bootstrap}">`
+				html += `<link rel="stylesheet" type="text/css" href="${mpdf}">`
 				html += "</head><body>"
 				html += "<div class='print-container'>"
 				html += data
@@ -35,9 +39,9 @@ export default {
 			win.document.write(html)
 			setTimeout(() => {
 				win.print()
+				win.close()
 			}, 500);
 			
-			/*win.close()*/
     	},
 	}
 }

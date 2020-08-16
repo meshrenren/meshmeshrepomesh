@@ -18,14 +18,14 @@
                 :prop="item.key"
                 :label="item.product_name">       
                 <template slot-scope="scope"> 
-                	{{ $nf.formatNumber(scope.row[item.key]) }} 
+                	{{ $nf.formatNumber(scope.row[item.key], 2) }} 
                 </template>                        
             </el-table-column>
             <el-table-column
                 prop="total"
                 label="Total">  
                 <template slot-scope="scope"> 
-                	{{ $nf.formatNumber(scope.row.total) }} 
+                	{{ $nf.formatNumber(scope.row.total, 2) }} 
                 </template>                      
             </el-table-column>
         </el-table>
@@ -80,7 +80,7 @@ export default {
 			let list = []
 
 			_forEach(accounts, acc=> {
-				let key = acc.type + "_" + acc.product_id
+				let key = acc.type + "_" + acc.particular_id
 				let arr = {
 					particular_id : acc.particular_id,
 					product_id : acc.product_id,
@@ -91,7 +91,7 @@ export default {
 
 				}
 				if(acc.is_prepaid !== undefined && acc.is_prepaid){
-					arr.key = acc.type + "_PI" + "_" + acc.product_id
+					arr.key = acc.type + "_PI" + "_" + acc.particular_id
 					arr.is_prepaid = true
 				}
 
@@ -113,8 +113,10 @@ export default {
                 let sumTotal = 0
                 _forEach(accColumn, col => {
 
-                    let getAccAmount = allTotals.filter(rs => { return rs.type == col.type && rs.product_id == col.product_id && mem.id == rs.member_id})
+                	let getAccAmount = allTotals.filter(rs => { return rs.type == col.type && rs.particular_id == col.particular_id && mem.id == rs.member_id})
+
                     if(col.type == "LOAN"){
+                    	let getAccAmount = allTotals.filter(rs => { return rs.type == col.type && rs.product_id == col.product_id && mem.id == rs.member_id})
 
                     	if(col.is_prepaid){
 	                    	getAccAmount = allTotals.filter(rs => { return rs.is_prepaid !== undefined && rs.is_prepaid && rs.type == col.type && rs.product_id == col.product_id && mem.id == rs.member_id})
@@ -133,7 +135,7 @@ export default {
                     arr[key] = parseFloat(sumAcc)
                     sumTotal = parseFloat(sumTotal) + parseFloat(sumAcc)
                 })
-                arr['total'] = sumTotal
+                arr['total'] = Number(sumTotal).toFixed(2)
                 memRows.push(arr)
             })
 

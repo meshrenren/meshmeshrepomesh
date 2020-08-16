@@ -13,6 +13,12 @@ use app\models\SavingsAccounts;
 use app\models\SavingsTransaction;
 use app\models\Savingsproduct;
 use app\models\SavingAccounts;
+
+
+use app\models\Shareaccount;
+use app\models\ShareTransaction;
+use app\models\ShareProduct;
+
 use app\helpers\payment\PaymentHelper;
 use app\helpers\accounts\LoanHelper;
 use app\helpers\particulars\ParticularHelper;
@@ -126,10 +132,10 @@ class LoanController extends \yii\web\Controller
             $member_id = $post['member_id'];
 
             $joinWith = ['loanTransaction' => function ($query){
-                $query->orderBy('transaction_date DESC')
+                $query->orderBy('date_posted')
                 ->asArray()->all();
             }];
-            $loanAccounts = LoanHelper::getMemberLoan($member_id, $loan_id, true, $joinWith, true);
+            $loanAccounts = LoanHelper::getMemberLoan($member_id, $loan_id, true, $joinWith, true, 'release_date');
             return $loanAccounts;
         }
     }
@@ -192,9 +198,22 @@ class LoanController extends \yii\web\Controller
                         ->orderBy('release_date DESC')
                         ->asArray()->one();
 
-                    //Getarrear
-                    $getArrear = LoanHelper::getArrears($acc['account_no']);
-                    $acc['arrears'] = $getArrear['arrearAmount'];
+                     $accArr = array();
+                    if($acc){
+                        $accArr = $acc;
+                        //Getarrear
+                        $getArrear = LoanHelper::getArrears($acc['account_no']);
+                        $acc['arrears'] = $getArrear['arrearAmount'];
+
+                        //Last Payment
+                        $acc['account_last_payment'] = "";
+                        $lastPayment = LoanHelper::getLastPayment($acc['account_no']);
+                        if($lastPayment){
+                            $acc['account_last_payment'] = $lastPayment->date_posted;
+                        }
+                        //Check LoanHelper -> getAccountLoanInfo for updates
+                    }
+
                     array_push($accountList, $acc);
                 }
             }
@@ -238,14 +257,6 @@ class LoanController extends \yii\web\Controller
                 'data' => $acc
             ];
             
-
-            /*$connection = Yii::$app->getDb();
-            $command = $connection->createCommand("
-				    SELECT sum(prepaid_intpaid) as prepaid_interest, sum(interest_earned) as interest_accum, DATE_FORMAT(NOW(), '%Y-%m-%d') as datenow,
-					ifnull((select date_posted from loan_transaction where loan_account=:accountnumber and LEFT(transaction_type,3)='PAY' and is_cancelled=0 order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber)) as last_tran_date
-					FROM `loan_transaction` lt where loan_account=:accountnumber and LEFT(transaction_type,3) in ('PAY', 'REL') and is_cancelled=0
-					order by id, date_posted", [':accountnumber' => $acc['account_no'] ]);				            
-			$result = $command->queryOne();*/
 				            
             $result = array();
             $getTransactions = [];
@@ -253,6 +264,7 @@ class LoanController extends \yii\web\Controller
             $systemDate = date("Y-m-d", strtotime($currentDate));
             if($acc != null)
             {
+                $release_date = $acc['release_date'];
                 $prepaid_interest = 0;
                 $interest_accum = 0;
                 $last_tran_date = $acc['release_date'];
@@ -263,53 +275,47 @@ class LoanController extends \yii\web\Controller
 
                 $calVersion = Yii::$app->view->getVersion($acc['release_date']);
 
-                $lastPayment = $acc['release_date'];
+                $lastPayment = date('Y-m-d', strtotime($cutOff . ' +1 day'));
                 $lastRunningBal = $acc['principal'];
+                if($release_date > $lastPayment){
+                   $lastPayment =  $release_date;
+                }
 
-                $getTransactions = LoanHelper::getLoanTransaction($acc['account_no'], null, 'date_posted');
-                foreach ($getTransactions as $transaction) {
+                $firstTransaction = null;
+                $getTransactions = LoanTransaction::find()->where(['loan_account' => $acc['account_no'], 'is_cancelled' => "0"])
+                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL"')
+                    ->orderBy('date_posted')
+                    ->asArray()->all();
+                $transLength = count($getTransactions);
+
+                foreach ($getTransactions as $transKey => $transaction) {
+
+                    $last_tran_date = $transaction['date_posted'];
+
                     if($transaction['date_posted'] <= $cutOff){
                         $balance_after_cutoff = $transaction['running_balance'];
+                        $lastRunningBal = $transaction['running_balance'];
                         continue;
                     }
-                    
-                    if($transaction['transaction_type'] == "RELEASE" && $transaction['is_cancelled'] == 0){
-                        $last_tran_date = $transaction['date_posted'];
-                        //var_dump($transaction);
-                        if($transaction['interest_earned'] && floatval($transaction['interest_earned']) > 0){
-                            $interest_accum = $interest_accum + $transaction['interest_earned'];
-                        }
 
-                        if($transaction['prepaid_intpaid'] && floatval($transaction['prepaid_intpaid']) > 0){
-                            $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+                    if($transaction['transaction_type'] == "PAYPARTIAL"){
+                        if($transaction['amount'] > 0){
+                            $total_amount_paid = $total_amount_paid + $transaction['amount'];
                         }
                     }
 
-                    if($transaction['transaction_type'] == "PAYPARTIAL" && $transaction['is_cancelled'] == 0){
-                        $last_tran_date = $transaction['date_posted'];
-                        if($transaction['amount'] > 0){
-                            $total_amount_paid = $total_amount_paid + $transaction['amount'];
-                            $interest_accum = $interest_accum + $transaction['interest_earned'];
-                            $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+                    if($transaction['prepaid_intpaid'] && floatval($transaction['prepaid_intpaid']) > 0){
+                        $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+                    }
 
-                            if($acc['loan_id'] == 1 && $calVersion == "1" ){
-                                if(!$transaction['interest_earned'] || $transaction['interest_earned'] == "" || floatval($transaction['interest_earned']) == 0){
-                                    $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['date_posted'], $lastRunningBal, $acc['int_rate']);
-                                    $interest_accum = $interest_accum + $interestEarned;
-                                    //var_dump($lastPayment, $transaction['date_posted'], $lastRunningBal, $interestEarned);
-                                }
-                            }
-                            /*else if($acc['loan_id'] == 2){
+                    //Recalculate interest earned. Dili magsalig sa DB
+                    $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['date_posted'], $lastRunningBal, $acc['int_rate']);
+                    $interest_accum = $interest_accum + $interestEarned;
 
-                                $nextPayment = $systemDate;
-                                if(!$transaction['interest_earned'] || $transaction['interest_earned'] == "" || floatval($transaction['interest_earned']) == 0){
-                                    $interestEarned = LoanHelper::getInterest($transaction['date_posted'],  , $lastRunningBal, $acc['int_rate']);
-                                    $interest_accum = $interest_accum + $interestEarned;
-                                    var_dump($lastPayment, $transaction['date_posted'], $lastRunningBal, $interestEarned);
-                                }
-                            }*/
-                            
-                        }
+                    //If at the last transaction
+                    if($transLength == $transKey+1){
+                        $interestEarnedLast = LoanHelper::getInterest($transaction['date_posted'], $systemDate, $transaction['running_balance'], $acc['int_rate']);
+                        $interest_accum = $interest_accum + $interestEarnedLast;
                     }
 
                     $lastPayment = $transaction['date_posted'];
@@ -318,11 +324,21 @@ class LoanController extends \yii\web\Controller
 
                 //CUT OF PI AND INTEREST
                 if($acc['loan_id'] == 2 || ($acc['loan_id'] == 1 && $calVersion == "1") ) {// Regular loan
-                    $beforeCutOff = LoanHelper::calculateBeforeCutOff($acc['account_no']);
-                    if($beforeCutOff){
-                        $interest_accum += $beforeCutOff['cutOffInt'];
-                        $prepaid_interest += $beforeCutOff['cutOffPi'];
+                    //If loan exist before cut off. Get Cut Off Data
+                    if($release_date <= $cutOff){
+                        $cutOffYear = date('Y', strtotime($cutOff));
+                        $getCutOff = LoanHelper::getCutOff($cutOffYear, $acc['loan_id'], $acc['member_id']);
+                        if($getCutOff){
+                            $prepaid_interest += $getCutOff['finalPi'];
+                            $interest_accum += $getCutOff['finalInt'];
+                        }
+                        /*$beforeCutOff = LoanHelper::calculateBeforeCutOff($acc['account_no']);
+                        if($beforeCutOff){
+                            $interest_accum += $beforeCutOff['cutOffInt'];
+                            $prepaid_interest += $beforeCutOff['cutOffPi'];
+                        }*/
                     }
+                    
                 }
 
                 $result['prepaid_interest'] = $prepaid_interest;
@@ -330,11 +346,6 @@ class LoanController extends \yii\web\Controller
                 $result['last_tran_date'] = $last_tran_date;
                 $result['total_amount_paid'] = $total_amount_paid;
                 $result['balance_after_cutoff'] = $balance_after_cutoff;
-
-                if($acc['loan_id'] == 2 || $acc['loan_id'] == 1 && $calVersion == "1" ) {// Regular loan
-                    $interestEarned = LoanHelper::getInterest($systemDate, $result['last_tran_date'], $acc['principal_balance'], $acc['int_rate']);
-                	$result['interest_accum'] = $result['interest_accum'] + $interestEarned;
-                }
             	
             }
             
@@ -401,7 +412,8 @@ class LoanController extends \yii\web\Controller
     		$loanmodel->prepaid = 0;
     		$loanmodel->maturity_date = date('Y-m-d', strtotime("+".$loanmodel->term." months", strtotime($loanmodel->release_date)));
     		$loanmodel->service_charge = $loanaccount->service_charge_amount;
-    		$loanmodel->prepaid_int = 0;
+    		$loanmodel->prepaid_int = $loanproduct->prepaid_interest;
+            $loanmodel->int_rate = $loanproduct->int_rate;
     		$loanmodel->is_active = 1;
     		$loanmodel->status='Verified';
     		$loanmodel->prepaid_accum = 0;
@@ -512,7 +524,10 @@ class LoanController extends \yii\web\Controller
             $gv_num = $post['gv_num'];
             $voucherDetails = $post['voucherDetails'];
             $otherLoanToPay = $post['otherLoanToPay'];
-    		
+
+            $currentDate = ParticularHelper::getCurrentDay();
+            $systemDate = date("Y-m-d", strtotime($currentDate));
+            $transac_date = $systemDate;
     		
     		/* For renewal, go give these parameters to close the loan.
     		 * Reminder: this function is not reusable for future closing of loans. 
@@ -556,7 +571,7 @@ class LoanController extends \yii\web\Controller
     		$loanTransaction->amount = $loanaccount->principal;
     		$loanTransaction->transaction_type='RELEASE';
     		$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
-    		$loanTransaction->transaction_date = date('Y-m-d');
+    		$loanTransaction->transaction_date = $transac_date;
     		$loanTransaction->running_balance = $loanaccount->principal;
     		$loanTransaction->remarks = "loan release";
     		$loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
@@ -564,10 +579,8 @@ class LoanController extends \yii\web\Controller
     		$loanTransaction->OR_no = $gv_num;
     		$loanTransaction->principal_paid = 0;
     		$loanTransaction->arrears_paid = 0;
-    		$loanTransaction->date_posted = date('Y-m-d');
+    		$loanTransaction->date_posted = $transac_date;
     		$loanTransaction->interest_earned = 0;
-    		
-
     		
     		if(/*$loanproduct->save() && */$loanmodel->save() && $loanTransaction->save())
     		{
@@ -591,7 +604,7 @@ class LoanController extends \yii\web\Controller
                             $otherLoanTransaction->amount = $amountToPay;
                             $otherLoanTransaction->transaction_type=$transaction_type;
                             $otherLoanTransaction->transacted_by = \Yii::$app->user->identity->id;
-                            $otherLoanTransaction->transaction_date = date('Y-m-d');
+                            $otherLoanTransaction->transaction_date = $transac_date;
                             $otherLoanTransaction->running_balance = $running_balance;
                             $otherLoanTransaction->remarks = "loan payment by regular loan";
                             $otherLoanTransaction->prepaid_intpaid = 0;
@@ -599,7 +612,7 @@ class LoanController extends \yii\web\Controller
                             $otherLoanTransaction->OR_no = $gv_num;
                             $otherLoanTransaction->principal_paid = $amountToPay;
                             $otherLoanTransaction->arrears_paid = 0;
-                            $otherLoanTransaction->date_posted = date('Y-m-d');
+                            $otherLoanTransaction->date_posted = $transac_date;
                             $otherLoanTransaction->interest_earned = 0;
 
                             if($otherLoanModel->save() && $otherLoanTransaction->save())
@@ -617,22 +630,22 @@ class LoanController extends \yii\web\Controller
 
     			if($loanaccount->savings_retention>0 && $success)
     			{
-    				$savingsaccount = SavingAccounts::findOne(['member_id'=>$loanaccount->member_id, 'is_active'=>1]);
-    				$savingstransaction = new SavingsTransaction();
-    				$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
+    				$shareaccount = Shareaccount::findOne(['fk_memid'=>$loanaccount->member_id, 'is_active'=>1]);
+    				$sharetransaction = new ShareTransaction();
+    				$sshareproduct = ShareProduct::findOne($shareaccount->fk_share_product);
     				
-    				$savingstransaction->fk_savings_id = $savingsaccount->account_no;
-    				$savingstransaction->amount = $loanaccount->savings_retention;
-    				$savingstransaction->transaction_type = 'CASHDEP';
-    				$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
-    				$savingstransaction->transaction_date = date('Y-m-d H:i:s');
-    				$savingstransaction->running_balance = $savingsaccount->balance + $loanaccount->savings_retention;
-    				$savingstransaction->remarks = "posted as Retention from loan ".$loanmodel->account_no;
-    				$savingstransaction->ref_no = "GV123.sample";
+    				$sharetransaction->fk_share_id = $shareaccount->accountnumber;
+    				$sharetransaction->amount = $loanaccount->savings_retention;
+    				$sharetransaction->transaction_type = 'CASHDEP';
+    				$sharetransaction->transacted_by = \Yii::$app->user->identity->id;
+    				$sharetransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transac_date));
+    				$sharetransaction->running_balance = $shareaccount->balance + $loanaccount->savings_retention;
+    				$sharetransaction->remarks = "posted as Retention from loan ".$loanmodel->account_no;
+    				$sharetransaction->reference_number = $gv_num; //"GV123.sample";
     				
-    				$savingsaccount->balance = $savingsaccount->balance + $loanaccount->savings_retention;
+    				$shareaccount->balance = $shareaccount->balance + $loanaccount->savings_retention;
     				
-    				if($savingsaccount->save() && $savingstransaction->save())
+    				if($shareaccount->save() && $sharetransaction->save())
     				{
                         $success = true;	
     				}
@@ -662,6 +675,9 @@ class LoanController extends \yii\web\Controller
                         $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
                         if(!$saveEntries){
                             $success = false;
+                        }
+                        else{
+                            $success = VoucherHelper::saveJournalVoucherBase($voucherModel->id);
                         }
                     }else{
                         $success = false;
@@ -800,6 +816,43 @@ class LoanController extends \yii\web\Controller
             $type = $postData['type'];
             
             $template = LoanHelper::printLoanSummary($dataLoan);
+            
+            $type = $postData['type'];
+            if($type == "pdf"){
+                // Set up MPDF configuration
+                $config = [
+                    'mode' => '+utf-8', 
+                    "allowCJKoverflow" => true, 
+                    "autoScriptToLang" => true,
+                    "allow_charset_conversion" => false,
+                    "autoLangToFont" => true,
+                    'orientation' => 'L'
+                ];
+                $mpdf = new Mpdf($config);
+                $mpdf->WriteHTML($template);
+
+                // Download the PDF file
+                $mpdf->Output();
+                exit();
+            }
+            else{
+                return [ 'data' => $template];
+            }
+        }
+        
+    }
+
+    public function actionPrintLedger(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            $dataLoan = $postData['dataLoan'];
+            $type = $postData['type'];
+            
+            $template = LoanHelper::printLoanLedger($dataLoan);
             
             $type = $postData['type'];
             if($type == "pdf"){

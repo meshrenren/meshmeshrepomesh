@@ -26,7 +26,7 @@
 				            </el-table-column>
 				            <el-table-column label="Balance">
 				                <template slot-scope="scope">
-				                   	<span >{{ $nf.formatNumber(scope.row.balance) }}</span>
+				                   	<span >{{ $nf.formatNumber(scope.row.balance, 2) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Action">
@@ -64,7 +64,8 @@
 
             				<el-col :span="8"> 
 		            			<div class = "right-toolbar">
-		            				<button class = "btn btn-app" @click = "printForm('pdf')"><i class = "fa fa-file-pdf-0"></i> Export</button>
+		            				<!-- <button class = "btn btn-app" @click = "printForm('pdf')"><i class = "fa fa-file-pdf-0"></i> Export</button> -->
+		            				<el-button type = "default" @click = "printForm('print')">Print Ledger</el-button>
 		            				<!-- <button class = "btn btn-app" @click = "printForm('print')"><i class = "fa fa-print"></i> Print</button> -->
 		            			</div>
 		            		</el-col>
@@ -97,7 +98,7 @@
 				            </el-table-column>
 				            <el-table-column label="Running Balance">
 				                <template slot-scope="scope">
-				                    <span>{{ $nf.formatNumber(scope.row.running_balance) }}</span>
+				                    <span>{{ $nf.formatNumber(scope.row.running_balance, 2) }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Remarks">
@@ -193,7 +194,7 @@ export default {
             })
     	},
     	printForm(type){
-    		if(this.accountTransactionList.length == 0){
+    		if(this.transactionList.length == 0){
     			new Noty({
                     theme: 'relax',
                     type: "error",
@@ -216,7 +217,7 @@ export default {
     			account_no : account.accountnumber,
     			account_name : accName,
     			balance : account.balance,
-    			transaction : this.accountTransactionList
+    			transaction : this.transactionList
     		}
 
 			this.$API.General.printList(data, type, "Share")
