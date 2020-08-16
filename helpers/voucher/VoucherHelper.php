@@ -6,6 +6,8 @@ use Yii;
 use \app\models\GeneralVoucher;
 use \app\models\voucherDetails;
 
+use app\helpers\journal\JournalHelper;
+use app\helpers\particulars\ParticularHelper;
 class VoucherHelper 
 {
     public static function saveVoucher($data){
@@ -59,7 +61,7 @@ class VoucherHelper
             $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
 
             if($saveJournal){
-                $voucherList = VoucherDetails::find()->where(['voucher_id' => $voucher_id])->all();
+                $voucherList = VoucherDetails::find()->where(['voucher_id' => $voucher_id])->asArray()->all();
                 if($voucherList && count($voucherList) > 0){
                     //Entries
 
@@ -69,8 +71,7 @@ class VoucherHelper
                     $totalAmount = 0;
                     $totalCredit = 0;
                     $totalDebit = 0;
-                    foreach ($voucherList as $list) {
-                        $$acct = (array)$list;
+                    foreach ($voucherList as $acct) {
                         if($acct['debit'] && (float)$acct['debit'] > 0){
                             $arr = $journalListAttr;
                             $arr['amount'] = $acct['debit'];
@@ -97,6 +98,7 @@ class VoucherHelper
                         $saveJournal->save();
                         
                         $success = true;
+                        return $success;
                     }
                     else{
                         $success = false;
@@ -111,6 +113,8 @@ class VoucherHelper
         }
         
         $success = false;
+
+        return $success;
     }
 
     public static function getVoucherList($filter = null, $limit = null){
