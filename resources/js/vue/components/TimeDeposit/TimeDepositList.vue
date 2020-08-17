@@ -52,7 +52,7 @@
 				                    <span>{{ $df.formatDate(scope.row.date_created, "MMMM DD, YYYY") }}</span>
 				                </template>
 				            </el-table-column>
-				            <el-table-column label="Term (days)" width = "50px">
+				            <el-table-column label="Term (months)" width = "50px">
 				                <template slot-scope="scope">
 				                    <span>{{ scope.row.term }}</span>
 				                </template>
@@ -93,7 +93,7 @@
 							<el-col :span = "12">
 								<label>Terms</label>
 								<el-input v-model="selectedAccount.term" :disabled = "true">
-									<el-button slot="append"> days</el-button>
+									<el-button slot="append"> months</el-button>
 								</el-input>
 							</el-col>
 							<el-col :span = "12">

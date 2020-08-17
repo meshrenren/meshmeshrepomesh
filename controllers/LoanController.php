@@ -283,7 +283,7 @@ class LoanController extends \yii\web\Controller
 
                 $firstTransaction = null;
                 $getTransactions = LoanTransaction::find()->where(['loan_account' => $acc['account_no'], 'is_cancelled' => "0"])
-                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL"')
+                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "EMERGENCY"')
                     ->orderBy('date_posted')
                     ->asArray()->all();
                 $transLength = count($getTransactions);
@@ -527,7 +527,7 @@ class LoanController extends \yii\web\Controller
 
             $currentDate = ParticularHelper::getCurrentDay();
             $systemDate = date("Y-m-d", strtotime($currentDate));
-            $transac_date = $systemDate;
+            $transac_date = isset($post['transaction_date']) ? $post['transaction_date'] : $systemDate;
     		
     		/* For renewal, go give these parameters to close the loan.
     		 * Reminder: this function is not reusable for future closing of loans. 
@@ -544,7 +544,7 @@ class LoanController extends \yii\web\Controller
     			$closeDetails['prepaid_int_pay'] = $loanaccount->credit_preinterest;
     			$closeDetails['reference'] = $gv_num;
     			
-    			$closeLoan =  LoanHelper::closeAccountDueToRenewal($closeDetails);
+    			$closeLoan =  LoanHelper::closeAccountDueToRenewal($closeDetails, $transac_date);
     			
     			if($closeLoan!="success")
     			{
@@ -663,7 +663,7 @@ class LoanController extends \yii\web\Controller
                     }
                     $voucherData['name'] = $name;
                     $voucherData['type'] = $type;
-                    $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                    $voucherData['date_transact'] = $transac_date;
 
                 
                     $voucherModel = VoucherHelper::saveVoucher($voucherData);

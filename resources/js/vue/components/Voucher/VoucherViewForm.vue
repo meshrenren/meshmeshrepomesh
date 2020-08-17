@@ -3,10 +3,14 @@
 	  	<span slot="title" class="el-dialog__title" >General Voucher</span>
 		<div class="voucher-view-form" v-loading = "pageLoading">
 			<el-row :gutter = "5">
-				<el-col :span = "24">
+				<el-col :span = "12">
 					<label>GV Number</label>
 					<el-input v-model="gvNumber" :required = "gvRequired"></el-input>
 				</el-col>
+                <el-col :span = "12">
+                    <label>Transaction Date</label>
+                    <el-date-picker v-model="transactionDate" type="date" placeholder="Pick a date"> </el-date-picker>
+                </el-col>
 			</el-row>
 			<el-table
 		      	:data="voucherDataList"
@@ -73,6 +77,7 @@ export default {
     		gvNumber 		: '',
     		pageLoading 	: false,
     		dialogVisible	: true,
+            transactionDate : moment(this.$systemDate)
     	}
     },
     mounted(){
@@ -153,7 +158,8 @@ export default {
     			return
     		}
     		let params = {
-    			gv_num 	: this.gvNumber,
+                gv_num  : this.gvNumber,
+                transaction_date  : this.$df.formatDate(this.transactionDate, "YYYY-MM-DD") ,
     			voucher_entries : this.voucherDataList
     		}
     		this.$emit('processvoucher', params)

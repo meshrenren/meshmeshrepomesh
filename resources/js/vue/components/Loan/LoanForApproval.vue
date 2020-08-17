@@ -347,6 +347,8 @@ export default {
                 return false
             }
             cashOnHand = cashOnHand - totalOtherToPay
+            cashOnHand = parseFloat(cashOnHand).toFixed(2)
+            console.log("cashOnHand", cashOnHand)
 
 
             //Cash on Hand
@@ -419,7 +421,7 @@ export default {
             }
         },
         processVoucher(data){
-            this.approveLoan(data.gv_num, data.voucher_entries)
+            this.approveLoan(data.gv_num, data.voucher_entries, data.transaction_date)
         },
         cancelLoan(index, row)
         {
@@ -476,7 +478,7 @@ export default {
 
             
         },
-        approveLoan(gvNumber, voucherDetails)
+        approveLoan(gvNumber, voucherDetails, transaction_date)
         {
             /*if(!this.gvNumber){
                 new Noty({
@@ -498,7 +500,8 @@ export default {
 				},
                 voucherDetails : voucherDetails,
                 gv_num : gvNumber,
-                otherLoanToPay : this.loanToPaySave
+                otherLoanToPay : this.loanToPaySave,
+                transaction_date : transaction_date
 			}
 
 			//data.set('applyLoan', JSON.stringify(loandata))

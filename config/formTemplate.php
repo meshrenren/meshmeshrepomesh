@@ -16,31 +16,31 @@ return [
 	'savings_deposit' 	=> '<div style="text-align: center;"><span style="font-size: 8pt;"><img width = "20px" src = "/images/coop_logo.png" /> DILG XI EMPLOYEES MULTI-PURPOSE
 COOPERATIVE 
 </span></div>
-<div style="text-align: center;"><span style="font-size: 8pt;">[account_type]</span></div>
+<div style="text-align: center;"><span>[account_type]</span></div>
 <div style="text-align: center;">&nbsp;</div>
 <table style="width: 100%;">
 	<tbody>
 		<tr>
-			<td><span style="font-size: 8pt;">&nbsp;Account Number:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[account_number]</span></td>
+			<td><span>&nbsp;Account Number:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[account_number]</span></td>
 			<td width = "10px"></td>
-			<td><span style="font-size: 8pt;">&nbsp;Date:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[transaction_date]</span></td>
+			<td><span>&nbsp;Date:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[transaction_date]</span></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">&nbsp;Account Name:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[account_name]</span></td>
+			<td><span>&nbsp;Account Name:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[account_name]</span></td>
 			<td width = "10px"></td>
-			<td><span style="font-size: 8pt;">&nbsp;Type:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[transaction_type]</span></td>
+			<td><span>&nbsp;Type:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[transaction_type]</span></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">&nbsp;Amount:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[transaction_amount]</span></td>
+			<td><span>&nbsp;Amount:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[transaction_amount]</span></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">&nbsp;Remarks:</span></td>
-			<td><span style="font-size: 8pt;">&nbsp;[transaction_remarks]</span></td>
+			<td><span>&nbsp;Remarks:</span></td>
+			<td><span>&nbsp;[transaction_remarks]</span></td>
 		</tr>
 
 
@@ -54,34 +54,34 @@ COOPERATIVE
 	</tbody>
 </table>',
 
-	'savings_withdraw' 	=> '<div><span style="font-size: 8pt; font-weight: bold;">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE </span></div>
+	'savings_withdraw' 	=> '<div style="text-align: center;"><span><img width = "20px" src = "/images/coop_logo.png" /> DILG XI EMPLOYEES MULTI-PURPOSE
+COOPERATIVE 
+</span></div>
+<div style="text-align: center;"><span>[account_type]</span></div>
+<div style="text-align: center;">&nbsp;</div>
 <table style="width: 50%;">
 	<tbody>
 		<tr>
-			<td><span style="font-size: 8pt;">Account Name:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[account_name]</span></td>
+			<td><span>Account Name:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[account_name]</span></td>
 			<td width = "10px"></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">Account No.:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[account_number]</span></td>
+			<td><span>Account No.:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[account_number]</span></td>
 			<td width = "10px"></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">Last Deposit/Withdraw:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[last_transaction]</span></td>
+			<td><span>Last Deposit/Withdraw:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[last_transaction]</span></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">Balance:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[balance]</span></td>
+			<td><span>Balance:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[balance]</span></td>
 		</tr>
 		<tr>
-			<td><span style="font-size: 8pt;">Desired Withdrawal Amount:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[amount]</span></td>
-		</tr>
-		<tr>
-			<td><span style="font-size: 8pt;">Penalty:</span></td>
-			<td style = "border-bottom: 1px solid #000;"><span style="font-size: 8pt;">&nbsp;[penalty]</span></td>
+			<td><span>Desired Withdrawal Amount:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[amount]</span></td>
 		</tr>
 
 		<tr>
@@ -91,10 +91,38 @@ COOPERATIVE
 		<tr style = margin-top = "40px;">
 			<td></td>
 			<td style = "text-align: center;">
-				<span>Charito L. Cinco</span>
+				<span>CHARITO L. CINCO</span>
 				<div style = "border-bottom: 1px solid #000; width = "100%"></div>
 				<span>Approved By</span>
 			</td>
+		</tr>
+	</tbody>
+</table>',
+
+	'account_balance' 	=> '<div style="text-align: center;"><span><img width = "30px" src = "/images/coop_logo.png" /> DILG XI EMPLOYEES MULTI-PURPOSE
+COOPERATIVE 
+</span></div>
+<div style="text-align: center;"><span>[account_type]</span></div>
+<div style="text-align: center;">&nbsp;</div>
+<table style="width: 50%;">
+	<tbody>
+		<tr>
+			<td><span>Account Name:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[account_name]</span></td>
+			<td width = "10px"></td>
+		</tr>
+		<tr>
+			<td><span>Account No.:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[account_number]</span></td>
+			<td width = "10px"></td>
+		</tr>
+		<tr>
+			<td><span>Last Transaction:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[last_transaction]</span></td>
+		</tr>
+		<tr>
+			<td><span>Balance:</span></td>
+			<td style = "border-bottom: 1px solid #000;"><span>&nbsp;[balance]</span></td>
 		</tr>
 	</tbody>
 </table>',

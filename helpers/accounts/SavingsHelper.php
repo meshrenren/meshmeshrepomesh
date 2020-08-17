@@ -53,7 +53,7 @@ class SavingsHelper
             $model = $model->where(['fk_savings_id' => $fk_savings_id]);
         }
         
-        return $model->orderBy('transaction_date DESC')->asArray()->all();
+        return $model->orderBy('transaction_date')->asArray()->all();
     }
 
     public static function saveSavingsTransaction($data){
@@ -90,7 +90,7 @@ class SavingsHelper
             <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Savings Account Transaction</div></tr>
         </table>';
 
-        $listTemplate .= '<table>
+        $accountDetail = '<table>
             <tr>
                 <td style = "font-weight: bold;">Account Name: </td> 
                 <td><span>[account_name]</span></td>
@@ -104,9 +104,11 @@ class SavingsHelper
                 <td>[balance]</td>
             </tr>
         </table>';
-        $listTemplate = str_replace('[account_name]', $account_name, $listTemplate);
-        $listTemplate = str_replace('[account_no]', $account_no, $listTemplate);
-        $listTemplate = str_replace('[balance]', Yii::$app->view->formatNumber($balance), $listTemplate);
+        $accountDetail = str_replace('[account_name]', $account_name, $accountDetail);
+        $accountDetail = str_replace('[account_no]', $account_no, $accountDetail);
+        $accountDetail = str_replace('[balance]', Yii::$app->view->formatNumber($balance), $accountDetail);
+
+        $listTemplate .= $accountDetail;
 
         if(count($transaction) > 0){
             $transTable = '<table class = "table table-bordered mt-10" width = "100%">
@@ -137,6 +139,8 @@ class SavingsHelper
             $transTable .= '</table>';
         }
         $listTemplate = $listTemplate . $transTable;
+
+        $listTemplate .= $accountDetail;
 
         return $listTemplate;
     }

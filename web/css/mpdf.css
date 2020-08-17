@@ -1,3 +1,11 @@
+body{
+	font-size: 14px;
+}
+
+#printPageContent .label-title{
+	font-weight: bold;
+}
+
 .table.table-bordered td{
 	padding: 5px 10px !important;
 }

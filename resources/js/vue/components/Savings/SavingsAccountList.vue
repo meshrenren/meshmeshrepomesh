@@ -66,6 +66,7 @@
 		            			<div class = "right-toolbar">
 		            				<!-- <button class = "btn btn-app" @click = "printForm('pdf')"><i class = "fa fa-file-pdf-0"></i> Print Ledger</button> -->
 		            				<el-button type = "default" @click = "printForm('print')">Print Ledger</el-button>
+		            				<el-button type = "default" @click = "printBalance('print')">Print Balance</el-button>
 		            				<!-- <button class = "btn btn-app" @click = "printForm('print')"><i class = "fa fa-print"></i> Print</button> -->
 		            			</div>
 		            		</el-col>
@@ -235,6 +236,45 @@ export default {
 
     		//window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
     	},
+    	printBalance(type){
+    		if(!this.accountSelected){
+    			new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: "Please select account.",
+                    timeout: 3000
+                }).show();
+                return
+    		}
+
+    		this.pageLoading = true
+    		let account = cloneDeep(this.accountSelected)
+    		let accName = account.account_name
+    		if(account.member){
+    			accName = account.member.fullname
+    		}
+
+    		let data = {
+    			account_no : account.account_no,
+    			account_name : accName,
+    			balance : account.balance,
+    			transaction : this.transactionList
+    		}
+
+			this.$API.General.printBalance(data, type, 'Savings')
+			.then(result => {
+				let res = result.data
+				if(type == 'pdf'){
+					this.exporter(type, 'Savings Account', res)
+				}
+				else if(type == 'print'){
+					this.winPrint(res.data, 'Savings Account')
+				}
+			})
+			.catch(err => { console.log(err)})
+			.then(_ => { this.pageLoading = false })
+    	}
 	}
 }
 </script>

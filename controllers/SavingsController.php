@@ -543,7 +543,7 @@ class SavingsController extends \yii\web\Controller
                 $template = str_replace('[last_transaction]', $last_transaction , $template);
                 $template = str_replace('[balance]', $balance, $template);
                 $template = str_replace('[penalty]', "", $template);
-                $template = str_replace('[amount]', $amount, $template);
+                $template = str_replace('[amount]', Yii::$app->view->formatNumber($amount), $template);
 
 
                 if($type == "pdf"){

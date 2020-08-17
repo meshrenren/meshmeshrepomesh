@@ -58,7 +58,7 @@
 						  	<el-form-item label="Amount" prop = "amount">
 						    	<el-input-number v-model="tdAccountDetails.amount" controls-position="right" :min="1" @change = "amountChange"></el-input-number>
 						  	</el-form-item>
-						  	<el-form-item label="Term (Days)" prop = "term">
+						  	<el-form-item label="Term (Months)" prop = "term">
 						  		<el-select v-model="tdAccountDetails.term" placeholder="Select" @change = "termChange" ref = "term" >
 								    <el-option
 								      v-for="(item, ind) in termList"
@@ -67,6 +67,10 @@
 								      :value="item">
 								    </el-option>
 								</el-select>
+						  	</el-form-item>
+
+						  	<el-form-item label="Date)" prop = "open_date">
+						  		<el-date-picker v-model="tdAccountDetails.open_date" type="date" placeholder="Pick a date"> </el-date-picker>
 						  	</el-form-item>
 						  	<el-form-item label="Interest Rate" prop = "interest_rate">
 						    	<el-input v-model="tdAccountDetails.interest_rate" >

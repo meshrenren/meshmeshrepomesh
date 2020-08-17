@@ -116,7 +116,7 @@ class LoanHelper
     }
     
     
-    public static function closeAccountDueToRenewal($loanDetails)
+    public static function closeAccountDueToRenewal($loanDetails, $transaction_date)
     {
     	//start of hell
     	
@@ -127,8 +127,6 @@ class LoanHelper
     	
     	$prepaidInterest = $loanDetails['prepaid_int_pay']; //multiply to -1 to negate the prepaid interest
     	$principal_pay = $loanDetails['principal_pay'];
-    	
-    	
     	
 
     	$interestEarned = 0; 
@@ -142,7 +140,7 @@ class LoanHelper
     	$loanTransaction->amount = round($totalToPay, 2);
     	$loanTransaction->transaction_type='PAYCLOSE';
     	$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
-    	$loanTransaction->transaction_date = date('Y-m-d');
+    	$loanTransaction->transaction_date = $transaction_date;
     	$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
     	$loanTransaction->remarks="payment thru payment facility";
     	$loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
@@ -150,7 +148,7 @@ class LoanHelper
     	$loanTransaction->OR_no= $loanDetails['reference'];
     	$loanTransaction->principal_paid = round($principal_pay, 2);
     	$loanTransaction->arrears_paid = 0;
-    	$loanTransaction->date_posted = date('Y-m-d');
+    	$loanTransaction->date_posted = $transaction_date;
     	$loanTransaction->interest_earned = round($interestEarned, 2);
     	
     	$account->principal_balance = $loanTransaction->running_balance;

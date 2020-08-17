@@ -58,7 +58,7 @@
 		        				<span>{{ $nf.formatNumber(evaluationForm.debit_loan) }}</span>
 						  	</td>
 						  	<th>
-		        				<p>LOAN</p>
+		        				<span class = "label-title">LOAN</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.credit_loan) }}</span>
@@ -70,7 +70,7 @@
 						  		<span>{{ $nf.formatNumber(evaluationForm.debit_interest) }}</span>
 						  	</td>
 						  	<th>
-		        				<p>Interest</p>
+		        				<span class = "label-title">Interest</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.credit_interest) }}</span>
@@ -82,7 +82,7 @@
 						  		<span>{{ $nf.formatNumber(evaluationForm.debit_preinterest) }}</span>
 						  	</td>
 						  	<th>
-		        				<p>Prepaid Int</p>
+		        				<span class = "label-title">Prepaid Int</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.credit_preinterest) }}</span>
@@ -94,7 +94,7 @@
 						  		<span>{{ $nf.formatNumber(evaluationForm.debit_redemption_ins) }}</span>
 						  	</td>
 						  	<th>
-		        				<p>Redemp. Ins.</p>
+		        				<span class = "label-title">Redemp. Ins.</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.credit_redemption_ins) }}</span>
@@ -103,10 +103,10 @@
 						
 						<tr>
 						  	<td>
-						  		<p>&nbsp;</p>
+						  		<span class = "label-title">&nbsp;</span>
 						  	</td>
 						  	<th>
-		        				<p>Service Charge</p>
+		        				<span class = "label-title">Service Charge</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.service_charge_amount) }}</span>
@@ -115,10 +115,10 @@
 
 						<tr>
 						  	<td>
-						  		<p>&nbsp;</p>
+						  		<span class = "label-title">&nbsp;</span>
 						  	</td>
 						  	<th>
-		        				<p>Retention</p>
+		        				<span class = "label-title">Retention</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.savings_retention) }}</span>
@@ -128,10 +128,10 @@
 
 						<tr>
 						  	<td>
-						  		<p>&nbsp;</p>
+						  		<span class = "label-title">&nbsp;</span>
 						  	</td>
 						  	<th>
-		        				<p>Notary</p>
+		        				<span class = "label-title">Notary</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.notary_amount) }}</span>
@@ -140,13 +140,13 @@
 
 						<tr>
 						  	<td>
-						  		<p>&nbsp;</p>
+						  		<span class = "label-title">&nbsp;</span>
 						  	</td>
 						  	<th>
-		        				<p><b>NET CASH</b></p>
+		        				<span class = "label-title"><b>NET CASH</b></span>
 						  	</th>
 						  	<td>
-						  		<span>{{ $nf.formatNumber(evaluationForm.net_cash) }}</span>
+						  		<span style="font-weight: bold; font-size: 20px !important;">{{ $nf.formatNumber(evaluationForm.net_cash) }}</span>
 						  	</td>
 						</tr>
 						<tr>
@@ -157,7 +157,7 @@
 						  		<span>{{ $nf.formatNumber(evaluationForm.debit_total) }}</span>
 						  	</td>
 						  	<th>
-		        				<p>TOTAL</p>
+		        				<span class = "label-title">TOTAL</span>
 						  	</th>
 						  	<td>
 						  		<span>{{ $nf.formatNumber(evaluationForm.credit_total) }}</span>

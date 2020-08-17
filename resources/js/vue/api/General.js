@@ -25,6 +25,29 @@ export default {
 		}
 	},
 
+	printBalance(data, type, accountType){	
+		let params = {
+			data : data,
+			type : type,
+			accountType : accountType
+		}
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/site/print-balance',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/site/print-balance',
+				data: params,
+			})
+		}
+	},
+
 	getParticularsByName(names){	
 		let params = {
 			names : names

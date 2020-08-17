@@ -34,7 +34,7 @@ class ShareHelper
             $model = $model->where(['fk_share_id' => $fk_share_id]);
         }
         
-        return $model->orderBy('transaction_date DESC')->asArray()->all();
+        return $model->orderBy('transaction_date')->asArray()->all();
     }
 
 
@@ -74,7 +74,7 @@ class ShareHelper
             <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Share Account Transaction</div></tr>
         </table>';
 
-        $listTemplate .= '<table>
+        $accountDetail = '<table>
             <tr>
                 <td style = "font-weight: bold;">Account Name: </td> 
                 <td><span>[account_name]</span></td>
@@ -88,9 +88,11 @@ class ShareHelper
                 <td>[balance]</td>
             </tr>
         </table>';
-        $listTemplate = str_replace('[account_name]', $account_name, $listTemplate);
-        $listTemplate = str_replace('[account_no]', $account_no, $listTemplate);
-        $listTemplate = str_replace('[balance]', Yii::$app->view->formatNumber($balance), $listTemplate);
+        $accountDetail = str_replace('[account_name]', $account_name, $accountDetail);
+        $accountDetail = str_replace('[account_no]', $account_no, $accountDetail);
+        $accountDetail = str_replace('[balance]', Yii::$app->view->formatNumber($balance), $accountDetail);
+
+        $listTemplate .= $accountDetail;
 
         if(count($transaction) > 0){
             $transTable = '<table class = "table table-bordered mt-10" width = "100%">
@@ -121,6 +123,8 @@ class ShareHelper
             $transTable .= '</table>';
         }
         $listTemplate = $listTemplate . $transTable;
+
+        $listTemplate .= $accountDetail;
 
         return $listTemplate;
     }

@@ -272,4 +272,84 @@ class SiteController extends Controller
             return [ 'data' => $getParticulars];
         }
     }
+
+    public function actionPrintBalance(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            $data = $postData['data'];
+            $type = $postData['type'];
+            $accountType = $postData['accountType'];
+
+            $account_no = $data['account_no'];
+            $account_type = "";
+            $template = Yii::$app->params['formTemplate']['account_balance'];
+
+            $model = null;
+            if($accountType == 'Savings'){
+
+                $template = Yii::$app->params['formTemplate']['savings_withdraw'];
+                $model = \app\models\SavingAccounts::find()->where(['savingsaccount.account_no' => $account_no])->joinWith(['member'])->one();
+                $transaction = \app\models\SavingAccounts::find()->where(['account_no' => $model->account_no])->one();
+                $account_no = $model->account_no;
+                $account_name = $model->member->fullname;
+                $last_transaction = "";
+                if($model->lastTransaction)
+                    $last_transaction = date('M d, Y', strtotime($model->lastTransaction->transaction_date));
+                $balance = number_format($model->balance, 2, '.', ',');
+
+                $account_type = "Savings Account";
+
+                $template = str_replace('[amount]', "", $template);
+                $template = str_replace('[penalty]', "", $template);
+            }
+            else if($accountType == 'Share'){
+
+                $model = \app\models\Shareaccount::find()->where(['shareaccount.accountnumber' => $account_no])->joinWith(['member'])->one();
+                $transaction = \app\models\ShareTransaction::find()->where(['fk_share_id' => $model->accountnumber])->one();
+                $account_no = $model->accountnumber;
+                $account_name = $model->member->fullname;
+                $last_transaction = "";
+                if($model->lastTransaction)
+                    $last_transaction = date('M d, Y', strtotime($model->lastTransaction->transaction_date));
+                $balance = number_format($model->balance, 2, '.', ',');
+
+                $account_type = "Share Account";
+            }
+            if($model){
+                
+                $template = str_replace('[account_type]', $account_type, $template);
+                $template = str_replace('[account_name]', $account_name, $template);
+                $template = str_replace('[account_number]', $account_no, $template);
+                $template = str_replace('[last_transaction]', $last_transaction , $template);
+                $template = str_replace('[balance]', $balance, $template);
+
+
+                if($type == "pdf"){
+                    // Set up MPDF configuration
+                    $config = [
+                        'mode' => '+utf-8', 
+                        "allowCJKoverflow" => true, 
+                        "autoScriptToLang" => true,
+                        "allow_charset_conversion" => false,
+                        "autoLangToFont" => true,
+                    ];
+                    $mpdf = new Mpdf($config);
+                    $mpdf->WriteHTML($template);
+
+                    // Download the PDF file
+                    $mpdf->Output();
+                    exit();
+                }
+                else{
+                    return [ 'data' => $template];
+                }
+                
+            }
+        }
+        
+    }
 }

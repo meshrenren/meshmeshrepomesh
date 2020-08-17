@@ -822,9 +822,9 @@ export default {
 			this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
 			if(!latestLoan)
 			{
-				this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
+				//this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.amount) * 0.01).toFixed(2) : 0 ;
     			this.evaluationForm.credit_loan = parseFloat(0).toFixed(2)
-				this.evaluationForm.debit_redemption_ins = parseFloat(0).to-printFixed(2)
+				this.evaluationForm.debit_redemption_ins = parseFloat(0).toFixed(2)
 				this.evaluationForm.debit_interest = 0;
 				this.evaluationForm.credit_interest = 0;
 				this.evaluationForm.debit_preinterest = 0;
@@ -908,7 +908,7 @@ export default {
 
 			this.evaluationForm.debit_total = parseFloat(Number(this.evaluationForm.debit_loan) + Number(this.evaluationForm.debit_preinterest) + Number(this.evaluationForm.debit_redemption_ins)).toFixed(2)
 						
-			this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) + Number(this.evaluationForm.savings_retention) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
+			this.evaluationForm.net_cash = parseFloat(Number(this.evaluationForm.debit_total) - (Number(this.evaluationForm.credit_loan) + Number(this.evaluationForm.credit_interest) + Number(this.evaluationForm.credit_preinterest) + Number(this.evaluationForm.credit_redemption_ins) + Number(this.evaluationForm.service_charge_amount) +  Number(this.evaluationForm.notary_amount))).toFixed(2);
 
 			/* CREDIT SAVING RETENTION -START- */
 			this.evaluationForm.savings_retention = this.evaluationForm.is_savings ? parseFloat(Number(this.evaluationForm.net_cash) * 0.01).toFixed(2) : 0 ;

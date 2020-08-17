@@ -135,6 +135,7 @@ class TimeDepositController extends \yii\web\Controller
                             'particular_id' => 1,
                         	'product_id'    => $tdaccount['fk_td_product'], 
                         	'account_no'    => $model->accountnumber,
+                            'or_num'        => $ref_no
                         ];
                         array_push($entries, $arr);     
                         $insertSuccess = \app\helpers\payment\PaymentHelper::insertAccount($entries, $paymentModel->id);
@@ -161,13 +162,13 @@ class TimeDepositController extends \yii\web\Controller
                         ];
                     }
                     
-
+                    $service_amount = isset($tdaccount['service_amount']) ? $tdaccount['service_amount'] : 0;
                     //Save in Journal
                     $journalHeader = new JournalHeader;
                     $journalHeaderData = $journalHeader->getAttributes();
                     $journalHeaderData['reference_no'] = $tdaccount['or_number'];
                     $journalHeaderData['posting_date'] = $today;
-                    $journalHeaderData['total_amount'] = $tdaccount['amount'] + $tdaccount['service_amount'];
+                    $journalHeaderData['total_amount'] = $tdaccount['amount'] + $service_amount;
                     $journalHeaderData['trans_type'] = 'Payment';
                     $journalHeaderData['remarks'] = 'TD Application';
 
@@ -181,7 +182,7 @@ class TimeDepositController extends \yii\web\Controller
                         // Account
                         
                         $arr = $journalListAttr;
-                        $arr['amount'] = $tdaccount['amount'] + $tdaccount['service_amount'];
+                        $arr['amount'] = $tdaccount['amount'] + $service_amount;
                         $arr['particular_id'] = 99; //--> 99 is cash on hand
                         $arr['entry_type'] = 'DEBIT';
                         array_push($lists, $arr);
@@ -193,11 +194,13 @@ class TimeDepositController extends \yii\web\Controller
                         $arr['entry_type'] = 'CREDIT';
                         array_push($lists, $arr);
                         
-                        $arr = $journalListAttr;
-                        $arr['amount'] = $tdaccount['service_amount'];
-                        $arr['particular_id'] = 7; //--> service fee
-                        $arr['entry_type'] = 'CREDIT';
-                        array_push($lists, $arr);
+                        if($service_amount > 0){
+                            $arr = $journalListAttr;
+                            $arr['amount'] = $tdaccount['service_amount'];
+                            $arr['particular_id'] = 7; //--> service fee
+                            $arr['entry_type'] = 'CREDIT';
+                            array_push($lists, $arr);
+                        }
 
                         $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
                         if($insertSuccess){                                
@@ -628,7 +631,7 @@ class TimeDepositController extends \yii\web\Controller
         $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
         $model->accountnumber = $product->id . "-" . $trans_serial_pad;
 
-        $mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' days'));
+        $mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' months'));
 
         $model->maturity_date = $mature_days;
         $model->open_date = $today;

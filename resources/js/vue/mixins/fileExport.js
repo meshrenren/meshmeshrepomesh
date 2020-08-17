@@ -32,7 +32,6 @@ export default {
 				html += "<div class='print-container'>"
 				html += data
 				html += "</div></body>"
-				html += `<footer style="bottom:0; right:0; position: fixed; font-family: monospace; font-size: 10px;">'+this.t('Rendered by Witty Manager')+'(www.wittymanager.com)</footer>`
 				html += "</html>"
 
 			//win.document.write('<h1 style="text-align:center; font-family: monospace;">' + title+ '</h1>' + data)

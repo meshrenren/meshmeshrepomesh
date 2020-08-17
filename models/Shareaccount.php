@@ -77,4 +77,8 @@ class Shareaccount extends \yii\db\ActiveRecord
         return $this->hasOne(ShareProduct::className(), [ 'id' => 'fk_share_product' ] );
     }
 
+    public function getLastTransaction() {
+        return $this->hasOne(ShareTransaction::className(), [ 'fk_share_id' => 'accountnumber' ] )->orderBy('id DESC');
+    }
+
 }
