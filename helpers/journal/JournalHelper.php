@@ -25,6 +25,8 @@ class JournalHelper
 
         if($journal->save()){
             return $journal;
+        }else{
+           var_dump($journal->getErrors()); 
         }
         return null;
 	}
@@ -34,14 +36,13 @@ class JournalHelper
     	
     	if(count($list)<1)
     		return false;
-    	
+
         foreach ($list as $key => $value) {
             $journal = new JournalDetails;
             $journal->fk_reference_no = $fk_reference_no;
             $journal->amount = $value['amount'];
             $journal->entry_type = $value['entry_type'];
             $journal->particular_id = $value['particular_id'];
-
             if(!$journal->save()){
             	//echo var_dump($journal->errors);
             	//echo "<br/><br/> ".$value['particular_id'];

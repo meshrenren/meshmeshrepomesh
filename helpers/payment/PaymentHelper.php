@@ -56,10 +56,11 @@ class PaymentHelper
 
     public static function insertAccount($list, $payment_record_id){
     	$success = true;
+    	$paymentModel = PaymentRecord::findOne($payment_record_id);
         foreach ($list as $key => $value) {
             $payment = new PaymentRecordList;
             $payment->payment_record_id = $payment_record_id;
-        	$payment->or_num = $value['or_num'];
+            $payment->or_num = isset($value['or_num']) ? $value['or_num'] :  $paymentModel ? $paymentModel->or_num : null;
             $payment->type = $value['type'];
             $payment->amount = $value['amount'];
             $payment->member_id = $value['member_id'];
@@ -174,7 +175,7 @@ class PaymentHelper
 
 					$isNewLoanPolicy = false;
 					//New policy was updates. Eg. No prepaid monthly for Applicance and interest earned calculcation
-                	$calVersion = Yii::$app->view->getVersion($acc['release_date']);
+                	$calVersion = Yii::$app->view->getVersion($account['release_date']);
                 	if($calVersion !== "1"){
                 		$isNewLoanPolicy = true;
                 	}
@@ -282,10 +283,20 @@ class PaymentHelper
 						$debitCOH +=  floatval($loanTransaction->amount);
 
 						array_push($journaldetails, [
-								'amount'=> $loanTransaction->amount,
+								'amount'=> $loanTransaction->principal_paid,
 								'entry_type' => 'CREDIT',
-								'particular_id' => $product->pi_particular_id
+								'particular_id' => $product->particular_id
 						]);
+
+						if($loanTransaction->prepaid_intpaid>0)
+						{
+							array_push($journaldetails, [
+									'amount'=> $loanTransaction->prepaid_intpaid,
+									'entry_type' => 'CREDIT',
+									'particular_id' => $product->pi_particular_id
+							]);
+							
+						}
 
 						//credit part		
 						/*if($loanTransaction->prepaid_intpaid>0)
