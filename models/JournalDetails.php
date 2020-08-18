@@ -36,7 +36,6 @@ class JournalDetails extends \yii\db\ActiveRecord
             [['entry_type'], 'string'],
             [['particular_id'], 'integer'],
             [['fk_reference_no'], 'string', 'max' => 100],
-            [['fk_reference_no'], 'exist', 'skipOnError' => true, 'targetClass' => JournalHeader::className(), 'targetAttribute' => ['fk_reference_no' => 'reference_no']],
             [['particular_id'], 'exist', 'skipOnError' => true, 'targetClass' => AccountParticulars::className(), 'targetAttribute' => ['particular_id' => 'id']],
         ];
     }

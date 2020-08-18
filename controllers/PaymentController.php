@@ -21,6 +21,7 @@ use \app\models\LoanProduct;
 use \app\models\LoanAccount;
 use \app\models\PaymentRecord;
 use \app\models\PaymentRecordList;
+use \app\models\PaymentRecordHistory;
 
 
 class PaymentController extends \yii\web\Controller
@@ -36,21 +37,23 @@ class PaymentController extends \yii\web\Controller
     } 
 
 
-    public function actionIndex($id = null)
+    public function actionIndex($record = null)
     {
         $this->layout = 'main-vue';
 
-        if($id != null){
-            $paymentModel = \app\models\PaymentRecord::find()->where(['id' => $id])->asArray()->one();
+        $paymentRecordList = [];
+        if($record != null){
+            $paymentModel = \app\models\PaymentRecord::find()->where(['id' => $record])->asArray()->one();
+            $paymentRecordList = PaymentHelper::getPaymentList($record);
 
         }
         else{
             $paymentModel = new \app\models\PaymentRecord;
             $paymentModel = $paymentModel->getAttributes();
-
-            $paymentModelList = new \app\models\PaymentRecordList;
-            $paymentModelList = $paymentModelList->getAttributes();
         }
+
+        $paymentModelList = new \app\models\PaymentRecordList;
+        $paymentModelList = $paymentModelList->getAttributes();
 
         $filter  = ['category' => ['OTHERS']];
         $orderBy = "name ASC";
@@ -60,7 +63,8 @@ class PaymentController extends \yii\web\Controller
         return $this->render('index', [
             'model'             => $paymentModel,
             'paymentModelList'  => $paymentModelList,
-            'particularList'    => $getParticular
+            'particularList'    => $getParticular,
+            'paymentRecordList' => $paymentRecordList
         ]);
     }
 
@@ -166,12 +170,13 @@ class PaymentController extends \yii\web\Controller
 
         if(\Yii::$app->getRequest()->getBodyParams())
         {
-            $success = "begin me";
+            $success = true;
             $error = '';
             $data = null;
 
             $transaction = \Yii::$app->db->beginTransaction();
             try {
+                $connection = Yii::$app->getDb();
                 $post = \Yii::$app->getRequest()->getBodyParams();
                 $paymentModel = $post['paymentModel'];
                 $allAccounts = $post['allAccounts'];
@@ -181,35 +186,52 @@ class PaymentController extends \yii\web\Controller
                 $getOR = \app\models\JournalHeader::find()->where(['reference_no' => $or_num])->one();
                 if($getOR){
                     return [
-                        'success'   => "mesry",
+                        'success'   => false,
                         'error'     => 'ERROR_HASOR'
                     ];
                 }
                 else{
+                    
+                    $paymentRec = PaymentRecord::find()->where(['or_num' => $or_num])->one();
+                    if($paymentRec){
+                        if($paymentRec->posted_date != null){
+                            return [
+                                'success'   => false,
+                                'error'     => 'ERROR_HASOR',
+                                'test'     => 'ERROR_HASOR'
+                            ];
+                        }
+                    }
 
-                    //Save Loan payment here
 
+                    $saveOR = PaymentHelper::savePayment($paymentModel);
+                    if($saveOR){
+                        if($paymentRec){
+                            //Get then save to history
+                            $paymentRecList = PaymentHelper::getPaymentList($paymentRec->id);
+                            $paymentHistory = new PaymentRecordHistory();
+                            $paymentHistory->or_num = $or_num;
+                            $paymentHistory->payment_record_id = $paymentRec->id;
+                            $paymentHistory->data = json_encode($paymentRecList);
+                            $paymentHistory->created_date = date('Y-m-d h:i:s');
+                            $paymentHistory->save();
+                            //Delete existing payment record
+                            PaymentRecordList::deleteAll('payment_record_id = :payment_record_id', [':payment_record_id' => $paymentRec->id]);
+                        }
 
-                    //After loan transaction is saved, Save General Voucher and Entries
-                    if($success){
-                        //Save gv and entries
-                        $saveOR = PaymentHelper::savePayment($paymentModel);
-                        if($saveOR){
-                            //Entries
-                            $insertSuccess = PaymentHelper::insertAccount($allAccounts, $saveOR->id);
-                            if($insertSuccess){
-                                $success = true;
-                            }
-                            else{
-                            	$success = $insertSuccess;
-                                $transaction->rollBack();
-                            }
+                        //Entries
+                        $insertSuccess = PaymentHelper::insertAccount($allAccounts, $saveOR->id);
+                        if($insertSuccess){
+                            $success = true;
                         }
                         else{
                             $success = false;
                             $transaction->rollBack();
                         }
-
+                    }
+                    else{
+                        $success = false;
+                        $transaction->rollBack();
                     }
                 }
 
@@ -220,9 +242,11 @@ class PaymentController extends \yii\web\Controller
                 else
                 	$transaction->rollBack();
             } catch (\Exception $e) {
+                $success = false;
                 $transaction->rollBack();
                 $error =  $e->getMessage();
             } catch (\Throwable $e) {
+                $success = false;
                 $transaction->rollBack();
                 $error = $e->getMessage();
             }

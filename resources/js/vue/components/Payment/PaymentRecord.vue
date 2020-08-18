@@ -153,13 +153,25 @@
                                             <el-table-column
                                               prop="balance"
                                               label="Balance"
-                                              width="150">
+                                              width="90">
                                             </el-table-column>
 
                                             <el-table-column
                                               label="Amount">
                                                 <template slot-scope="scope">
-                                                    <el-input type="number" :min = "0" v-model="scope.row.amount" :disabled = "Number(scope.row.balance) <= 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                    <div v-if = "scope.row.type == 'LOAN'">
+                                                        <el-input type="number" :min = "0" v-model="scope.row.amount" :disabled = "Number(scope.row.balance) <= 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                    </div>
+                                                    <div v-else>
+                                                        <el-input type="number" :min = "0" v-model="scope.row.amount" @keyup.enter.native = "addAccounts"></el-input>
+                                                    </div>
+                                                </template>
+                                            </el-table-column>
+
+                                            <el-table-column
+                                              label="Add as Savings">
+                                                <template slot-scope="scope" v-if= "scope.row.type == 'LOAN' && !scope.row.is_prepaid">
+                                                    <el-input type="number" :min = "0" v-model="scope.row.add_as_savings" :disabled = "Number(scope.row.balance) > 0" @keyup.enter.native = "addAccounts"></el-input>
                                                 </template>
                                             </el-table-column>
                                         </el-table>
@@ -245,11 +257,16 @@
 
 export default {
     mixins: [getNameList, swalAlert],
-    props: ['dataModel', 'dataPaymentList', 'dataParticularList'],
+    props: ['dataModel', 'dataPaymentList', 'dataParticularList', 'dataPaymentRecord'],
     data: function () {  
         let formPayment  = cloneDeep(this.dataModel)
         formPayment['name_id'] = null
         formPayment['member_id'] = null
+
+        let hasModel = false
+        if(this.dataModel.or_num){
+            hasModel = true
+        }
 
         let accountModel = {key : null, member_id : null, account_no : null, particular_id : null, product_id : null, product_name : "", type : null, balance : 0, amount: 0, entry_type : null}
     	return {
@@ -270,7 +287,9 @@ export default {
             loadingPage         : false,
             memberSelectList    : [],
             nameSearch          : '',
-            showListModal       : false
+            showListModal       : false,
+            hasPayment           : hasModel,
+            paymentRecordList   : this.dataPaymentRecord
     	}
     },
     created(){
@@ -293,6 +312,10 @@ export default {
             ],
             entry_type: [ { required: true, message: 'Please select entry type.', trigger: 'blur' }
             ],
+        }
+
+        if(this.hasPayment){
+            this.setPayment(this.paymentRecordList)
         }
     },
     computed:{
@@ -386,6 +409,19 @@ export default {
         }
     },
     methods: {
+        setPayment(recordList){
+            this.allTotalAccount = []
+            _forEach(recordList, rl => {
+                let arr = cloneDeep(rl)
+                arr.fullname = rl.member ? rl.member.fullname : ""
+                arr.product_name = rl.particular ? rl.particular.name : ""
+                arr.key = rl.type + "_" + (rl.account_no ? rl.account_no : rl.particular_id)
+                if(rl.is_prepaid){
+                    arr.key = rl.type + "_PI_" + (rl.account_no ? rl.account_no : rl.particular_id)
+                }
+                this.allTotalAccount.push(arr)
+            })
+        },
         /*showAllList(){
             this.pytRecListData = {
                 accountList : this.totalAccounts,
@@ -543,8 +579,10 @@ export default {
                 })
             }
 
+            let savingsData = null
             if(savings && savings.length > 0){
                 _forEach(savings, rs =>{
+                    savingsData = rs
 
                     let arr = cloneDeep(this.accountModel)
                     arr.member_id = rs.member_id
@@ -581,6 +619,9 @@ export default {
                     let amount = this.getAmount(arr.key)
                     arr.amount = amount
 
+                    arr.add_as_savings = null
+                    arr.savings_data = savingsData
+
                     allAccounts.push(arr)
 
 
@@ -594,7 +635,7 @@ export default {
                         arr.product_id = rs.loan_id
                         arr.product_name = "PI " + rs.product.product_name
                         arr.type = "LOAN"
-                        arr.balance = parseFloat(rs.prepaid_amortization_quincena).toFixed(2)
+                        arr.balance = parseFloat(rs.principal_balance).toFixed(2)
                         arr.particular_id = rs.product.pi_particular_id
                         arr.is_prepaid = true
 
@@ -618,13 +659,57 @@ export default {
             }
             return null
         },
-        getInAllAccount(key){
+        getInAllAccount(key, asSavings = false){
+            if(asSavings){
+                let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == key})
+            }
             let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == key})
             return getInd
         },
         addAccounts(){
+            console.log('addAccounts')
             let vm = this
-             vm.$swal({
+            vm.loadingPage = true
+            _forEach(vm.accountSelected.list, rs =>{
+                let acct = cloneDeep(rs)
+                if(rs.amount && Number(rs.amount) > 0){
+                    //Check for existing account with same account number
+                    let getInd = vm.getInAllAccount(rs.key)
+                    if(getInd >= 0){
+                        vm.allTotalAccount[getInd].amount = Number(rs.amount)
+                    }
+                    else{
+                        //Push to  allaccount
+                        vm.allTotalAccount.push(acct)
+                    }
+                }
+
+                if(rs.add_as_savings && Number(rs.add_as_savings) > 0 && rs.savings_data){
+                    let getInd = vm.getInAllAccount(rs.key, true)
+                    if(getInd >= 0){
+                        vm.allTotalAccount[getInd].amount = Number(rs.add_as_savings)
+                    }
+                    else{
+                        //Change data
+                        acct.key = "LOAN_"+rs.account_no+"_SAVINGS_" + rs.savings_data.account_no
+                        acct.account_no = rs.savings_data.account_no
+                        acct.product_id = rs.savings_data.saving_product_id
+                        acct.particular_id = rs.savings_data.product ? rs.savings_data.product.particular_id : 1
+                        acct.product_name = rs.savings_data.product ? rs.savings_data.product.product_name : "Regular Savings"
+                        acct.type = "SAVINGS"
+                        acct.amount = rs.add_as_savings
+                        acct.remarks = "From " + rs.product_name + " Payment"
+                        vm.allTotalAccount.push(acct)
+                    }
+                }
+            })
+            vm.loadingPage = false
+
+            if(!this.disableAccountName){ 
+                vm.accountSelected.member_id = null
+                vm.accountSelected.list = []
+            }
+            /*vm.$swal({
                 title: "Add Accounts",
                 text: "Are you sure you want to add accounts listed?",
                 type: 'question',
@@ -636,28 +721,10 @@ export default {
                 cancelButtonText: 'Cancel',
                 reverseButtons: true,
                 width: '400px',
-            }).then(function(result) {
+            }).then( result => {
                 if (result.value) {
-                    vm.loadingPage = true
-                    _forEach(vm.accountSelected.list, rs =>{
-                        let acct = cloneDeep(rs)
-                        if(rs.amount && Number(rs.amount) > 0){
-                            //Check for existing account with same account number
-                            let getInd = vm.getInAllAccount(rs.key)
-                            if(getInd >= 0){
-                                vm.allTotalAccount[getInd].amount = Number(rs.amount)
-                            }
-                            else{
-                                //Push to  allaccount
-                                vm.allTotalAccount.push(acct)
-                            }
-                        }
-                    })
-                    vm.loadingPage = false
-                    vm.accountSelected.member_id = null
-                    vm.accountSelected.list = []
                 }
-            })
+            })*/
             
         },
         getParticular(particular_id){
@@ -791,7 +858,8 @@ export default {
                     let text = "Payments not successfully saved. Please try again or contact administrator."
                     if(res.error == 'ERROR_HASOR'){
                         title = 'Error: OR Number Exist'
-                        text = "OR Number " + paymentModel.or_num + " already exist."
+                        //text = "OR Number " + paymentModel.or_num + " already exist."
+                        text = "This payment is already posted."
                         type = "error"
                     }
 

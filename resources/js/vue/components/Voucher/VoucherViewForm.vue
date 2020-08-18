@@ -68,16 +68,18 @@ export default {
             required: false,
             default: false
         },
+        dateTransact:{},
     },
     mixins: [dialogComponent, _message],
     data(){
+        let dt = this.dateTransact ? this.dateTransact : moment(this.$systemDate)
     	return{
     		voucherData 	: this.dataList,
     		particulars 	: [],
     		gvNumber 		: '',
     		pageLoading 	: false,
     		dialogVisible	: true,
-            transactionDate : moment(this.$systemDate)
+            transactionDate : dt
     	}
     },
     mounted(){

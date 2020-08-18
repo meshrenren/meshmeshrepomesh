@@ -24,10 +24,11 @@ export default {
 		return axios.post($baseUrl + '/loan/get-loan-history', params)
 	},
 
-	getLatestLoan(loan_id, member_id){
+	getLatestLoan(loan_id, member_id, transaction_date = null){
 		let params = {
 			member_id : member_id,
-			loan_id : loan_id
+			loan_id : loan_id,
+			transaction_date : transaction_date
 		}	
 		return axios.post($baseUrl + '/loan/get-latest-info', params)
 	},

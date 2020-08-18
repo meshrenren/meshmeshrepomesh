@@ -118,6 +118,9 @@
 									  			<el-input v-model="evaluationForm.duration_type"  :disabled = "true"></el-input>
 									  		</el-col>
 										</el-row>
+									  	<el-form-item label="Transaction Date" prop = "transaction_date" label-width="200px">
+									  		<el-date-picker v-model="evaluationForm.transaction_date" type="date" placeholder="Pick a date"> </el-date-picker>
+									  	</el-form-item>
 									  	<el-form-item label="Loan Amount" prop = "amount" label-width="200px">
 									    	<el-input v-model="evaluationForm.amount" @keyup.enter.native = "enterLoanAmount" ref = "amount" :disabled = "disabledBox">
 									    		<el-button slot="append" type = "primary" @click="evaluateLoan(true)">EVALUATE</el-button>
@@ -327,7 +330,7 @@ export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	mixins: [dialogComponent],
 	data: function () {
-		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : false, savings_retention: null}
+		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : false, savings_retention: null, transaction_date : null}
 		let durationList = [ {value : 6, label : 6},
 			{value : 12, label : 12},
 			{value : 24, label : 24},
@@ -355,6 +358,7 @@ export default {
 	created(){
 
 		this.evaluationForm.product_loan_id = this.loanProduct[0].id
+		this.evaluationForm.transaction_date = this.$systemDate
 		var validateDuration = (rule, value, callback) => {
 
     		let getProduct = this.loanProduct.find(pr =>{
@@ -521,12 +525,13 @@ export default {
 		    			let getProduct = this.loanProduct.find(lp => { return Number(lp.id) == Number(this.evaluationForm.product_loan_id) })
 		    			let amount = Number(this.evaluationForm.amount)
 		    			let duration = this.evaluationForm.duration
+		    			let transaction_date = this.evaluationForm.transaction_date ? this.$df.formatDate(this.evaluationForm.transaction_date, 'YYYY-MM-DD') : this.$systemDate
 
 
 		    			console.log("getProduct", getProduct)
 		    			this.isLoading = true
 		    			if(getProduct){
-		    				this.$API.Loan.getLatestLoan(getProduct.id, this.memberDetails.id)
+		    				this.$API.Loan.getLatestLoan(getProduct.id, this.memberDetails.id, transaction_date)
 				    		.then(result => {
 				    			let res = result.data
 								console.log("resRES", res)
@@ -819,6 +824,8 @@ export default {
 			let evalForm = cloneDeep(this.evaluationForm)
 			let service_charge = 0	
 
+			let transaction_date = this.evaluationForm.transaction_date ? this.$df.formatDate(this.evaluationForm.transaction_date, 'YYYY-MM-DD') : this.$systemDate
+
 			this.evaluationForm.debit_loan = parseFloat(this.evaluationForm.amount).toFixed(2)
 			if(!latestLoan)
 			{
@@ -877,8 +884,6 @@ export default {
 				this.evaluationForm.debit_preinterest = parseFloat(debit_prepaid).toFixed(2); 
 
 				/* DEBIT PREPAID INTEREST -END- */
-
-				this.preIntCalculation(latestLoan, dataneeded.loanTransaction)
 			}
 			this.evaluationForm.debit_interest = 0;
 
@@ -992,130 +997,6 @@ export default {
     		return amt
     		
     	},
-    	//Do not forget the last interest
-    	preIntCalculation(account, loanTransaction, product){
-    		let intCredit = 0
-    		let preIntDedit = 0
-    		let loanCutOff = this.$cutOffDate
-    		let loanCutOffX = this.$df.formatDate(loanCutOff, 'X') 
-    		let tmpTransDate = account.release_date
-
-    		let strRL1 = 0
-    		let strRL2 = 0
-    		let firstPi = 0
-    		let firstInt = 0
-    		let intCount = 0
-    		let firstPayAfter = loanCutOff
-    		console.log("loanTransaction", loanTransaction)
-    		_forEach(loanTransaction, lt =>{
-    			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
-    			if(lt.transaction_type == "PAYPARTIAL"){
-	    			if(dateTransacX > loanCutOffX){
-	    				if(lt.interest_earned ){
-	    					intCredit = intCredit + parseFloat(lt.interest_earned)
-	    					if(parseFloat(lt.running_balance) < 0){
-	    						intCredit = intCredit - parseFloat(lt.interest_earned)
-	    					}
-	    					if(intCount == 0){ firstInt = parseFloat(lt.interest_earned)}
-	    				}
-
-	    				if(lt.prepaid_intpaid ){
-	    					preIntDedit = preIntDedit + parseFloat(lt.prepaid_intpaid)
-	    					if(intCount == 0){ firstPi = parseFloat(lt.prepaid_intpaid)}
-
-	    				}
-	    				if(intCount == 0){firstPayAfter = lt.transaction_date}
-	    				intCount++
-	    			}
-	    		}
-    		})
-    		console.log('preIntCalculation', cloneDeep(intCredit), cloneDeep(preIntDedit), strRL1, strRL2)
-    		console.log('preIntCalculation FIRST', firstInt, firstPi)
-
-    		let firstPayAfterX = this.$df.formatDate(this.$df.formatDate(firstPayAfter, 'YYYY-MM-DD'), 'X') 
-    		_forEach(loanTransaction, lt =>{
-    			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
-    			if(dateTransacX < firstPayAfterX){
-    				if(dateTransacX > loanCutOffX){
-
-    				}
-    				else{
-
-    				}
-    			}
-    			if(lt.transaction_type == "PAYPARTIAL"){
-	    			if(dateTransacX > loanCutOffX){
-	    				if(lt.interest_earned ){
-	    					intCredit = intCredit + parseFloat(lt.interest_earned)
-	    					if(parseFloat(lt.running_balance) < 0){
-	    						intCredit = intCredit - parseFloat(lt.interest_earned)
-	    					}
-	    					if(intCount == 0){ firstInt = parseFloat(lt.interest_earned)}
-	    				}
-
-	    				if(lt.prepaid_intpaid ){
-	    					preIntDedit = preIntDedit + parseFloat(lt.prepaid_intpaid)
-	    					if(intCount == 0){ firstPi = parseFloat(lt.prepaid_intpaid)}
-
-	    				}
-	    				intCount++
-	    			}
-	    			if(dateTransacX <= loanCutOffX){
-	    				strRL1 = strRL1 + parseFloat(lt.prepaid_intpaid)
-	    				strRL2 = strRL2 + parseFloat(lt.interest_earned)
-	    			}
-	    		}
-    		})
-
-    		/*let tempAmountPaid = 0
-    		let firstPi = 0
-    		let firstInt = 0
-    		let intCount = 0
-    		_forEach(loanTransaction, lt =>{
-    			if(lt.amount > 0 && lt.transaction_type == "PAYPARTIAL"){
-    				tempAmountPaid = tempAmountPaid + parseFloat(lt.amount)
-    			}
-    			if(lt.transaction_type == "PAYPARTIAL"){
-    				if(lt.interest_earned ){
-    					intCredit = intCredit + parseFloat(lt.interest_earned)
-    					if(parseFloat(lt.running_balance) < 0){
-    						intCredit = intCredit - parseFloat(lt.interest_earned)
-    					}
-    					if(intCount == 0){ firstInt = parseFloat(lt.interest_earned)}
-    				}
-
-    				if(lt.prepaid_intpaid ){
-    					preIntDedit = preIntDedit + parseFloat(lt.prepaid_intpaid)
-    					if(intCount == 0){ firstPi = parseFloat(lt.prepaid_intpaid)}
-    				}
-    				intCount++
-    			}
-    		})
-    		console.log('preIntCalculation', intCredit, preIntDedit)
-    		intCredit = intCredit + firstInt
-    		preIntDedit = preIntDedit + firstPi
-    		console.log('preIntCalculation 2', intCredit, preIntDedit, firstInt, firstPi)
-
-    		let intCredit2 = 0
-    		let preIntDedit2 = 0
-    		_forEach(loanTransaction, lt =>{
-    			let dateTransacX = this.$df.formatDate(this.$df.formatDate(lt.transaction_date, 'YYYY-MM-DD'), 'X') 
-    			if(dateTransacX > loanCutOffX){
-    				if(lt.interest_earned ){
-    					intCredit2 = intCredit2 + parseFloat(lt.interest_earned)
-    					if(parseFloat(lt.running_balance) < 0){
-    						intCredit2 = intCredit2 - parseFloat(lt.interest_earned)
-    					}
-    				}
-
-    				if(lt.prepaid_intpaid ){
-    					preIntDedit2 = preIntDedit2 + parseFloat(lt.prepaid_intpaid)
-    				}
-    			}
-    		})
-
-    		console.log('preIntCalculation 3', intCredit2, preIntDedit2)*/
-    	},
     	newLoan(){
     		if(this.memberDetails.id != null){
 
@@ -1138,9 +1019,10 @@ export default {
 		    			this.disabledBox = false
 
 		    			console.log("this.evaluationForm", this.evaluationForm)
-
+		    			let formEval = cloneDeep(this.evaluationForm)
+		    			formEval['transaction_date'] = this.$df.formatDate(formEval['transaction_date'], "YYYY-MM-DD")
 						let loandata = {
-							evaluationFormss: this.evaluationForm,
+							evaluationFormss: formEval,
 							loanToRenew: this.LoanToRenew == null ? null : {
 								account_number: this.LoanToRenew.account_no,
 								product_id:  this.LoanToRenew.loan_id,

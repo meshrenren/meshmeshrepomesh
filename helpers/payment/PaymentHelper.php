@@ -22,6 +22,7 @@ use \app\models\ShareTransaction;
 
 use app\helpers\journal\JournalHelper;
 use app\helpers\particulars\ParticularHelper;
+use app\helpers\accounts\SavingsHelper;
 
 class PaymentHelper 
 {
@@ -29,7 +30,12 @@ class PaymentHelper
 
 	public static function savePayment($data){
         $payment = new PaymentRecord;
-      
+
+        if(isset($data['id'])){
+        	$payment = PaymentRecord::findOne($data['id']);
+        }
+      	
+      	$created_date = isset($data['date_transact']) ? $data['date_transact'] : (isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->DateTimeNow : date('Y-m-d'));
         $payment->date_transact = $data['date_transact'];
         $payment->or_num = $data['or_num'];
         $payment->name = $data['name'];
@@ -37,7 +43,7 @@ class PaymentHelper
         $payment->posting_code = $data['posting_code'];
         $payment->check_number = $data['check_number'];
         $payment->amount_paid = $data['amount_paid'];
-        $payment->created_date = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->DateTimeNow : $data['date_transact'];
+        $payment->created_date = $created_date;
         $payment->created_by = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->id : 18;
         //$payment->created_by = 18; //CINCO
         if(isset($data['posted_date'])){
@@ -47,9 +53,9 @@ class PaymentHelper
         if($payment->save()){
             return $payment;
         }
-        /*else{
+        else{
             var_dump($voucher->getErrors());
-        }*/
+        }
         //return $payment->getErrors();
         return false;
     }
@@ -79,6 +85,10 @@ class PaymentHelper
 
             if(isset($value['is_prepaid'])){
             	$payment->is_prepaid = $value['is_prepaid'] === 1|| $value['is_prepaid'] === "1" || $value['is_prepaid'] === true || $value['is_prepaid'] === "true" ? 1 : 0;
+            }
+
+            if(isset($value['remarks'])){
+            	$payment->remarks = $value['remarks'];
             }
 
             if(!$payment->save()){
@@ -239,11 +249,19 @@ class PaymentHelper
 					$loanTransaction->loan_account = $row['account_no'];
 					//$loanTransaction->loan_id = $product->id;
 					//$loanTransaction->member_id = $account->member_id;
+					echo "Principal Bal => " . $account->principal_balance . "<br>";
+					$running_balance = round($account->principal_balance - $principal_pay, 2);
+					$asSavings = 0;
+					if($running_balance < 0){
+						$asSavings = $principal_pay - $account->principal_balance;
+						$running_balance = 0;
+					}
+
 					$loanTransaction->amount = round($amount, 2);
 					$loanTransaction->transaction_type='PAYPARTIAL';
 					$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
 					$loanTransaction->transaction_date = $dateToday;
-					$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
+					$loanTransaction->running_balance = $running_balance;
 					$loanTransaction->remarks="payment thru payment facility";
 					$loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
 					$loanTransaction->interest_paid = 0;
@@ -256,16 +274,67 @@ class PaymentHelper
 					$account->principal_balance = $loanTransaction->running_balance;
 					$account->interest_balance = $account->interest_balance + $interestEarned;
 					$account->interest_accum = $account->interest_accum + $interestEarned;
+
+					if($asSavings > 0){
+						//Save as savings
+						echo "Add As Savings => " . $asSavings . "<br>";
+						echo "Principal Pay => " . $principal_pay . "<br>";
+						$savingsaccount = SavingsHelper::getMemberSavings($row['member_id'], false);
+						if($savingsaccount){
+							$savingstransaction = new SavingsTransaction();
+							$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
+							
+							$pro_name = "LOAN";
+							$getLoanProd = LoanProduct::findOne($account->loan_id);
+							if($getLoanProd){
+								$pro_name = $getLoanProd->product_name;
+							}
+
+							$savingstransaction->fk_savings_id = $row['account_no'];
+							$savingstransaction->amount = $asSavings;
+							$savingstransaction->transaction_type = 'CASHDEP';
+							$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
+							$savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($dateToday));
+							$savingstransaction->running_balance = $savingsaccount->balance + $asSavings;
+							$savingstransaction->remarks = "From " .$pro_name. " payment. Posted as Payment from ".$paymentHeader->or_num;
+							$savingstransaction->ref_no = $paymentHeader->or_num;
+							
+							$savingsaccount->balance = $savingsaccount->balance + $asSavings;
+							
+							if($savingsaccount->save() && $savingstransaction->save())
+							{
+								$debitCOH +=  floatval($savingstransaction->amount);
+								array_push($journaldetails, [
+										'amount'=> $savingstransaction->amount,
+										'entry_type' => 'CREDIT',
+										'particular_id' => $savingsproduct->particular_id
+								]);
+								
+								
+							}
+							else
+							{
+								$success = false;
+								break;
+							}
+						}else{
+							echo "No savings account found" . "<br>";
+							$success = false;
+							break;
+						}
+						
+					}
 					
 					//Account will close
-					if($loanTransaction->running_balance<=0)
+					/*if($loanTransaction->running_balance<=0)
 					{
 						$success = false;
 						$transaction->rollBack();
 
-						echo "Achieved negative on prinicipal balance. Please check amount.";
+						echo "Achieved negative on prinicipal balance. Please check amount. ->" . $loanTransaction->running_balance;
 						break;
-					}
+						
+					}*/
 					
 					//3. update loan balance
 					if($loanTransaction->save() && $account->save())
@@ -353,26 +422,21 @@ class PaymentHelper
 					$savingstransaction = new SavingsTransaction();
 					$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
 					
-					
+					$remarks = isset($row['remarks']) ? $row['remarks'] . ". " : "";
+					$remarks = "Posted as Payment from ".$paymentHeader->or_num;
 					$savingstransaction->fk_savings_id = $row['account_no'];
 					$savingstransaction->amount = $row['amount'];
 					$savingstransaction->transaction_type = 'CASHDEP';
 					$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
 					$savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($dateToday));
 					$savingstransaction->running_balance = $savingsaccount->balance + $row['amount'];
-					$savingstransaction->remarks = "posted as Payment from ".$paymentHeader->or_num;
+					$savingstransaction->remarks = $remarks;
 					$savingstransaction->ref_no = $paymentHeader->or_num;
 					
 					$savingsaccount->balance = $savingsaccount->balance + $row['amount'];
 					
 					if($savingsaccount->save() && $savingstransaction->save())
 					{
-						/*array_push($journaldetails, [
-								'amount'=> $savingstransaction->amount,
-								'entry_type' => 'DEBIT',
-								'particular_id' => $cashOnHandId
-						]);*/
-						
 						$debitCOH +=  floatval($savingstransaction->amount);
 						array_push($journaldetails, [
 								'amount'=> $savingstransaction->amount,
@@ -382,7 +446,6 @@ class PaymentHelper
 						
 						
 					}
-					
 					else
 					{
 						$success = false;
@@ -454,21 +517,25 @@ class PaymentHelper
 				
 			}
 
-			//debit part
-			array_push($journaldetails, [
-					'amount' => $debitCOH,
-					'entry_type'=>'DEBIT',
-					'particular_id'=>$cashOnHandId //cash on hand
-			]);
-			
-			//post to journal entry
-			if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
-			{
-				$success = true;
+			if($success){
+				//debit part
+				array_push($journaldetails, [
+						'amount' => $debitCOH,
+						'entry_type'=>'DEBIT',
+						'particular_id'=>$cashOnHandId //cash on hand
+				]);
+				$journalheader['total_amount'] = $debitCOH;
+				
+				//post to journal entry
+				if(JournalHelper::saveJournalHeader($journalheader) != null && JournalHelper::insertJournal($journaldetails,$paymentHeader->or_num))
+				{
+					$success = true;
+				}
+				
+				else $success = false;
 			}
-			
-			else $success = false;
-			
+
+
 			if($success){
 				$paymentHeader->posted_date = $posted_date;
 				$paymentHeader->save();
@@ -496,7 +563,7 @@ class PaymentHelper
 	}
 	
 	public static function getPaymentList($payment_record_id){
-		$accountList = PaymentRecordList::find()->joinWith(['member']);
+		$accountList = PaymentRecordList::find()->joinWith(['member', 'particular']);
         if($payment_record_id != null){
             $accountList = $accountList->where(['payment_record_id' => $payment_record_id]);
         }

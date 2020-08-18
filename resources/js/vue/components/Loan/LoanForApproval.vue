@@ -192,6 +192,7 @@
         <voucher-view-form 
             :data-list = "voucherList"
             :gv-required = "true"
+            :date-transact = "loanprofile.release_date"
             v-if="isShowVoucher"
             :visible.sync="isShowVoucher"
             @close="isShowVoucher = false"

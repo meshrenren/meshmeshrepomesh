@@ -243,6 +243,7 @@ class LoanController extends \yii\web\Controller
             $post = \Yii::$app->getRequest()->getBodyParams();
             $member_id = $post['member_id'];
             $loan_id = $post['loan_id'];
+            $transaction_date = isset($post['transaction_date']) ? $post['transaction_date'] : null;
             $acc = array();
             $acc = \app\models\LoanAccount::find()
                 ->innerJoinWith(['product'])
@@ -261,7 +262,7 @@ class LoanController extends \yii\web\Controller
             $result = array();
             $getTransactions = [];
             $currentDate = ParticularHelper::getCurrentDay();
-            $systemDate = date("Y-m-d", strtotime($currentDate));
+            $systemDate = $transaction_date ? $transaction_date : date("Y-m-d", strtotime($currentDate));
             if($acc != null)
             {
                 $release_date = $acc['release_date'];
@@ -332,11 +333,6 @@ class LoanController extends \yii\web\Controller
                             $prepaid_interest += $getCutOff['finalPi'];
                             $interest_accum += $getCutOff['finalInt'];
                         }
-                        /*$beforeCutOff = LoanHelper::calculateBeforeCutOff($acc['account_no']);
-                        if($beforeCutOff){
-                            $interest_accum += $beforeCutOff['cutOffInt'];
-                            $prepaid_interest += $beforeCutOff['cutOffPi'];
-                        }*/
                     }
                     
                 }
@@ -390,6 +386,8 @@ class LoanController extends \yii\web\Controller
     		$transaction = \Yii::$app->db->beginTransaction();
 
             $post = \Yii::$app->getRequest()->getBodyParams();
+            $currentDate = ParticularHelper::getCurrentDay();
+            $systemDate = date("Y-m-d", strtotime($currentDate));
     		
     		$loanaccount  = (object)$post['evaluationFormss'];
             //$loanToRenew  = $post['loanToRenew'];
@@ -400,6 +398,7 @@ class LoanController extends \yii\web\Controller
     		$loanproduct->trans_serial = $loanproduct->trans_serial + 1;
     		
     		$loanmodel = new LoanAccount();
+            $transaction_date = isset($loanaccount->transaction_date) ? $loanaccount->transaction_date : $systemDate;
     		
     		//$loanmodel->attributes = $loanaccount;
     		$loanmodel->account_no = $loanaccount->product_loan_id."-".str_pad($loanproduct->trans_serial, 6, '0', STR_PAD_LEFT);
@@ -407,7 +406,7 @@ class LoanController extends \yii\web\Controller
     		$loanmodel->principal = $loanaccount->amount;
     		$loanmodel->interest_balance = 0;
     		$loanmodel->principal_balance = $loanmodel->principal;
-    		$loanmodel->release_date = date('Y-m-d');
+    		$loanmodel->release_date = $transaction_date;
     		$loanmodel->term = $loanaccount->duration;
     		$loanmodel->prepaid = 0;
     		$loanmodel->maturity_date = date('Y-m-d', strtotime("+".$loanmodel->term." months", strtotime($loanmodel->release_date)));
@@ -432,7 +431,7 @@ class LoanController extends \yii\web\Controller
     		$loanmodel->principal_amortization_quincena = $loanaccount->principal_amortization_quincena;
     		$loanmodel->net_cash = $loanaccount->net_cash;
     		$loanmodel->member_id = $loanaccount->member_id;
-    		$loanmodel->date_created = date('Y-m-d');
+    		$loanmodel->date_created = $systemDate;
     		
     		/*$loanTransaction = new LoanTransaction();
     		$loanTransaction->loan_account = $loanmodel->account_no;

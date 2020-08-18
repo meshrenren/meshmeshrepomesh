@@ -61,7 +61,8 @@
 		                        <h3 class="box-title">ALL ACCOUNTS</h3>
 		                        <div class="box-tools pull-right">
 		                            <!-- <el-button class = "auto-width pull-right ml-5" size = "small" type = "danger" @click = "cancelPayment()">CANCEL</el-button> -->
-		                            <el-button class = "auto-width pull-right " size = "small" type = "primary" @click = "finishPayment()" v-if = "paymentRecord.id && !paymentRecord.posted_date">POST</el-button>
+		                            <el-button class = "auto-width pull-right " size = "small" type = "success" @click = "finishPayment()" v-if = "paymentRecord.id && !paymentRecord.posted_date">POST</el-button>
+		                            <el-button class = "auto-width pull-right mr-10 " size = "small" type = "primary" @click = "updatePayment()" v-if = "paymentRecord.id && !paymentRecord.posted_date">UPDATE</el-button>
 		                        </div>
 		                    </div>
 		                    <div class="box-body payment-entry-list mt-5">
@@ -164,7 +165,9 @@ export default {
         }
     },
 	methods:{	
-
+		updatePayment(){
+			window.location.href = this.$baseUrl+"/payment?record="+this.paymentRecord.id;
+		},
     	searchPayment(){
     		console.log()
     		this.pageLoading = true
