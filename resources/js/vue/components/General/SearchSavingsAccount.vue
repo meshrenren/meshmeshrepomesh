@@ -23,6 +23,12 @@
                             <el-tag size="medium">{{ scope.row.member.fullname }}</el-tag>
                         </div>
                     </el-popover>
+                    <el-popover trigger="hover" placement="top" v-else>
+                        <p>Name: {{ scope.row.account_name }}</p>
+                        <div slot="reference" class="name-wrapper">
+                            <el-tag size="medium">{{ scope.row.account_name }}</el-tag>
+                        </div>
+                    </el-popover>
                 </template>
             </el-table-column>
             <el-table-column label="Savings Product" width="180">
@@ -32,7 +38,7 @@
             </el-table-column>
             <el-table-column label="Balance" width="150">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px">{{ scope.row.balance }}</span>
+                    <span style="margin-left: 10px">{{ $nf.formatNumber(scope.row.balance) }}</span>
                 </template>
             </el-table-column>
             <el-table-column label="Action">
@@ -83,7 +89,11 @@ export default {
             if (filterKey) {
                 if(datalist){
                     datalist = datalist.filter(function (row) {
-                        return row.member && String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1
+                        if(row.member){
+                           return String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1
+                        }else{
+                           return row.account_name && String(row.account_name).toLowerCase().indexOf(filterKey) > -1
+                        }
                     })
                 }
             }
@@ -92,7 +102,7 @@ export default {
         }
     },
     methods: {
-        getAccount(){
+        getAccount(){ 
             this.loadingTable = true
 
             this.$API.Savings.getAccounts()

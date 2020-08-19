@@ -57,7 +57,7 @@ class LoanController extends \yii\web\Controller
     {
     	$this->layout = 'main-vue';
 
-    	$loandProduct  = \app\models\LoanProduct::find()->joinWith(['serviceCharge'])
+    	$loandProduct  = \app\models\LoanProduct::find()->joinWith(['serviceCharge'])->where(['is_active' => 1])
     		->asArray()->all();
         $default_setting = array();
 

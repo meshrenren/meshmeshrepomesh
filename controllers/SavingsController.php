@@ -242,6 +242,7 @@ class SavingsController extends \yii\web\Controller
                 $product = $post['product'];
                 $product_particularid = $product['particular_id'];
                 $trans_amount = $acct_transaction['amount'];
+                $transaction_date = isset($acct_transaction['transaction_date']) ? $acct_transaction['transaction_date'] : \Yii::$app->user->identity->DateTimeNow ;
 
                 //Check Reference Number if exist
                 $ref_no = $acct_transaction['ref_no'];
@@ -316,7 +317,7 @@ class SavingsController extends \yii\web\Controller
                             $voucherData['gv_num'] = $ref_no;
                             $voucherData['name'] = $name;
                             $voucherData['type'] = $type;
-                            $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                            $voucherData['date_transact'] = $transaction_date;
 
                         
                             $voucherModel = VoucherHelper::saveVoucher($voucherData);
@@ -361,7 +362,7 @@ class SavingsController extends \yii\web\Controller
                         else{
                             $payment = new PaymentRecord;
                             $paymentData = $payment->getAttributes();
-                            $paymentData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                            $paymentData['date_transact'] = $transaction_date;
                             $paymentData['or_num'] = $ref_no;
                             $paymentData['name'] = $name;
                             $paymentData['type'] = 'Individual';
@@ -408,6 +409,7 @@ class SavingsController extends \yii\web\Controller
                         $journalHeaderData['total_amount'] = $saveSD->amount;
                         $journalHeaderData['trans_type'] = $trans_type;
                         $journalHeaderData['remarks'] = $saveSD->remarks;
+                        $journalHeaderData['transacted_date'] = $transaction_date;
 
                         $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
                         if($saveJournal){
@@ -526,7 +528,7 @@ class SavingsController extends \yii\web\Controller
             if($model){
                 $transaction = \app\models\SavingAccounts::find()->where(['account_no' => $model->account_no])->one();
                 $account_no = $model->account_no;
-                $account_name = $model->member->fullname;
+                $account_name = $model->member ? $model->member->fullname : $model->account_name;
                 $last_transaction = "";
                 if($model->lastTransaction)
                     $last_transaction = date('M d, Y', strtotime($model->lastTransaction->transaction_date));
@@ -538,6 +540,7 @@ class SavingsController extends \yii\web\Controller
 
                 $template = Yii::$app->params['formTemplate']['savings_withdraw'];
 
+                $template = str_replace('[account_type]', "Savings Account", $template);
                 $template = str_replace('[account_name]', $account_name, $template);
                 $template = str_replace('[account_number]', $account_no, $template);
                 $template = str_replace('[last_transaction]', $last_transaction , $template);

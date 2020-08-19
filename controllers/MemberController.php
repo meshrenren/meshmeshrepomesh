@@ -197,32 +197,36 @@ class MemberController extends \yii\web\Controller
             $getTimedeposits = [];
             $getLoan = [];
 
-            $filter = ['member_id' => $id];
+            if($id){
+                $filter = ['member_id' => $id];
 
-            if(isset($post['type']) && $post['type'] != null){
-                $accts = $post['type'];
-                if(in_array('SAVINGS', $accts)){
+                if(isset($post['type']) && $post['type'] != null){
+                    $accts = $post['type'];
+                    if(in_array('SAVINGS', $accts)){
+                        $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
+                    }
+
+                    if(in_array('SHARE', $accts)){
+                        $getShare = ShareHelper::getAccountShareInfo($filter);
+                    }
+
+                    if(in_array('LOAN', $accts)){
+                        $getLoan = LoanHelper::getAccountLoanInfo($id);
+                    }
+
+                    if(in_array('TIME_DEPOSIT', $accts)){
+                        $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
+                    }
+                }
+                else{
                     $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
-                }
-
-                if(in_array('SHARE', $accts)){
                     $getShare = ShareHelper::getAccountShareInfo($filter);
-                }
-
-                if(in_array('LOAN', $accts)){
+                    $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
                     $getLoan = LoanHelper::getAccountLoanInfo($id);
                 }
+            }
 
-                if(in_array('TIME_DEPOSIT', $accts)){
-                    $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
-                }
-            }
-            else{
-                $getSavings = SavingsHelper::getAccountSavingsInfo($filter);
-                $getShare = ShareHelper::getAccountShareInfo($filter);
-                $getTimedeposits = TimeDepositHelper::getAccountTDInfo($filter);
-                $getLoan = LoanHelper::getAccountLoanInfo($id);
-            }
+            
         
             return [
                 'savingsAccounts'        => $getSavings,

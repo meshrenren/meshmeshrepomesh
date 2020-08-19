@@ -11,7 +11,7 @@
             			<div class = "box-content">
 	            			<el-form label-position="right" label-width="180px" :model="accountDetails">
 	            				<el-form-item label="Member" prop="memberName">
-								    <el-input v-model="accountDetails.member.fullname" :disabled = "true"></el-input>
+								    <el-input v-model="accountDetails.account_name" :disabled = "true"></el-input>
 								</el-form-item>
 								<el-form-item label="ID" prop="memberID">
 								    <el-input v-model="accountDetails.account_no" :disabled = "true"></el-input>
@@ -143,6 +143,9 @@ export default {
     methods:{
     	populateField(data){
     		console.log(data)
+    		if(data.member){
+    			data.account_name = data.member.fullname
+    		}
     		this.accountDetails = data
     		this.savingTransactionForm.fk_savings_id = data.account_no
     		this.savingTransactionForm.current_balance = data.balance

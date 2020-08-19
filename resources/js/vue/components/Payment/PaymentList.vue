@@ -134,9 +134,13 @@ export default {
                 let getInd = -1
 
                 if(acct.type == "OTHERS"){
-                	getInd = account.findIndex(rs => { return rs.type == acct.type && rs.particular_id == acct.particular_id})
+                	getInd = account.findIndex(rs2 => { return rs2.type == acct.type && rs2.particular_id == acct.particular_id})
                 }else{
-                	getInd = account.findIndex(rs => { return rs.type == acct.type && rs.product_id == acct.product_id})
+                	if(acct.is_prepaid){
+                		getInd = account.findIndex(rs2 => { return rs2.is_prepaid && rs2.type == acct.type && rs2.product_id == acct.product_id})
+                	}else{
+                		getInd = account.findIndex(rs2 => { return rs2.type == acct.type && rs2.product_id == acct.product_id})
+                	}
                 }
                 if(getInd >= 0){
                     let amt = cloneDeep(Number(account[getInd].amount)) + Number(acct.amount)
@@ -144,6 +148,9 @@ export default {
                 }
                 else{
                 	acct['product_name'] = rs.productData ? rs.productData.name : ""
+                	if(acct.is_prepaid){
+                		acct['product_name'] = "PI" + acct['product_name'];
+                	}
                     account.push(acct)
                 }
             })

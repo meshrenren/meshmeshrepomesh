@@ -59,7 +59,7 @@ class SavingsHelper
     public static function saveSavingsTransaction($data){
         $model = new SavingsTransaction;
         $model->attributes = $data;
-        $model->transaction_date = date('Y-m-d H:i:s');
+        $model->transaction_date = isset($data['transaction_date']) ? $data['transaction_date'] : \Yii::$app->user->identity->id;
         $model->transacted_by = \Yii::$app->user->identity->id;
         if(isset($data['reference_number'])){
             $model->ref_no=$data['reference_number'];

@@ -11,7 +11,7 @@
             			<div class = "box-content">
 	            			<el-form label-position="right" label-width="180px" :model="accountDetails">
 	            				<el-form-item label="Member" prop="memberName">
-								    <el-input v-model="accountDetails.member.fullname" :disabled = "true"></el-input>
+								    <el-input v-model="accountDetails.account_name" :disabled = "true"></el-input>
 								</el-form-item>
 								<el-form-item label="ID" prop="memberID">
 								    <el-input v-model="accountDetails.account_no" :disabled = "true"></el-input>
@@ -72,7 +72,10 @@
 								</el-form-item>
 								<el-form-item label="Reference No. (GV No.)" prop="reference_number">
 									<el-input type = "text" v-model="savingTransactionForm.ref_no"></el-input>
-								</el-form-item>		
+								</el-form-item>	
+								<el-form-item label="Date" prop="transaction_date">
+									<el-date-picker v-model="savingTransactionForm.transaction_date" type="date" placeholder="Pick a date"> </el-date-picker>
+								</el-form-item>	
 								<el-form-item label="Remarks" prop="remarks">
 									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
 									</el-input>
@@ -133,6 +136,8 @@ export default {
   			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
   			ref_no : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
 		}
+
+		this.savingTransactionForm.transaction_date = moment(this.$systemDate)._d
 	},
     components: {
       	SearchSavingsAccount,
@@ -157,6 +162,9 @@ export default {
     	},
     	populateField(data){
     		console.log(data)
+    		if(data.member){
+    			data.account_name = data.member.fullname
+    		}
     		this.accountDetails = data
     		this.savingTransactionForm.fk_savings_id = data.account_no
     		this.savingTransactionForm.current_balance = data.balance
@@ -207,6 +215,7 @@ export default {
 		            		vm.pageLoading = true
 
 		            		let accountTransaction = cloneDeep(vm.savingTransactionForm)
+		            		accountTransaction.transaction_date = accountTransaction.transaction_date && vm.$df.formatDate(accountTransaction.transaction_date, "YYYY-MM-DD")
 		            		accountTransaction.transaction_type = "WITHDRWL"
 
 							let params = {

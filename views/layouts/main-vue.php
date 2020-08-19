@@ -47,12 +47,12 @@ use yii\helpers\Html;
                     ]
                 ) ?>
 
-                <?= $this->render(
+                <?php /*$this->render(
                     'left.php',
                     [
                         'directoryAsset'    => $directoryAsset
                     ]
-                )
+                )*/
                 ?>
 
                 <?= $this->render(
