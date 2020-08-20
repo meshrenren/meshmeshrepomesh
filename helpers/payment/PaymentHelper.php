@@ -423,7 +423,7 @@ class PaymentHelper
 					$savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
 					
 					$remarks = isset($row['remarks']) ? $row['remarks'] . ". " : "";
-					$remarks = "Posted as Payment from ".$paymentHeader->or_num;
+					$remarks .= "Posted as Payment from ".$paymentHeader->or_num;
 					$savingstransaction->fk_savings_id = $row['account_no'];
 					$savingstransaction->amount = $row['amount'];
 					$savingstransaction->transaction_type = 'CASHDEP';

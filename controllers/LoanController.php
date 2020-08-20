@@ -212,9 +212,9 @@ class LoanController extends \yii\web\Controller
                             $acc['account_last_payment'] = $lastPayment->date_posted;
                         }
                         //Check LoanHelper -> getAccountLoanInfo for updates
+                        array_push($accountList, $acc);
                     }
 
-                    array_push($accountList, $acc);
                 }
             }
     	
@@ -329,6 +329,7 @@ class LoanController extends \yii\web\Controller
                     if($release_date <= $cutOff){
                         $cutOffYear = date('Y', strtotime($cutOff));
                         $getCutOff = LoanHelper::getCutOff($cutOffYear, $acc['loan_id'], $acc['member_id']);
+                        var_dump($getCutOff);
                         if($getCutOff){
                             $prepaid_interest += $getCutOff['finalPi'];
                             $interest_accum += $getCutOff['finalInt'];
