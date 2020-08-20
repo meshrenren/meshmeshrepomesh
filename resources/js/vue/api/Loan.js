@@ -50,6 +50,11 @@ export default {
 	{
 		return axios.post($baseUrl + '/loan/apply-loan', params)
 	},
+	saveLoan(params)
+	{
+		return axios.post($baseUrl + '/loan/save-loan', params)
+	},
+
 	releaseLoanVoucher(voucherModel, entryList){
 		let params = {
 			voucherModel : voucherModel,

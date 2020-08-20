@@ -182,6 +182,7 @@
                                     
                                 </div>
                                 <el-button class = "mt-10" type = "primary" @click = "releaseVoucher()">Release Loan</el-button>
+                                <el-button class = "mt-10" type = "primary" @click = "saveLoan()">Save Loan Without Release</el-button>
                                 <!-- <el-button class = "mt-10" type = "primary" @click = "approveLoan()">Approve Loan Application</el-button> -->
                             </div>
                         </div>
@@ -198,6 +199,16 @@
             @close="isShowVoucher = false"
             @processvoucher="processVoucher">
         </voucher-view-form>
+
+        <enter-voucher 
+            :gv-required = "true"
+            :date-transact = "loanprofile.release_date"
+            v-if="isEnterVoucher"
+            :visible.sync="isEnterVoucher"
+            @close="isEnterVoucher = false"
+            @processentervoucher="processentervoucher">
+        </enter-voucher>
+       
     </div>
 </template>
 
@@ -223,7 +234,8 @@ export default {
             loanToPaySave   : [],
             loanToPayList   : [],
             otherToPay      : [],
-            otherList       : []
+            otherList       : [],
+            isEnterVoucher  : false
         }
     },
     created(){
@@ -542,7 +554,77 @@ export default {
 			}).then(_ => { 
                 this.pageLoading = false
             })
+        },
+
+        saveLoan(){
+            this.isEnterVoucher = true
+        },
+        processentervoucher(data){
+            this.$swal({
+                title: 'Save Loan',
+                text: "Are you sure you want to save loan? Use this only for old loans that are not included on loan migration but in the release data is in General Voucher",
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Proceed',
+                focusConfirm: false,
+                focusCancel: true,
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                customClass: {
+                    container: 'loan-product-form-swal'
+                }
+            }).then(result => {
+                if (result.value) {
+                    let loandata = {
+                        evaluationForm: this.loanprofile,
+                        gv_num : data.gv_num,
+                        transaction_date : data.transaction_date
+                    }
+
+                    //data.set('applyLoan', JSON.stringify(loandata))
+                    this.pageLoading = true
+                    
+                    this.$API.Loan.saveLoan(loandata)
+                    .then(result=>{
+                        let res = result.data
+                        console.log("successresultx", result.data);
+                        if(res.success){
+                            new Noty({
+                                type: 'success',
+                                layout: 'topRight',
+                                text: 'Loan successfully approved',
+                                timeout: 2500
+                            }).show()
+                            location.reload()
+                        }
+                        else{
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: 'Loan not successfully approved. Please try again or contact administrator',
+                                timeout: 2500
+                            }).show()
+                        }
+                         
+
+                    }).catch(err=>{
+                        console.log("apierror", err);
+                         new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: 'An error occured. Please try again or contact administrator',
+                            timeout: 2500
+                        }).show()
+                    }).then(_ => { 
+                        this.pageLoading = false
+                    })
+                }
+            });
+
+            
         }
+
 
 
     }

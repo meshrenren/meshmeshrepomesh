@@ -507,6 +507,74 @@ class LoanController extends \yii\web\Controller
 
 
     }
+    public function actionSaveLoan()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $success = true;
+            $transaction = \Yii::$app->db->beginTransaction();
+            
+            $loanaccount_array  = $post;
+            $loanaccount = (object) $post['evaluationForm'];
+            $gv_num = $post['gv_num'];
+
+            $currentDate = ParticularHelper::getCurrentDay();
+            $systemDate = date("Y-m-d", strtotime($currentDate));
+            $transac_date = isset($post['transaction_date']) ? $post['transaction_date'] : $systemDate;
+
+            $loanmodel = LoanAccount::findOne($loanaccount->account_no);
+            $loanmodel->status='Released';
+
+            $member = \app\models\Member::find()->where(['id' => $loanmodel->member_id])->one();
+            
+            $loanTransaction = new LoanTransaction();
+            $loanTransaction->loan_account = $loanmodel->account_no;
+            $loanTransaction->amount = $loanaccount->principal;
+            $loanTransaction->transaction_type='RELEASE';
+            $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+            $loanTransaction->transaction_date = $transac_date;
+            $loanTransaction->running_balance = $loanaccount->principal;
+            $loanTransaction->remarks = "loan release";
+            $loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
+            $loanTransaction->interest_paid = 0;
+            $loanTransaction->OR_no = $gv_num;
+            $loanTransaction->principal_paid = 0;
+            $loanTransaction->arrears_paid = 0;
+            $loanTransaction->date_posted = $transac_date;
+            $loanTransaction->interest_earned = 0;
+            
+            if($loanmodel->save() && $loanTransaction->save())
+            {
+                //Okay
+                $transaction->commit();
+                return [
+                    'success' => true,
+                    'loanaccount' => $loanaccount
+                        
+                ];
+            } 
+            else
+            {
+                $transaction->rollBack();
+                return [
+                    'success' => false,
+                    'status'=>'not saved',
+                    'errors'=> [
+                            'lmError' => $loanmodel->getErrors(),
+                            'ltError' => $loanTransaction->getErrors()
+                    ]
+                        
+                ];
+            }
+            
+            return [
+                'success' => false
+            ];
+        }
+    }
     
     public function actionApplyLoan()
     {
