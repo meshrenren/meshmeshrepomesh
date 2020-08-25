@@ -12,7 +12,8 @@
                         <el-input v-model="search" size="mini" placeholder="Type to search"/>
                         <el-table
                             :data="toApproveLoan.filter(data => !search || data.fullname.toLowerCase().includes(search.toLowerCase()))"
-                            style="width: 100%">
+                            style="width: 100%"
+                            max-height = "1000px">
                             
                              <el-table-column
                                 label="Acc. No."
@@ -168,13 +169,21 @@
                                         </table>
 
                                         <!-- Show only if Regular  -->
-                                        <el-button class = "mt-10" type = "info" @click = "getMemberAccount()">Loan to deduct</el-button>
+                                        <el-button class = "mt-10" type = "info" @click = "getMemberAccount()">Account to deduct</el-button>
                                         <table class="table table-striped table-dark" v-if = "loanToPayList.length > 0">
                                             <tr v-for="item in loanToPayList">
-                                                <th scope="row">{{ item.product.product_name }}</th>
-                                                <td>{{ $nf.formatNumber(item.principal, 2)  }} ({{ $nf.formatNumber(item.principal_balance, 2) }})</td>
+                                                <th scope="row">{{ item.product_name }}</th>
                                                 <td>
-                                                    <el-input class = "mt-5" type="number" :min = "0" v-model="item.amountToPay" :disabled = "Number(item.principal_balance) <= 0" :max = "Number(item.principal_balance)"></el-input>
+                                                    <template v-if = "item.type == 'LOAN'">
+                                                        {{ $nf.formatNumber(item.principal, 2)  }} ({{ $nf.formatNumber(item.balance, 2) }})
+                                                    </template>
+                                                    <template v-else>
+                                                        {{ $nf.formatNumber(item.balance, 2) }}
+                                                    </template>
+                                                </td>
+                                                <td>
+                                                    <el-input v-if = "item.type == 'LOAN'" class = "mt-5" type="number" :min = "0" v-model="item.amountToPay" :disabled = "Number(item.principal_balance) <= 0" :max = "Number(item.principal_balance)"></el-input>
+                                                    <el-input v-else class = "mt-5" type="number" :min = "0" v-model="item.amountToPay"></el-input>
                                                 </td>
                                             </tr>
                                         </table>
@@ -252,9 +261,9 @@ export default {
 
             let list = []
             //Set product name
-            let arr = {particular_name: this.loanprofile.product.product_name, amount: this.loanprofile.principal, type : "DEBIT" }
+            let arr = {particular_name: this.loanprofile.product.product_name, amount: this.loanprofile.principal, type : "DEBIT", account_no : this.loanprofile.account_no }
             list.push(arr)
-            arr = {particular_name: this.loanprofile.product.product_name, amount: this.loanprofile.credit_loan, type : "CREDIT" }
+            arr = {particular_name: this.loanprofile.product.product_name, amount: this.loanprofile.credit_loan, type : "CREDIT", account_no : this.loanprofile.account_no }
             list.push(arr)
 
             //Interest on Loans
@@ -309,9 +318,9 @@ export default {
                         }
                         else{
                            //get Pi
-                            let getPi = this.particulars.find(fn => Number(fn.id) == Number(la.product.particular_id))
+                            let getPi = this.particulars.find(fn => Number(fn.id) == Number(la.particular_id))
                             if(getPi){
-                                arr = {particular_name: getPi.name, amount: la.amountToPay, type : "CREDIT", account :  la.account_no, account_type : "LOAN"}
+                                arr = {particular_name: getPi.name, amount: la.amountToPay, type : "CREDIT", account_no :  la.account_no, account_type : la.type}
                                 list.push(arr)
                                 this.loanToPaySave.push(la)
 
@@ -380,19 +389,7 @@ export default {
             .then(result => {
                 let res = result.data
                 let list = []
-                if(res.loanAccounts && res.loanAccounts.length > 0){
-                    _forEach(res.loanAccounts, la =>{
-                        //If 3: EDUCATIONAL LOAN, 4: EMERGENCY LOAN, 6: HOUSE IMPROVEMENT LOAN, 12: BUY-OUT LOAN, 14: e-GADGET LOAN
-                        if(la && Number(la.loan_id) != Number(this.loanprofile.loan_id)){
-                            if(Number(la.principal_balance) > 0){   
-                                la.amountToPay = null
-                                list.push(la)
-                            }
-                        }
-                    })
-                }
-                
-                this.loanToPayList = list
+                this.mergeAccount(res.loanAccounts, res.savingsAccounts, res.shareAccounts)
             })
             .catch(err => {
                 console.log(err)
@@ -400,6 +397,72 @@ export default {
             .then(_ => { 
                 this.pageLoading = false
             })
+        },
+        mergeAccount(loans = null, savings = null, shares = null){
+            let allAccounts = []
+
+            if(shares && shares.length > 0){
+                _forEach(shares, rs =>{
+
+                    let arr = {}
+                    arr.member_id = rs.fk_memid
+                    arr.key = "SHARE_" + rs.particular_id
+                    arr.account_no = rs.accountnumber
+                    arr.product_id = rs.fk_share_product
+                    arr.product_name = rs.product.name
+                    arr.type = "SHARE"
+                    arr.balance = parseFloat(rs.balance).toFixed(2)
+                    arr.particular_id = rs.product.particular_id
+                    arr.amountToPay = null
+
+                    allAccounts.push(arr)
+                })
+            }
+
+            let savingsData = null
+            if(savings && savings.length > 0){
+                _forEach(savings, rs =>{
+                    savingsData = rs
+
+                    let arr = {}
+                    arr.member_id = rs.member_id
+                    arr.key = "SAVINGS_" + rs.particular_id
+                    arr.account_no = rs.account_no
+                    arr.product_id = rs.saving_product_id
+                    arr.product_name = rs.product.description
+                    arr.type = "SAVINGS"
+                    arr.balance = parseFloat(rs.balance).toFixed(2)
+                    arr.particular_id = rs.product.particular_id
+                    arr.amountToPay = null
+
+                    allAccounts.push(arr)
+                })
+            }
+
+            if(loans && loans.length > 0){
+                _forEach(loans, rs =>{
+                    if(Number(rs.principal_balance) > 0){ 
+                        let arr = {}
+                        arr.member_id = rs.member_id
+                        arr.key = "LOAN_" + rs.particular_id
+                        arr.account_no = rs.account_no
+                        arr.product_id = rs.loan_id
+                        arr.product_name = rs.product.product_name
+                        arr.type = "LOAN"
+                        arr.balance = parseFloat(rs.principal_balance).toFixed(2)
+                        arr.particular_id = rs.product.particular_id
+                        arr.principal = parseFloat(rs.principal).toFixed(2)
+                        arr.amountToPay = null
+
+                        allAccounts.push(arr)
+                    }
+                })
+            }
+
+            
+
+            this.loanToPayList = allAccounts
+            
         },
         otherParticulars(){
             let arr = {particular_id : null, amountToPay : null}
@@ -505,54 +568,69 @@ export default {
 
             //let data = new FormData()
 
-			let loandata = {
-				evaluationFormss: this.loanprofile,
-				loanToRenew: this.LoanToRenew == null ? null : {
-					account_number: this.LoanToRenew.account_no,
-					product_id:  this.LoanToRenew.loan_id,
-				},
-                voucherDetails : voucherDetails,
-                gv_num : gvNumber,
-                otherLoanToPay : this.loanToPaySave,
-                transaction_date : transaction_date
-			}
+            this.$swal({
+                title: 'Post Release Loan',
+                text: "Are you sure you want to release loan? This will automatically posted.",
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Proceed',
+                focusConfirm: false,
+                focusCancel: true,
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+            }).then(result => {
+                if (result.value) {
+        			let loandata = {
+        				evaluationFormss: this.loanprofile,
+        				loanToRenew: this.LoanToRenew == null ? null : {
+        					account_number: this.LoanToRenew.account_no,
+        					product_id:  this.LoanToRenew.loan_id,
+        				},
+                        voucherDetails : voucherDetails,
+                        gv_num : gvNumber,
+                        otherLoanToPay : this.loanToPaySave,
+                        transaction_date : transaction_date
+        			}
 
-			//data.set('applyLoan', JSON.stringify(loandata))
-            this.pageLoading = true
-			
-			this.$API.Loan.approveLoan(loandata)
-			.then(result=>{
-                let res = result.data
-				console.log("successresultx", result.data);
-                if(res.success){
-                    new Noty({
-                        type: 'success',
-                        layout: 'topRight',
-                        text: 'Loan successfully approved',
-                        timeout: 2500
-                    }).show()
-                    location.reload()
-                }
-                else{
-                    new Noty({
-                        type: 'error',
-                        layout: 'topRight',
-                        text: 'Loan not successfully approved. Please try again or contact administrator',
-                        timeout: 2500
-                    }).show()
-                }
-                 
+        			//data.set('applyLoan', JSON.stringify(loandata))
+                    this.pageLoading = true
+        			
+        			this.$API.Loan.approveLoan(loandata)
+        			.then(result=>{
+                        let res = result.data
+        				console.log("successresultx", result.data);
+                        if(res.success){
+                            new Noty({
+                                type: 'success',
+                                layout: 'topRight',
+                                text: 'Loan successfully approved',
+                                timeout: 2500
+                            }).show()
+                            location.reload()
+                        }
+                        else{
+                            new Noty({
+                                type: 'error',
+                                layout: 'topRight',
+                                text: 'Loan not successfully approved. Please try again or contact administrator',
+                                timeout: 2500
+                            }).show()
+                        }
+                         
 
-			}).catch(err=>{
-				console.log("apierror", err);
-                 new Noty({
-                    type: 'error',
-                    layout: 'topRight',
-                    text: 'An error occured. Please try again or contact administrator',
-                    timeout: 2500
-                }).show()
-			}).then(_ => { 
-                this.pageLoading = false
+        			}).catch(err=>{
+        				console.log("apierror", err);
+                         new Noty({
+                            type: 'error',
+                            layout: 'topRight',
+                            text: 'An error occured. Please try again or contact administrator',
+                            timeout: 2500
+                        }).show()
+        			}).then(_ => { 
+                        this.pageLoading = false
+                    })
+                }
             })
         },
 

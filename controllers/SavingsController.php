@@ -148,7 +148,7 @@ class SavingsController extends \yii\web\Controller
 	        	$account->member_id = $accountDetails['member_id'];
 	        	$account->saving_product_id = $accountDetails['saving_product_id'];
 	        	$account->balance = 0;
-	        	$account->date_created = $today;
+	        	$account->date_created = date('Y-m-d H:i:s');
 	        	$account->transacted_date = $today;
                 $account->type = $accountDetails['type'];
                 if($accountDetails['type'] == "Group"){
@@ -318,6 +318,7 @@ class SavingsController extends \yii\web\Controller
                             $voucherData['name'] = $name;
                             $voucherData['type'] = $type;
                             $voucherData['date_transact'] = $transaction_date;
+                            $voucherData['posted_date'] = $transaction_date;
 
                         
                             $voucherModel = VoucherHelper::saveVoucher($voucherData);
@@ -327,6 +328,8 @@ class SavingsController extends \yii\web\Controller
                                 $entries = array();
                                 $arr = [
                                     'member_id'        => $member_id,
+                                    'account_no'       => $getSavingsAccount->account_no,
+                                    'type'             => "SAVINGS",
                                     'particular_id'    => $product_particularid, // Savings Deposit
                                     'debit'            => $saveSD->amount,
                                     'credit'           => 0,
@@ -335,13 +338,15 @@ class SavingsController extends \yii\web\Controller
 
                                 $arr = [
                                     'member_id'        => $member_id,
+                                    'account_no'       => null,
+                                    'type'             => $coh_id->category,
                                     'particular_id'    => $coh_id->id, //Cash on Hand
                                     'debit'            => 0,
                                     'credit'           => $saveSD->amount,
                                 ];
                                 array_push($entries, $arr);
 
-                                $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
+                                $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id, $voucherData['posted_date']);
                                 if($saveEntries){
                                     $success = true;
                                 }

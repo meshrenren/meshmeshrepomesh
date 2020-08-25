@@ -7,23 +7,38 @@ use app\helpers\voucher\VoucherHelper;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\journal\JournalHelper;
 
+use app\models\GeneralVoucher;
+use app\models\VoucherDetails;
+
 class GeneralVoucherController extends \yii\web\Controller
 {
-    public function actionIndex()
+    public function actionIndex($record = null)
     {
     	$this->layout = 'main-vue';
-        $voucher = new \app\models\GeneralVoucher;
-        $voucherModel = $voucher->getAttributes();
+
+        $voucherList = [];
+        if($record != null){
+            $voucherModel = \app\models\GeneralVoucher::find()->where(['id' => $record])->asArray()->one();
+            $voucherList = VoucherHelper::getList($record);
+        }
+        else{
+            $voucher = new \app\models\GeneralVoucher;
+            $voucherModel = $voucher->getAttributes();
+        }
 
         $details = new \app\models\VoucherDetails;
         $detailsModel = $details->getAttributes();
 
-        $filter  = ['category' => ['OTHERS', 'SAVINGS', 'SHARE', 'LOAN', 'TIME_DEPOSIT']];
+        /*$filter  = ['category' => ['OTHERS', 'SAVINGS', 'SHARE', 'LOAN', 'TIME_DEPOSIT']];
         $orderBy = [new \yii\db\Expression('FIELD (category,"OTHERS","LOAN","SAVINGS","SHARE","TIME_DEPOSIT"), name ASC')];
+        $getParticular = ParticularHelper::getParticulars($filter, $orderBy);*/
+        $filter  = ['category' => ['OTHERS']];
+        $orderBy = "name ASC";
         $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
 
         return $this->render('index', [
         	'voucherModel'      => $voucherModel,
+            'voucherList'       => $voucherList,
             'detailsModel'      => $detailsModel,
             'particularList'    => $getParticular
         ]);
@@ -61,20 +76,46 @@ class GeneralVoucherController extends \yii\web\Controller
                 $post = \Yii::$app->getRequest()->getBodyParams();
                 $voucherModel = $post['voucherModel'];
                 $entryList = $post['entryList'];
+                $allAccounts = $post['allAccounts'];
                 $success = false;
                 $error = '';
                 $data = null;
 
                 //Check GV Number if exist
                 $gv_num = $voucherModel['gv_num'];
+                //$getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
                 $getGV = \app\models\JournalHeader::find()->where(['reference_no' => $gv_num])->one();
                 if($getGV){
-                    $getGV = VoucherHelper::saveVoucher($voucherModel);
+                    return [
+                        'success'   => false,
+                        'error'     => 'ERROR_HASGV'
+                    ];
                 }
                 else{
-                    if($getGV){
+                /*if($getGV){
+                    $getGV = VoucherHelper::saveVoucher($voucherModel);
+                }*/
+                    $genVoucher = GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
+                    if($genVoucher){
+                        if($genVoucher->posted_date != null){
+                            return [
+                                'success'   => false,
+                                'error'     => 'ERROR_HASOR',
+                                'test'     => 'ERROR_HASOR'
+                            ];
+                        }
+                    }
+
+                    $saveGV = VoucherHelper::saveVoucher($voucherModel);
+                    if($saveGV){
+                        if($genVoucher){
+                            //ADD HISTORY FUNCTION: Get then save to history
+                            //Delete existing payment record
+                            VoucherDetails::deleteAll('voucher_id = :voucher_id', [':voucher_id' => $genVoucher->id]);
+                        }
+
                         //Entries
-                        $insertSuccess = VoucherHelper::insertEntries($entryList, $saveGV->id, 'OTHERS');
+                        $insertSuccess = VoucherHelper::insertEntries($allAccounts, $saveGV->id);
                         if($insertSuccess){
                             $success = true;
                         }
@@ -88,63 +129,6 @@ class GeneralVoucherController extends \yii\web\Controller
                         $transaction->rollBack();
                     }
 
-                     if($success && $saveGV){
-                        $journalHeader = new \app\models\JournalHeader;
-                        $journalHeaderData = $journalHeader->getAttributes();
-                        $journalHeaderData['reference_no'] = $saveGV->gv_num;
-                        $journalHeaderData['posting_date'] = $saveGV->date_transact;
-                        $journalHeaderData['total_amount'] = 0;
-                        $journalHeaderData['trans_type'] = 'GeneralVoucher';
-                        $journalHeaderData['remarks'] = '';
-
-                        $saveJournal = JournalHelper::saveJournalHeader($journalHeaderData);
-                        if($saveJournal){
-                            //Entries
-
-                            $journalList = new \app\models\JournalDetails;
-                            $journalListAttr = $journalList->getAttributes();
-                            $lists = array();
-                            $totalAmount = 0;
-                            $totalCredit = 0;
-                            $totalDebit = 0;
-                            foreach ($entryList as $acct) {
-                                if($acct['debit'] && (float)$acct['debit'] > 0){
-                                    $arr = $journalListAttr;
-                                    $arr['amount'] = $acct['debit'];
-                                    $arr['particular_id'] = $acct['particular_id'];
-                                    $arr['entry_type'] = "DEBIT";
-                                    array_push($lists, $arr);
-
-                                    $totalAmount += $acct['debit'];
-                                }
-
-                                if($acct['credit'] && (float)$acct['credit'] > 0){
-                                    $arr = $journalListAttr;
-                                    $arr['amount'] = $acct['credit'];
-                                    $arr['particular_id'] = $acct['particular_id'];
-                                    $arr['entry_type'] = "CREDIT";
-                                    array_push($lists, $arr);
-                                }
-                                
-                            }
-
-                            $insertSuccess = JournalHelper::insertJournal($lists, $saveJournal->reference_no);
-                            if($insertSuccess){
-                                $saveJournal->total_amount = $totalAmount;
-                                $saveJournal->save();
-                                
-                                $success = true;
-                            }
-                            else{
-                                $success = false;
-                                $transaction->rollBack();
-                            }
-                        }
-                        else{
-                            $success = false;
-                            $transaction->rollBack();
-                        }
-                    }
                 }
 
                 if($success){
@@ -203,10 +187,14 @@ class GeneralVoucherController extends \yii\web\Controller
     public function actionGetAllVoucher(){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $getVouchers  = \app\models\GeneralVoucher::find()->asArray()->all();
+        $getVouchers  = \app\models\GeneralVoucher::find()->limit(500)->asArray()->all();
         return [
             'data' => $getVouchers
         ];
     }
 
+    public function actionPostVoucher($id)
+    {
+        VoucherHelper::postVoucher($id);
+    }
 }

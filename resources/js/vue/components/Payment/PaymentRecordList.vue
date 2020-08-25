@@ -187,7 +187,7 @@ export default {
 		                	return prev;
 		              	}
 		            }, 0);
-		            sums[index] = ' ' + this.$nf.formatNumber(sumAmount)
+		            sums[index] = ' ' + this.$nf.formatNumber(sumAmount, 2)
 	          	} else {
 	            	sums[index] = 'N/A';
 	          	}

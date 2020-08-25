@@ -91,6 +91,8 @@ export default {
     		let particularsList = this.particulars
     		_forEach(particularsList, pt =>{
     			let arr = {
+                    type : pt.category,
+                    account_no : null,
     				category_type : null,
     				category_id : null,
     				credit : 0,
@@ -98,7 +100,7 @@ export default {
     				particular_id : pt.id,
     				particular_name : pt.name,
     			}
-
+                let acct_no = null
     			_forEach(this.voucherData, vd=>{
     				if(pt.name.toLowerCase() == vd.particular_name.toLowerCase()){
     					if(vd.type == "CREDIT"){
@@ -107,9 +109,14 @@ export default {
     					else if(vd.type == "DEBIT"){
     						arr.debit = Number(arr.debit) + Number(vd.amount)
     					}
+                        if(vd.account_no){
+                            acct_no = vd.account_no
+                        }
 
     				}
 	    		})
+
+                arr.account_no = acct_no
 
 	    		list.push(arr)
     		})
@@ -159,6 +166,7 @@ export default {
                 console.log('here')
     			return
     		}
+
     		let params = {
                 gv_num  : this.gvNumber,
                 transaction_date  : this.$df.formatDate(this.transactionDate, "YYYY-MM-DD") ,
