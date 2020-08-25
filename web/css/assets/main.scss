@@ -1,0 +1,55 @@
+/* Global CSS for all pages */
+.el-row-csm-flex{
+	display: flex;
+
+	> .el-col{
+    	flex-direction: column;
+
+    	.box{
+    		height: 100%;
+    	}
+	}
+}
+
+.right-toolbar{
+	text-align: right;
+
+	.btn-app{
+	    padding: 7px 5px;
+	    min-width: 60px;
+	    height: 50px;
+	}
+}
+
+.toolbar-right{
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.el-table{
+	.el-table__body{
+		td{
+			padding: 3px 0px;
+
+			.el-button{
+				padding: 5px 15px;
+			}
+		}
+	}
+
+
+	.cell{
+	  padding-left: 5px !important;
+	  padding-right: 5px !important;
+	}
+}
+
+.el-input--mini .el-input__inner {
+    height: 24px;
+    line-height: 24px;
+}
+
+.el-upload__input{
+	display: none !important;
+}
