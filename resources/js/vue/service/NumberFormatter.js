@@ -26,6 +26,7 @@ export default class NumberFormatter{
 			return ""
 		}
 
+
 		number = Number(number)
 		if(fixedCount){
 			number = Number(number).toFixed(fixedCount)

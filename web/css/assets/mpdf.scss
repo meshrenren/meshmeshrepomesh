@@ -1,0 +1,190 @@
+body{
+	font-size: 12px;
+}
+
+.report-table{
+	width: 100%; 
+	font-size: 10px; 
+	text-align: center;
+	border-collapse : collapse;
+}
+.report-table td, .report-table th{
+	border: 1px solid #9a9696;
+}
+
+.no-bottom-border{
+	border-bottom: none;
+}
+
+.no-top-border{
+	border-top: none;
+}
+
+.no-border{
+	border: none;
+}
+
+.blue-text{
+  color: rgb(30,144,255);
+}
+.red-text{
+  color: rgb(178,34,34);
+}
+
+.weekly-view td {
+	width: 100px;		
+}
+
+.weekly-view table {
+	margin: auto;
+	overflow: wrap;
+	width: 100%;		
+}
+
+.text-center {
+	text-align: center;
+}
+
+.weekly-view .employee-name {
+	line-height: 15px;
+}
+.weekly-view .employee-name .name {
+	font-size: 14px;
+}
+.weekly-view .employee-name .description {
+	color: #999;
+	font-size: 10px;
+}
+
+.calendar-day-saturday{
+	color: #2F65BD ;
+}
+.calendar-day-sunday{
+	color: #DF363B;
+}
+
+.calendar-list-view {
+	margin: auto;
+	overflow: wrap;
+	width: 100%;
+}
+
+.calendar-list-view .policy-section {
+	width: 100% !important;
+	height: auto;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+/**
+    Spacing for reusabilty and to avoid redundancy :(
+*/
+    /* Margin All */
+.m-5 { margin: 5px; }
+.m-10 { margin: 10px; }
+.m-15 { margin: 15px; }
+.m-20 { margin: 20px; }
+.m-25 { margin: 25px; }
+.m-30 { margin: 30px; }
+.m-40 { margin: 40px; }
+.m-50 { margin: 50px; }
+.m-100 { margin: 100px; }
+
+/* Margin Top */
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+.mt-25 { margin-top: 25px; }
+.mt-30 { margin-top: 30px; }
+.mt-40 { margin-top: 40px; }
+.mt-50 { margin-top: 50px; }
+.mt-100 { margin-top: 100px; }
+
+/* Margin Left */
+.ml-5 { margin-left: 5px; }
+.ml-10 { margin-left: 10px; }
+.ml-15 { margin-left: 15px; }
+.ml-20 { margin-left: 20px; }
+.ml-25 { margin-left: 25px; }
+.ml-30 { margin-left: 30px; }
+.ml-40 { margin-left: 40px; }
+.ml-50 { margin-left: 50px; }
+.ml-100 { margin-left: 100px; }
+
+/* Margin Right */
+.mr-5 { margin-right: 5px; }
+.mr-10 { margin-right: 10px !important; }
+.mr-15 { margin-right: 15px; }
+.mr-20 { margin-right: 20px; }
+.mr-25 { margin-right: 25px; }
+.mr-30 { margin-right: 30px; }
+.mr-40 { margin-right: 40px; }
+.mr-50 { margin-right: 50px; }
+.mr-100 { margin-right: 100px; }
+
+/* Margin Bottom */
+.mb-5 { margin-bottom: 5px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-25 { margin-bottom: 25px; }
+.mb-30 { margin-bottom: 30px; }
+.mb-40 { margin-bottom: 40px; }
+.mb-50 { margin-bottom: 50px; }
+.mb-100 { margin-bottom: 100px; }
+
+/* Padding All */
+.p-5 { padding: 5px; }
+.p-10 { padding: 10px; }
+.p-15 { padding: 15px; }
+.p-20 { padding: 20px; }
+.p-25 { padding: 25px; }
+.p-30 { padding: 30px; }
+.p-40 { padding: 40px; }
+.p-50 { padding: 50px; }
+.p-100 { padding: 100px; }
+
+/* Padding Top */
+.pt-5 { padding-top: 5px; }
+.pt-10 { padding-top: 10px; }
+.pt-15 { padding-top: 15px; }
+.pt-20 { padding-top: 20px; }
+.pt-25 { padding-top: 25px; }
+.pt-30 { padding-top: 30px; }
+.pt-40 { padding-top: 40px; }
+.pt-50 { padding-top: 50px; }
+.pt-100 { padding-top: 100px; }
+
+/* Padding Left */
+.pl-5 { padding-left: 5px; }
+.pl-10 { padding-left: 10px; }
+.pl-15 { padding-left: 15px; }
+.pl-20 { padding-left: 20px; }
+.pl-25 { padding-left: 25px; }
+.pl-30 { padding-left: 30px; }
+.pl-40 { padding-left: 40px; }
+.pl-50 { padding-left: 50px; }
+.pl-100 { padding-left: 100px; }
+
+/* Padding Right */
+.pr-5 { padding-right: 5px; }
+.pr-10 { padding-right: 10px; }
+.pr-15 { padding-right: 15px; }
+.pr-20 { padding-right: 20px; }
+.pr-25 { padding-right: 25px; }
+.pr-30 { padding-right: 30px; }
+.pr-40 { padding-right: 40px; }
+.pr-50 { padding-right: 50px; }
+.pr-100 { padding-right: 100px; }
+
+/* Padding Bottom */
+.pd-5 { padding-bottom: 5px; }
+.pd-10 { padding-bottom: 10px; }
+.pd-15 { padding-bottom: 15px; }
+.pd-20 { padding-bottom: 20px; }
+.pd-25 { padding-bottom: 25px; }
+.pd-30 { padding-bottom: 30px; }
+.pd-40 { padding-bottom: 40px; }
+.pd-50 { padding-bottom: 50px; }
+.pd-100 { padding-bottom: 100px; }

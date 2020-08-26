@@ -1,0 +1,175 @@
+
+.member-form{
+
+  .member-list{
+    table{
+      width: 100%;
+      table-layout: fixed !important;
+
+      td{        
+        white-space: normal !important;
+        overflow: initial !important;
+        word-wrap: break-word;
+      }
+    }
+
+    ul.material-pagination{
+      list-style: none;
+    }
+
+    .toolbar{      
+      position: absolute;
+      right: 140px;
+      top: 33px;
+
+    }
+  }
+
+  .member-create{
+
+    .input-name{
+      display: inline-block;
+
+      >input{
+        margin-right: 5px;
+        float: left;
+      }
+
+    }
+
+    .content-btn{
+
+      button{
+        margin: 0 auto;
+        display: block;
+      }
+
+    }
+
+    .mx-datepicker{
+      width: 100% !important;
+    }
+
+  }
+
+}
+
+.member-view{
+
+  .tab-content{
+    padding: 15px;
+
+    .table{
+
+      td{
+        position: relative;
+
+        .close{
+          top: -15px;
+        }
+
+      }
+
+      .action-column{
+        width: 20px;
+        vertical-align: top !important;
+      }
+
+    }
+
+    .member-family{
+
+      table{
+        td{
+          width: 24%;
+        }
+
+        td:last-child{
+          width: 10px !important;
+          text-align: center;
+        }
+      }      
+
+    }
+
+    .member-address{
+
+      table{
+        td{
+          width: 35%;
+        }
+
+        td:last-child{
+          width: 10px !important;
+          text-align: center;
+        }
+      }      
+
+    }
+
+
+    .update-link{
+      padding: 0px 6px;
+      border-bottom: 1px dashed #3c8dbc;
+    }
+
+  }
+
+  .box-profile{
+    padding-bottom: 30px !important;
+
+    .image-container{
+      margin-bottom: 20px;
+    }
+
+    .content-name{
+      position: relative;
+      text-align: center;
+
+      input{
+        margin-top: 3px;
+      }
+
+      .form-info{
+        width: auto;
+        display: inline-block;
+      }
+
+    }
+
+    .list-group{
+      margin-top: 30px;
+
+      .list-group-item{
+        padding-right: 10px;
+      }
+
+    }
+
+    .close{
+      bottom: -15px;
+    }
+
+  }
+
+
+  .svg_edit, .svg_delete{
+    font-size: 10px;
+    vertical-align: top;
+
+    i{
+      vertical-align: top;
+    }
+  }
+
+}
+
+.el-dialog{
+  button.submit{
+    display: flex;
+    margin: 0 auto
+  } 
+}
+
+
+        
