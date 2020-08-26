@@ -329,7 +329,7 @@ class LoanController extends \yii\web\Controller
                     if($release_date <= $cutOff){
                         $cutOffYear = date('Y', strtotime($cutOff));
                         $getCutOff = LoanHelper::getCutOff($cutOffYear, $acc['loan_id'], $acc['member_id']);
-                        var_dump($getCutOff);
+                        //var_dump($getCutOff);
                         if($getCutOff){
                             $prepaid_interest += $getCutOff['finalPi'];
                             $interest_accum += $getCutOff['finalInt'];
