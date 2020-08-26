@@ -481,4 +481,111 @@ class LoanHelper
         ];
     }
 
+    public static function loanPayment($account_no, $loanDetails){
+        $success = false;
+        $error = null;
+
+        $principal_pay = $loanDetails['principal_pay'];
+        $prepaidInterest = $loanDetails['prepaid_pay'];
+        $ref_num = $loanDetails['ref_num'];
+        $product_id = $loanDetails['product_id'];
+        $transaction_date = $loanDetails['transaction_date'];
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+
+
+        $product = LoanProduct::findOne($loanDetails['product_id']);
+        $account = LoanAccount::findOne($account_no);
+
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("
+        select ifnull((select date_posted FROM `loan_transaction` where loan_account=:accountnumber and left(transaction_type, 3)='PAY' AND is_cancelled=0 order by date_posted desc limit 1), (SELECT release_date FROM `loanaccount` where account_no=:accountnumber limit 1)) as lasttrandate", [':accountnumber' => $account_no]);
+        $lastTransaction = $command->queryOne();
+        $noOfDaysPassed = date_diff(date_create($dateToday), date_create($lastTransaction['lasttrandate']));
+        $noOfDaysPassed = $noOfDaysPassed->format("%a");
+
+        $interestEarned = 0;
+        if($product->id == 1){//Regular loan base on diminishing amount
+            $interestEarned = ($account->principal_balance * ($account->int_rate/100))/30;
+            $interestEarned = $interestEarned * $noOfDaysPassed;
+        }
+
+        //1. insert to payment transaction
+        $loanTransaction = new LoanTransaction();
+        $loanTransaction->loan_account = $account_no;
+        //$loanTransaction->loan_id = $product->id;
+        //$loanTransaction->member_id = $account->member_id;
+
+        $amount = floatval($principal_pay) + floatval($prepaidInterest);
+
+        $running_balance = round($account->principal_balance - $principal_pay, 2);
+        $asSavings = 0;
+        if($running_balance < 0){
+            $asSavings = $principal_pay - $account->principal_balance;
+            $running_balance = 0;
+            $principal_pay = $account->principal_balance;
+            $amount = $amount - $asSavings;
+        }
+
+        if($running_balance == 0){
+            $account->status='Closed';
+            $loanTransaction="PAYCLOSE";
+        }
+
+        $loanTransaction->amount = round($amount, 2);
+        $loanTransaction->transaction_type='PAYPARTIAL';
+        $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+        $loanTransaction->transaction_date = $transaction_date;
+        $loanTransaction->running_balance = $running_balance;
+        $loanTransaction->remarks="payment thru payment facility";
+        $loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
+        $loanTransaction->interest_paid = 0;
+        $loanTransaction->OR_no= $ref_num;
+        $loanTransaction->principal_paid = round($principal_pay, 2);
+        $loanTransaction->arrears_paid = 0;
+        $loanTransaction->date_posted = $transaction_date;
+        $loanTransaction->interest_earned = round($interestEarned, 2);
+        
+        $account->principal_balance = $loanTransaction->running_balance;
+        $account->interest_balance = $account->interest_balance + $interestEarned;
+        $account->interest_accum = $account->interest_accum + $interestEarned;
+
+        if($account->save() && $loanTransaction->save())
+        {
+
+            //Calculate Rebate
+            if($running_balance == 0){
+
+            }
+            
+            if($asSavings > 0){
+
+                $savingsaccount = SavingsHelper::getMemberSavings($member_id, false);
+                if($savingsaccount){
+                    $pro_name = "LOAN";
+                    $getLoanProd = LoanProduct::findOne($account->loan_id);
+                    if($getLoanProd){
+                        $pro_name = $getLoanProd->product_name;
+                    }
+
+                    $savingsDetails = array();
+                    $savingsDetails['account_no'] = $savingsaccount->account_no;
+                    $savingsDetails['remarks'] = "From " .$pro_name. " payment. Posted as Payment from ". $$ref_num;
+                    $amount['amount'] = $asSavings;
+                    $amount['transaction_date'] = $transaction_date;
+
+                    $depositSavings = SavingsHelper::depositSavings($savingsDetails);
+                }
+                
+            }
+            $success = true;    
+        }
+        else{
+            $success = false;
+            $error = $loanTransaction->errors;
+        }
+
+        return ['success' => $success, 'error' => $error];
+
+    }
+
 }

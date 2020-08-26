@@ -13,9 +13,10 @@ export default {
 		return axios.post($baseUrl + '/general-voucher/get-name', params)
 	},
 
-	saveVoucherEntries(voucherModel, entryList){	
+	saveVoucherEntries(voucherModel, allAccounts, entryList){	
 		let params = {
 			voucherModel : voucherModel,
+			allAccounts : allAccounts,
 			entryList : entryList
 		}
 		return axios.post($baseUrl + '/general-voucher/save-voucher-entries', params)

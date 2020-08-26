@@ -188,7 +188,7 @@
             <el-col :span="8">
                 <div class="box box-primary">
                     <div class="box-header">
-                        <h3 class="box-title">TOTAL</h3>
+                        <h3 class="box-title">TOTAL PAYMENT</h3>
                     </div>
                     <div class="box-body payment-entry-list">
                         <el-table
@@ -204,9 +204,13 @@
                                 prop="type"
                                 label="Type"> 
                             </el-table-column>
+                            
                             <el-table-column
                                 prop="amount"
                                 label="Amount">
+                                <template slot-scope="scope">
+                                    {{ $nf.formatNumber(scope.row.principal, 2) }}
+                                </template>
                             </el-table-column>
                         </el-table>
                     </div>
@@ -838,6 +842,7 @@ export default {
             })
         },
         savePaymentList(paymentModel, allAccounts){
+            this.loadingPage = true
             this.$API.Payment.savePaymentList(paymentModel, allAccounts)
             .then(result => {
                 var res = result.data
@@ -870,7 +875,7 @@ export default {
                 console.log(err)
             })
             .then(_ => { 
-                main_preloader.style.display = 'none'
+                this.loadingPage = false
             })
         },
         cancelPayment(){

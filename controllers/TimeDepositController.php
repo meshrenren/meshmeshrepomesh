@@ -529,6 +529,7 @@ class TimeDepositController extends \yii\web\Controller
                             foreach ($entries as  $key => $ent) {
                                 $entries[$key]['member_id'] = $member_id;
                             }
+                            //Ren: 08-24-2020, Note: Add posted date
                             $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
                             if(!$saveEntries){
                                 $success = false;
@@ -635,7 +636,7 @@ class TimeDepositController extends \yii\web\Controller
 
         $model->maturity_date = $mature_days;
         $model->open_date = $today;
-        $model->date_created = $todayDateTime;
+        $model->date_created = date('Y-m-d H:i:s');
         $model->account_status = 'ACTIVE';
         $model->created_by = \Yii::$app->user->identity->id;
         $model->amount = $tdaccount['amount'];

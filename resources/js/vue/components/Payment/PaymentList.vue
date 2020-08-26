@@ -201,7 +201,7 @@ export default {
     		let vm = this
     		if(this.paymentRecord){
     			vm.$swal({
-	                title: "POst Payment",
+	                title: "Post Payment",
 	                text: "Are you sure you want to save payment list? This can't be undone",
 	                type: 'warning',
 	                showCancelButton: true,

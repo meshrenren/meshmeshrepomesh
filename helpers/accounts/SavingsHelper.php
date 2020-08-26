@@ -59,7 +59,7 @@ class SavingsHelper
     public static function saveSavingsTransaction($data){
         $model = new SavingsTransaction;
         $model->attributes = $data;
-        $model->transaction_date = isset($data['transaction_date']) ? $data['transaction_date'] : \Yii::$app->user->identity->id;
+        $model->transaction_date = isset($data['transaction_date']) ? $data['transaction_date'] : \Yii::$app->user->identity->DateNow;
         $model->transacted_by = \Yii::$app->user->identity->id;
         if(isset($data['reference_number'])){
             $model->ref_no=$data['reference_number'];
@@ -143,5 +143,47 @@ class SavingsHelper
         $listTemplate .= $accountDetail;
 
         return $listTemplate;
+    }
+
+    public static function depositSavings($savingsDetails){
+        $success = false;
+        $error = null;
+
+        $account_no = $savingsDetails['account_no'];
+        $remarks = $savingsDetails['remarks'];
+        $ref_num = $savingsDetails['ref_num'];
+        $amount = $savingsDetails['amount'];
+        $transaction_date = $savingsDetails['transaction_date'];
+
+        $savingsaccount = SavingAccounts::findOne($savingsDetails['account_no']);
+
+        $savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
+
+
+        $savingstransaction = new SavingsTransaction();
+        $savingstransaction->fk_savings_id = $account_no;
+        $savingstransaction->amount = $amount;
+        $savingstransaction->transaction_type = 'CASHDEP';
+        $savingstransaction->transacted_by = \Yii::$app->user->identity->id;
+        $savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
+        $savingstransaction->running_balance = $savingsaccount->balance + $amount;
+        $savingstransaction->remarks = $remarks;
+        $savingstransaction->ref_no = $ref_num;
+        
+        $savingsaccount->balance = $savingsaccount->balance + $amount;
+        
+        if($savingsaccount->save() && $savingstransaction->save())
+        {
+            $success = true;
+            
+        }
+        else
+        {
+            var_dump($savingstransaction->errors);
+            $error = $savingstransaction->errors;
+            $success = false;
+        }
+
+        return ['success' => $success, 'error' => $error];
     }
 }
