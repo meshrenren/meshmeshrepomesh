@@ -11,6 +11,10 @@
                     <label>Transaction Date</label>
                     <el-date-picker v-model="transactionDate" type="date" placeholder="Pick a date"> </el-date-picker>
                 </el-col>
+                <el-col :span = "24">
+                    <label>Remarks</label>
+                    <el-input type="textarea" v-model="remarks" ></el-input>
+                </el-col>
 			</el-row>
 		</div>
 		<div slot="footer" class="dialog-footer">
@@ -46,7 +50,8 @@ export default {
     		gvNumber 		: '',
     		pageLoading 	: false,
     		dialogVisible	: true,
-            transactionDate : dt
+            transactionDate : dt,
+            remarks         : null
     	}
     },
     mounted(){
@@ -67,6 +72,7 @@ export default {
     		}
     		let params = {
                 gv_num  : this.gvNumber,
+                remarks  : this.remarks,
                 transaction_date  : this.$df.formatDate(this.transactionDate, "YYYY-MM-DD") ,
     		}
     		this.$emit('processentervoucher', params)

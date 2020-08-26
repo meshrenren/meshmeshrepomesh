@@ -579,6 +579,7 @@ export default {
                     let loandata = {
                         evaluationForm: this.loanprofile,
                         gv_num : data.gv_num,
+                        remarks : data.remarks,
                         transaction_date : data.transaction_date
                     }
 

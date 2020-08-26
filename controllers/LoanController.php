@@ -521,6 +521,10 @@ class LoanController extends \yii\web\Controller
             $loanaccount_array  = $post;
             $loanaccount = (object) $post['evaluationForm'];
             $gv_num = $post['gv_num'];
+            $remarks = $post['remarks'];
+            if(!$remarks){
+                $remarks = "loan release";
+            }
 
             $currentDate = ParticularHelper::getCurrentDay();
             $systemDate = date("Y-m-d", strtotime($currentDate));
@@ -538,7 +542,7 @@ class LoanController extends \yii\web\Controller
             $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
             $loanTransaction->transaction_date = $transac_date;
             $loanTransaction->running_balance = $loanaccount->principal;
-            $loanTransaction->remarks = "loan release";
+            $loanTransaction->remarks = $remarks;
             $loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
             $loanTransaction->interest_paid = 0;
             $loanTransaction->OR_no = $gv_num;

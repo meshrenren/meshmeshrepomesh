@@ -8,7 +8,7 @@
             :summary-method="getSummaries"
     		show-summary >
             <el-table-column
-                prop="fullname">   
+                prop="fullname" fixed>   
                 <template slot="header" slot-scope="scope">
                     <el-input v-model="nameSearch" size="mini" placeholder="Search Member"/>
                 </template>                          
@@ -23,7 +23,7 @@
             </el-table-column>
             <el-table-column
                 prop="total"
-                label="Total">  
+                label="Total" fixed="right" >  
                 <template slot-scope="scope"> 
                 	{{ $nf.formatNumber(scope.row.total, 2) }} 
                 </template>                      
@@ -187,7 +187,7 @@ export default {
 		                	return prev;
 		              	}
 		            }, 0);
-		            sums[index] = ' ' + this.$nf.formatNumber(sumAmount)
+		            sums[index] = ' ' + this.$nf.formatNumber(sumAmount, 2)
 	          	} else {
 	            	sums[index] = 'N/A';
 	          	}

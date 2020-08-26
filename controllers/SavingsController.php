@@ -127,7 +127,7 @@ class SavingsController extends \yii\web\Controller
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
 
-            $currentDate = app\helpers\particulars\ParticularHelper::getCurrentDay();
+            $currentDate = ParticularHelper::getCurrentDay();
             $today = date("Y-m-d H:i:s", strtotime($currentDate));
 
         	$accountDetails = $post['account'];

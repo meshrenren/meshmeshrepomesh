@@ -230,8 +230,10 @@ export default {
             let totalPrincipal = 0
             let totalBalance = 0
             _forEach(cloneDeep(this.accountLoanList), rs=>{
-                totalPrincipal = parseFloat(totalPrincipal) + parseFloat(rs.principal)
-                totalBalance = parseFloat(totalBalance) + parseFloat(rs.principal_balance)
+            	if(parseFloat(rs.principal_balance) > 0){
+	                totalPrincipal = parseFloat(totalPrincipal) + parseFloat(rs.principal)
+	                totalBalance = parseFloat(totalBalance) + parseFloat(rs.principal_balance)
+            	}
             })
             dataAccount['totalPrincipal'] = totalPrincipal
             dataAccount['totalBalance'] = totalBalance
