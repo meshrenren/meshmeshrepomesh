@@ -5,6 +5,8 @@ namespace app\helpers\voucher;
 use Yii;
 use \app\models\GeneralVoucher;
 use \app\models\voucherDetails;
+use \app\models\LoanAccount;
+use \app\models\LoanProduct;
 
 use app\helpers\journal\JournalHelper;
 use app\helpers\particulars\ParticularHelper;
@@ -219,8 +221,8 @@ class VoucherHelper
                             continue;
                         }
 
-                        $product = LoanProduct::findOne($row['product_id']);
                         $account = LoanAccount::findOne($row['account_no']);
+                        $product = LoanProduct::findOne($account['loan_id']);
 
                         $isNewLoanPolicy = false;
                         //New policy was updates. Eg. No prepaid monthly for Applicance and interest earned calculcation
@@ -250,7 +252,7 @@ class VoucherHelper
                         $loanDetails['principal_pay'] = $row['credit'];
                         $loanDetails['prepaid_pay'] = $prepaidInterest;
                         $loanDetails['ref_num'] = $generalVoucher->gv_num;
-                        $loanDetails['product_id'] = $row['product_id'];
+                        $loanDetails['product_id'] = $account['loan_id'];
                         $loanDetails['transaction_date'] = $dateToday;
                         $loanPayment = LoanHelper::loanPayment($row['account_no'], $loanDetails);
                         
