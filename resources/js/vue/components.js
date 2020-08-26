@@ -103,6 +103,9 @@ Vue.component('voucher-view-form', VoucherViewForm)
 import EnterVoucher from './components/EnterVoucher.vue'
 Vue.component('enter-voucher', EnterVoucher)
 
+import VoucherDetailsList from './components/Voucher/VoucherDetailsList.vue'
+Vue.component('voucher-details-list', VoucherDetailsList)
+
 /* --- END --- */
 
 

@@ -2807,6 +2807,203 @@ class SeedController extends Controller
         }
     }
 
+    public function actionAddParticular(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_particulars ll');
+        $getParticular = $query->all();
+        foreach ($getParticular as $key2 => $prt) {
+            //Find existing particular
+            $getAccount = \app\models\AccountParticulars::find()->where(['name' => $prt['Particular']])->one();
+            if($getAccount){
+                //echo $prt['Particular'] . " has account particular \n";
+                $getAccount->acct_num = $prt['AcctNum']; 
+                $getAccount->save();
+            }
+            else{
+                $particular = new \app\models\AccountParticulars;
+                $particular->name = $prt['Particular'];
+                $particular->category = "OTHERS";
+                $particular->acct_num = $prt['AcctNum'];
+                $particular->save();
+                echo $prt['Particular'] . " has no account particular \n";
+            }
+        }
+    }
+
+
+    public function actionSeedMisclleneous(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_miscledger')->groupBy('Name')->orderBy('DateTransac');
+        $miscLedger = $query->all();
+        foreach ($miscLedger as $key => $misc) {
+            $getMember = \app\models\Member::find()->where(['old_db_name' => $misc['Name']])->one();
+            if($getMember){
+
+                //Add miscellaneous loan account
+                $product = \app\models\LoanProduct::find()->where(['id' => 20])->one();
+                $trans_serial = $product->trans_serial + 1;
+                $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+
+                if($misc['DateTransac'] != ""){
+                    $date = date("Y-m-d", strtotime($misc['DateTransac']));
+                    $release_date = $date;
+                }
+
+                $addLoanAccount = new \app\models\LoanAccount;
+                $addLoanAccount->account_no = $product->id . "-" . $trans_serial_pad;
+                $addLoanAccount->loan_id = $loan_id;
+                $addLoanAccount->member_id = $getMember->id;
+                $addLoanAccount->principal = 0;
+                $addLoanAccount->principal_balance = 0;
+                $addLoanAccount->term = 12;
+                $addLoanAccount->prepaid = 0 ;
+                $addLoanAccount->release_date = $release_date ;
+                $addLoanAccount->service_charge = 0;
+                $addLoanAccount->int_rate = 0;
+                $addLoanAccount->prepaid_int = 0;
+                $addLoanAccount->is_active = 1;
+                $addLoanAccount->status = 'Current';
+                $addLoanAccount->principal_amortization_quincena = 0;
+                $addLoanAccount->prepaid_amortization_quincena = 0;
+                $addLoanAccount->qiun_principal = 0;
+                $addLoanAccount->quin_prepaid = 0;
+                $addLoanAccount->interest_accum = 0;
+                $addLoanAccount->prepaid_accum = 0;
+                $addLoanAccount->olddb_transacnum = $loan['EntryNum'];
+
+                $acctSave = false;
+                if(!$addLoanAccount->save()){
+                    var_dump($addLoanAccount->getErrors());
+                }
+                else{
+                    $product->trans_serial = $trans_serial;
+                    $product->save();
+                    $acctSave = true;
+                }
+
+                if($acctSave){
+                    //Save Transactions
+                    $query2 = new \yii\db\Query;
+                    $query2->select('*');
+                    $query2->from('zold_miscledger')->where(['Name' => $misc['Name'] ])->orderBy('DateTransac ASC, EntryNum DESC');
+                    $ledgerList = $query->all();
+
+                    $accountPrincipal = 0;
+                    $accountbalance = 0;
+                    $count = 0;
+                    foreach ($ledgerList as $key => $ledger) {
+                        
+                        //do not include Calamity Loan
+                        if($ledger['ItemName']  != 'Calamity Loan'){
+                            $ItemAmount = floatval(str_replace(",", "", $ledger['ItemAmount']));
+                            $ItemAmountPaid = floatval(str_replace(",", "", $ledger['ItemAmountPaid']));
+                            $ItemBalance = floatval(str_replace(",", "", $ledger['ItemBalance']));
+
+                            $type = "PAYPARTIAL";
+                            $principal_paid = 0;
+                            $principal = 0;
+
+                            if($ItemAmount > 0){
+                                $amount = $ItemAmount;
+                                $type = "EMERGENCY";
+                            }
+                            else{
+                                if($ItemAmountPaid > 0){
+                                    $principal_paid = $ItemAmountPaid;
+                                    $amount = $ItemAmountPaid;
+                                }
+                                else if($ItemAmountPaid < 0){
+                                    $loan = $ItemAmountPaid * -1;
+                                    $amount = $loan;
+                                    $type = "EMERGENCY";
+                                    $principal = $amount;
+                                }
+
+                            }
+
+                            if($count == 0){
+                                $type = "RELEASE";
+                                $principal = $amount;
+                            }
+                            
+
+                            $date = date("Y-m-d", strtotime($misc['DateTransac']));
+
+                            $loanTransaction = new \app\models\LoanTransaction;
+                            $loanTransaction->loan_account = $addLoanAccount->account_no;
+                            $loanTransaction->amount = $amount;
+                            $loanTransaction->loan_id = $accs->loan_id;
+                            $loanTransaction->member_id = $accs->member_id;
+                            $loanTransaction->transaction_type = $type;
+                            $loanTransaction->transacted_by = 18;
+                            $loanTransaction->transaction_date = $date;
+                            $loanTransaction->running_balance = $ItemBalance;
+                            $loanTransaction->remarks = $ledger['ItemName'] . ": Migrate from old db";
+                            $loanTransaction->prepaid_intpaid = 0;
+                            $loanTransaction->interest_paid = 0;
+                            $loanTransaction->OR_no = $ledger['ORGVNum'];
+                            $loanTransaction->principal_paid = $principal_paid;
+                            $loanTransaction->arrears_paid = 0;
+                            $loanTransaction->date_posted = $date;
+                            $loanTransaction->interest_earned = 0;
+                            $loanTransaction->olddb_entrynum = $ledger['EntryNum'];
+
+                            if($addLoanAccount->save()){
+                                $accountbalance = $ItemBalance;
+                                if($principal > $accountPrincipal){
+                                    if($ItemBalance > $principal){
+                                        $accountPrincipal += $principal;
+                                    }
+                                    else{
+                                        $accountPrincipal = $principal;
+                                    }
+                                }
+                            }
+                            else{
+                                var_dump($addLoanAccount->getErrors());
+                            }
+
+                            $count++;
+                        }
+                    }
+
+                    $addLoanAccount->principal = $accountbalance;
+                    $addLoanAccount->principal_balance = $accountbalance;
+                    $addLoanAccount->save();
+                }
+
+                
+            }
+        }
+    }
+
+    public function actionVoucherPostedDate(){
+        $getGV = \app\models\GeneralVoucher::find()->all();
+        foreach ($getGV as $keyGv => $gv) {
+            $getList = \app\models\VoucherDetails::find()->where(['voucher_id' => $gv->id])->all();
+            foreach ($getList as $key => $list) {
+                $list->posted_date = $gv->date_transact;
+                $list->save();
+            }
+            $gv->posted_date = $gv->date_transact;
+            $gv->Save();
+        }
+    }
+
+
+    public function actionPaymentPostedDate(){
+        $getOR = \app\models\PaymentRecord::find()->all();
+        foreach ($getOR as $keyGv => $or) {
+            $getList = \app\models\PaymentRecordList::find()->where(['payment_record_id' => $or->id])->all();
+            foreach ($getList as $key => $list) {
+                $list->posted_date = $or->posted_date;
+                $list->save();
+            }
+        }
+    }
+
 }
 
 

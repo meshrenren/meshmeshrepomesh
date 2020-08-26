@@ -35,7 +35,6 @@ class PaymentHelper
         	$payment = PaymentRecord::findOne($data['id']);
         }
       	
-      	$created_date = isset($data['date_transact']) ? $data['date_transact'] : (isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->DateTimeNow : date('Y-m-d'));
         $payment->date_transact = $data['date_transact'];
         $payment->or_num = $data['or_num'];
         $payment->name = $data['name'];
@@ -43,7 +42,7 @@ class PaymentHelper
         $payment->posting_code = $data['posting_code'];
         $payment->check_number = $data['check_number'];
         $payment->amount_paid = $data['amount_paid'];
-        $payment->created_date = $created_date;
+        $payment->created_date = date('Y-m-d H:i:s');;
         $payment->created_by = isset(\Yii::$app->user) && isset(\Yii::$app->user->identity) ? \Yii::$app->user->identity->id : 18;
         //$payment->created_by = 18; //CINCO
         if(isset($data['posted_date'])){
@@ -60,7 +59,7 @@ class PaymentHelper
         return false;
     }
 
-    public static function insertAccount($list, $payment_record_id){
+    public static function insertAccount($list, $payment_record_id, $posted_date = null){
     	$success = true;
     	$paymentModel = PaymentRecord::findOne($payment_record_id);
         foreach ($list as $key => $value) {
@@ -89,6 +88,10 @@ class PaymentHelper
 
             if(isset($value['remarks'])){
             	$payment->remarks = $value['remarks'];
+            }
+
+            if($posted_date){
+                $voucher->posted_date = $posted_date;
             }
 
             if(!$payment->save()){
@@ -144,7 +147,7 @@ class PaymentHelper
 			$journalheader['trans_type'] = 'Payment';
 			
 			if($paymentHeader->posted_date){
-				echo "Payment with OR Number " . $paymentHeader['or_num'] . ' for ' . $paymentHeader['name'] . ' is already posted.<br/>';
+				echo "Payment with OR Number " . $paymentHeader->or_num . ' for ' . $paymentHeader->name . ' is already posted.<br/>';
 				echo "<h3> Please close the window </h3>";
 				die;
 			}
@@ -255,6 +258,8 @@ class PaymentHelper
 					if($running_balance < 0){
 						$asSavings = $principal_pay - $account->principal_balance;
 						$running_balance = 0;
+						$principal_pay = $account->principal_balance;
+						$amount = $amount - $asSavings;
 					}
 
 					$loanTransaction->amount = round($amount, 2);
@@ -290,7 +295,7 @@ class PaymentHelper
 								$pro_name = $getLoanProd->product_name;
 							}
 
-							$savingstransaction->fk_savings_id = $row['account_no'];
+							$savingstransaction->fk_savings_id = $savingsaccount->account_no;
 							$savingstransaction->amount = $asSavings;
 							$savingstransaction->transaction_type = 'CASHDEP';
 							$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
@@ -409,9 +414,6 @@ class PaymentHelper
 						$success = false;
 						break;
 					}
-					
-					
-					
 					
 				}
 				

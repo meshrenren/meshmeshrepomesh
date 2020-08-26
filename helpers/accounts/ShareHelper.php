@@ -128,4 +128,43 @@ class ShareHelper
 
         return $listTemplate;
     }
+
+    public static function depositShare($shareDetails){
+        $success = false;
+        $error = null;
+
+        $account_no = $shareDetails['account_no'];
+        $remarks = $shareDetails['remarks'];
+        $ref_num = $shareDetails['ref_num'];
+        $amount = $shareDetails['amount'];
+        $transaction_date = $shareDetails['transaction_date'];
+
+        $shareaccount = Shareaccount::findOne($shareDetails['account_no']);
+
+        $sharetransaction = new ShareTransaction();
+        $sharetransaction->fk_share_id = $account_no;
+        $sharetransaction->amount = $amount;
+        $sharetransaction->transaction_type = 'CASHDEP';
+        $sharetransaction->transacted_by = \Yii::$app->user->identity->id;
+        $sharetransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
+        $sharetransaction->running_balance = $shareaccount->balance + $amount;
+        $sharetransaction->remarks = $remarks;
+        $sharetransaction->reference_number = $ref_num;
+        
+        $shareaccount->balance = $shareaccount->balance + $amount;
+        
+        if($shareaccount->save() && $sharetransaction->save())
+        {
+            $success = true;
+            
+        }
+        else
+        {
+            //var_dump($savingstransaction->error);
+            $error = $sharetransaction->errors;
+            $success = false;
+        }
+
+        return ['success' => $success, 'error' => $error];
+    }
 }
