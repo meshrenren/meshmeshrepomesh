@@ -28,15 +28,19 @@ class TimeDepositHelper
         return $accountList;
     }
 
-    public static function getSavingsCalculation($tdAccount){
+    public static function getSavingsCalculation($tdAccount, $dateProcess = null){
         $tdAccount = (object) $tdAccount;
 
         $currentDate = ParticularHelper::getCurrentDay();
         $systemDate = date("Y-m-d", strtotime($currentDate));
+        if($dateProcess == null){
+            $dateProcess = $systemDate;
+        }
 
-        $diff_days = GlobalHelper::getDiffDays($tdAccount->maturity_date, $systemDate);
+        $diff_days = GlobalHelper::getDiffDays($tdAccount->maturity_date, $dateProcess);
         $sa_int_rate = GlobalHelper::getSAInterest();
         $days_in_year = static::daysInYear();
+
         $balance = $tdAccount->balance;
         $interest = 0;
         if($diff_days > 0 && $balance > 0){
@@ -71,5 +75,64 @@ class TimeDepositHelper
         }
 
         return $rate;
+    }
+
+    public static function printList($postData){
+        $account_no = $postData['account_no'];
+        $account_name = $postData['account_name'];
+        $balance = $postData['balance'];
+        $transaction = $postData['transaction'];
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Time Deposit Account</div></tr>
+        </table>';
+
+        $accountDetail = '<table>
+            <tr>
+                <td style = "font-weight: bold;">Account Name: </td> 
+                <td><span>[account_name]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Account Number: </td> 
+                <td>[account_no] </td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Amount: </td> 
+                <td>[amount]</td>
+            </tr>
+        </table>';
+        $accountDetail = str_replace('[account_name]', $account_name, $accountDetail);
+        $accountDetail = str_replace('[account_no]', $account_no, $accountDetail);
+        $accountDetail = str_replace('[amount]', Yii::$app->view->formatNumber($amount), $accountDetail);
+
+        $listTemplate .= $accountDetail;
+
+        if(count($transaction) > 0){
+            $transTable = '<table class = "table table-bordered mt-10" width = "100%">
+                <tr>
+                    <th>Transaction</th> 
+                    <th>Amount</th> 
+                    <th>Remarks</th> 
+                    <th>Balance</th> 
+                </tr>';
+            foreach ($transaction as $trans) {
+                $transDate = date('Y-m-d', strtotime($trans['transaction_date']));
+                $amount = $trans['amount'] && floatval($trans['amount']) > 0 ? Yii::$app->view->formatNumber($trans['amount']) : "";
+                $amount = $trans['balance'] && floatval($trans['balance']) > 0 ? Yii::$app->view->formatNumber($trans['balance']) : "";
+                $transTable .= '<tr>
+                    <td>'.$transDate.'</td> 
+                    <td>'.$amount.'</td> 
+                    <td>'.$trans['remarks'].'</td> 
+                    <td>'.$balance.'</td> 
+                </tr>';
+            }
+
+            $transTable .= '</table>';
+        }
+        $listTemplate = $listTemplate . $transTable;
+
+        $listTemplate .= $accountDetail;
+
+        return $listTemplate;
     }
 }

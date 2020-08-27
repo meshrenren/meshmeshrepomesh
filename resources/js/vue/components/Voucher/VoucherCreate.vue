@@ -421,19 +421,37 @@ export default {
             console.log('addAccounts')
             let vm = this
             vm.loadingPage = true
+
+            let isBalance = true
+            let checkBalanceText = ""
             _forEach(vm.accountSelected.list, rs =>{
                 let acct = cloneDeep(rs)
                 if((rs.credit && Number(rs.credit) > 0) || (rs.debit && Number(rs.debit) > 0)){
-                    //Check for existing account with same account number
-                    let getInd = vm.getInAllAccount(rs.key)
-                    if(getInd >= 0){
-                        vm.allTotalAccount[getInd].credit = Number(rs.credit)
-                        vm.allTotalAccount[getInd].debit = Number(rs.debit)
+                    let toAdd = true;
+                    if(rs.credit && Number(rs.credit) > 0){
+                        if(rs.type == "LOAN" && !rs.is_prepaid){
+                            let bal = rs.balance < 0 ? Number(rs.balance) * -1 : rs.balance
+                            if(Number(rs.credit) > Number(bal) || Number(rs.debit) > Number(balance)) {
+                                isBalance = false
+                                toAdd = false
+                                checkBalanceText += rs.product_name + ", "
+                            }
+                        }
+
                     }
-                    else{
-                        //Push to  allaccount
-                        vm.allTotalAccount.push(acct)
+                    if(toAdd){
+                        //Check for existing account with same account number
+                        let getInd = vm.getInAllAccount(rs.key)
+                        if(getInd >= 0){
+                            vm.allTotalAccount[getInd].credit = Number(rs.credit)
+                            vm.allTotalAccount[getInd].debit = Number(rs.debit)
+                        }
+                        else{
+                            //Push to  allaccount
+                            vm.allTotalAccount.push(acct)
+                        }
                     }
+                    
                 }
             })
             vm.loadingPage = false
@@ -651,9 +669,23 @@ export default {
                     arr.balance = parseFloat(rs.principal_balance).toFixed(2)
                     arr.particular_id = rs.product.particular_id
 
-                    let credit = this.getAmount(arr.key, 'CREDIT')
-                    arr.credit = credit
-                    arr.showDebit = false
+                    if(arr.balance > 0){
+                        let credit = this.getAmount(arr.key, 'CREDIT')
+                        arr.credit = credit
+                    }
+                    else{
+                        arr.showFalse = false
+                        arr.credit = 0
+                    }
+
+                    if(arr.balance < 0){
+                        let debit = this.getAmount(arr.key, 'DEBIT')
+                        arr.debit = debit
+                    }
+                    else{
+                        arr.showDebit = false
+                        arr.debit = 0
+                    }
 
                     arr.add_as_savings = null
                     arr.savings_data = savingsData

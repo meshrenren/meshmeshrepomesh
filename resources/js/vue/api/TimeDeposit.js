@@ -3,9 +3,10 @@ let $baseUrl = window.Yii.baseUrl
 
 export default {
 
-	savingsCalculation(account_id){	
+	savingsCalculation(account_id, date = null){	
 		let params = {
-			account_id : account_id
+			account_id 	: account_id,
+			date 		: date
 		}
 		return axios.post($baseUrl + '/time-deposit/savings-calculation', params)
 	},

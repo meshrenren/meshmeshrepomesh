@@ -122,6 +122,7 @@ class LoanHelper
     	
     	$product = LoanProduct::findOne($loanDetails['product_id']);
     	$account = LoanAccount::findOne($loanDetails['accountnumber']);
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
     	
 
     	
@@ -132,6 +133,15 @@ class LoanHelper
     	$interestEarned = 0; 
     	
     	$totalToPay =  $loanDetails['principal_pay'] +  $loanDetails['prepaid_int_pay'] + $loanDetails['interest_pay'];
+
+        $running_balance = round($account->principal_balance - $principal_pay, 2);
+        $asInitialPayment = 0;
+        if($running_balance < 0){
+            $asInitialPayment = $principal_pay - $account->principal_balance;
+            $running_balance = 0;
+            $principal_pay = $account->principal_balance;
+            $totalToPay = $totalToPay - $asInitialPayment;
+        }
     	
     	
     	//1. insert to payment transaction
@@ -141,39 +151,32 @@ class LoanHelper
     	$loanTransaction->transaction_type='PAYCLOSE';
     	$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
     	$loanTransaction->transaction_date = $transaction_date;
-    	$loanTransaction->running_balance = round($account->principal_balance - $principal_pay, 2);
+    	$loanTransaction->running_balance = round($running_balance, 2);
     	$loanTransaction->remarks="payment thru payment facility";
     	$loanTransaction->prepaid_intpaid = round($prepaidInterest, 2);
     	$loanTransaction->interest_paid = $loanDetails['interest_pay'];
     	$loanTransaction->OR_no= $loanDetails['reference'];
     	$loanTransaction->principal_paid = round($principal_pay, 2);
     	$loanTransaction->arrears_paid = 0;
-    	$loanTransaction->date_posted = $transaction_date;
+    	$loanTransaction->date_posted = $dateToday;
     	$loanTransaction->interest_earned = round($interestEarned, 2);
     	
     	$account->principal_balance = $loanTransaction->running_balance;
     	$account->interest_balance = $account->interest_balance - $loanDetails['interest_pay'];
     	$account->status = "Closed";
-    	
-    	if($loanTransaction->running_balance<0)
-    	{
-    		return "achieved negative. might want to proceed to close payment.";
 
-    		
-    	}
-    	
     	//3. update loan balance
     	if($loanTransaction->save() && $account->save())
     	{
-    		return "success";
-    		
+    		return ['success' => true, 'asInitialPayment' => $asInitialPayment];
     	}
     	
     	else
     	{
     		return [
-    				'lnTransaction' => $loanTransaction->errors,
-    				'lnAccount' => $account->errors
+                'success'   => false,
+    			'lnTransaction' => $loanTransaction->errors,
+    			'lnAccount' => $account->errors
     		];
     		
     		
@@ -542,7 +545,7 @@ class LoanHelper
         $loanTransaction->OR_no= $ref_num;
         $loanTransaction->principal_paid = round($principal_pay, 2);
         $loanTransaction->arrears_paid = 0;
-        $loanTransaction->date_posted = $transaction_date;
+        $loanTransaction->date_posted = $dateToday;
         $loanTransaction->interest_earned = round($interestEarned, 2);
         
         $account->principal_balance = $loanTransaction->running_balance;
@@ -577,6 +580,61 @@ class LoanHelper
                 }
                 
             }
+            $success = true;    
+        }
+        else{
+            $success = false;
+            $error = $loanTransaction->errors;
+        }
+
+        return ['success' => $success, 'error' => $error];
+
+    }
+
+    public static function loanRefund($account_no, $loanDetails){
+        $success = false;
+        $error = null;
+
+        $amount = $loanDetails['amount'];
+        $ref_num = $loanDetails['ref_num'];
+        $transaction_date = $loanDetails['transaction_date'];
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+
+        $account = LoanAccount::findOne($account_no);
+
+        $principal_pay = floatval($amount) * -1;
+        $running_balance = round($account->principal_balance - $principal_pay, 2);
+       
+        $transaction_type="REFUND";
+        if($running_balance == 0){
+            $account->status='Closed';
+        }
+
+        $loanTransaction = new LoanTransaction();
+        $loanTransaction->loan_account = $account_no;
+        $loanTransaction->amount = round($amount, 2);
+        $loanTransaction->transaction_type= $transaction_type;
+        $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+        $loanTransaction->transaction_date = $transaction_date;
+        $loanTransaction->running_balance = $running_balance;
+        $loanTransaction->remarks="refund";
+        $loanTransaction->prepaid_intpaid = 0;
+        $loanTransaction->interest_paid = 0;
+        $loanTransaction->OR_no= $ref_num;
+        $loanTransaction->principal_paid = round($principal_pay, 2);
+        $loanTransaction->arrears_paid = 0;
+        $loanTransaction->date_posted = $dateToday;
+        $loanTransaction->interest_earned = 0;
+        
+        $account->principal_balance = $loanTransaction->running_balance;
+
+        if($account->save() && $loanTransaction->save())
+        {
+            //Calculate Rebate
+            if($running_balance == 0){
+
+            }
+
             $success = true;    
         }
         else{

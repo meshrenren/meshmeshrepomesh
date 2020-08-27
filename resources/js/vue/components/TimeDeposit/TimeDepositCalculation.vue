@@ -30,7 +30,17 @@
 		    </el-table-column>
 		</el-table>
 		<template  v-if = "timeDeposit.account_status == 'MATURED'">
-			<el-row :gutter = "5" class = "mt-20">
+            <el-row :gutter = "5" class = "mt-20">
+                <el-col :span = "4">
+                    <label>Date</label>
+                </el-col>
+                <el-col :span = "12">
+                    <el-date-picker v-model="openDate" @change = "changeDate" type="date" placeholder="Pick a date"> </el-date-picker>
+                </el-col>
+            </el-row>
+
+			<el-row :gutter = "5" class = "mt-5">
+                
 				<el-col :span = "14">
 					<label>Withdraw Amount</label>
 					<el-input v-model="withdrawAmt"></el-input>
@@ -40,7 +50,8 @@
 					<el-input v-model="renewAmt" :disabled = "true"></el-input>
 				</el-col>
 			</el-row>
-			<el-button class = "mt-10" type = "primary" @click = "showVoucher()" v-if = "timeDeposit.account_status == 'MATURED'">Process</el-button>
+			<el-button class = "mt-10" type = "primary" @click = "showVoucher()" v-if = "timeDeposit.account_status == 'MATURED'">Withdraw</el-button>
+            <el-button class = "mt-10" type = "primary" @click = "print()">Print</el-button>
 		</template>
 		
 
@@ -85,7 +96,8 @@ export default {
 			withdrawAmt 	: 0,
 			renewAmt 		: 0,
 			isShowVoucher 	: false,
-			pageLoading 	: false
+			pageLoading 	: false,
+            openDate        : moment(this.$systemDate)
 
 		}
 	},
@@ -122,8 +134,17 @@ export default {
         genVoucher(){
         	let list = []
         	//Set tdaccount debit
-        	let arr = {particular_name: "Time Deposit", amount: this.timeDeposit.balance, type : "DEBIT" }
+        	let arr = {particular_name: "Time Deposit", amount: this.timeDeposit.amount, type : "DEBIT" }
         	list.push(arr)
+
+            if(this.timeDeposit.transactions && this.timeDeposit.transactions.length > 0){
+                _forEach(this.timeDeposit.transactions, tr => {
+                    if(tr.transaction_type == 'TDINTEREST'){
+                        let arr = {particular_name: "Interest Expense", amount: tr.amount, type : "DEBIT" }
+                        list.push(arr)
+                    }
+                })
+            }
 
         	// If has interest savings. Set as Interest Expense
         	if(this.savingsInterest){
@@ -147,11 +168,29 @@ export default {
         }
     },
 	methods:{
-		getCalculation(id){
+        changeDate(val){
+            let dt = this.$df.formatDate(this.$df.formatDate(val, "YYYY-MM-DD"), "X")
+            let tdMature = this.$df.formatDate(this.$df.formatDate(this.timeDeposit.maturity_date, "YYYY-MM-DD"), "X")
+            
+            if(dt < tdMature){
+                new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: 'Select date after or on maturity date.',
+                    timeout: 2500
+                }).show()
+
+                return
+            }
+
+            this.getCalculation(this.timeDeposit.accountnumber, this.$df.formatDate(val, "YYYY-MM-DD"))
+        },
+		getCalculation(id, date = null){
 			this.pageLoading = true
 
 			this.savingsInterest = null
-			this.$API.TimeDeposit.savingsCalculation(id)
+			this.$API.TimeDeposit.savingsCalculation(id, date)
             .then(result => {
             	let res = result.data
                 this.savingsInterest = res.data
@@ -167,6 +206,47 @@ export default {
                 this.pageLoading = false
             })
 		},
+        print(){
+            if(this.transactionList.length == 0){
+                new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: "No transaction to process.",
+                    timeout: 3000
+                }).show();
+                return
+            }
+            console.log("Here")
+            this.pageLoading = true
+
+            let account = cloneDeep(this.timeDeposit)
+            let accName = account.account_name
+            if(account.member){
+                accName = account.member.fullname
+            }
+
+            let data = {
+                account_no : account.accountnumber,
+                account_name : accName,
+                amount : account.amount,
+                transaction : this.transactionList
+            }
+
+            this.$API.General.printList(data, type, 'TimeDeposit')
+            .then(result => {
+                let res = result.data
+                if(type == 'pdf'){
+                    this.exporter(type, 'Time Deposit Account', res)
+                }
+                else if(type == 'print'){
+                    this.winPrint(res.data, 'Time Deposit Account')
+                }
+            })
+            .catch(err => { console.log(err)})
+            .then(_ => { this.pageLoading = false })
+
+        },
         showVoucher(){
         	this.isShowVoucher = true
         },
@@ -191,7 +271,8 @@ export default {
         		savings_transaction : savings_transaction,
         		withdraw_amount : this.withdrawAmt,
         		renew_amount : this.renewAmt,
-        		general_voucher : data
+        		general_voucher : data,
+                open_date : this.$df.formatDate(this.openDate, "YYYY-MM-DD")
         	}
 
         	this.$API.TimeDeposit.processAccount(params)
@@ -223,12 +304,13 @@ export default {
 			this.timeDeposit = val
 
 			setTimeout(() => {
+                this.openDate = moment(this.$systemDate)
 				this.getCalculation(this.timeDeposit.accountnumber)
 			}, 500)
 		},
 		withdrawAmt: function(val){
 			let renew = Number(this.balanceAmt) - Number(val)
-			this.renewAmt = renew
+			this.renewAmt = this.$nf.numberFixed(renew, 2)
 		}
 	}
 }
