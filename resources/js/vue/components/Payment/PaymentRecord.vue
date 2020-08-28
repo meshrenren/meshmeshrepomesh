@@ -671,21 +671,31 @@ export default {
             return getInd
         },
         addAccounts(){
-            console.log('addAccounts')
+
             let vm = this
             vm.loadingPage = true
+
+            let isBalance = true
+            let checkBalanceText = ""
             _forEach(vm.accountSelected.list, rs =>{
                 let acct = cloneDeep(rs)
                 if(rs.amount && Number(rs.amount) > 0){
-                    //Check for existing account with same account number
-                    let getInd = vm.getInAllAccount(rs.key)
-                    if(getInd >= 0){
-                        vm.allTotalAccount[getInd].amount = Number(rs.amount)
+                    if(rs.type == "LOAN" && !rs.is_prepaid && Number(rs.amount) > Number(rs.balance)){
+                        isBalance = false
+                        checkBalanceText += rs.product_name + ", "
                     }
                     else{
-                        //Push to  allaccount
-                        vm.allTotalAccount.push(acct)
+                       //Check for existing account with same account number
+                        let getInd = vm.getInAllAccount(rs.key)
+                        if(getInd >= 0){
+                            vm.allTotalAccount[getInd].amount = Number(rs.amount)
+                        }
+                        else{
+                            //Push to  allaccount
+                            vm.allTotalAccount.push(acct)
+                        } 
                     }
+                    
                 }
 
                 if(rs.add_as_savings && Number(rs.add_as_savings) > 0 && rs.savings_data){
@@ -708,6 +718,19 @@ export default {
                 }
             })
             vm.loadingPage = false
+
+            if(!isBalance){
+                checkBalanceText = checkBalanceText.slice(0, -2);
+                let text = "Some PAYMENT is greater than LOAN BALANCE: " + checkBalanceText
+                new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: text,
+                    timeout: 3000
+                }).show();
+                return
+            }
 
             if(!this.disableAccountName){ 
                 vm.accountSelected.member_id = null

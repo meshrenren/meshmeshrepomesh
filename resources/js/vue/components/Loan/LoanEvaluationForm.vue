@@ -41,7 +41,7 @@
 	        </div>
 	        <div class = "row">
 	        	<div class = "col-md-12" style = "margin-top: 20px;">
-	        		<table class="centertable" style="min-width: 400px;">
+	        		<table class="centertable evaluation-form" style="min-width: 400px;">
 						<tr>
 		        			<th>
 		        				<h3>Debit</h3>
@@ -146,7 +146,7 @@
 		        				<span class = "label-title"><b>NET CASH</b></span>
 						  	</th>
 						  	<td>
-						  		<span style="font-weight: bold; font-size: 20px !important;">{{ $nf.formatNumber(evaluationForm.net_cash) }}</span>
+						  		<span style="font-weight: bold;">{{ $nf.formatNumber(evaluationForm.net_cash) }}</span>
 						  	</td>
 						</tr>
 						<tr>
@@ -168,7 +168,7 @@
 	        </div>
 	        <div class = "row">
 	        	<div class = "col-md-12" style = "margin-top: 20px;">
-	        		<table class="centertable"  style="text-align: left;">
+	        		<table  style="text-align: left;">
 	        			<tr>
 	        				<th>Loan Amount: </th>
 	        				<td>

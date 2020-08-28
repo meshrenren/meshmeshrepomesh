@@ -13,6 +13,7 @@ use app\models\AccountParticulars;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\accounts\ShareHelper;
+use app\helpers\accounts\TimeDepositHelper;
 
 
 use yii\db\conditions\OrCondition;
@@ -224,6 +225,8 @@ class SiteController extends Controller
                 $template = SavingsHelper::printList($postData['data']);
             else if($accType == 'Share')
                 $template = ShareHelper::printList($postData['data']);
+            else if($accType == 'TimeDeposit')
+                $template = TimeDepositHelper::printList($postData['data']);
             
             $type = $postData['type'];
             if($type == "pdf"){

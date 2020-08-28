@@ -2,6 +2,10 @@ body{
 	font-size: 20px;
 }
 
+table.evaluation-form td, table.evaluation-form th{
+	font-size: 25px !important;
+}
+
 #printPageContent .label-title{
 	font-weight: bold;
 }

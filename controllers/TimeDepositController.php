@@ -387,11 +387,12 @@ class TimeDepositController extends \yii\web\Controller
 
             $post = \Yii::$app->getRequest()->getBodyParams();
             $account_id = $post['account_id'];
+            $date = isset($post['date']) && $post['date'] ? $post['date'] : null;
         
             $account = \app\models\TimeDepositAccount::find()->where(['accountnumber' => $account_id])->one();
             $calculation = 0;
             if($account){
-                $calculation = TimeDepositHelper::getSavingsCalculation($account);
+                $calculation = TimeDepositHelper::getSavingsCalculation($account, $date);
             }
 
             return [
@@ -436,6 +437,9 @@ class TimeDepositController extends \yii\web\Controller
                 $withdraw_amount = $post['withdraw_amount'];
                 $renew_amount = $post['renew_amount'];
                 $voucher = $post['general_voucher'];
+                $open_date = isset($post['open_date']) ? $post['open_date'] : Yii::$app->user->identity->DateTimeNow;
+
+                $transaction_date = isset($voucher['transaction_date']) ? $voucher['transaction_date'] : \Yii::$app->user->identity->DateTimeNow;
 
                 $account = \app\models\TimeDepositAccount::find()->where(['accountnumber' => $account_id])->one();
                 $member = \app\models\Member::find()->where(['id' => $account->member_id])->one();
@@ -450,7 +454,7 @@ class TimeDepositController extends \yii\web\Controller
                     $trans->amount = $savings_transaction['amount'];
                     $trans->balance = $balance;
                     $trans->remarks = $savings_transaction['remarks'];
-                    $trans->transaction_date = Yii::$app->user->identity->DateTimeNow;
+                    $trans->transaction_date = $transaction_date;
                     $trans->transacted_by = \Yii::$app->user->identity->id;
                     if($trans->save()){
                         $account->balance = $balance;
@@ -468,7 +472,7 @@ class TimeDepositController extends \yii\web\Controller
                     $trans->amount = $balance;
                     $trans->balance = 0;
                     $trans->remarks = '';
-                    $trans->transaction_date = \Yii::$app->user->identity->DateTimeNow;
+                    $trans->transaction_date = $transaction_date;
                     $trans->transacted_by = \Yii::$app->user->identity->id;
                     if($trans->save()){
                         $account->balance = $balance;
@@ -520,7 +524,7 @@ class TimeDepositController extends \yii\web\Controller
                         }
                         $voucherData['name'] = $name;
                         $voucherData['type'] = $type;
-                        $voucherData['date_transact'] = \Yii::$app->user->identity->DateTimeNow;
+                        $voucherData['date_transact'] = isset($voucher['transaction_date']) ? $voucher['transaction_date'] : \Yii::$app->user->identity->DateTimeNow;
 
                     
                         $voucherModel = VoucherHelper::saveVoucher($voucherData);

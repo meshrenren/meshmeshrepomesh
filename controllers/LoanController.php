@@ -442,24 +442,6 @@ class LoanController extends \yii\web\Controller
     		$loanmodel->member_id = $loanaccount->member_id;
     		$loanmodel->date_created = date('Y-m-d H:i:s');
     		
-    		/*$loanTransaction = new LoanTransaction();
-    		$loanTransaction->loan_account = $loanmodel->account_no;
-    		$loanTransaction->amount = $loanaccount->amount;
-    		$loanTransaction->transaction_type='Verified';
-    		$loanTransaction->transacted_by = \Yii::$app->user->identity->id;
-    		$loanTransaction->transaction_date = date('Y-m-d');
-    		$loanTransaction->running_balance = $loanaccount->amount;
-    		$loanTransaction->remarks = "loan release";
-    		$loanTransaction->prepaid_intpaid = $loanaccount->credit_preinterest;
-    		$loanTransaction->interest_paid = 0;
-    		$loanTransaction->OR_no = "";
-    		$loanTransaction->principal_paid = 0;
-    		$loanTransaction->arrears_paid = 0;
-    		$loanTransaction->date_posted = date('Y-m-d');
-    		$loanTransaction->interest_earned = 0;*/
-    		
-    		
-    		
     		if($loanproduct->save() && $loanmodel->save()/* && $loanTransaction->save()*/)
     		{
     			
@@ -609,6 +591,7 @@ class LoanController extends \yii\web\Controller
             $systemDate = date("Y-m-d", strtotime($currentDate));
             $transac_date = isset($post['transaction_date']) ? $post['transaction_date'] : $systemDate;
     		
+            $intialPayment = 0; // In case credit loan amount is greater that balance. The remaining will be as payment.
     		/* For renewal, go give these parameters to close the loan.
     		 * Reminder: this function is not reusable for future closing of loans. 
     		 */
@@ -626,14 +609,19 @@ class LoanController extends \yii\web\Controller
     			
     			$closeLoan =  LoanHelper::closeAccountDueToRenewal($closeDetails, $transac_date);
     			
-    			if($closeLoan!="success")
+    			if(!$closeLoan['success'])
     			{
     				$transaction->rollBack();
     				return [
-    						'status'=>'not saved',
-    						'errors'=>$closeLoan    						
+    					'status'=>'not saved',
+    					'errors'=>$closeLoan    						
     				];
     			}
+                else{
+                    if(isset($closeLoan['asInitialPayment']) && floatval($closeLoan['asInitialPayment']) > 0){
+                        $intialPayment = $closeLoan['asInitialPayment'];
+                    }
+                }
     		}
     		
     	//	return $loanaccount_array;
@@ -664,6 +652,21 @@ class LoanController extends \yii\web\Controller
     		
     		if(/*$loanproduct->save() && */$loanmodel->save() && $loanTransaction->save())
     		{
+                //In case the credit loan to renew is greater than the current balance. The remaining will be set as payment
+                if($intialPayment > 0){
+                    $loanDetails = array();
+                    $loanDetails['principal_pay'] = $intialPayment;
+                    $loanDetails['prepaid_pay'] = 0;
+                    $loanDetails['ref_num'] = $gv_num;
+                    $loanDetails['product_id'] = $loanmodel->loan_id;
+                    $loanDetails['transaction_date'] = $transac_date;
+                    $loanPayment = LoanHelper::loanPayment($loanmodel->account_no, $loanDetails);
+
+                    if(!$loanPayment['success']){
+                        $success = false;
+                    }
+                }
+
                 //Update other paid loan
                 if($otherLoanToPay && count($otherLoanToPay) > 0){
                     foreach ($otherLoanToPay as $lnKey => $ln) {
