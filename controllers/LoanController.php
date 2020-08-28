@@ -265,6 +265,7 @@ class LoanController extends \yii\web\Controller
             $getTransactions = [];
             $currentDate = ParticularHelper::getCurrentDay();
             $systemDate = $transaction_date ? $transaction_date : date("Y-m-d", strtotime($currentDate));
+            //var_dump($systemDate);
             if($acc != null)
             {
                 $release_date = $acc['release_date'];
@@ -275,6 +276,7 @@ class LoanController extends \yii\web\Controller
                 $balance_after_cutoff = 0;
                 $cutOff = Yii::$app->view->getCutOff();
                 $balance_after_cutoff = $acc['principal'];
+                $amount_balance = $acc['principal_balance'];
 
                 $calVersion = Yii::$app->view->getVersion($acc['release_date']);
 
@@ -287,6 +289,7 @@ class LoanController extends \yii\web\Controller
                 $firstTransaction = null;
                 $getTransactions = LoanTransaction::find()->where(['loan_account' => $acc['account_no'], 'is_cancelled' => "0"])
                     ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "EMERGENCY"')
+                    ->andWhere('date_posted <= "' . $systemDate . '"')
                     ->orderBy('date_posted')
                     ->asArray()->all();
                 $transLength = count($getTransactions);
@@ -314,15 +317,18 @@ class LoanController extends \yii\web\Controller
                     //Recalculate interest earned. Dili magsalig sa DB
                     $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['date_posted'], $lastRunningBal, $acc['int_rate']);
                     $interest_accum = $interest_accum + $interestEarned;
+                    //var_dump($interestEarned);
 
                     //If at the last transaction
                     if($transLength == $transKey+1){
                         $interestEarnedLast = LoanHelper::getInterest($transaction['date_posted'], $systemDate, $transaction['running_balance'], $acc['int_rate']);
                         $interest_accum = $interest_accum + $interestEarnedLast;
+                        //var_dump($interestEarned);
                     }
 
                     $lastPayment = $transaction['date_posted'];
                     $lastRunningBal = $transaction['running_balance'];
+                    $amount_balance = $transaction['running_balance'];
                 }
 
                 //CUT OF PI AND INTEREST
@@ -344,6 +350,7 @@ class LoanController extends \yii\web\Controller
                 $result['last_tran_date'] = $last_tran_date;
                 $result['total_amount_paid'] = $total_amount_paid;
                 $result['balance_after_cutoff'] = $balance_after_cutoff;
+                $result['amount_balance'] = $amount_balance;
             	
             }
             

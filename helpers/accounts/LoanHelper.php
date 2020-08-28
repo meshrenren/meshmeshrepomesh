@@ -486,7 +486,7 @@ class LoanHelper
         $error = null;
 
         $principal_pay = $loanDetails['principal_pay'];
-        $prepaidInterest = $loanDetails['prepaid_pay'];
+        $prepaidInterest = isset($loanDetails['prepaid_pay']) && $loanDetails['prepaid_pay'] ? $loanDetails['prepaid_pay'] : 0;
         $ref_num = $loanDetails['ref_num'];
         $product_id = $loanDetails['product_id'];
         $transaction_date = $loanDetails['transaction_date'];
@@ -526,13 +526,14 @@ class LoanHelper
             $amount = $amount - $asSavings;
         }
 
+        $transaction_type = 'PAYPARTIAL';
         if($running_balance == 0){
             $account->status='Closed';
-            $loanTransaction="PAYCLOSE";
+            $transaction_type="PAYCLOSE";
         }
 
         $loanTransaction->amount = round($amount, 2);
-        $loanTransaction->transaction_type='PAYPARTIAL';
+        $loanTransaction->transaction_type= $transaction_type;
         $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
         $loanTransaction->transaction_date = $transaction_date;
         $loanTransaction->running_balance = $running_balance;

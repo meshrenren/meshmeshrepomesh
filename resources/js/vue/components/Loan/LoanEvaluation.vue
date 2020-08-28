@@ -483,8 +483,8 @@ export default {
     		this.$refs['evaluationForm'].resetFields();
     	},
     	getLatestLoan(loan_id, member_id){
-    		console.log("Here33333")
-    		this.$API.Loan.getLatestLoan(loan_id, member_id)
+    		let date_trans = this.$df.formatDate(this.evaluationForm.transaction_date)
+    		this.$API.Loan.getLatestLoan(loan_id, member_id, date_trans)
     		.then(result => {
     			let res = result.data
     			console.log("res", res)
@@ -789,7 +789,11 @@ export default {
 			let dbtLoan = cloneDeep(this.evaluationForm.debit_loan)
 			let crdtLoan = cloneDeep(this.evaluationForm.credit_loan)
 
-			let amountFee = Number(dbtLoan) //Number(dbtLoan) - Number(crdtLoan)
+			let amountFee = Number(dbtLoan)
+			/*if(getProduct.id == 2){ //If regular loan, get service charge on debit and credit loan differene
+				amountFee = Number(dbtLoan) - Number(crdtLoan)
+			}*/
+
 			let srvCharge = 0
 
 			console.log("getProduct", getProduct, evalForm, amountFee)
@@ -838,7 +842,8 @@ export default {
 
 			}
 			else{
-    			this.evaluationForm.credit_loan = parseFloat(latestLoan.principal_balance).toFixed(2)
+				console.log("lastTran.amount_balance", lastTran.amount_balance)
+    			this.evaluationForm.credit_loan = parseFloat(lastTran.amount_balance).toFixed(2)
 
     			let calVersion = this.$ch.checkVersion(latestLoan.release_date)
     			console.log("calVersion", calVersion)

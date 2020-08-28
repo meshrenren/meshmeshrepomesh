@@ -53,13 +53,14 @@ class SavingsHelper
             $model = $model->where(['fk_savings_id' => $fk_savings_id]);
         }
         
-        return $model->orderBy('transaction_date')->asArray()->all();
+        return $model->orderBy('posted_date')->asArray()->all();
     }
 
     public static function saveSavingsTransaction($data){
         $model = new SavingsTransaction;
         $model->attributes = $data;
         $model->transaction_date = isset($data['transaction_date']) ? $data['transaction_date'] : \Yii::$app->user->identity->DateNow;
+        $model->posted_date = \Yii::$app->user->identity->DateNow;
         $model->transacted_by = \Yii::$app->user->identity->id;
         if(isset($data['reference_number'])){
             $model->ref_no=$data['reference_number'];
@@ -154,6 +155,7 @@ class SavingsHelper
         $ref_num = $savingsDetails['ref_num'];
         $amount = $savingsDetails['amount'];
         $transaction_date = $savingsDetails['transaction_date'];
+        $posted_date = \Yii::$app->user->identity->DateNow;
 
         $savingsaccount = SavingAccounts::findOne($savingsDetails['account_no']);
 
@@ -166,6 +168,7 @@ class SavingsHelper
         $savingstransaction->transaction_type = 'CASHDEP';
         $savingstransaction->transacted_by = \Yii::$app->user->identity->id;
         $savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
+        $savingstransaction->posted_date = date('Y-m-d', strtotime($posted_date));
         $savingstransaction->running_balance = $savingsaccount->balance + $amount;
         $savingstransaction->remarks = $remarks;
         $savingstransaction->ref_no = $ref_num;

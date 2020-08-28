@@ -11,7 +11,7 @@
                     <el-col :span="14" class = "loan-list">
                         <el-input v-model="search" size="mini" placeholder="Type to search"/>
                         <el-table
-                            :data="toApproveLoan.filter(data => !search || data.fullname.toLowerCase().includes(search.toLowerCase()))"
+                            :data="toApproveLoan.filter(data => !search || (data.member && data.member.fullname.toLowerCase().includes(search.toLowerCase())))"
                             style="width: 100%"
                             max-height = "1000px">
                             
@@ -191,7 +191,7 @@
                                     
                                 </div>
                                 <el-button class = "mt-10" type = "primary" @click = "releaseVoucher()">Release Loan</el-button>
-                                <el-button class = "mt-10" type = "primary" @click = "saveLoan()">Save Loan Without Release</el-button>
+                                <!-- <el-button class = "mt-10" type = "primary" @click = "saveLoan()">Save Loan Without Release</el-button> -->
                                 <!-- <el-button class = "mt-10" type = "primary" @click = "approveLoan()">Approve Loan Application</el-button> -->
                             </div>
                         </div>
@@ -313,7 +313,7 @@ export default {
                 let hasLimitLoan = false
                 _forEach(this.loanToPayList, la =>{
                     if(la.amountToPay && la.amountToPay > 0){
-                        if(parseFloat(la.amountToPay)  > parseFloat(la.principal_balance) ){
+                        if(parseFloat(la.amountToPay)  > parseFloat(la.balance) ){
                             hasLimitLoan = true
                         }
                         else{

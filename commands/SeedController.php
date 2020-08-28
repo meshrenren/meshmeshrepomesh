@@ -3004,6 +3004,16 @@ class SeedController extends Controller
         }
     }
 
+    public function actionSavingsPostedDate(){
+        $getOR = \app\models\SavingsTransaction::find()->all();
+        foreach ($getOR as $keyGv => $or) {
+            if(!$or->posted_date){
+                $or->posted_date = date('Y-m-d', strtotime($or->transaction_date));
+                $or->save();
+            }
+        }
+    }
+
 }
 
 
