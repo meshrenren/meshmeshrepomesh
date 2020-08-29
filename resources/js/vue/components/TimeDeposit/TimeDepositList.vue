@@ -30,7 +30,7 @@
 				                    <span v-if = "scope.row.member">{{ scope.row.member.fullname }}</span>
 				                    <span v-else>{{scope.row.account_name}}</span>
 				                   	<div v-if = "scope.row.is_mature">
-				                   		<span class="label label-danger">Matured</span>
+				                   		<span class="label label-warning">Matured</span>
 				                   	</div>
 				                   	<div v-else-if = "scope.row.is_close">
 				                   		<span class="label label-danger">Closed</span>

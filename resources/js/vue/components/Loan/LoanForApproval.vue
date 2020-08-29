@@ -150,7 +150,7 @@
                                     <template v-if = "loanprofile && loanprofile.member">
 
                                         <el-button class = "mt-10" type = "info" @click = "otherParticulars()">Other</el-button>
-                                        <table class="table table-striped table-dark" v-if = "otherToPay.length > 0">
+                                        <table class="table table-bordered table-dark" v-if = "otherToPay.length > 0">
                                             <tr v-for="item in otherToPay">
                                                 <th scope="row">
                                                     <el-select class = "mt-5" v-model="item.particular_id" filterable placeholder="Select Particular">
@@ -170,7 +170,7 @@
 
                                         <!-- Show only if Regular  -->
                                         <el-button class = "mt-10" type = "info" @click = "getMemberAccount()">Account to deduct</el-button>
-                                        <table class="table table-striped table-dark" v-if = "loanToPayList.length > 0">
+                                        <table class="table table-bordered table-dark" v-if = "loanToPayList.length > 0">
                                             <tr v-for="item in loanToPayList">
                                                 <th scope="row">{{ item.product_name }}</th>
                                                 <td>
@@ -458,8 +458,6 @@ export default {
                     }
                 })
             }
-
-            
 
             this.loanToPayList = allAccounts
             
