@@ -790,9 +790,9 @@ export default {
 			let crdtLoan = cloneDeep(this.evaluationForm.credit_loan)
 
 			let amountFee = Number(dbtLoan)
-			/*if(getProduct.id == 2){ //If regular loan, get service charge on debit and credit loan differene
+			if(getProduct.id == 2){ //If regular loan, get service charge on debit and credit loan differene
 				amountFee = Number(dbtLoan) - Number(crdtLoan)
-			}*/
+			}
 
 			let srvCharge = 0
 
@@ -860,7 +860,7 @@ export default {
 				/* CREDIT INTEREST -END- */
 
 				//If has existing account for the loan product
-				let daystart = moment(this.$systemDate, "YYYY-MM-DD");
+				let daystart = moment(transaction_date, "YYYY-MM-DD");
 				let dayend = moment(lastTran.last_tran_date, "YYYY-MM-DD"); //usd against the latest TRANSACTION.
 				let monthend = moment(latestLoan.release_date, "YYYY-MM-DD"); //used against the latest loan.
 				let rangeNoOfDays = moment.duration(daystart.diff(dayend)).asDays(); 

@@ -304,7 +304,7 @@ class PaymentHelper
 
 							$savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
 							$savingstransaction->posted_date = date('Y-m-d', strtotime($dateToday));
-							
+
 							$savingstransaction->running_balance = $savingsaccount->balance + $asSavings;
 							$savingstransaction->remarks = "From " .$pro_name. " payment. Posted as Payment from ".$paymentHeader->or_num;
 							$savingstransaction->ref_no = $paymentHeader->or_num;
@@ -435,12 +435,10 @@ class PaymentHelper
 					$savingstransaction->amount = $row['amount'];
 					$savingstransaction->transaction_type = 'CASHDEP';
 					$savingstransaction->transacted_by = \Yii::$app->user->identity->id;
-<<<<<<< HEAD
-					$savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($dateToday));
-					$savingstransaction->posted_date = date('Y-m-d', strtotime($dateToday));
-=======
+					
 					$savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
->>>>>>> 0fa27dde552c7d775d99c4d067bf786a65fff346
+					$savingstransaction->posted_date = date('Y-m-d', strtotime($dateToday));
+
 					$savingstransaction->running_balance = $savingsaccount->balance + $row['amount'];
 					$savingstransaction->remarks = $remarks;
 					$savingstransaction->ref_no = $paymentHeader->or_num;

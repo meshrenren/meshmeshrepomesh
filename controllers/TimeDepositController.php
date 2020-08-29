@@ -494,6 +494,7 @@ class TimeDepositController extends \yii\web\Controller
                         $new_account['term'] = 12; //New policy
                         $getrate = TimeDepositHelper::getInterestRate(12, $renew_amount);
                         $new_account['interest_rate'] = $getrate; 
+                        $new_account['open_date'] = $open_date; 
                         $renewAccount = $this->createNewAccount($new_account);
                         if($renewAccount == null){
                             $success = false;
@@ -636,10 +637,12 @@ class TimeDepositController extends \yii\web\Controller
         $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
         $model->accountnumber = $product->id . "-" . $trans_serial_pad;
 
-        $mature_days = date('Y-m-d', strtotime($today. ' + '. $tdaccount['term'] . ' months'));
+        $openDate = isset($tdaccount['open_date']) ? $tdaccount['open_date'] : $today;
+
+        $mature_days = date('Y-m-d', strtotime($openDate. ' + '. $tdaccount['term'] . ' months'));
 
         $model->maturity_date = $mature_days;
-        $model->open_date = $today;
+        $model->open_date = $openDate;
         $model->date_created = date('Y-m-d H:i:s');
         $model->account_status = 'ACTIVE';
         $model->created_by = \Yii::$app->user->identity->id;

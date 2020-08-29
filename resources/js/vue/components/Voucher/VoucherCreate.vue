@@ -173,7 +173,19 @@
                                               label="Balance"
                                               width="90">
                                             </el-table-column>
-
+                                            
+                                            <el-table-column
+                                              label="Debit"
+                                              idth="50">
+                                                <template slot-scope="scope" v-if = "scope.row.showDebit">
+                                                    <div v-if = "scope.row.type == 'LOAN'">
+                                                        <el-input type="number" :min = "0" v-model="scope.row.debit" :disabled = "Number(scope.row.balance) >= 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                    </div>
+                                                    <div v-else>
+                                                        <el-input type="number" :min = "0" v-model="scope.row.debit" @keyup.enter.native = "addAccounts"></el-input>
+                                                    </div>
+                                                </template>
+                                            </el-table-column>
 
                                             <el-table-column
                                               label="Credit">
@@ -187,18 +199,6 @@
                                                 </template>
                                             </el-table-column>
 
-                                            <el-table-column
-                                              label="Debit"
-                                              idth="50">
-                                                <template slot-scope="scope" v-if = "scope.row.showDebit">
-                                                    <div v-if = "scope.row.type == 'LOAN'">
-                                                        <el-input type="number" :min = "0" v-model="scope.row.debit" :disabled = "Number(scope.row.balance) <= 0" @keyup.enter.native = "addAccounts"></el-input>
-                                                    </div>
-                                                    <div v-else>
-                                                        <el-input type="number" :min = "0" v-model="scope.row.debit" @keyup.enter.native = "addAccounts"></el-input>
-                                                    </div>
-                                                </template>
-                                            </el-table-column>
                                         </el-table>
                                     </el-col>
                                 </el-row>
@@ -431,7 +431,7 @@ export default {
                     if(rs.credit && Number(rs.credit) > 0){
                         if(rs.type == "LOAN" && !rs.is_prepaid){
                             let bal = rs.balance < 0 ? Number(rs.balance) * -1 : rs.balance
-                            if(Number(rs.credit) > Number(bal) || Number(rs.debit) > Number(balance)) {
+                            if(Number(rs.credit) > Number(bal) || Number(rs.debit) > Number(rs.balance)) {
                                 isBalance = false
                                 toAdd = false
                                 checkBalanceText += rs.product_name + ", "

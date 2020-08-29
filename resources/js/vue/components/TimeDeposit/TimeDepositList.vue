@@ -49,7 +49,7 @@
 				            </el-table-column>
 				            <el-table-column label="Date Open">
 				                <template slot-scope="scope">
-				                    <span>{{ $df.formatDate(scope.row.date_created, "MMMM DD, YYYY") }}</span>
+				                    <span>{{ $df.formatDate(scope.row.open_date, "MMMM DD, YYYY") }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Term (months)" width = "50px">
@@ -206,7 +206,7 @@ export default {
 			this.tdAccount = acc
 			this.selectedAccount = acc
 			this.selectedAccount.account_name = acc.member.fullname
-			this.selectedAccount.created = this.$df.formatDate(acc.date_created, "MMMM DD, YYYY")
+			this.selectedAccount.created = this.$df.formatDate(acc.open_date, "MMMM DD, YYYY")
 			this.selectedAccount.matured = this.$df.formatDate(acc.maturity_date, "MMMM DD, YYYY")
 		},
 		calculate(data){

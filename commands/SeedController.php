@@ -2983,12 +2983,20 @@ class SeedController extends Controller
         $getGV = \app\models\GeneralVoucher::find()->all();
         foreach ($getGV as $keyGv => $gv) {
             $getList = \app\models\VoucherDetails::find()->where(['voucher_id' => $gv->id])->all();
+            $posted_date = date('Y-m-d', strtotime($gv->created_date));
+            if($or->posted_date){
+                $posted_date = $or->posted_date;
+            }
+            echo "Post payment details: GV = " . $or->gv_num . " \t " . $or->name;
             foreach ($getList as $key => $list) {
-                $list->posted_date = $gv->date_transact;
+                $list->posted_date = $posted_date;
                 $list->save();
             }
-            $gv->posted_date = $gv->date_transact;
-            $gv->Save();
+            if(!$or->posted_date){
+                $gv->posted_date = $posted_date;
+                $gv->Save();
+            }
+            echo "\n";
         }
     }
 
@@ -2997,9 +3005,13 @@ class SeedController extends Controller
         $getOR = \app\models\PaymentRecord::find()->all();
         foreach ($getOR as $keyGv => $or) {
             $getList = \app\models\PaymentRecordList::find()->where(['payment_record_id' => $or->id])->all();
-            foreach ($getList as $key => $list) {
-                $list->posted_date = $or->posted_date;
-                $list->save();
+            if($or->posted_date){
+                echo "Post payment details: OR = " . $or->or_num . " \t " . $or->name;
+                foreach ($getList as $key => $list) {
+                    $list->posted_date = $or->posted_date;
+                    $list->save();
+                }
+                echo "\n";
             }
         }
     }

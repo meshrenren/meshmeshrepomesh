@@ -39,8 +39,7 @@ class TimeDepositHelper
 
         $diff_days = GlobalHelper::getDiffDays($tdAccount->maturity_date, $dateProcess);
         $sa_int_rate = GlobalHelper::getSAInterest();
-        $days_in_year = static::daysInYear();
-
+        $days_in_year = 365;//static::daysInYear();
         $balance = $tdAccount->balance;
         $interest = 0;
         if($diff_days > 0 && $balance > 0){

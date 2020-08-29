@@ -7,7 +7,7 @@
             <div class = "row">
 	        	<div class = "col-md-12">
 	        		<h4>Loan Evaluation</h4>
-	        		<table style="text-align: left;">
+	        		<table style="text-align: left;" class = "evaluation-form">
 	        			<tr>
 	        				<th>Name: </th>
 	        				<td>{{ memberDetails.fullname }}</td>
@@ -168,7 +168,7 @@
 	        </div>
 	        <div class = "row">
 	        	<div class = "col-md-12" style = "margin-top: 20px;">
-	        		<table  style="text-align: left;">
+	        		<table  style="text-align: left;" class = "evaluation-form">
 	        			<tr>
 	        				<th>Loan Amount: </th>
 	        				<td>
@@ -242,7 +242,24 @@
 	        		</table>
 	        	</div>
 
-	        	<div class = "col-md-12" style = "margin-top: 20px;">
+	        	<div class="col-md-12">
+					<div class = "col-md-8" style = "margin-top: 20px;">
+						&nbsp;&nbsp;&nbsp;
+					</div>
+					<div class = "col-md-4" style = "margin-top: 20px;">
+		        		<table style="width:100%; margin-top:10px;">
+							<tr>
+								<td><strong>Approved by:</strong></td>
+												
+							</tr>
+							<tr>
+								<td style="border-bottom:1px solid black; text-align:center; padding-top: 20px" >Charito L. Cinco</td> 
+							</tr>
+						</table>	
+		        	</div>
+				</div>
+
+	        	<div class = "col-md-12" style = "margin-top: 50px;">
 	        		<h3>Payments:</h3>
 	        		<table class = "table table-borderedx" style="text-align: left;">
 	        			<thead>
@@ -267,29 +284,7 @@
 	        		</table>
 	        	</div>
 
-
-				
-
 	        </div>
-
-			<div class="row">
-				<div class = "col-md-8" style = "margin-top: 20px;">
-				</div>
-				<div class = "col-md-4" style = "margin-top: 20px;">
-	        		<table style="width:100%; margin-top:10px;">
-						<tr>
-							<td><strong>Approved by:</strong></td>
-											
-						</tr>
-						<tr>
-							<td style="border-bottom:1px solid black; text-align:center;" >Charito L. Cinco</td> 
-						</tr>
-						<tr>
-							<td>Queen of DILG -> Pakiedit ko ani :D</td> 
-						</tr>
-					</table>	
-	        	</div>
-			</div>
         </div>
         <div>
         	<el-button type = "default" @click = "printPage()" ref = "print">Print</el-button> 

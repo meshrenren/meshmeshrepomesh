@@ -399,9 +399,10 @@ export default {
 		              	width: '400px',
 		            }).then(function(result) {
 		            	if (result.value) {
-
+		            		let tdAcc = cloneDeep(vm.tdAccountDetails)
+		            		tdAcc.open_date = vm.$df.formatDate(tdAcc.open_date, "YYYY-MM-DD")
 		            		let data = {
-			            		accountDetails : vm.tdAccountDetails,
+			            		accountDetails : tdAcc,
 			            		signatoryList : vm.signatoryList
 			            	}
 
