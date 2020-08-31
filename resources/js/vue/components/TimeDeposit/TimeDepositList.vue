@@ -179,10 +179,10 @@ export default {
                 if(datalist){
                     datalist = datalist.filter(function (row) {
                     	let toShow = false
-                    	if(row.member && row.member.fullname && String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1 ){
+                    	if(row.member && row.member.fullname && String(row.member.fullname).toLowerCase().indexOf(filterKey.toLowerCase()) > -1 ){
                     		toShow = true
                     	}
-                    	else if(row.account_name && String(row.account_name).toLowerCase().indexOf(filterKey) > -1){
+                    	else if(row.account_name && String(row.account_name).toLowerCase().indexOf(filterKey.toLowerCase()) > -1){
                     		toShow = true
                     	}
 
@@ -205,7 +205,7 @@ export default {
 			let acc = cloneDeep(account)
 			this.tdAccount = acc
 			this.selectedAccount = acc
-			this.selectedAccount.account_name = acc.member.fullname
+			this.selectedAccount.account_name = acc.member ? acc.member.fullname : acc.account_name
 			this.selectedAccount.created = this.$df.formatDate(acc.open_date, "MMMM DD, YYYY")
 			this.selectedAccount.matured = this.$df.formatDate(acc.maturity_date, "MMMM DD, YYYY")
 		},
@@ -219,6 +219,7 @@ export default {
 			if(data.success){
 				this.tdAccount = null
 				this.selectedAccount = {}
+				location.reload()
 			}
 		}
 	}

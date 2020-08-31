@@ -84,7 +84,7 @@ class GeneralVoucherController extends \yii\web\Controller
                 //Check GV Number if exist
                 $gv_num = $voucherModel['gv_num'];
                 //$getGV = \app\models\GeneralVoucher::find()->where(['gv_num' => $gv_num])->one();
-                $getGV = \app\models\JournalHeader::find()->where(['reference_no' => $gv_num])->one();
+                $getGV = GeneralVoucher::find()->where(['gv_num' => $gv_num])->andWhere('posted_date IS NOT NULL')->one();
                 if($getGV){
                     return [
                         'success'   => false,

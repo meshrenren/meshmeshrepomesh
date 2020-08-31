@@ -79,12 +79,10 @@ class TimeDepositHelper
     public static function printList($postData){
         $account_no = $postData['account_no'];
         $account_name = $postData['account_name'];
-        $balance = $postData['balance'];
+        $amount = $postData['amount'];
         $transaction = $postData['transaction'];
-        $listTemplate = '<table width = "100%">
-            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
-            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Time Deposit Account</div></tr>
-        </table>';
+        $listTemplate = '';
+        $listTemplate .= Yii::$app->params['formTemplate']['header_layout'];
 
         $accountDetail = '<table>
             <tr>
@@ -115,11 +113,11 @@ class TimeDepositHelper
                     <th>Balance</th> 
                 </tr>';
             foreach ($transaction as $trans) {
-                $transDate = date('Y-m-d', strtotime($trans['transaction_date']));
+                //$transDate = date('Y-m-d', strtotime($trans['transaction_date']));
                 $amount = $trans['amount'] && floatval($trans['amount']) > 0 ? Yii::$app->view->formatNumber($trans['amount']) : "";
-                $amount = $trans['balance'] && floatval($trans['balance']) > 0 ? Yii::$app->view->formatNumber($trans['balance']) : "";
+                $balance = $trans['balance'] && floatval($trans['balance']) > 0 ? Yii::$app->view->formatNumber($trans['balance']) : "";
                 $transTable .= '<tr>
-                    <td>'.$transDate.'</td> 
+                    <td>'.$trans['transaction_type'].'</td> 
                     <td>'.$amount.'</td> 
                     <td>'.$trans['remarks'].'</td> 
                     <td>'.$balance.'</td> 
@@ -129,8 +127,6 @@ class TimeDepositHelper
             $transTable .= '</table>';
         }
         $listTemplate = $listTemplate . $transTable;
-
-        $listTemplate .= $accountDetail;
 
         return $listTemplate;
     }

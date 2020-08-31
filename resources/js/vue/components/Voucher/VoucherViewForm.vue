@@ -15,10 +15,13 @@
 			<el-table
 		      	:data="voucherDataList"
 		      	style="width: 100%"
+                :summary-method="getSummaries"
+                show-summary
 		      	>
 			    <el-table-column
-			        prop="balance"
-			        label="DEBIT">
+			        prop="debit"
+			        label="DEBIT"
+                    width="100px">
 			        <template slot-scope="scope">
 	                    <span>{{ $nf.formatNumber(scope.row.debit) }}</span>
 	                </template>
@@ -26,7 +29,8 @@
 			    </el-table-column>
 			    <el-table-column
 			        prop="particular_name"
-			        label="Particular">
+			        label="Particular"
+                    align="center">
 			    </el-table-column>
 			    <el-table-column
 			        prop="credit"
@@ -83,12 +87,15 @@ export default {
     	}
     },
     mounted(){
-    	this.getParticulars()
+        if(this.voucherData.length > 0){
+            this.getParticulars()
+        }
     },
     computed:{
     	voucherDataList(){
     		let list = []
     		let particularsList = this.particulars
+
     		_forEach(particularsList, pt =>{
     			let arr = {
                     type : pt.category,
@@ -102,18 +109,25 @@ export default {
     			}
                 let acct_no = null
     			_forEach(this.voucherData, vd=>{
-    				if(pt.name.toLowerCase() == vd.particular_name.toLowerCase()){
-    					if(vd.type == "CREDIT"){
-    						arr.credit = Number(arr.credit) + Number(vd.amount)
-    					}
-    					else if(vd.type == "DEBIT"){
-    						arr.debit = Number(arr.debit) + Number(vd.amount)
-    					}
+                    let hasParticular = false
+    				if(vd.particular_name && pt.name.toLowerCase() == vd.particular_name.toLowerCase()){
+                        hasParticular = true
+    				}
+                    else if(vd.particular_id && Number(vd.particular_id) == Number(pt.id)){
+                        hasParticular = true
+                    }
+
+                    if(hasParticular){
+                        if(vd.type == "CREDIT"){
+                            arr.credit = Number(arr.credit) + Number(vd.amount)
+                        }
+                        else if(vd.type == "DEBIT"){
+                            arr.debit = Number(arr.debit) + Number(vd.amount)
+                        }
                         if(vd.account_no){
                             acct_no = vd.account_no
                         }
-
-    				}
+                    }
 	    		})
 
                 arr.account_no = acct_no
@@ -126,23 +140,34 @@ export default {
     },
     methods:{
     	mapParticulars(){
-    		let list = this.voucherData.map(em => {
-	    		return em.particular_name
-	    	})
+            let list = []
+            let ids = []
+            _forEach(this.voucherData, vd =>{
+                if(vd.particular_name){ 
+                    list.push(vd.particular_name) 
+                }
+                else if(vd.particular_id){
+                    ids.push(vd.particular_id) 
+                }
+            })
 
 	    	list = _uniq(list)
+            ids = _uniq(ids)
 
-	    	return list
+	    	return {names : list, ids : ids}
     	},
 
     	getParticulars(){
     		this.pageLoading = true
-    		let names = this.mapParticulars() 
+    		let mapParticulars = this.mapParticulars() 
 
-        	this.$API.General.getParticularsByName(names)
+            let params = {
+                filter : mapParticulars
+            }
+
+        	this.$API.General.getParticularsVoucher(params)
             .then(result => {
             	let res = result.data
-                console.log("result", result)
                 this.particulars = res.data
             })
             .catch(err => {
@@ -167,15 +192,74 @@ export default {
     			return
     		}
 
-    		let params = {
-                gv_num  : this.gvNumber,
-                transaction_date  : this.$df.formatDate(this.transactionDate, "YYYY-MM-DD") ,
-    			voucher_entries : this.voucherDataList
-    		}
-    		this.$emit('processvoucher', params)
-    		this.dialogVisible = false
+            this.$swal({
+                title: 'Process Voucher',
+                text: "Are you sure you want to process vouher? This will automatically be posted.",
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Proceed',
+                focusConfirm: false,
+                focusCancel: true,
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                customClass: {
+                    container: 'swal-voucher'
+                }
+            }).then(result => {
+                if (result.value) {
+                    let params = {
+                        gv_num  : this.gvNumber,
+                        transaction_date  : this.$df.formatDate(this.transactionDate, "YYYY-MM-DD") ,
+                        voucher_entries : this.voucherDataList
+                    }
+                    this.$emit('processvoucher', params)
+                    this.dialogVisible = false
+                }
+            })
+        		
     	},
+        getSummaries(param){
+            const { columns, data } = param;
+            const sums = [];
+
+            columns.forEach((column, index) => {
+                if (index === 1) {
+                    sums[index] = 'TOTAL';
+                    return;
+                }
+                else if(index === 0 || index === 2){
+                    const values = data.map(item => Number(item[column.property]));
+                    if (!values.every(value => isNaN(value))) {
+                        let sumAmount = values.reduce((prev, curr) => {
+                            const value = Number(curr);
+                            if (!isNaN(value)) {
+                                return prev + curr;
+                            } else {
+                                return prev;
+                            }
+                        }, 0);
+                        sums[index] = ' ' + this.$nf.formatNumber(sumAmount, 2)
+                    } else {
+                        sums[index] = 'N/A';
+                    }
+                }
+                else{
+                    sums[index] = '';
+                    return;
+                }
+
+                
+            });
+
+            return sums;
+        }
     }
 }
 </script>
+<style type="scss">
+    .swal-voucher{
+        z-index : 10000;
+    }
+</style>
 

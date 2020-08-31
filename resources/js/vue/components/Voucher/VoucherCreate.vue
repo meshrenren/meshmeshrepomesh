@@ -625,7 +625,16 @@ export default {
 
                     let credit = this.getAmount(arr.key, 'CREDIT')
                     arr.credit = credit
-                    arr.showDebit = false
+
+                    if(arr.balance > 0){
+                        let debit = this.getAmount(arr.key, 'DEBIT')
+                        arr.debit = debit
+                    }
+                    else{
+                        arr.showDebit = false
+                        arr.debit = 0
+                    }
+                    
 
                     allAccounts.push(arr)
                 })
@@ -649,7 +658,15 @@ export default {
 
                     let credit = this.getAmount(arr.key, 'CREDIT')
                     arr.credit = credit
-                    arr.showDebit = false
+                    
+                    if(arr.balance > 0){
+                        let debit = this.getAmount(arr.key, 'DEBIT')
+                        arr.debit = debit
+                    }
+                    else{
+                        arr.showDebit = false
+                        arr.debit = 0
+                    }
 
                     allAccounts.push(arr)
                 })
@@ -674,7 +691,7 @@ export default {
                         arr.credit = credit
                     }
                     else{
-                        arr.showFalse = false
+                        arr.showCredit = false
                         arr.credit = 0
                     }
 

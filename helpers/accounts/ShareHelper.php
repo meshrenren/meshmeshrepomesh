@@ -34,15 +34,16 @@ class ShareHelper
             $model = $model->where(['fk_share_id' => $fk_share_id]);
         }
         
-        return $model->orderBy('transaction_date')->asArray()->all();
+        return $model->orderBy('posted_date')->asArray()->all();
     }
 
 
     public static function saveShareTransaction($data){
         $model = new ShareTransaction;
         $model->attributes = $data;
-        $model->transaction_date = date('Y-m-d H:i:s');
+        $model->transaction_date = isset($data['transaction_date']) ? $data['transaction_date'] : \Yii::$app->user->identity->DateNow;
         $model->transacted_by = \Yii::$app->user->identity->id;
+        $model->posted_date = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateNow));
 
         if($model->save()){
             return $model;
@@ -129,7 +130,7 @@ class ShareHelper
         return $listTemplate;
     }
 
-    public static function depositShare($shareDetails){
+    public static function transactionShare($shareDetails){
         $success = false;
         $error = null;
 
@@ -138,16 +139,28 @@ class ShareHelper
         $ref_num = $shareDetails['ref_num'];
         $amount = $shareDetails['amount'];
         $transaction_date = $shareDetails['transaction_date'];
+        $transaction_type = $shareDetails['transaction_type'];
+        $posted_date = \Yii::$app->user->identity->DateNow;
 
         $shareaccount = Shareaccount::findOne($shareDetails['account_no']);
+
+        $running_balance = $shareaccount->balance;
+        if($transaction_type == "CASHDEP"){
+            $running_balance = $shareaccount->balance + $amount;
+        }
+        else if($transaction_type == "WITHDRWL"){
+            $running_balance = $shareaccount->balance - $amount;
+        }
+    
 
         $sharetransaction = new ShareTransaction();
         $sharetransaction->fk_share_id = $account_no;
         $sharetransaction->amount = $amount;
-        $sharetransaction->transaction_type = 'CASHDEP';
+        $sharetransaction->transaction_type = $transaction_type;
         $sharetransaction->transacted_by = \Yii::$app->user->identity->id;
         $sharetransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
-        $sharetransaction->running_balance = $shareaccount->balance + $amount;
+        $sharetransaction->posted_date = date('Y-m-d', strtotime($posted_date));
+        $sharetransaction->running_balance = $running_balance;
         $sharetransaction->remarks = $remarks;
         $sharetransaction->reference_number = $ref_num;
         

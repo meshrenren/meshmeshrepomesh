@@ -1,17 +1,16 @@
 <?php
 
 return [
-	'header_layout'  	=> '<table class = "no-border" width = "100%">
-            <tr>
-            	<td>
-            		<img width = "100px" src = "/images/coop_logo.png" />
-            	</td>
-            	<td>
-            		<p style="font-size: 12pt; font-weight: bold;">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<p>
-            		<p style="font-size: 10pt;">DILG Regional Office, #58 McArthur Highway, Davao City </p>
-            		<p style="font-size: 10pt;">Tel #: 297-27-01 / 297-26-06 / 297-2604 </p>
-            	</tr>
-        </table>',
+	'header_layout'  	=> '<div class = "header-layout mb-10">
+			<div style = "width: 80px;">
+				<img width = "80px" src = "/images/coop_logo.png" />
+			</div>
+			<div style = "width: 500px; text-align: center;" >
+				<span style="font-size: 12pt; font-weight: bold;">DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS</span><br>
+	            <span style="font-size: 10pt;">DILG Regional Office, #58 McArthur Highway, Davao City </span><br>
+	            <span style="font-size: 10pt;">Tel #: 297-27-01 / 297-26-06 / 297-2604 </span> 
+	        </div>
+        </div>',
 
 	'savings_deposit' 	=> '<div style="text-align: center;"><span style="font-size: 8pt;"><img width = "20px" src = "/images/coop_logo.png" /> DILG XI EMPLOYEES MULTI-PURPOSE
 COOPERATIVE 

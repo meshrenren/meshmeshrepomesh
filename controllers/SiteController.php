@@ -259,18 +259,48 @@ class SiteController extends Controller
         if(\Yii::$app->getRequest()->getBodyParams()){
 
             $post = \Yii::$app->getRequest()->getBodyParams();
-            $names = $post['names'];
+            $getParticulars = [];
+            if(isset($post['names']) && $post['names']){
+                $names = $post['names'];
 
-            $where = [];
-            if(is_array($names)){
-                foreach ($names as $nm) {
-                    array_push($where, ['name' => $nm]);
+                $where = [];
+                if(is_array($names)){
+                    foreach ($names as $nm) {
+                        array_push($where, ['name' => $nm]);
+                    }
                 }
-            }
 
-            $getParticulars = AccountParticulars::find()
-                ->where(new OrCondition($where))
-                ->asArray()->all();
+                $getParticulars = AccountParticulars::find()
+                    ->where(new OrCondition($where))
+                    ->asArray()->all();
+            }
+            else if(isset($post['category']) && $post['category']){
+                $filter  = ['category' => $post['category']];
+                $orderBy = "name ASC";
+                $getParticulars = ParticularHelper::getParticulars($filter, $orderBy);
+            }
+            else if(isset($post['filter'])){
+                $filter = $post['filter'];
+
+                $where = [];
+                if(isset($filter['names']) && count($filter['names']) > 0){
+                    foreach ($filter['names'] as $nm) {
+                        array_push($where, ['name' => $nm]);
+                    }
+                }
+
+                if(isset($filter['ids']) && count($filter['ids']) > 0){
+                    foreach ($filter['ids'] as $id) {
+                        array_push($where, ['id' => $id]);
+                    }
+                }
+                if(count($where) > 0){
+                    $getParticulars = AccountParticulars::find()
+                    ->where(new OrCondition($where))
+                    ->asArray()->all();
+                }
+
+            }
 
             return [ 'data' => $getParticulars];
         }

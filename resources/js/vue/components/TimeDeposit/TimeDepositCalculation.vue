@@ -47,11 +47,21 @@
 				</el-col>
 				<el-col :span = "10">
 					<label>Renew Amount</label>
-					<el-input v-model="renewAmt" :disabled = "true"></el-input>
+					<!-- <el-input v-model="renewAmt" :disabled = "true"></el-input> -->
+                    <el-input v-model="renewAmt"></el-input>
 				</el-col>
 			</el-row>
-			<el-button class = "mt-10" type = "primary" @click = "showVoucher()" v-if = "timeDeposit.account_status == 'MATURED'">Withdraw</el-button>
-            <el-button class = "mt-10" type = "primary" @click = "print()">Print</el-button>
+            <el-row>
+                <el-col :span = "24">
+                    <process-account
+                        ref = "processAccount"
+                        v-if = "timeDeposit && timeDeposit.member"
+                        :page-data = "processData">
+                    </process-account>
+                </el-col>
+            </el-row>
+			<el-button class = "mt-10" type = "primary" @click = "showVoucher()" v-if = "timeDeposit.account_status == 'MATURED'">Process</el-button>
+            <el-button class = "mt-10" type = "primary" @click = "print('print')">Print</el-button>
 		</template>
 		
 
@@ -73,6 +83,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import _forEach from 'lodash/forEach'
 
 import _message from '../../mixins/messageDialog.js'
+import fileExport from '../../mixins/fileExport'
 
 export default {
 	props: {
@@ -85,9 +96,9 @@ export default {
 			required: false
 		}
 	},
-	mixins: [_message],
+	mixins: [_message, fileExport],
 	data: function () {
-
+        let processData = {memberData : this.timedepositData.member, accData : null}
 		return {
 			timeDeposit 	: this.timedepositData,
 			tableLoading 	: false,
@@ -97,8 +108,10 @@ export default {
 			renewAmt 		: 0,
 			isShowVoucher 	: false,
 			pageLoading 	: false,
-            openDate        : moment(this.$systemDate)
-
+            openDate        : moment(this.$systemDate),
+            processData     : processData,
+            genVoucher      : [],
+            accToProcess    : []
 		}
 	},
 	mounted(){
@@ -131,41 +144,6 @@ export default {
             
             return transactionList
         },
-        genVoucher(){
-        	let list = []
-        	//Set tdaccount debit
-        	let arr = {particular_name: "Time Deposit", amount: this.timeDeposit.amount, type : "DEBIT" }
-        	list.push(arr)
-
-            if(this.timeDeposit.transactions && this.timeDeposit.transactions.length > 0){
-                _forEach(this.timeDeposit.transactions, tr => {
-                    if(tr.transaction_type == 'TDINTEREST'){
-                        let arr = {particular_name: "Interest Expense", amount: tr.amount, type : "DEBIT" }
-                        list.push(arr)
-                    }
-                })
-            }
-
-        	// If has interest savings. Set as Interest Expense
-        	if(this.savingsInterest){
-        		let arr = {particular_name: "Interest Expense", amount: this.savingsInterest, type : "DEBIT" }
-        		list.push(arr)
-        	}
-
-        	// If to withdraw, Set cash on hand
-        	if(Number(this.withdrawAmt) > 0){
-        		let arr = {particular_name: "Cash on Hand", amount: this.withdrawAmt, type : "CREDIT" }
-        		list.push(arr)
-        	}
-
-        	// If to renew, set TD account
-        	if(Number(this.renewAmt) > 0){
-        		let arr = {particular_name: "Time Deposit", amount: this.renewAmt, type : "CREDIT" }
-        		list.push(arr)
-        	}
-
-        	return list
-        }
     },
 	methods:{
         changeDate(val){
@@ -206,7 +184,7 @@ export default {
                 this.pageLoading = false
             })
 		},
-        print(){
+        print(type){
             if(this.transactionList.length == 0){
                 new Noty({
                     theme: 'relax',
@@ -247,8 +225,88 @@ export default {
             .then(_ => { this.pageLoading = false })
 
         },
+
+        setVoucher(){
+            this.accToProcess = []
+            let list = []
+            let debitTotal = 0
+            let creditTotal = 0
+            //Set tdaccount debit
+            let arr = {particular_name: "Time Deposit", amount: parseFloat(this.timeDeposit.amount), type : "DEBIT" }
+            list.push(arr)
+            debitTotal += parseFloat(this.timeDeposit.amount)
+
+            if(this.timeDeposit.transactions && this.timeDeposit.transactions.length > 0){
+                _forEach(this.timeDeposit.transactions, tr => {
+                    if(tr.transaction_type == 'TDINTEREST'){
+                        let arr = {particular_name: "Interest Expense", amount: parseFloat(tr.amount), type : "DEBIT" }
+                        list.push(arr)
+                        debitTotal += parseFloat(tr.amount)
+                    }
+                })
+            }
+
+            // If has interest savings. Set as Interest Expense
+            if(this.savingsInterest){
+                let arr = {particular_name: "Interest Expense", amount: this.savingsInterest, type : "DEBIT" }
+                list.push(arr)
+                debitTotal += parseFloat(this.savingsInterest)
+            }
+
+            // If to withdraw, Set cash on hand
+            if(Number(this.withdrawAmt) > 0){
+                let arr = {particular_name: "Cash on Hand", amount: this.withdrawAmt, type : "CREDIT" }
+                list.push(arr)
+                creditTotal += parseFloat(this.withdrawAmt)
+            }
+
+            // If to renew, set TD account
+            if(Number(this.renewAmt) > 0){
+                let arr = {particular_name: "Time Deposit", amount: this.renewAmt, type : "CREDIT" }
+                list.push(arr)
+                creditTotal += parseFloat(this.renewAmt)
+            }
+
+            let loanToPay = this.$refs.processAccount.loanToPayList
+            let otherToPay = this.$refs.processAccount.otherToPay
+            let setVoucherAccount = this.$ah.setVoucherAccount(loanToPay, otherToPay)
+            console.log('setVoucherAccount', setVoucherAccount)
+            if(!setVoucherAccount.success){
+                if(setVoucherAccount.error == "ERR_LOAN_BALANCE"){
+                    this.showMessage('error', 'AMOUNT TO PAY is greater than LOAN BALANCE', 5000)
+                    return false
+                }
+            }
+            else{
+                let dataVoucher = setVoucherAccount.data
+                let totalOtherToPay = dataVoucher.totalOtherToPay
+                creditTotal += parseFloat(totalOtherToPay)
+                let totalOtherToWithdraw = dataVoucher.totalOtherToWithdraw
+                debitTotal += parseFloat(totalOtherToWithdraw)
+                list = list.concat(dataVoucher.toPaySave)
+                this.accToProcess = dataVoucher.accToPaySave
+            }
+
+            creditTotal = this.$nf.numberFixed(creditTotal, 2)
+            debitTotal = this.$nf.numberFixed(debitTotal, 2)
+
+
+            console.log('creditTotal', creditTotal, debitTotal)
+            if(creditTotal != debitTotal){
+                this.showMessage('error', 'VOUCHER is not balance', 5000)
+                this.accToProcess = []
+                return false
+            }
+
+            this.genVoucher = list
+
+            return true
+        },
         showVoucher(){
-        	this.isShowVoucher = true
+            let isset = this.setVoucher()
+            if(isset){
+                this.isShowVoucher = true
+            }
         },
         getSavingsTransaction(){
         	let savings_transaction = null
@@ -272,7 +330,8 @@ export default {
         		withdraw_amount : this.withdrawAmt,
         		renew_amount : this.renewAmt,
         		general_voucher : data,
-                open_date : this.$df.formatDate(this.openDate, "YYYY-MM-DD")
+                open_date : this.$df.formatDate(this.openDate, "YYYY-MM-DD"),
+                otherAccToProcess : this.accToProcess,
         	}
 
         	this.$API.TimeDeposit.processAccount(params)
@@ -306,6 +365,11 @@ export default {
 			setTimeout(() => {
                 this.openDate = moment(this.$systemDate)
 				this.getCalculation(this.timeDeposit.accountnumber)
+
+
+                this.processData.memberData = val.member
+                this.loanToPay = []
+                this.otherToPay = []
 			}, 500)
 		},
 		withdrawAmt: function(val){

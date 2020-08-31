@@ -294,8 +294,9 @@ class VoucherHelper
                         $savingsDetails['amount'] = $row['credit'];
                         $savingsDetails['ref_num'] = $ref_num;
                         $savingsDetails['transaction_date'] = $dateToday;
+                        $savingsDetails['transaction_type'] = 'CASHDEP';
 
-                        $depositSavings = SavingsHelper::depositSavings($savingsDetails);
+                        $depositSavings = SavingsHelper::transactionSavings($savingsDetails);
                         if(!$depositSavings['success']){
                             $success = false;
                             break;
@@ -315,8 +316,9 @@ class VoucherHelper
                         $shareDetails['amount'] = $row['credit'];
                         $shareDetails['ref_num'] = $ref_num;
                         $shareDetails['transaction_date'] = $dateToday;
+                        $shareDetails['transaction_type'] = "CASHDEP";
 
-                        $depositShare = ShareHelper::depositShare($shareDetails);
+                        $depositShare = ShareHelper::transactionShare($shareDetails);
                         if(!$depositShare['success']){
                             $success = false;
                             break;

@@ -79,6 +79,9 @@
 								<el-form-item label="Reference No. (OR Number)" prop="ref_no">
 									<el-input type = "text" v-model="savingTransactionForm.ref_no"></el-input>
 								</el-form-item>	
+								<el-form-item label="Date" prop="transaction_date">
+									<el-date-picker v-model="savingTransactionForm.transaction_date" type="date" placeholder="Pick a date"> </el-date-picker>
+								</el-form-item>	
 								<el-form-item label="Remarks" prop="remarks">
 									<el-input type = "textarea" v-model="savingTransactionForm.remarks" :rows = "5">
 									</el-input>
@@ -136,6 +139,8 @@ export default {
   			transaction_type : [{ required: true, message: 'Transaction type cannot be blank.', trigger: 'change' },],
   			ref_no : [{ required: true, message: 'Reference Number cannot be blank.', trigger: 'change' },],
 		}
+
+		this.savingTransactionForm.transaction_date = moment(this.$systemDate)._d
 	},
     components: {
       	SearchSavingsAccount
@@ -181,7 +186,7 @@ export default {
 	          	if (valid) {
 	          		vm.$swal({
 	                  title: 'Save Savings Transaction?',
-	                  text: "Are you sure you want to save this transaction? This action cannot be undone.",
+	                  text: "Are you sure you want to save this transaction? This will automatically be posted.",
 	                  type: 'warning',
 	                  showCancelButton: true,
 	                  cancelButtonColor: '#d33',
@@ -195,6 +200,7 @@ export default {
 		            		vm.pageLoading = true
 
 		            		let accountTransaction = cloneDeep(vm.savingTransactionForm)
+		            		accountTransaction.transaction_date = accountTransaction.transaction_date && vm.$df.formatDate(accountTransaction.transaction_date, "YYYY-MM-DD")
 		            		if(accountTransaction.type == "Cash")
 		            			accountTransaction.transaction_type = "CASHDEP"
 		            		if(accountTransaction.type == "Cheque")

@@ -48,10 +48,15 @@ export default {
 		}
 	},
 
-	getParticularsByName(names){	
+	getParticularsByName(names = null, category = null){	
 		let params = {
-			names : names
+			names : names,
+			category : category
 		}	
+		return axios.post($baseUrl + '/site/get-particulars', params)
+	},
+
+	getParticularsVoucher(params){	
 		return axios.post($baseUrl + '/site/get-particulars', params)
 	}
 }

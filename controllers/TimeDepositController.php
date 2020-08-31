@@ -12,6 +12,7 @@ use app\models\TimeDepositRateTable;
 
 use app\helpers\accounts\PaymentHelper;
 use app\helpers\accounts\TimeDepositHelper;
+use app\helpers\accounts\AccountHelper;
 use app\helpers\voucher\VoucherHelper;
 use app\helpers\journal\JournalHelper;
 use app\models\JournalHeader;
@@ -123,6 +124,7 @@ class TimeDepositController extends \yii\web\Controller
                     $paymentData['name'] = $name;
                     $paymentData['type'] = 'Individual';
                     $paymentData['amount_paid'] = $model->amount;
+                    $paymentData['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
 
                     $paymentModel = \app\helpers\payment\PaymentHelper::savePayment($paymentData);
                     if($paymentModel){
@@ -135,7 +137,8 @@ class TimeDepositController extends \yii\web\Controller
                             'particular_id' => 1,
                         	'product_id'    => $tdaccount['fk_td_product'], 
                         	'account_no'    => $model->accountnumber,
-                            'or_num'        => $ref_no
+                            'or_num'        => $ref_no,
+                            'posted_date'   => \Yii::$app->user->identity->DateTimeNow
                         ];
                         array_push($entries, $arr);     
                         $insertSuccess = \app\helpers\payment\PaymentHelper::insertAccount($entries, $paymentModel->id);
@@ -437,9 +440,20 @@ class TimeDepositController extends \yii\web\Controller
                 $withdraw_amount = $post['withdraw_amount'];
                 $renew_amount = $post['renew_amount'];
                 $voucher = $post['general_voucher'];
+                $gv_num = $voucher['gv_num'];
                 $open_date = isset($post['open_date']) ? $post['open_date'] : Yii::$app->user->identity->DateTimeNow;
 
                 $transaction_date = isset($voucher['transaction_date']) ? $voucher['transaction_date'] : \Yii::$app->user->identity->DateTimeNow;
+
+                $checkGV = VoucherHelper::getVoucherByGvNum($gv_num);
+                if($checkGV){
+                    $success = false;
+                    $errorMessage = "GV Number already exist";
+                    return [
+                        'success' => $success,
+                        'errorMessage' => $errorMessage
+                    ] ;
+                }
 
                 $account = \app\models\TimeDepositAccount::find()->where(['accountnumber' => $account_id])->one();
                 $member = \app\models\Member::find()->where(['id' => $account->member_id])->one();
@@ -502,9 +516,20 @@ class TimeDepositController extends \yii\web\Controller
                     }
                 }
 
-                //Save in Genereral Voucher then Journal Entry
-                $gv_num = $voucher['gv_num'];
                 if($success){
+                    //Process other account
+                    if(isset($post['otherAccToProcess']) && count($post['otherAccToProcess']) > 0){
+                        $processOtherAccount = AccountHelper::processOtherAccount($post['otherAccToProcess'], $voucher['gv_num'], $transaction_date);
+                        if(!$processOtherAccount['success']){
+                            $success = false;
+                        }
+                    }
+                }
+
+
+                //Save in Genereral Voucher then Journal Entry
+                if($success){
+
                     $name = $account->account_name;
                     $type = "Group";
                     $member_id = null;
@@ -526,6 +551,7 @@ class TimeDepositController extends \yii\web\Controller
                         $voucherData['name'] = $name;
                         $voucherData['type'] = $type;
                         $voucherData['date_transact'] = isset($voucher['transaction_date']) ? $voucher['transaction_date'] : \Yii::$app->user->identity->DateTimeNow;
+                        $voucherData['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
 
                     
                         $voucherModel = VoucherHelper::saveVoucher($voucherData);
@@ -533,6 +559,7 @@ class TimeDepositController extends \yii\web\Controller
                             $entries =  $voucher['voucher_entries'];
                             foreach ($entries as  $key => $ent) {
                                 $entries[$key]['member_id'] = $member_id;
+                                $entries[$key]['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
                             }
                             //Ren: 08-24-2020, Note: Add posted date
                             $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);

@@ -22,6 +22,7 @@ use app\models\ShareProduct;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\accounts\LoanHelper;
 use app\helpers\accounts\ShareHelper;
+use app\helpers\accounts\AccountHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\voucher\VoucherHelper;
@@ -399,6 +400,12 @@ class LoanController extends \yii\web\Controller
             $systemDate = date("Y-m-d", strtotime($currentDate));
     		
     		$loanaccount  = (object)$post['evaluationFormss'];
+
+            //Check for existing verified loan
+            $getOtherVerified = LoanProduct::find()->where(['member_id' => $loanaccount->member_id, 'loan_id' => $loanaccount->product_loan_id, 'status' => 'Verified'])->asArray()->one();
+            if($getOtherVerified){
+                return ['success' => true, 'status' => 'has_verified', 'error' => $getOtherVerified];
+            }
             //$loanToRenew  = $post['loanToRenew'];
     		
     		//	return $loanaccount_array;
@@ -446,23 +453,24 @@ class LoanController extends \yii\web\Controller
     		{
     			
     			$transaction->commit();
-    			return $loanaccount;
+                return ['success' => true, 'data' => $loanaccount];
     			
     		} else
     		{
     			$transaction->rollBack();
     			return [
-    					'status'=>'not saved',
-    					'errors'=> [
-    							'lpError' => $loanproduct->getErrors(),
-    							'lmError' => $loanmodel->getErrors(),
-    							'ltError' => $loanTransaction->getErrors()
-    					]
+                    'success' => false,
+					'status'=>'not saved',
+					'errors'=> [
+							'lpError' => $loanproduct->getErrors(),
+							'lmError' => $loanmodel->getErrors(),
+							'ltError' => $loanTransaction->getErrors()
+					]
     					
     			];
     		}
     		
-    		return $loanaccount;
+    		return ['success' => false];
     		
     	}
     }
@@ -587,6 +595,15 @@ class LoanController extends \yii\web\Controller
             $voucherDetails = $post['voucherDetails'];
             $otherLoanToPay = $post['otherLoanToPay'];
 
+            //Check for existing GVNumber
+            $checkGV = VoucherHelper::getVoucherByGvNum($gv_num);
+            if($checkGV){
+                return [
+                    'success' => false,
+                    'status'=>'ERROR_HASGV',                          
+                ];
+            }
+
             $currentDate = ParticularHelper::getCurrentDay();
             $systemDate = date("Y-m-d", strtotime($currentDate));
             $transac_date = isset($post['transaction_date']) ? $post['transaction_date'] : $systemDate;
@@ -668,57 +685,11 @@ class LoanController extends \yii\web\Controller
                 }
 
                 //Update other paid loan
-                if($otherLoanToPay && count($otherLoanToPay) > 0){
-                    foreach ($otherLoanToPay as $lnKey => $ln) {
-                        if($ln['amountToPay'] > 0){
-                            $amountToPay = $ln['amountToPay'];
-                            if($ln['type'] == "LOAN"){
-                                $otherLoanModel = LoanAccount::findOne($ln['account_no']);
+                if($success && $otherLoanToPay && count($otherLoanToPay) > 0){
 
-                                $loanDetails = array();
-                                $loanDetails['principal_pay'] = $amountToPay;
-                                $loanDetails['prepaid_pay'] = 0;
-                                $loanDetails['ref_num'] = $gv_num;
-                                $loanDetails['product_id'] = $otherLoanModel->loan_id;
-                                $loanDetails['transaction_date'] = $transac_date;
-                                $loanPayment = LoanHelper::loanPayment($ln['account_no'], $loanDetails);
-
-                                if(!$loanPayment['success']){
-                                    $success = false;
-                                    break;
-                                }
-                            }
-                            else if($ln['type'] == "SAVINGS"){
-                                $savingsDetails = array();
-                                $savingsDetails['account_no'] = $ln['account_no'];
-                                $savingsDetails['remarks'] = "Posted as deposit from ". $gv_num;
-                                $savingsDetails['amount'] = $amountToPay;
-                                $savingsDetails['ref_num'] = $gv_num;
-                                $savingsDetails['transaction_date'] = $transac_date;
-
-                                $depositSavings = SavingsHelper::depositSavings($savingsDetails);
-                                if(!$depositSavings['success']){
-                                    $success = false;
-                                    break;
-                                }
-                            }
-                            else if($ln['type'] == "SHARE"){
-                                $shareDetails = array();
-                                $shareDetails['account_no'] = $ln['account_no'];
-                                $shareDetails['remarks'] = "Posted as deposit from ". $gv_num;
-                                $shareDetails['amount'] = $amountToPay;
-                                $shareDetails['ref_num'] = $gv_num;
-                                $shareDetails['transaction_date'] = $transac_date;
-
-                                $depositShare = ShareHelper::depositShare($shareDetails);
-                                if(!$depositShare['success']){
-                                    $success = false;
-                                    break;
-                                }
-                            }
-                            
-                        }
-                        
+                    $processOtherAccount = AccountHelper::processOtherAccount($otherLoanToPay, $gv_num, $transac_date);
+                    if(!$processOtherAccount['success']){
+                        $success = false;
                     }
                 }
 
@@ -758,6 +729,7 @@ class LoanController extends \yii\web\Controller
                     $voucherData['name'] = $name;
                     $voucherData['type'] = $type;
                     $voucherData['date_transact'] = $transac_date;
+                    $voucherData['posted_date'] = $systemDate;
 
                 
                     $voucherModel = VoucherHelper::saveVoucher($voucherData);
@@ -765,6 +737,7 @@ class LoanController extends \yii\web\Controller
                         $entries =  $voucherDetails;
                         foreach ($entries as  $key => $ent) {
                             $entries[$key]['member_id'] = $member_id;
+                            $entries[$key]['posted_date'] = $systemDate;
                         }
                         $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
                         if(!$saveEntries){

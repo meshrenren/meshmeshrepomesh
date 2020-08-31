@@ -146,7 +146,7 @@ class SavingsHelper
         return $listTemplate;
     }
 
-    public static function depositSavings($savingsDetails){
+    public static function transactionSavings($savingsDetails){
         $success = false;
         $error = null;
 
@@ -155,25 +155,33 @@ class SavingsHelper
         $ref_num = $savingsDetails['ref_num'];
         $amount = $savingsDetails['amount'];
         $transaction_date = $savingsDetails['transaction_date'];
+        $transaction_type = $savingsDetails['transaction_type'];
         $posted_date = \Yii::$app->user->identity->DateNow;
 
         $savingsaccount = SavingAccounts::findOne($savingsDetails['account_no']);
-
         $savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
 
+        $running_balance = $savingsaccount->balance;
+        if($transaction_type == "CASHDEP"){
+            $running_balance = $savingsaccount->balance + $amount;
+        }
+        else if($transaction_type == "WITHDRWL"){
+            $running_balance = $savingsaccount->balance - $amount;
+        }
+        
 
         $savingstransaction = new SavingsTransaction();
         $savingstransaction->fk_savings_id = $account_no;
         $savingstransaction->amount = $amount;
-        $savingstransaction->transaction_type = 'CASHDEP';
+        $savingstransaction->transaction_type = $transaction_type;
         $savingstransaction->transacted_by = \Yii::$app->user->identity->id;
         $savingstransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
         $savingstransaction->posted_date = date('Y-m-d', strtotime($posted_date));
-        $savingstransaction->running_balance = $savingsaccount->balance + $amount;
+        $savingstransaction->running_balance = $running_balance;
         $savingstransaction->remarks = $remarks;
         $savingstransaction->ref_no = $ref_num;
         
-        $savingsaccount->balance = $savingsaccount->balance + $amount;
+        $savingsaccount->balance = $running_balance;
         
         if($savingsaccount->save() && $savingstransaction->save())
         {
@@ -182,7 +190,6 @@ class SavingsHelper
         }
         else
         {
-            var_dump($savingstransaction->errors);
             $error = $savingstransaction->errors;
             $success = false;
         }

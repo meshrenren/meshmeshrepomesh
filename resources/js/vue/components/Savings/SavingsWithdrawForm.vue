@@ -200,7 +200,7 @@ export default {
 	          	if (valid) {
 	          		vm.$swal({
 		              	title: 'Save Savings Transaction?',
-		              	text: "Are you sure you want to save this transaction? This action cannot be undone.",
+		              	text: "Are you sure you want to save this transaction? This will automatically be posted.",
 		              	type: 'warning',
 		              	showCancelButton: true,
 		              	cancelButtonColor: '#d33',

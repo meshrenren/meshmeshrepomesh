@@ -154,5 +154,8 @@ Vue.component('dialog-modal', DialogModal)
 import PrintHeader from './components/General/PrintHeader.vue'
 Vue.component('print-header', PrintHeader)
 
+import ProcessAccount from './components/ProcessAccount.vue'
+Vue.component('process-account', ProcessAccount)
+
 
 /* --- END --- */

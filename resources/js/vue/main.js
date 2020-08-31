@@ -9,6 +9,7 @@ import EventDispatcher from './service/EventDispatcher'
 import NumberFormatter from './service/NumberFormatter'
 import DateFormatter from './service/DateFormatter'
 import CalculationHelper from './service/CalculationHelper'
+import AccountHelper from './service/AccountHelper'
 import VueSweetalert2 from 'vue-sweetalert2';
 import moment from 'moment'
 /* CSS */
@@ -24,6 +25,7 @@ Vue.prototype.$EventDispatcher = new EventDispatcher()
 Vue.prototype.$nf = new NumberFormatter()
 Vue.prototype.$df = new DateFormatter()
 Vue.prototype.$ch = new CalculationHelper()
+Vue.prototype.$ah = new AccountHelper()
 Vue.prototype.$baseUrl = window.Yii.baseUrl
 Vue.prototype.$systemDate = window.coopData.systemDate
 Vue.prototype.$cutOffDate = window.coopData.cutOffDate

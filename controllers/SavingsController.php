@@ -318,7 +318,7 @@ class SavingsController extends \yii\web\Controller
                             $voucherData['name'] = $name;
                             $voucherData['type'] = $type;
                             $voucherData['date_transact'] = $transaction_date;
-                            $voucherData['posted_date'] = $transaction_date;
+                            $voucherData['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
 
                         
                             $voucherModel = VoucherHelper::saveVoucher($voucherData);
@@ -333,6 +333,7 @@ class SavingsController extends \yii\web\Controller
                                     'particular_id'    => $product_particularid, // Savings Deposit
                                     'debit'            => $saveSD->amount,
                                     'credit'           => 0,
+                                    'posted_date'      => \Yii::$app->user->identity->DateTimeNow
                                 ];
                                 array_push($entries, $arr);
 
@@ -343,6 +344,7 @@ class SavingsController extends \yii\web\Controller
                                     'particular_id'    => $coh_id->id, //Cash on Hand
                                     'debit'            => 0,
                                     'credit'           => $saveSD->amount,
+                                    'posted_date'      => \Yii::$app->user->identity->DateTimeNow
                                 ];
                                 array_push($entries, $arr);
 
@@ -372,6 +374,7 @@ class SavingsController extends \yii\web\Controller
                             $paymentData['name'] = $name;
                             $paymentData['type'] = 'Individual';
                             $paymentData['amount_paid'] = $saveSD->amount;
+                            $paymentData['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
 
                             $paymentModel = PaymentHelper::savePayment($paymentData);
                             if($paymentModel){
@@ -385,6 +388,7 @@ class SavingsController extends \yii\web\Controller
                                     'particular_id' => $product_particularid,
                                     'product_id'    => $getSavingsAccount->saving_product_id, 
                                     'account_no'    => $getSavingsAccount->account_no,
+                                    'posted_date'   => \Yii::$app->user->identity->DateTimeNow
                                 ];
                                 array_push($entries, $arr);     
                                 $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);

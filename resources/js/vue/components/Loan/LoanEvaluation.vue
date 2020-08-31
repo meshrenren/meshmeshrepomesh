@@ -325,6 +325,7 @@
     import _forEach from 'lodash/forEach'
 
 	import {dialogComponent} from '../../mixins/dialogComponent.js'
+	import _message from '../../mixins/messageDialog.js'
 
 export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
@@ -1039,14 +1040,26 @@ export default {
 						this.$API.Loan.applyLoan(loandata)
 						.then(result=>{
 							console.log("successresult", result.data);
-							new Noty({
-		                        theme: 'relax',
-		                        type: 'success',
-		                        layout: 'topRight',
-		                        text: "New loan successfully applied. See 'Pending List'",
-		                        timeout: 5000
-		                    }).show();
-		                    location.reload();
+							let res = data.result
+							if(!res.success){
+								if(res.status == 'has_verified'){
+									this.showMessage('error', 'New loan not applied. Already has existing verified loan. Please cancel it first.', 5000)
+								}
+								else{
+									this.showMessage('error', 'New loan not applied. Please try again or contact administrator', 5000)
+								}
+							}
+							else{
+								new Noty({
+			                        theme: 'relax',
+			                        type: 'success',
+			                        layout: 'topRight',
+			                        text: "New loan successfully applied. See 'Pending List'",
+			                        timeout: 5000
+			                    }).show();
+			                    location.reload();
+							}
+							
 
 						}).catch(err=>{
 							console.log("apierror", err.message);

@@ -563,7 +563,7 @@ class LoanHelper
             
             if($asSavings > 0){
 
-                $savingsaccount = SavingsHelper::getMemberSavings($member_id, false);
+                $savingsaccount = SavingsHelper::getMemberSavings($account->member_id, false);
                 if($savingsaccount){
                     $pro_name = "LOAN";
                     $getLoanProd = LoanProduct::findOne($account->loan_id);
@@ -574,10 +574,11 @@ class LoanHelper
                     $savingsDetails = array();
                     $savingsDetails['account_no'] = $savingsaccount->account_no;
                     $savingsDetails['remarks'] = "From " .$pro_name. " payment. Posted as Payment from ". $$ref_num;
-                    $amount['amount'] = $asSavings;
-                    $amount['transaction_date'] = $transaction_date;
+                    $savingsDetails['amount'] = $asSavings;
+                    $savingsDetails['transaction_date'] = $transaction_date;
+                    $savingsDetails['transaction_type'] = 'CASHDEP';
 
-                    $depositSavings = SavingsHelper::depositSavings($savingsDetails);
+                    $depositSavings = SavingsHelper::transactionSavings($savingsDetails);
                 }
                 
             }

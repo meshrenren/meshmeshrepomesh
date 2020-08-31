@@ -287,6 +287,7 @@ class ShareaccountController extends Controller
                         $paymentData['name'] = $name;
                         $paymentData['type'] = 'Individual';
                         $paymentData['amount_paid'] = $saveSD->amount;
+                        $paymentData['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
 
                         $paymentModel = PaymentHelper::savePayment($paymentData);
                         if($paymentModel){
@@ -299,6 +300,7 @@ class ShareaccountController extends Controller
                                 'particular_id' => $product_particularid,
                                 'product_id'    => $getSavingsAccount->saving_product_id, 
                                 'account_no'    => $getSavingsAccount->account_no,
+                                'posted_date'   => \Yii::$app->user->identity->DateTimeNow
                             ];
                             array_push($entries, $arr);   
 
