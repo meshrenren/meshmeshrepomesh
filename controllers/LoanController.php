@@ -135,8 +135,7 @@ class LoanController extends \yii\web\Controller
             $member_id = $post['member_id'];
 
             $joinWith = ['loanTransaction' => function ($query){
-                $query->orderBy('date_posted')
-                ->asArray()->all();
+                $query->orderBy('date_posted');
             }];
             $loanAccounts = LoanHelper::getMemberLoan($member_id, $loan_id, true, $joinWith, true, 'release_date');
             return $loanAccounts;

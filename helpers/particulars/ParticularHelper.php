@@ -187,7 +187,7 @@ class ParticularHelper
 
 				$isSaveToSaving = false;
 				if($tdaccount->balance >= 500000){
-					$isSaveToSaving = true;
+					//$isSaveToSaving = true;
 				}
 				$tdBalance = $tdaccount->balance + $interest;
 				$maturedAmount = $tdaccount->balance + $interest;
@@ -413,6 +413,7 @@ class ParticularHelper
 				$mdlTrans->transaction_type = "INTEREST";
 				$mdlTrans->transacted_by = \Yii::$app->user->identity->id;
 				$mdlTrans->transaction_date = $currentDate;
+				$mdlTrans->posted_date = $currentDate;
 				$mdlTrans->running_balance = $totalBalance;
 				$mdlTrans->remarks = $refNo;
 				$mdlTrans->ref_no = $refNo;
