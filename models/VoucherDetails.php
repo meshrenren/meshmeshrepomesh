@@ -64,6 +64,9 @@ class VoucherDetails extends \yii\db\ActiveRecord
     {
         return $this->hasOne(GeneralVoucher::className(), ['id' => 'voucher_id']);
     }
+    
+    
+
 
     /**
      * @return \yii\db\ActiveQuery

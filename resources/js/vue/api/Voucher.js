@@ -30,5 +30,17 @@ export default {
 
 	getAllVouchers(){
 		return axios.post($baseUrl + '/general-voucher/get-all-voucher')
+	},
+
+	getAllVoucherSummaryPerParticulars(param_sent){
+		let params = {
+			name : param_sent.name,
+			particular_id : param_sent.particular_id,
+			date_from : param_sent.date_from,
+			date_to : param_sent.date_to,
+		}
+
+		return axios.post($baseUrl + '/general-voucher/get-voucher-summary-per-particulars', params)
+
 	}
 }
