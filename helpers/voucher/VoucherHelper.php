@@ -33,6 +33,10 @@ class VoucherHelper
             $voucher->posted_date = $data['posted_date'];
         }
 
+        if(isset($value['is_prepaid'])){
+            $voucher->is_prepaid = $value['is_prepaid'] === 1|| $value['is_prepaid'] === "1" || $value['is_prepaid'] === true || $value['is_prepaid'] === "true" ? 1 : 0;
+        }
+
         if($voucher->save()){
             return $voucher;
         }
@@ -181,6 +185,28 @@ class VoucherHelper
         return null;
     }
 
+    public static function getPrepaid($list, $voucher){
+        $getPrepaid = null;
+
+        $getVoucherList = array_filter( $list,
+            function ($e) use ($voucher) {
+                return intval($e->is_prepaid) === 1 && $e->account_no == $voucher['account_no'];
+            }
+        );
+        
+
+        if(count($getVoucherList) > 0){
+            foreach ($getVoucherList as $pyt) {
+                if($pyt->account_no == $voucher['account_no']){
+                    $getPrepaid = $pyt;
+                }
+            }
+        }
+
+        return $getPrepaid;
+        
+    }
+
     public static function postVoucher($ref_id){
         try {
 
@@ -217,7 +243,7 @@ class VoucherHelper
                     if($row['credit']  && floatval($row['credit'] ) > 0){
 
                         //If prepaid paid skip as it will be included on adding the loan
-                        if($row['is_prepaid'] === 1){
+                        if(intval($row['is_prepaid']) === 1){
                             continue;
                         }
 
@@ -237,7 +263,7 @@ class VoucherHelper
                         if($product->id == 1 || ($product->id == 2 && !$isNewLoanPolicy)) //No quiencena prepaid for appliance loan 
                         {
                             //Get prepaid from the payment
-                            $getPrepaid = static::getPrepaid($payments, $row);
+                            $getPrepaid = static::getPrepaid($voucherList, $row);
                             if($getPrepaid){
                                 $prepaidInterest = $getPrepaid['credit'] < 0 ? 0 : $getPrepaid['credit'];
                                 $amount += $prepaidInterest;
@@ -248,7 +274,7 @@ class VoucherHelper
                         echo "i am interest prepaid .. ".$prepaidInterest." | <br/>";
                         $principal_pay = $row['credit']/* - $prepaidInterest*/;
 
-                        $loanDetails = array();
+                        /*$loanDetails = array();
                         $loanDetails['principal_pay'] = $row['credit'];
                         $loanDetails['prepaid_pay'] = $prepaidInterest;
                         $loanDetails['ref_num'] = $generalVoucher->gv_num;
@@ -260,7 +286,7 @@ class VoucherHelper
                             var_dump($loanPayment['error']);
                             $success = false;
                             break;
-                        }
+                        }*/
                     }
 
                     //IF DEBIT, This mostly for refund
@@ -291,7 +317,7 @@ class VoucherHelper
                         $savingsDetails = array();
                         $savingsDetails['account_no'] = $row['account_no'];
                         $savingsDetails['remarks'] = "Posted as deposit from ". $ref_num;
-                        $savingsDetails['amount'] = $row['credit'];
+                        $savingsDetails['amount'] = floatval($row['credit'] );
                         $savingsDetails['ref_num'] = $ref_num;
                         $savingsDetails['transaction_date'] = $dateToday;
                         $savingsDetails['transaction_type'] = 'CASHDEP';
@@ -303,7 +329,22 @@ class VoucherHelper
                         }
                     }
                     
-                    
+                    //IF DEBIT, THIS WILL BE SAVINGS WITHDRAW
+                    if($row['debit']  && floatval($row['debit'] ) > 0){
+                        $savingsDetails = array();
+                        $savingsDetails['account_no'] = $row['account_no'];
+                        $savingsDetails['remarks'] = "Posted as withdrawal from ". $ref_num;
+                        $savingsDetails['amount'] = floatval($row['debit'] );
+                        $savingsDetails['ref_num'] = $ref_num;
+                        $savingsDetails['transaction_date'] = $dateToday;
+                        $savingsDetails['transaction_type'] = 'WITHDRWL';
+
+                        $depositSavings = SavingsHelper::transactionSavings($savingsDetails);
+                        if(!$depositSavings['success']){
+                            $success = false;
+                            break;
+                        }
+                    }
                 }
 
                 else if($row['type']=='SHARE')
@@ -313,7 +354,7 @@ class VoucherHelper
                         $shareDetails = array();
                         $shareDetails['account_no'] = $row['account_no'];
                         $shareDetails['remarks'] = "Posted as deposit from ". $ref_num;
-                        $shareDetails['amount'] = $row['credit'];
+                        $shareDetails['amount'] = floatval($row['credit'] );
                         $shareDetails['ref_num'] = $ref_num;
                         $shareDetails['transaction_date'] = $dateToday;
                         $shareDetails['transaction_type'] = "CASHDEP";
@@ -324,6 +365,23 @@ class VoucherHelper
                             break;
                         }
                     }  
+
+                    //IF DEBIT, THIS WILL BE SHARE WITHDRAW
+                    if($row['debit']  && floatval($row['debit'] ) > 0){
+                        $shareDetails = array();
+                        $shareDetails['account_no'] = $row['account_no'];
+                        $shareDetails['remarks'] = "Posted as withdrawal from ". $ref_num;
+                        $shareDetails['amount'] = floatval($row['debit'] );
+                        $shareDetails['ref_num'] = $ref_num;
+                        $shareDetails['transaction_date'] = $dateToday;
+                        $shareDetails['transaction_type'] = "WITHDRWL";
+
+                        $depositShare = ShareHelper::transactionShare($shareDetails);
+                        if(!$depositShare['success']){
+                            $success = false;
+                            break;
+                        }
+                    }
                 }
             }
 

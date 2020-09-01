@@ -279,23 +279,26 @@ export default {
             let totalOtherToPay = 0
             let totalOtherToWithdraw = 0
 
-            let loanToPay = this.$refs.processAccount.loanToPayList
-            let otherToPay = this.$refs.processAccount.otherToPay
-            let setVoucherAccount = this.$ah.setVoucherAccount(loanToPay, otherToPay)
 
-            console.log('setVoucherAccount', setVoucherAccount)
-            if(!setVoucherAccount.success){
-                if(setVoucherAccount.error == "ERR_LOAN_BALANCE"){
-                    this.showMessage('error', 'AMOUNT TO PAY is greater than LOAN BALANCE', 5000)
-                    return false
+            if(this.$refs && this.$refs.processAccount){
+                let loanToPay = this.$refs.processAccount.loanToPayList
+                let otherToPay = this.$refs.processAccount.otherToPay
+                let setVoucherAccount = this.$ah.setVoucherAccount(loanToPay, otherToPay)
+
+                console.log('setVoucherAccount', setVoucherAccount)
+                if(!setVoucherAccount.success){
+                    if(setVoucherAccount.error == "ERR_LOAN_BALANCE"){
+                        this.showMessage('error', 'AMOUNT TO PAY is greater than LOAN BALANCE', 5000)
+                        return false
+                    }
                 }
-            }
-            else{
-                let dataVoucher = setVoucherAccount.data
-                totalOtherToPay = dataVoucher.totalOtherToPay
-                totalOtherToWithdraw = dataVoucher.totalOtherToWithdraw
-                list = list.concat(dataVoucher.toPaySave)
-                this.loanToPaySave = dataVoucher.accToPaySave
+                else{
+                    let dataVoucher = setVoucherAccount.data
+                    totalOtherToPay = dataVoucher.totalOtherToPay
+                    totalOtherToWithdraw = dataVoucher.totalOtherToWithdraw
+                    list = list.concat(dataVoucher.toPaySave)
+                    this.loanToPaySave = dataVoucher.accToPaySave
+                }
             }
 
             cashOnHand = parseFloat(cashOnHand) + parseFloat(totalOtherToWithdraw)

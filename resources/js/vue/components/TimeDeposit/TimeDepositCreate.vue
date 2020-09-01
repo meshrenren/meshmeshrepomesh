@@ -416,6 +416,15 @@ export default {
 				                if(res.success){
 				                	type = "success"
 				                	message = "Time Deposit Account successfully created."
+
+				                	new Noty({
+							            theme: 'relax',
+							            type: type,
+							            layout: 'topRight',
+							            text: message,
+							            timeout: 2500
+							        }).show()
+				                	location.reload()
 				                }
 				                else{
 				                	type = "error"

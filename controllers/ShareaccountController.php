@@ -304,7 +304,7 @@ class ShareaccountController extends Controller
                             ];
                             array_push($entries, $arr);   
 
-                            $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);
+                            $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id, \Yii::$app->user->identity->DateTimeNow);
                             if(!$insertSuccess){
                                 $success = false;
                                 $error = "PAYMENT_ERROR";

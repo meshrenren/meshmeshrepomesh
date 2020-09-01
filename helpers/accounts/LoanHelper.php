@@ -487,6 +487,7 @@ class LoanHelper
     public static function loanPayment($account_no, $loanDetails){
         $success = false;
         $error = null;
+        var_dump($loanDetails);
 
         $principal_pay = $loanDetails['principal_pay'];
         $prepaidInterest = isset($loanDetails['prepaid_pay']) && $loanDetails['prepaid_pay'] ? $loanDetails['prepaid_pay'] : 0;
@@ -573,7 +574,7 @@ class LoanHelper
 
                     $savingsDetails = array();
                     $savingsDetails['account_no'] = $savingsaccount->account_no;
-                    $savingsDetails['remarks'] = "From " .$pro_name. " payment. Posted as Payment from ". $$ref_num;
+                    $savingsDetails['remarks'] = "From " .$pro_name. " payment. Posted as Payment from ". $ref_num;
                     $savingsDetails['amount'] = $asSavings;
                     $savingsDetails['transaction_date'] = $transaction_date;
                     $savingsDetails['transaction_type'] = 'CASHDEP';

@@ -267,25 +267,29 @@ export default {
                 creditTotal += parseFloat(this.renewAmt)
             }
 
-            let loanToPay = this.$refs.processAccount.loanToPayList
-            let otherToPay = this.$refs.processAccount.otherToPay
-            let setVoucherAccount = this.$ah.setVoucherAccount(loanToPay, otherToPay)
-            console.log('setVoucherAccount', setVoucherAccount)
-            if(!setVoucherAccount.success){
-                if(setVoucherAccount.error == "ERR_LOAN_BALANCE"){
-                    this.showMessage('error', 'AMOUNT TO PAY is greater than LOAN BALANCE', 5000)
-                    return false
+            if(this.$refs && this.$refs.processAccount){
+                let loanToPay = this.$refs.processAccount.loanToPayList
+                let otherToPay = this.$refs.processAccount.otherToPay
+                let setVoucherAccount = this.$ah.setVoucherAccount(loanToPay, otherToPay)
+                console.log('setVoucherAccount', setVoucherAccount)
+                if(!setVoucherAccount.success){
+                    if(setVoucherAccount.error == "ERR_LOAN_BALANCE"){
+                        this.showMessage('error', 'AMOUNT TO PAY is greater than LOAN BALANCE', 5000)
+                        return false
+                    }
+                }
+                else{
+                    let dataVoucher = setVoucherAccount.data
+                    let totalOtherToPay = dataVoucher.totalOtherToPay
+                    creditTotal += parseFloat(totalOtherToPay)
+                    let totalOtherToWithdraw = dataVoucher.totalOtherToWithdraw
+                    debitTotal += parseFloat(totalOtherToWithdraw)
+                    list = list.concat(dataVoucher.toPaySave)
+                    this.accToProcess = dataVoucher.accToPaySave
                 }
             }
-            else{
-                let dataVoucher = setVoucherAccount.data
-                let totalOtherToPay = dataVoucher.totalOtherToPay
-                creditTotal += parseFloat(totalOtherToPay)
-                let totalOtherToWithdraw = dataVoucher.totalOtherToWithdraw
-                debitTotal += parseFloat(totalOtherToWithdraw)
-                list = list.concat(dataVoucher.toPaySave)
-                this.accToProcess = dataVoucher.accToPaySave
-            }
+
+            
 
             creditTotal = this.$nf.numberFixed(creditTotal, 2)
             debitTotal = this.$nf.numberFixed(debitTotal, 2)

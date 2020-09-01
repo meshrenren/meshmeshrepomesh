@@ -17,7 +17,7 @@ COOPERATIVE
 </span></div>
 <div style="text-align: center;"><span>[account_type]</span></div>
 <div style="text-align: center;">&nbsp;</div>
-<table style="width: 100%;">
+<table style="width: 100%;" class = "account-process">
 	<tbody>
 		<tr>
 			<td><span>&nbsp;Account Number:</span></td>
@@ -58,7 +58,7 @@ COOPERATIVE
 </span></div>
 <div style="text-align: center;"><span>[account_type]</span></div>
 <div style="text-align: center;">&nbsp;</div>
-<table style="width: 50%;">
+<table style="width: 50%;" class = "account-process">
 	<tbody>
 		<tr>
 			<td><span>Account Name:</span></td>
@@ -103,7 +103,7 @@ COOPERATIVE
 </span></div>
 <div style="text-align: center;"><span>[account_type]</span></div>
 <div style="text-align: center;">&nbsp;</div>
-<table style="width: 50%;">
+<table style="width: 50%;" class = "account-process">
 	<tbody>
 		<tr>
 			<td><span>Account Name:</span></td>

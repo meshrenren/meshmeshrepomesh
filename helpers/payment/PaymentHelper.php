@@ -91,7 +91,7 @@ class PaymentHelper
             }
 
             if($posted_date){
-                $voucher->posted_date = $posted_date;
+                $payment->posted_date = $posted_date;
             }
 
             if(!$payment->save()){

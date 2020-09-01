@@ -2,6 +2,10 @@ body{
 	font-size: 20px;
 }
 
+table.account-process{
+	font-size: 20px !important;
+}
+
 .header-layout {
   	display: flex;
   	justify-content: center;

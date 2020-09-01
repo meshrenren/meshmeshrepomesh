@@ -150,6 +150,8 @@ class SavingsHelper
         $success = false;
         $error = null;
 
+        var_dump($savingsDetails);
+
         $account_no = $savingsDetails['account_no'];
         $remarks = $savingsDetails['remarks'];
         $ref_num = $savingsDetails['ref_num'];

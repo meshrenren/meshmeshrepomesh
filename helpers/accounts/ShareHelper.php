@@ -164,7 +164,7 @@ class ShareHelper
         $sharetransaction->remarks = $remarks;
         $sharetransaction->reference_number = $ref_num;
         
-        $shareaccount->balance = $shareaccount->balance + $amount;
+        $shareaccount->balance = $running_balance;
         
         if($shareaccount->save() && $sharetransaction->save())
         {

@@ -99,7 +99,7 @@ class TimeDepositController extends \yii\web\Controller
                     if($model->type == "Group" && isset($post['signatoryList'])){
                         $signatories = $post['signatoryList'];
                         foreach ($signatories as $sign) {
-                            $newSign = new \app\models\SaGroupSignatory;
+                            $newSign = new \app\models\TdGroupSignatory;
                             $newSign->td_account = $model->accountnumber;
                             $newSign->member_id = $sign['id'];
                             $newSign->save();
@@ -141,7 +141,7 @@ class TimeDepositController extends \yii\web\Controller
                             'posted_date'   => \Yii::$app->user->identity->DateTimeNow
                         ];
                         array_push($entries, $arr);     
-                        $insertSuccess = \app\helpers\payment\PaymentHelper::insertAccount($entries, $paymentModel->id);
+                        $insertSuccess = \app\helpers\payment\PaymentHelper::insertAccount($entries, $paymentModel->id, \Yii::$app->user->identity->DateTimeNow);
                         if(!$insertSuccess){
                             $success = false;
                             $error = "PAYMENT_ERROR";
@@ -562,7 +562,7 @@ class TimeDepositController extends \yii\web\Controller
                                 $entries[$key]['posted_date'] = \Yii::$app->user->identity->DateTimeNow;
                             }
                             //Ren: 08-24-2020, Note: Add posted date
-                            $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
+                            $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id, \Yii::$app->user->identity->DateTimeNow);
                             if(!$saveEntries){
                                 $success = false;
                             }

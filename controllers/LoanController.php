@@ -739,7 +739,7 @@ class LoanController extends \yii\web\Controller
                             $entries[$key]['member_id'] = $member_id;
                             $entries[$key]['posted_date'] = $systemDate;
                         }
-                        $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id);
+                        $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id, $systemDate);
                         if(!$saveEntries){
                             $success = false;
                         }

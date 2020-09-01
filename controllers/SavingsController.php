@@ -391,7 +391,7 @@ class SavingsController extends \yii\web\Controller
                                     'posted_date'   => \Yii::$app->user->identity->DateTimeNow
                                 ];
                                 array_push($entries, $arr);     
-                                $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id);
+                                $insertSuccess = PaymentHelper::insertAccount($entries, $paymentModel->id, \Yii::$app->user->identity->DateTimeNow);
                                 if($insertSuccess){
                                     $success = true;
                                 }  

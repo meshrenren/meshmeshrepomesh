@@ -209,7 +209,7 @@
                                 prop="amount"
                                 label="Amount">
                                 <template slot-scope="scope">
-                                    {{ $nf.formatNumber(scope.row.principal, 2) }}
+                                    {{ $nf.formatNumber(scope.row.amount, 2) }}
                                 </template>
                             </el-table-column>
                         </el-table>

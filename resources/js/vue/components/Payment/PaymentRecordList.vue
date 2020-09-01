@@ -11,7 +11,10 @@
                 prop="fullname" fixed>   
                 <template slot="header" slot-scope="scope">
                     <el-input v-model="nameSearch" size="mini" placeholder="Search Member"/>
-                </template>                          
+                </template>  
+                <template slot-scope="scope"> 
+                	{{ $nf.formatNumber(scope.row[item.key], 2) }} 
+                </template>                         
             </el-table-column>
             <el-table-column v-for="item in setUpColumn"
             	:key = "item.key"
