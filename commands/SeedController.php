@@ -2980,9 +2980,9 @@ class SeedController extends Controller
     }
 
     public function actionVoucherPostedDate(){
-        $getGV = \app\models\GeneralVoucher::find()->count();
+        $getGVCount = \app\models\GeneralVoucher::find()->count();
         $limit = 2000;
-        $loop = $getORCount / 2000;
+        $loop = $getGVCount / 2000;
 
         $offsetCount = 0;
         for ($queryLoop = 0; $queryLoop <= $loop ; $queryLoop++) { 
@@ -2991,15 +2991,15 @@ class SeedController extends Controller
             foreach ($getGV as $keyGv => $gv) {
                 $getList = \app\models\VoucherDetails::find()->where(['voucher_id' => $gv->id])->all();
                 $posted_date = date('Y-m-d', strtotime($gv->created_date));
-                if($or->posted_date){
-                    $posted_date = $or->posted_date;
+                if($gv->posted_date){
+                    $posted_date = $gv->posted_date;
                 }
-                echo "Post payment details: GV = " . $or->gv_num . " \t " . $or->name;
+                echo "Voucher details: GV = " . $gv->gv_num . " \t " . $gv->name;
                 foreach ($getList as $key => $list) {
                     $list->posted_date = $posted_date;
                     $list->save();
                 }
-                if(!$or->posted_date){
+                if(!$gv->posted_date){
                     $gv->posted_date = $posted_date;
                     $gv->Save();
                 }
@@ -3012,9 +3012,10 @@ class SeedController extends Controller
 
 
     public function actionPaymentPostedDate(){
-        $getORCount = \app\models\PaymentRecord::find()->count();
+        $getORCount = \app\models\PaymentRecord::find()->andWhere('id > 2000')->count();
         $limit = 2000;
         $loop = $getORCount / 2000;
+        $loop = intval($loop) + 1;
 
         $offsetCount = 0;
         for ($queryLoop = 0; $queryLoop <= $loop ; $queryLoop++) { 
@@ -3033,13 +3034,24 @@ class SeedController extends Controller
                     echo "\n";
                 }
             }
+
+            $offsetCount = $offsetCount + $limit;
         }
-        $offsetCount = $offsetCount + $limit;
 
     }
 
     public function actionSavingsPostedDate(){
         $getOR = \app\models\SavingsTransaction::find()->all();
+        foreach ($getOR as $keyGv => $or) {
+            if(!$or->posted_date){
+                $or->posted_date = date('Y-m-d', strtotime($or->transaction_date));
+                $or->save();
+            }
+        }
+    }
+
+    public function actionSharePostedDate(){
+        $getOR = \app\models\ShareTransaction::find()->all();
         foreach ($getOR as $keyGv => $or) {
             if(!$or->posted_date){
                 $or->posted_date = date('Y-m-d', strtotime($or->transaction_date));
