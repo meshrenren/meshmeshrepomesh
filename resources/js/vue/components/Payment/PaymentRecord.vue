@@ -171,7 +171,7 @@
                                             <el-table-column
                                               label="Add as Savings">
                                                 <template slot-scope="scope" v-if= "scope.row.type == 'LOAN' && !scope.row.is_prepaid">
-                                                    <el-input type="number" :min = "0" v-model="scope.row.add_as_savings" :disabled = "Number(scope.row.balance) > 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                    <el-input type="number" :min = "0" v-model="scope.row.add_as_savings" @keyup.enter.native = "addAccounts"></el-input>
                                                 </template>
                                             </el-table-column>
                                         </el-table>
@@ -608,45 +608,49 @@ export default {
 
             if(loans && loans.length > 0){
                 _forEach(loans, rs =>{
-
-                    let arr = cloneDeep(this.accountModel)
-                    arr.member_id = rs.member_id
-                    arr.fullname = this.getMemberName(rs.member_id)
-                    arr.key = "LOAN_" + rs.account_no
-                    arr.account_no = rs.account_no
-                    arr.product_id = rs.loan_id
-                    arr.product_name = rs.product.product_name
-                    arr.type = "LOAN"
-                    arr.balance = parseFloat(rs.principal_balance).toFixed(2)
-                    arr.particular_id = rs.product.particular_id
-
-                    let amount = this.getAmount(arr.key)
-                    arr.amount = amount
-
-                    arr.add_as_savings = null
-                    arr.savings_data = savingsData
-
-                    allAccounts.push(arr)
-
-
-                    //Add PI for Loan that has pi particular field
-                    if(Number(rs.product.pi_particular_id) > 0){
+                    if(rs && rs.account_no && rs.product){
                         let arr = cloneDeep(this.accountModel)
                         arr.member_id = rs.member_id
                         arr.fullname = this.getMemberName(rs.member_id)
-                        arr.key = "LOAN_PI_" + rs.account_no
+                        arr.key = "LOAN_" + rs.account_no
                         arr.account_no = rs.account_no
                         arr.product_id = rs.loan_id
-                        arr.product_name = "PI " + rs.product.product_name
+                        arr.product_name = rs.product.product_name
                         arr.type = "LOAN"
                         arr.balance = parseFloat(rs.principal_balance).toFixed(2)
-                        arr.particular_id = rs.product.pi_particular_id
-                        arr.is_prepaid = true
+                        arr.particular_id = rs.product.particular_id
 
                         let amount = this.getAmount(arr.key)
                         arr.amount = amount
 
+                        if(savingsData){
+                            let keyS = "LOAN_"+arr.account_no+"_SAVINGS_" + savingsData.account_no
+                            arr.add_as_savings = null
+                            arr.savings_data = savingsData
+                        }
+
                         allAccounts.push(arr)
+
+
+                        //Add PI for Loan that has pi particular field
+                        if(Number(rs.product.pi_particular_id) > 0){
+                            let arr = cloneDeep(this.accountModel)
+                            arr.member_id = rs.member_id
+                            arr.fullname = this.getMemberName(rs.member_id)
+                            arr.key = "LOAN_PI_" + rs.account_no
+                            arr.account_no = rs.account_no
+                            arr.product_id = rs.loan_id
+                            arr.product_name = "PI " + rs.product.product_name
+                            arr.type = "LOAN"
+                            arr.balance = parseFloat(rs.principal_balance).toFixed(2)
+                            arr.particular_id = rs.product.pi_particular_id
+                            arr.is_prepaid = true
+
+                            let amount = this.getAmount(arr.key)
+                            arr.amount = amount
+
+                            allAccounts.push(arr)
+                        }
                     }
                 })
             }
@@ -663,10 +667,20 @@ export default {
             }
             return null
         },
-        getInAllAccount(key, asSavings = false){
-            if(asSavings){
-                let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == key})
+        getAmountSavings(key){
+            let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == key})
+            if(getInd >= 0){
+                return Number(this.allTotalAccount[getInd].amount)
             }
+            return null
+        },
+        getInAllAccount(key, savingsKey = null){
+            console.log("savingsKey", savingsKey)
+            if(savingsKey){
+                let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == savingsKey})
+                return getInd
+            }
+
             let getInd = this.allTotalAccount.findIndex(rs => { return rs.key == key})
             return getInd
         },
@@ -697,23 +711,40 @@ export default {
                     }
                     
                 }
+                else{
+                    let getInd = vm.getInAllAccount(rs.key)
+                    if(getInd >= 0){
+                        vm.allTotalAccount.splice(getInd, 1)
+                    }
+                }
+
 
                 if(rs.add_as_savings && Number(rs.add_as_savings) > 0 && rs.savings_data){
-                    let getInd = vm.getInAllAccount(rs.key, true)
+                    let keyS = "LOAN_"+rs.account_no+"_SAVINGS_" + rs.savings_data.account_no
+                    let getInd = vm.getInAllAccount(rs.key, keyS)
+
                     if(getInd >= 0){
                         vm.allTotalAccount[getInd].amount = Number(rs.add_as_savings)
                     }
                     else{
                         //Change data
-                        acct.key = "LOAN_"+rs.account_no+"_SAVINGS_" + rs.savings_data.account_no
-                        acct.account_no = rs.savings_data.account_no
-                        acct.product_id = rs.savings_data.saving_product_id
-                        acct.particular_id = rs.savings_data.product ? rs.savings_data.product.particular_id : 1
-                        acct.product_name = rs.savings_data.product ? rs.savings_data.product.product_name : "Regular Savings"
-                        acct.type = "SAVINGS"
-                        acct.amount = rs.add_as_savings
-                        acct.remarks = "From " + rs.product_name + " Payment"
-                        vm.allTotalAccount.push(acct)
+                        let acct2 = cloneDeep(rs)
+                        acct2.key = "LOAN_"+rs.account_no+"_SAVINGS_" + rs.savings_data.account_no
+                        acct2.account_no = rs.savings_data.account_no
+                        acct2.product_id = rs.savings_data.saving_product_id
+                        acct2.particular_id = rs.savings_data.product ? rs.savings_data.product.particular_id : 1
+                        acct2.product_name = rs.savings_data.product ? rs.savings_data.product.description : "Savings Deposit"
+                        acct2.type = "SAVINGS"
+                        acct2.amount = rs.add_as_savings
+                        acct2.remarks = "From " + rs.product_name + " Payment"
+                        vm.allTotalAccount.push(acct2)
+                    }
+                }
+                else if(rs.savings_data){
+                    let keyS = "LOAN_"+rs.account_no+"_SAVINGS_" + rs.savings_data.account_no
+                    let getInd = vm.getInAllAccount(rs.key, keyS)
+                    if(getInd >= 0){
+                        vm.allTotalAccount.splice(getInd, 1)
                     }
                 }
             })

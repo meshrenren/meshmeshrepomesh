@@ -1040,14 +1040,20 @@ export default {
 						this.$API.Loan.applyLoan(loandata)
 						.then(result=>{
 							console.log("successresult", result.data);
-							let res = data.result
+							let res = result.data
 							if(!res.success){
+								let text = 'New loan not applied. Please try again or contact administrator.'
 								if(res.status == 'has_verified'){
-									this.showMessage('error', 'New loan not applied. Already has existing verified loan. Please cancel it first.', 5000)
+									text = 'New loan not applied. Already has existing verified loan. Please cancel it first.'
 								}
-								else{
-									this.showMessage('error', 'New loan not applied. Please try again or contact administrator', 5000)
-								}
+
+								new Noty({
+			                        theme: 'relax',
+			                        type: 'error',
+			                        layout: 'topRight',
+			                        text: text,
+			                        timeout: 5000
+			                    }).show();
 							}
 							else{
 								new Noty({

@@ -285,10 +285,10 @@ class LoanController extends \yii\web\Controller
                 if($release_date > $lastPayment){
                    $lastPayment =  $release_date;
                 }
-
+                
                 $firstTransaction = null;
                 $getTransactions = LoanTransaction::find()->where(['loan_account' => $acc['account_no'], 'is_cancelled' => "0"])
-                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "EMERGENCY"')
+                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "PAYCLOSE" OR transaction_type = "EMERGENCY"')
                     ->andWhere('date_posted <= "' . $systemDate . '"')
                     ->orderBy('date_posted')
                     ->asArray()->all();
@@ -351,6 +351,7 @@ class LoanController extends \yii\web\Controller
                 $result['total_amount_paid'] = $total_amount_paid;
                 $result['balance_after_cutoff'] = $balance_after_cutoff;
                 $result['amount_balance'] = $amount_balance;
+                $result['lastRunningBal'] = $lastRunningBal;
             	
             }
             
@@ -401,9 +402,9 @@ class LoanController extends \yii\web\Controller
     		$loanaccount  = (object)$post['evaluationFormss'];
 
             //Check for existing verified loan
-            $getOtherVerified = LoanProduct::find()->where(['member_id' => $loanaccount->member_id, 'loan_id' => $loanaccount->product_loan_id, 'status' => 'Verified'])->asArray()->one();
+            $getOtherVerified = LoanAccount::find()->where(['member_id' => $loanaccount->member_id, 'loan_id' => $loanaccount->product_loan_id, 'status' => 'Verified'])->asArray()->one();
             if($getOtherVerified){
-                return ['success' => true, 'status' => 'has_verified', 'error' => $getOtherVerified];
+                return ['success' => false, 'status' => 'has_verified', 'error' => $getOtherVerified];
             }
             //$loanToRenew  = $post['loanToRenew'];
     		
