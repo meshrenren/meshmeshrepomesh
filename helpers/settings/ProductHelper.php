@@ -4,12 +4,7 @@ namespace app\helpers\settings;
 
 use Yii;
 
-/**
- * Organization class holds static functions
- * that'll provide reusable methods to retrieve
- * orgs utility data such as List of employees
- * or departments.
- */
+
 class ProductHelper
 {
 	/**

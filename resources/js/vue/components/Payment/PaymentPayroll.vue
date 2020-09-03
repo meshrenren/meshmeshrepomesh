@@ -72,7 +72,7 @@
 
 
 export default {
-    props: ['dataPaymentModel', 'dataPayrollModel', 'dataPayrollListModel', 'dataMember'],
+    props: ['dataPaymentModel', 'dataMember'],
     data: function () {  
     	let formPayment  = {}
         this.dataPaymentModel.forEach(function(detail){
@@ -80,14 +80,14 @@ export default {
         })
 
         let formPayroll  = {}
-        this.dataPayrollModel.forEach(function(detail){
+       /* this.dataPayrollModel.forEach(function(detail){
             formPayment[detail] = null
-        })
+        })*/
 
         let formPayrollList  = {}
-        this.dataPayrollListModel.forEach(function(detail){
+        t/*his.dataPayrollListModel.forEach(function(detail){
             formPayment[detail] = null
-        })
+        })*/
     	return{
     		paymentModel 		: formPayment,
     		payrollModel 		: formPayroll,

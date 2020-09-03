@@ -130,6 +130,9 @@ Vue.component('payment-import', PaymentImport)
 import PaymentCancellation from './components/Payment/PaymentCancellation.vue'
 Vue.component('payment-cancellation', PaymentCancellation)
 
+import PayrollList from './components/Payment/PayrollList.vue'
+Vue.component('payroll-list', PayrollList)
+
 /* --- END --- */
 
 

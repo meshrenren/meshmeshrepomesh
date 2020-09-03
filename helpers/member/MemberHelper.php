@@ -16,4 +16,18 @@ class MemberHelper
 
         return $getMember;
     }
+
+    public static function getMemberList($filter = null, $asArray = false){
+        $getMember= Member::find()->select(["member.*", "CONCAT(last_name,', ',first_name,' ',middle_name) fullname"]);
+        if($filter){
+        	$getMember = $getMember->where($filter);
+        }
+
+        if($asArray){
+            $getMember = $getMember->asArray();
+        }
+        $getMember = $getMember->all();
+
+        return $getMember;
+    }
 }

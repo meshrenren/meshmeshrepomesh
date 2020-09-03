@@ -251,6 +251,7 @@ class LoanHelper
                     <th style = "font-weight: bold; border: 1px solid #000;">Date of Loan</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Loan Balance</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Last Payment</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Payment per Quincena</th> 
                     <th style = "font-weight: bold; border: 1px solid #000;">Loan Arrears</th> 
                 </tr>';
             foreach ($loanList as $trans) {
@@ -259,12 +260,18 @@ class LoanHelper
                     $total_arrears += floatval($trans['arrears']);
                     $arrears = Yii::$app->view->formatNumber($trans['arrears']);
                 }
+                $per_quincena = "";
+                if(isset($trans['principal_amortization_quincena']) && $trans['principal_amortization_quincena'] && floatval($trans['principal_amortization_quincena']) > 0){
+                    $per_quincena = Yii::$app->view->formatNumber($trans['principal_amortization_quincena']);
+                }
+
                 $transTable .= '<tr>
                     <td style = "border: 1px solid #000;">'.$trans['product']['product_name'].'</td> 
                     <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal']).'</td> 
                     <td style = "border: 1px solid #000;">'.$trans['release_date'].'</td> 
                     <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal_balance']).'</td>
                     <td style = "border: 1px solid #000;">'.$trans['account_last_payment'].'</td>
+                    <td style = "border: 1px solid #000;">'.$per_quincena.'</td>
                     <td style = "border: 1px solid #000;">'.$arrears.'</td> 
                 </tr>';
 

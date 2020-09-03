@@ -16,6 +16,7 @@ use app\helpers\accounts\ShareHelper;
 use app\helpers\accounts\TimeDepositHelper;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\member\MemberHelper;
+use app\helpers\settings\SettingsHelper;
 
 use \app\models\LoanProduct;
 use \app\models\LoanAccount;
@@ -265,20 +266,12 @@ class PaymentController extends \yii\web\Controller
         $paymentModel = new \app\models\PaymentRecord;
         $paymentModel = $paymentModel->attributes();
 
-        $pytPayroll = new \app\models\PaymentPayroll;
-        $pytPayrollModel = $pytPayroll->attributes();
-
-        $pytPayrollList = new \app\models\PaymentPayrollList;
-        $pytPayrollListModel = $pytPayrollList->attributes();
-
         $getParticular = ParticularHelper::getPayrollParticulars();
 
         $members = \app\models\Member::find()->all();
 
         return $this->render('payroll-payment', [
             'paymentModel'          => $paymentModel,
-            'pytPayrollModel'       => $pytPayrollModel,
-            'pytPayrollListModel'   => $pytPayrollListModel,
             'memberList'            => $members
         ]);
     }
@@ -651,5 +644,22 @@ class PaymentController extends \yii\web\Controller
     	//\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
     	
     	PaymentHelper::unpostPayment($ref_id);
+    }
+
+    public function actionExportPayroll()
+    {
+        $this->layout = 'main-vue';
+
+        $memberList = MemberHelper::getMemberList(null, true);
+
+        $stationList  = SettingsHelper::getStation();
+
+        $pageData =  [
+            'memberList'    => $memberList,
+            'stationList'   => $stationList,
+        ];
+
+        return $this->render('payroll', [
+            'pageData'    => $pageData]);
     }
 }
