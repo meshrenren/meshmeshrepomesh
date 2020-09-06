@@ -54,6 +54,10 @@ class ParticularHelper
 
 			$getParticular = $getParticular->where($where);
 		}
+		else if(isset($filter['ids'])){
+			$getParticular = $getParticular->where(['id' => $filter['ids']]);
+		}
+
 		if($orderBy != null){
 			$getParticular = $getParticular->orderBy($orderBy);
 		}

@@ -52,32 +52,29 @@
                         <h3 class="box-title">Payroll List</h3>
                     </div>
                     <div class="box-body">
+                        <div class = "toolbar-right" style="margin-top: 7px; margin-right: 16px;">
+	        				<el-button size="mini" @click="setPayroll()">Set</el-button>
+	        				<el-button type = "info" size="mini" @click="exportExcel()">Export</el-button>
+	        			</div>
                     	<el-table
 							:data="tableData"
 				            border striped
 				            style="width: 100%"
-				            height = "500px"
-				    		show-summary >
+    						max-height="500" >
+
 				            <el-table-column
-				                prop="fullname" fixed>   
-				                <template slot="header" slot-scope="scope">
-				                    <el-input v-model="nameSearch" size="mini" placeholder="Search Member"/>
-				                </template>                         
+				            	width = "150px"
+				                prop="fullname">                          
 				            </el-table-column>
-				            <el-table-column v-for="item in columnsList"
+
+				            <el-table-column v-for="item in columnList"
+				            	width="100px"
 				            	:key = "item.key"
 				                :prop="item.key"
-				                :label="item.product_name">       
+				                :label="item.label">       
 				                <template slot-scope="scope"> 
 				                	{{ $nf.formatNumber(scope.row[item.key], 2) }} 
 				                </template>                        
-				            </el-table-column>
-				            <el-table-column
-				                prop="total"
-				                label="Total" fixed="right" >  
-				                <template slot-scope="scope"> 
-				                	{{ $nf.formatNumber(scope.row.total, 2) }} 
-				                </template>                      
 				            </el-table-column>
 				        </el-table>
                     </div>
@@ -94,6 +91,8 @@
     import cloneDeep from 'lodash/cloneDeep'    
     import _forEach from 'lodash/forEach'
 
+    import fileExport from '../../mixins/fileExport'
+
 export default {
 	props:{
 		pageData : {
@@ -102,18 +101,23 @@ export default {
 		},
 	},
 	data(){
+		let col = cloneDeep(this.pageData.columnList)
 		return{
 			memberList 			: this.pageData.memberList,
 			stationList 		: this.pageData.stationList,
-			columnsList 		: [],
+			defColumnList 		: col,
+			columnList 			: col,
+			loanColumn 			: [],
 			loadingPage 		: false,
 			nameSearch 			: null,
 			selectForm 			: {station : null},
 			filterMember 		: "",
 			checkedMember 		: [],
-			sealectAllEmp 		: false
+			sealectAllEmp 		: false,
+			memberLoan 			: []
 		}
 	},
+	mixins: [fileExport],
 	created(){
 	},
 	computed:{
@@ -128,11 +132,16 @@ export default {
 		},
 		tableData(){
 			let mem = this.checkedMember
+			let loan = this.memberLoan
 			let list = []
 			_forEach(mem, mb =>{
 				let getMem = this.memberList.find(fn => Number(fn.id) == Number(mb))
 				let arr = {}
 				if(getMem){
+					let getLoan = loan.find(fn => Number(fn.member_id) == Number(mb))
+					if(getLoan){
+						arr = getLoan
+					}
 					arr.fullname = getMem.fullname
 					list.push(arr)
 				}
@@ -142,13 +151,70 @@ export default {
 	},
 	methods:{
 		selectMemChange(val){
+			console.log('selectMemChange', val)
 			let arr = []
 			if(val){
-				_forEach(this.employeSelected, emp=>{
+				_forEach(this.memberSelected, emp=>{
 					arr.push(emp.id)
 				})				
 			}
 			this.checkedMember = arr
+		},
+		setPayroll(){
+			console.log('setPayroll')
+			this.loadingPage = true
+
+			let mem = cloneDeep(this.checkedMember)
+			let params = {
+				members : mem
+			}
+
+			this.$API.Payment.setPaymentPayroll(params)
+            .then(result => {
+                let res = result.data
+                console.log('res', res)
+                this.setEmpLoan(res.loanColumns)
+
+                setTimeout(() => {
+                	this.memberLoan = res.loanMember
+                }, 1000);
+
+            })
+            .catch(err => { console.log(err)})
+            .then(_ => { this.loadingPage = false })
+		},
+		setEmpLoan(loanCols){
+			let colArr = cloneDeep(this.defColumnList)
+			this.columnList = loanCols.concat(colArr)
+		},
+		exportExcel(){
+
+			this.loadingPage = true
+
+			let mem = cloneDeep(this.checkedMember)
+			let headers = cloneDeep(this.columnList)
+			headers.splice(0, 0, {key : 'fullname', label : "Name"})
+
+			let title = "ALL STATION"
+			if(this.selectForm.station){
+				let getS = this.stationList.find(fn => Number(fn.id) == Number(this.selectForm.station))
+				if(getS){
+					title = getS.name + " STATION"
+				}
+			}
+			let params = {
+				data : this.tableData,
+				headers : headers,
+				title : title
+			}
+
+			this.$API.Report.payrollExport(params)
+            .then(result => {
+                this.exporter('xlsx', title + ' PAYROLL', result.data)
+
+            })
+            .catch(err => { console.log(err)})
+            .then(_ => { this.loadingPage = false })
 		}
 	},
 	watch:{

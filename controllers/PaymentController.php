@@ -17,6 +17,7 @@ use app\helpers\accounts\TimeDepositHelper;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\member\MemberHelper;
 use app\helpers\settings\SettingsHelper;
+use app\helpers\ReportHelper;
 
 use \app\models\LoanProduct;
 use \app\models\LoanAccount;
@@ -654,12 +655,218 @@ class PaymentController extends \yii\web\Controller
 
         $stationList  = SettingsHelper::getStation();
 
+
+        $columnList = array();
+        //Share Deposit, Savings Deposit 
+        $particularId = [1, 19, 22, 29, 61, 21];
+
+        $getParticular = ParticularHelper::getParticulars(['ids' => $particularId]);
+        foreach ($getParticular as $key => $particular) {
+            $arrProd = array();
+            $arrProd['key'] = $particular['category'] . '_' . $particular['id'];
+            $arrProd['label'] = $particular['name'];
+            array_push($columnList, $arrProd);
+        }
+
         $pageData =  [
             'memberList'    => $memberList,
             'stationList'   => $stationList,
+            'columnList'    => $columnList
         ];
 
         return $this->render('payroll', [
             'pageData'    => $pageData]);
+    }
+
+    public function actionSetPaymentPayroll(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $members = $post['members'];
+
+            $loanMember = array();
+            $loanColumns = array();
+
+            $loanId = array();
+            $prepaidId = array();
+            foreach ($members as $key => $mem) {
+
+                $getLatestLoan = LoanHelper::getLatestLoan($mem, 'loan_id');
+
+                if($getLatestLoan && count($getLatestLoan) > 0){
+                    $arr = array();
+                    $arr['member_id'] = $mem;
+                    foreach ($getLatestLoan as $key => $loan) {
+                        $arrKey = 'LOAN_' . $loan['loan_id'];
+                        $arr[$arrKey] =  $loan['principal_amortization_quincena'];
+
+                        if($loan['prepaid_amortization_quincena'] && floatval($loan['prepaid_amortization_quincena']) > 0){
+                            $arrPreKey = 'LOAN_PI_' . $loan['loan_id'];
+                            $arr[$arrPreKey] =  $loan['prepaid_amortization_quincena'];
+
+                            if(!in_array($loan['loan_id'], $prepaidId)){
+                                array_push($prepaidId, $loan['loan_id']);
+                            }
+                        }
+
+                        if(!in_array($loan['loan_id'], $loanId)){
+                            array_push($loanId, $loan['loan_id']);
+                        }
+                    }
+
+                    array_push($loanMember, $arr);
+                }
+            }
+            sort($loanId);
+
+            //LOAN
+            foreach ($loanId as $key => $loan) {
+                $getProduct = LoanHelper::getProduct(['id' => $loan]);
+                if($getProduct){
+                    $pName = ucwords(strtolower($getProduct['product_name']));
+                    $arrProd = array();
+                    $arrProd['key'] = 'LOAN_' . $getProduct['id'];
+                    $arrProd['label'] = $pName;
+                    array_push($loanColumns, $arrProd);
+
+                    if(in_array($loan, $prepaidId)){
+                        $arrProd = array();
+                        $arrProd['key'] = 'LOAN_PI_' . $getProduct['id'];
+                        $arrProd['label'] = "PI on " . $pName;
+                        array_push($loanColumns, $arrProd);
+                    }
+                }
+            }
+
+            return ['loanMember' => $loanMember, 
+                'loanColumns' => $loanColumns];
+        }
+    }
+
+    public function actionPayrollExport(){
+
+        $alignment = new \PhpOffice\PhpSpreadsheet\Style\Alignment;
+
+        $postData = \Yii::$app->getRequest()->getBodyParams();
+        $data = $postData['data'];
+        $title = $postData['title'];
+        $headers = $postData['headers'];
+
+        $spreadsheet = new Spreadsheet();
+        $exportStyle = ReportHelper::getExportStyle();
+        $activeSheet = $spreadsheet->getActiveSheet();
+        $activeSheet->setTitle($title);
+
+        $startLet = 'A';
+        $cellCount = count($headers);
+
+        $endChar = Yii::$app->view->convertIntToExcelColumn($cellCount);
+        
+        //TITLE
+        $activeSheet->setCellValue('A1', "DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE")
+            ->getStyle('A1')->applyFromArray($exportStyle['topColumn']);
+        $activeSheet->mergeCells('A1:'.$endChar.'1');
+        //Station Title
+
+        $activeSheet->setCellValue('A3', $title)
+            ->getStyle('A3')->applyFromArray($exportStyle['secondaryHeader']);
+        $activeSheet->mergeCells('A3:'.$endChar.'3');
+
+        //HEADER COLUMNS
+        $dataHeaderRowIndex = 4;
+        $headerProps = []; // used for getting items in $data
+
+        if($headers && count($headers) > 0){
+            $charNum = 1;
+            foreach ($headers as $key => $value) {
+                $currChar = Yii::$app->view->convertIntToExcelColumn($charNum);
+
+                $headerProps[] = $value['key'];
+
+                $activeSheet->setCellValue($currChar.$dataHeaderRowIndex, ($value['label'] ?? ''));
+
+                $charNum++;
+            }
+        }
+        
+        //Set Column Design
+        $cnt = 1;
+        foreach (range('A',$endChar) as $col) {
+            if($cnt == 1){
+                $activeSheet->getColumnDimension($col)->setAutoSize(true); 
+            }
+            else{
+                $activeSheet->getColumnDimension($col)->setWidth(10); 
+            }
+            $cnt++;
+        }
+        $headerCols = 'A'.$dataHeaderRowIndex.':'.$endChar.$dataHeaderRowIndex;
+        $activeSheet->getStyle($headerCols)->applyFromArray(
+            [
+                'font'  => [
+                    'bold'  =>  true
+                ],
+                'alignment' => [
+                    'horizontal' => $alignment::HORIZONTAL_CENTER
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    ],
+                ],
+            ]
+        );
+        $activeSheet->getStyle($headerCols)->getAlignment()->setWrapText(true);
+
+        $dataStartIndex = $dataHeaderRowIndex + 1;
+        $dataRows = $dataStartIndex;
+        foreach ($data as $key => $datum) {
+            $cell = $dataRows;
+            
+            $item = (Array)$datum;
+
+            $charNum = 1;
+
+            foreach ($headerProps as $index => $value) {
+                $currChar = Yii::$app->view->convertIntToExcelColumn($charNum);
+
+                if(isset($item[$value])){
+                    $activeSheet->setCellValue($currChar.$cell, $item[$value]);
+                }
+                $charNum++;
+            }
+            $dataRows++;
+        }
+
+        $styleRows = $dataRows;
+        for ($i=$dataStartIndex; $i < $styleRows; $i++) { 
+
+            $activeSheet->getStyle('A'.$i.':'.$endChar.$i)->applyFromArray(
+                [
+                    'alignment' => [
+                        'horizontal' => $alignment::HORIZONTAL_RIGHT
+                    ],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        ],
+                    ],
+                ]
+            );
+        }
+        $activeSheet->getStyle('A'.$dataStartIndex.':'.'A'.$styleRows)->applyFromArray(
+            [
+                'alignment' => [
+                    'horizontal' => $alignment::HORIZONTAL_LEFT
+                ],
+            ]
+        );
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, "Xlsx");
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $writer->save("php://output");
+        exit();
     }
 }

@@ -46,5 +46,9 @@ export default {
 		}
 
 		return axios.post($baseUrl + '/payment/get-payment-list-with-reference', params)
+	},
+
+	setPaymentPayroll(params) {
+		return axios.post($baseUrl + '/payment/set-payment-payroll', params)
 	}
 }
