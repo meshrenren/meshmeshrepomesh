@@ -10,7 +10,6 @@ use app\models\AccountParticulars;
 use app\models\VoucherDetails;
 
 use app\models\GeneralVoucher;
-use app\models\VoucherDetails;
 
 class GeneralVoucherController extends \yii\web\Controller
 {

@@ -59,10 +59,10 @@ use yii\helpers\Html;
                                 'label'     => 'View Voucher', 
                                 'url'       => ['general-voucher/view']
                             ],
-                        	[
+                        	/*[
                         		'label'     => 'View Voucher Summary',
                         		'url'       => ['general-voucher/view-summary']
-                        	],
+                        	],*/
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_general_voucher_", "_view")
                     ],
@@ -83,8 +83,13 @@ use yii\helpers\Html;
                                 'label'     => 'Import Payment', 
                                 'url'       => ['payment/import-payment'], 
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
+                            ], 
+                            [
+                              'label'     => 'Export Payroll',
+                              'url'       => ['payment/export-payroll'],
+                              'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                             ],
-                        	[
+                        	/*[
                         		 'label'     => 'Loan Closure Payments',
                         		 'url'       => ['loan/loan-closure'],
                         		 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
@@ -94,7 +99,7 @@ use yii\helpers\Html;
                         	  'label'     => 'Payment Cancellation',
                         	  'url'       => ['loan/cancel-payments'],
                         	  'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
-                        	],
+                        	],*/
                         		
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
