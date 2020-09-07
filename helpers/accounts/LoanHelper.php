@@ -58,11 +58,24 @@ class LoanHelper
 		return $accountList;
 	}
 
+    public static function getLatestLoan($member_id, $orderBy = "release_date DESC"){
+
+        $accountList = \app\models\LoanAccount::find()
+                    ->innerJoinWith(['product'])
+                    ->where(['loanaccount.member_id' => $member_id])
+                    ->andWhere('status != "Cancel" AND status != "Verified"')
+                    ->andWhere('principal_balance > 0')
+                    ->orderBy($orderBy)
+                    ->asArray()->all();
+                    
+        return $accountList;
+    }
+
     public static function getMemberLoan($member_id, $loan_id, $asArray = true, $joinWith = null, $isAll = false, $orderBy = 'release_date DESC'){
         $acc = \app\models\LoanAccount::find()
             ->innerJoinWith(['product'])
             ->where(['loanaccount.member_id' => $member_id, 'loanaccount.loan_id' =>  $loan_id])
-            ->andWhere('status != "Cancel"')
+            ->andWhere('status != "Cancel" AND status != "Verified"')
             ->orderBy($orderBy);
         if($joinWith){
             $acc->joinWith($joinWith);

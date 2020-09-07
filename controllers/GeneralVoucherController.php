@@ -6,9 +6,10 @@ use app\helpers\particulars\ParticularHelper;
 use app\helpers\voucher\VoucherHelper;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\journal\JournalHelper;
+use app\models\AccountParticulars;
+use app\models\VoucherDetails;
 
 use app\models\GeneralVoucher;
-use app\models\VoucherDetails;
 
 class GeneralVoucherController extends \yii\web\Controller
 {
@@ -192,6 +193,59 @@ class GeneralVoucherController extends \yii\web\Controller
             'data' => $getVouchers
         ];
     }
+    
+    public function actionViewSummary(){
+    	$this->layout = 'main-vue';
+    	//$voucherList = $this->getVoucherList(null, 100);
+    	
+    	return $this->render('view-summary', [
+    			'voucherList'   => []
+    	]);
+    }
+    
+    public function actionGetParticulars() {
+    	
+    	\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    	
+    	return AccountParticulars::find()->select(['id', 'name'])->asArray()->all();
+    	
+    }
+    
+    public function actionGetVoucherSummaryPerParticulars() {
+    	
+    	try {
+    		\Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    		
+    		$model = new VoucherDetails();
+    		$post = \Yii::$app->getRequest()->getBodyParams();
+    		
+    		
+    		
+    		
+    		//$modelx = $model->find()->joinWith(['voucher', 'particular'])->where(['particular_id'=>99])->andWhere(['like', 'general_voucher.name', 'MENDOZA,%', false])->asArray()->all();
+    		
+    		$modelx = $model->find()->joinWith(['voucher', 'particular'])->where(['particular_id'=>$post['particular_id']])->andWhere(['>=', 'general_voucher.date_transact', $post['date_from']])->andWhere(['<=', 'general_voucher.date_transact', $post['date_to']]);
+    		
+    		
+    		
+    		
+    		if($post['name']!=='')
+    			$modelx = $modelx->andWhere(['like', 'general_voucher.name', $post['name'].'%', false]);
+    			
+    			
+    			
+    			$modelx = $modelx->orderBy([
+    					'general_voucher.date_transact' => SORT_ASC
+    			])->asArray()->all();
+    			
+    			
+    			return $modelx;
+    	} catch (Exception $e) {
+    		
+    		return $e->getMessage();
+    	}
+    }
+    
 
     public function actionPostVoucher($id)
     {
