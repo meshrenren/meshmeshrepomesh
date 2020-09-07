@@ -71,6 +71,12 @@
 						                    <span>{{ $nf.formatNumber(scope.row.principal_balance, 2)  }}</span>
 						                </template>
 						            </el-table-column>
+						            <el-table-column label="Per Quincena">
+						                <template slot-scope="scope">
+						                    <span>{{ $nf.formatNumber(scope.row.principal_amortization_quincena, 2)  }}</span>  
+						                    <span v-if = "scope.row.prepaid_amortization_quincena && scope.row.prepaid_amortization_quincena > 0"> / <br> {{ $nf.formatNumber(scope.row.prepaid_amortization_quincena, 2)  }}</span> 
+						                </template>
+						            </el-table-column>
 						            <el-table-column label="Arrears">
 						                <template slot-scope="scope">
 						                    <span v-if = "scope.row.arrears && scope.row.arrears > 0">{{ $nf.formatNumber(scope.row.arrears, 2)  }}</span>
