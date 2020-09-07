@@ -29,7 +29,8 @@
                 </template>
 		    </el-table-column>
 		</el-table>
-		<template  v-if = "timeDeposit.account_status == 'MATURED'">
+		<!-- <template  v-if = "timeDeposit.account_status == 'MATURED'"> -->
+        <template>
             <el-row :gutter = "5" class = "mt-20">
                 <el-col :span = "4">
                     <label>Date</label>
@@ -60,7 +61,8 @@
                     </process-account>
                 </el-col>
             </el-row>
-			<el-button class = "mt-10" type = "primary" @click = "showVoucher()" v-if = "timeDeposit.account_status == 'MATURED'">Process</el-button>
+			<!-- <el-button class = "mt-10" type = "primary" @click = "showVoucher()" v-if = "timeDeposit.account_status == 'MATURED'">Process</el-button> -->
+            <el-button class = "mt-10" type = "primary" @click = "showVoucher()">Process</el-button>
             <el-button class = "mt-10" type = "primary" @click = "print('print')">Print</el-button>
 		</template>
 		
@@ -205,6 +207,7 @@ export default {
             }
 
             let data = {
+                account    : account,
                 account_no : account.accountnumber,
                 account_name : accName,
                 amount : account.amount,

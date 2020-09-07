@@ -81,6 +81,10 @@ class TimeDepositHelper
         $account_name = $postData['account_name'];
         $amount = $postData['amount'];
         $transaction = $postData['transaction'];
+
+        $account = $postData['account'];
+        $open_date = $account['open_date'];
+        $maturity_date = $account['maturity_date'];
         $listTemplate = '';
         $listTemplate .= Yii::$app->params['formTemplate']['header_layout'];
 
@@ -88,10 +92,18 @@ class TimeDepositHelper
             <tr>
                 <td style = "font-weight: bold;">Account Name: </td> 
                 <td><span>[account_name]</span></td>
+                <td width = "100px"></td>
+
+                <td style = "font-weight: bold;">Open Date: </td> 
+                <td><span>[open_date]</span></td>
             </tr> 
             <tr>
                 <td style = "font-weight: bold;">Account Number: </td> 
                 <td>[account_no] </td>
+                <td></td>
+
+                <td style = "font-weight: bold;">Mature Date: </td> 
+                <td><span>[maturity_date]</span></td>
             </tr> 
             <tr>
                 <td style = "font-weight: bold;">Amount: </td> 
@@ -101,6 +113,8 @@ class TimeDepositHelper
         $accountDetail = str_replace('[account_name]', $account_name, $accountDetail);
         $accountDetail = str_replace('[account_no]', $account_no, $accountDetail);
         $accountDetail = str_replace('[amount]', Yii::$app->view->formatNumber($amount), $accountDetail);
+        $accountDetail = str_replace('[open_date]', $open_date, $accountDetail);
+        $accountDetail = str_replace('[maturity_date]', $maturity_date, $accountDetail);
 
         $listTemplate .= $accountDetail;
 
