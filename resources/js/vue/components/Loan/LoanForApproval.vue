@@ -156,7 +156,7 @@
                                     </template>
                                 </div>
                                 <el-button class = "mt-10" type = "primary" @click = "releaseVoucher()">Release Loan</el-button>
-                                <el-button class = "mt-10" type = "warning" @click = "saveLoan()">Save Loan Without Release</el-button>
+                                <!-- <el-button class = "mt-10" type = "warning" @click = "saveLoan()">Save Loan Without Release</el-button> -->
                                 <!-- <el-button class = "mt-10" type = "primary" @click = "approveLoan()">Approve Loan Application</el-button> -->
                             </div>
                         </div>

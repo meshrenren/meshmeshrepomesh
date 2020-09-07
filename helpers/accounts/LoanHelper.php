@@ -265,6 +265,10 @@ class LoanHelper
                     $per_quincena = Yii::$app->view->formatNumber($trans['principal_amortization_quincena']);
                 }
 
+                if(isset($trans['prepaid_amortization_quincena']) && $trans['prepaid_amortization_quincena'] && floatval($trans['prepaid_amortization_quincena']) > 0){
+                    $per_quincena .= " / " . Yii::$app->view->formatNumber($trans['prepaid_amortization_quincena']);
+                }
+
                 $transTable .= '<tr>
                     <td style = "border: 1px solid #000;">'.$trans['product']['product_name'].'</td> 
                     <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal']).'</td> 

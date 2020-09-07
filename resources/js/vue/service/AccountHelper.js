@@ -84,7 +84,7 @@ export default class AccountHelper{
             _forEach(loanToPayList, la =>{
                 let toPushAcc = false
                 if(la.amountToPay && la.amountToPay > 0){
-                    if(parseFloat(la.amountToPay)  > parseFloat(la.balance) ){
+                    if(la.type == "LOAN" && parseFloat(la.amountToPay)  > parseFloat(la.balance) ){
                         hasLimitLoan = true
                     }
                     else{
@@ -114,7 +114,7 @@ export default class AccountHelper{
 
             if(hasLimitLoan){
                 return {
-		        	success : true, 
+		        	success : false, 
 		            error : 'ERR_LOAN_BALANCE'
 		        }
             }
