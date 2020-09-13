@@ -29,8 +29,7 @@
                 </template>
 		    </el-table-column>
 		</el-table>
-		<!-- <template  v-if = "timeDeposit.account_status == 'MATURED'"> -->
-        <template>
+		<template  v-if = "timeDeposit.account_status != 'CLOSED'">
             <el-row :gutter = "5" class = "mt-20">
                 <el-col :span = "4">
                     <label>Date</label>

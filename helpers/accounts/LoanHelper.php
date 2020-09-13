@@ -511,7 +511,7 @@ class LoanHelper
     public static function loanPayment($account_no, $loanDetails){
         $success = false;
         $error = null;
-        var_dump($loanDetails);
+        //var_dump($loanDetails);
 
         $principal_pay = $loanDetails['principal_pay'];
         $prepaidInterest = isset($loanDetails['prepaid_pay']) && $loanDetails['prepaid_pay'] ? $loanDetails['prepaid_pay'] : 0;
