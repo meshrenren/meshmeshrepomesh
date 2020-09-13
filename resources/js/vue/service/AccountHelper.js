@@ -2,7 +2,7 @@
 import _forEach from 'lodash/forEach'
 export default class AccountHelper{
 
-	mergAllAccounts(loans = null, savings = null, shares = null, notIncLoan = null) {
+	mergAllAccounts(loans = null, savings = null, shares = null, notIncLoan = null, allowZeroBal = null) {
         let allAccounts = []
 
         if(shares && shares.length > 0){
@@ -48,8 +48,8 @@ export default class AccountHelper{
 
         if(loans && loans.length > 0){
             _forEach(loans, rs =>{
-                if(notIncLoan && notIncLoan.indexOf(rs.product.id) < 0){
-                    if(Number(rs.principal_balance) > 0){ 
+                if(!notIncLoan || (notIncLoan && notIncLoan.indexOf(rs.product.id) < 0)){
+                    if(Number(rs.principal_balance) > 0 || (allowZeroBal && allowZeroBal.indexOf(rs.product.id) >= 0)){ 
                         let arr = {}
                         arr.member_id = rs.member_id
                         arr.key = "LOAN_" + rs.particular_id

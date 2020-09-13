@@ -511,7 +511,6 @@ class LoanHelper
     public static function loanPayment($account_no, $loanDetails){
         $success = false;
         $error = null;
-        var_dump($loanDetails);
 
         $principal_pay = $loanDetails['principal_pay'];
         $prepaidInterest = isset($loanDetails['prepaid_pay']) && $loanDetails['prepaid_pay'] ? $loanDetails['prepaid_pay'] : 0;
@@ -540,8 +539,8 @@ class LoanHelper
         //1. insert to payment transaction
         $loanTransaction = new LoanTransaction();
         $loanTransaction->loan_account = $account_no;
-        //$loanTransaction->loan_id = $product->id;
-        //$loanTransaction->member_id = $account->member_id;
+        $loanTransaction->loan_id = $product->id;
+        $loanTransaction->member_id = $account->member_id;
 
         $amount = floatval($principal_pay) + floatval($prepaidInterest);
 

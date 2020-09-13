@@ -534,6 +534,8 @@ class LoanController extends \yii\web\Controller
             $member = \app\models\Member::find()->where(['id' => $loanmodel->member_id])->one();
             
             $loanTransaction = new LoanTransaction();
+            $loanTransaction->loan_id = $loanmodel->loan_id;
+            $loanTransaction->member_id = $loanmodel->member_id;
             $loanTransaction->loan_account = $loanmodel->account_no;
             $loanTransaction->amount = $loanaccount->principal;
             $loanTransaction->transaction_type='RELEASE';
@@ -652,6 +654,8 @@ class LoanController extends \yii\web\Controller
             $member = \app\models\Member::find()->where(['id' => $loanmodel->member_id])->one();
     		
     		$loanTransaction = new LoanTransaction();
+            $loanTransaction->loan_id = $loanmodel->loan_id;
+            $loanTransaction->member_id = $loanmodel->member_id;
     		$loanTransaction->loan_account = $loanmodel->account_no;
     		$loanTransaction->amount = $loanaccount->principal;
     		$loanTransaction->transaction_type='RELEASE';
@@ -687,6 +691,14 @@ class LoanController extends \yii\web\Controller
                 //Update other paid loan
                 if($success && $otherLoanToPay && count($otherLoanToPay) > 0){
 
+                    //Check if has loan product id same with renewed loan
+                    foreach ($otherLoanToPay as $lnKey => $ln) {
+                        if($ln['type'] == "LOAN" && $ln['product_id'] == $loanmodel->loan_id){
+                            $otherLoanToPay[$lnKey]['account_no'] = $loanmodel->account_no; //Set with the release loan account
+                            break;
+                        }
+                    }
+                    
                     $processOtherAccount = AccountHelper::processOtherAccount($otherLoanToPay, $gv_num, $transac_date);
                     if(!$processOtherAccount['success']){
                         $success = false;

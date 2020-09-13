@@ -33,13 +33,15 @@
                 </tr>
                 <tr v-for="item in loanToPayList">
                     <th scope="row">{{ item.product_name }}</th>
-                    <td>
-                        <template v-if = "item.type == 'LOAN'">
-                            {{ $nf.formatNumber(item.principal, 2)  }} ({{ $nf.formatNumber(item.balance, 2) }})
-                        </template>
-                        <template v-else>
+                    <td>  
+                        <span v-if = "item.type == 'LOAN'">
+                            <template v-if = "!accData || (accData && accData.loan_id != item.product_id )">
+                                {{ $nf.formatNumber(item.principal, 2)  }} ({{ $nf.formatNumber(item.balance, 2) }})
+                            </template>
+                        </span>
+                        <span v-else>
                             {{ $nf.formatNumber(item.balance, 2) }}
-                        </template>
+                        </span>
                     </td>
                     <td>
                         <el-input v-if = "item.type == 'LOAN'" class = "mt-5" type="number" :min = "0" v-model="item.amountToPay" :disabled = "Number(item.balance) <= 0" :max = "Number(item.balance)"></el-input>
@@ -128,7 +130,7 @@ export default {
             if(this.accData && this.accData.loan_id){
                 notIncLoan = [this.accData.loan_id]
             }
-            let allAccounts = this.$ah.mergAllAccounts(loans, savings, shares, notIncLoan)
+            let allAccounts = this.$ah.mergAllAccounts(loans, savings, shares, null, notIncLoan)
             this.loanToPayList = allAccounts
         },
     },

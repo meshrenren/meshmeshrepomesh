@@ -274,7 +274,7 @@ class VoucherHelper
                         echo "i am interest prepaid .. ".$prepaidInterest." | <br/>";
                         $principal_pay = $row['credit']/* - $prepaidInterest*/;
 
-                        /*$loanDetails = array();
+                        $loanDetails = array();
                         $loanDetails['principal_pay'] = $row['credit'];
                         $loanDetails['prepaid_pay'] = $prepaidInterest;
                         $loanDetails['ref_num'] = $generalVoucher->gv_num;
@@ -286,7 +286,7 @@ class VoucherHelper
                             var_dump($loanPayment['error']);
                             $success = false;
                             break;
-                        }*/
+                        }
                     }
 
                     //IF DEBIT, This mostly for refund
