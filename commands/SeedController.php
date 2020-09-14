@@ -3060,6 +3060,75 @@ class SeedController extends Controller
         }
     }
 
+    public function actionCheckGvLoan(){
+        $getGV = \app\models\GeneralVoucher::find()->where('posted_date >= "2020-08-01"')->all();
+        foreach ($getGV as $keyGv => $gv) {
+            $getGVDetails = \app\models\VoucherDetails::find()->where(['voucher_id' => $gv->id, 'type' => [/*'SHARE', 'SAVINGS',*/ 'LOAN']])->all();
+            foreach ($getGVDetails as $key => $detail) {
+                $getTransaction =  \app\models\LoanTransaction::find()->where(['loan_account' => $detail->account_no, 'OR_no' => $gv->gv_num])->one();
+                if($getTransaction == null){
+                    echo "Account: " . $detail->account_no . " \t GV: " . $gv->gv_num . " \t Credit: " . $detail->credit . " \t Debit: " . $detail->debit;
+                    echo "\n";
+                }
+            }
+        }
+    }
+
+    public function actionCheckOrLoan(){
+        $getGV = \app\models\GeneralVoucher::find()->where('posted_date >= "2020-08-01"')->all();
+        foreach ($getGV as $keyGv => $gv) {
+            $getGVDetails = \app\models\VoucherDetails::find()->where(['voucher_id' => $gv->id, 'type' => [/*'SHARE', 'SAVINGS',*/ 'LOAN']])->all();
+            foreach ($getGVDetails as $key => $detail) {
+                $getTransaction =  \app\models\LoanTransaction::find()->where(['loan_account' => $detail->account_no, 'OR_no' => $gv->gv_num])->one();
+                if($getTransaction == null){
+                    echo "Account: " . $detail->account_no . " \t GV: " . $gv->gv_num . " \t Credit: " . $detail->credit . " \t Debit: " . $detail->debit;
+                    echo "\n";
+                }
+            }
+        }
+    }
+
+    public function actionParticularVoucher(){
+        $getGVDetails = \app\models\VoucherDetails::find()->where("particular_id IS NULL")->all();
+        foreach ($getGVDetails as $key => $detail) {
+            $query = new \yii\db\Query;
+            $query->from('zold_voucher')->where("GVNum = " . $detail['gv_num']);
+            $oldGvList = $query->all();
+            foreach ($oldGvList as $keyOld => $oldGv) {
+                $oldDebit = null;
+                if($oldGv['Debit']){
+                    $Amount = floatval(str_replace(",", "", $oldGv['Debit']));
+                    $oldDebit = $Amount;
+                }
+
+                $oldCredit = null;
+                if($oldGv['Credit']){
+                    $Amount = floatval(str_replace(",", "", $oldGv['Credit']));
+                    $oldCredit = $Amount;
+                }
+
+                if($detail['credit'] == $oldCredit && $detail['debit'] == $oldDebit){
+
+                    $getPart= \app\models\AccountParticulars::find()->where(['name' => $oldGv['Description']])->one();
+                    if($getPart){
+                        echo "GV :" . $detail['gv_num'] . " \tName:" . $oldGv['Description'];
+                        echo "\n";
+
+                        $detail->particular_id = $getPart->id;
+                        $detail->save();
+                    }
+                    else{
+                        echo "Not found GV :" . $detail['gv_num'] . " \tName:" . $oldGv['Description'];
+                        echo "\n";
+                    }
+                }
+                /*else{
+                    echo "Not Found GV :" . $detail['gv_num'] . " \tName:" . $oldGv['Description'];
+                    echo "\n";
+                }*/
+            }
+        }
+    }
 }
 
 
