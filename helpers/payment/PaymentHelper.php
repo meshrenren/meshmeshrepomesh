@@ -477,10 +477,11 @@ class PaymentHelper
 					$sharetransaction->amount = $row['amount'];
 					$sharetransaction->transaction_type = 'CASHDEP';
 					$sharetransaction->transacted_by = \Yii::$app->user->identity->id;
-					$sharetransaction->transaction_date = date('Y-m-d H:i:s', strtotime($dateToday));
+					$sharetransaction->transaction_date = date('Y-m-d H:i:s', strtotime($transaction_date));
 					$sharetransaction->running_balance = $shareaccount->balance + $row['amount'];
 					$sharetransaction->remarks = "posted as Payment from ".$paymentHeader->or_num;
 					$sharetransaction->reference_number = $paymentHeader->or_num;
+        			$sharetransaction->posted_date = date('Y-m-d', strtotime($dateToday));
 					
 					$shareaccount->balance = $shareaccount->balance + $row['amount'];
 					

@@ -3051,7 +3051,7 @@ class SeedController extends Controller
     }
 
     public function actionSharePostedDate(){
-        $getOR = \app\models\ShareTransaction::find()->all();
+        $getOR = \app\models\ShareTransaction::find()->where('posted_date IS NULL')->all();
         foreach ($getOR as $keyGv => $or) {
             if(!$or->posted_date){
                 $or->posted_date = date('Y-m-d', strtotime($or->transaction_date));
