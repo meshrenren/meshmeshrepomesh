@@ -43,5 +43,9 @@ export default {
 
 		return axios.post($baseUrl + '/general-voucher/get-voucher-summary-per-particulars', params)
 
-	}
+	},
+
+	getVoucherParticular(params){
+		return axios.post($baseUrl + '/general-voucher/get-voucher-particular', params)
+	},
 }

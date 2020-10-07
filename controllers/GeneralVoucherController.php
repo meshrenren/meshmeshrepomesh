@@ -6,6 +6,7 @@ use app\helpers\particulars\ParticularHelper;
 use app\helpers\voucher\VoucherHelper;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\journal\JournalHelper;
+use app\helpers\member\MemberHelper;
 use app\models\AccountParticulars;
 use app\models\VoucherDetails;
 
@@ -250,5 +251,36 @@ class GeneralVoucherController extends \yii\web\Controller
     public function actionPostVoucher($id)
     {
         VoucherHelper::postVoucher($id);
+    }
+
+    public function actionViewParticulars(){
+        $this->layout = 'main-vue';
+
+        $filter  = ['category' => ['LOAN', 'SAVINGS', 'SHARE', 'OTHERS']];
+        $orderBy = "name ASC";
+        $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
+        $memberList = MemberHelper::getMemberList(null, true);
+
+        $pageData = [
+            'particularList' => $getParticular,
+            'memberList' => $memberList
+        ];
+
+        return $this->render('view-particular', [
+            'pageData'    => $pageData
+        ]);
+    }
+
+    public function actionGetVoucherParticular(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $filter = $post;
+            $paymentRecordList = VoucherHelper::getVoucherParticular($filter);
+
+            return ['data' => $paymentRecordList];
+        }
     }
 }

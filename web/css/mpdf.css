@@ -105,6 +105,18 @@ table.evaluation-form td, table.evaluation-form th{
 	font-weight: bold;
 }
 
+.list-table{
+	width: 100%; 
+	font-size: 12px; 
+	text-align: left;
+	border-collapse : collapse;
+}
+.list-table td, .list-table th{
+	padding: 0px 5px !important;
+	padding-top: 5px !important;
+	padding-bottom: 5px !important;
+}
+
 /**
     Spacing for reusabilty and to avoid redundancy :(
 */

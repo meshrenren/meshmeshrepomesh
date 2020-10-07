@@ -869,4 +869,35 @@ class PaymentController extends \yii\web\Controller
         $writer->save("php://output");
         exit();
     }
+
+    public function actionViewParticulars(){
+        $this->layout = 'main-vue';
+
+        $filter  = ['category' => ['LOAN', 'SAVINGS', 'SHARE', 'OTHERS']];
+        $orderBy = "name ASC";
+        $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
+        $memberList = MemberHelper::getMemberList(null, true);
+
+        $pageData = [
+            'particularList' => $getParticular,
+            'memberList' => $memberList
+        ];
+
+        return $this->render('view-particular', [
+            'pageData'    => $pageData
+        ]);
+    }
+
+    public function actionGetPaymentParticular(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = \Yii::$app->getRequest()->getBodyParams();
+            $filter = $post;
+            $paymentRecordList = PaymentHelper::getPaymentsParticular($filter);
+
+            return ['data' => $paymentRecordList];
+        }
+    }
 }

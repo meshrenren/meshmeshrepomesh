@@ -2555,6 +2555,7 @@ class SeedController extends Controller
         $tdAccs = $query->all();
         foreach ($tdAccs as $key => $td) {
             $findAcc = \app\models\TimeDepositAccount::find()->where(['old_td_account' => $td['TDAcctNum']])->one(); 
+            
             if($findAcc != null){
                 continue;
             }
@@ -2569,9 +2570,11 @@ class SeedController extends Controller
             $balance = floatval(str_replace(",", "", $td['Balance']));
             $amountMature = floatval(str_replace(",", "", $td['AmountMature']));
 
-            if($balance < 0 || $td['Remarks'] == "CLOSED"){
+            if($balance <= 0 || $td['Remarks'] == "CLOSED"){
                 continue;
             }
+
+            var_dump($balance);
             //Get member
             $member_id = null;
             $accountName = null;
@@ -2597,7 +2600,8 @@ class SeedController extends Controller
                     
                 }
             }
-            else{
+
+            if($toSave == false){
                 $accountName = $td['Name'];
                 $toSave = true;
             }

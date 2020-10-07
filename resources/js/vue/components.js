@@ -109,6 +109,8 @@ Vue.component('voucher-details-list', VoucherDetailsList)
 import ViewVoucherSummary from './components/General/ViewVoucherSummary.vue'
 Vue.component('view-voucher-summary', ViewVoucherSummary)
 
+import VoucherViewParticular from './components/Voucher/VoucherViewParticular.vue'
+Vue.component('voucher-view-particular', VoucherViewParticular)
 
 /* --- END --- */
 
@@ -136,6 +138,9 @@ Vue.component('payment-cancellation', PaymentCancellation)
 
 import PayrollList from './components/Payment/PayrollList.vue'
 Vue.component('payroll-list', PayrollList)
+
+import PaymentViewParticular from './components/Payment/PaymentViewParticular.vue'
+Vue.component('payment-view-particular', PaymentViewParticular)
 
 /* --- END --- */
 
