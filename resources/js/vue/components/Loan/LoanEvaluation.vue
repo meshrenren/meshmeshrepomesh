@@ -497,11 +497,12 @@ export default {
     		console.log("Eva")
     		this.$refs.evaluationForm.validateField('amount', valid => {
     			if (valid) {
-    				console.log("Has Error")
-    			}
-    			else{
     				this.evaluationForm.loan_amount = this.evaluationForm.amount
     				this.evaluateLoan(true)
+    			}
+    			else{
+    				
+    				console.log("Has Error")
     			}
     		})
     	},

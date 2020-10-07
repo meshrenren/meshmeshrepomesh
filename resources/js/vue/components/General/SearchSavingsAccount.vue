@@ -90,9 +90,9 @@ export default {
                 if(datalist){
                     datalist = datalist.filter(function (row) {
                         if(row.member){
-                           return String(row.member.fullname).toLowerCase().indexOf(filterKey) > -1
+                           return String(row.member.fullname).toLowerCase().indexOf(filterKey.toLowerCase()) > -1
                         }else{
-                           return row.account_name && String(row.account_name).toLowerCase().indexOf(filterKey) > -1
+                           return row.account_name && String(row.account_name).toLowerCase().indexOf(filterKey.toLowerCase()) > -1
                         }
                     })
                 }

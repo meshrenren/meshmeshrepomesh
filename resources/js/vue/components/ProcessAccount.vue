@@ -3,6 +3,11 @@
 		<el-button type = "info" @click = "otherParticulars()">OTHER</el-button>
         <table class="table table-bordered tbl-list mt-10" v-if = "otherToPay.length > 0">
             <tbody>
+                <tr>
+                    <th></th>
+                    <th>DEBIT</th>
+                    <th>CREDIT</th>
+                </tr>
                 <tr v-for="item in otherToPay">
                     <th scope="row">
                         <el-select class = "mt-5" v-model="item.particular_id" filterable placeholder="Select Particular">
@@ -14,6 +19,9 @@
                             </el-option>
                         </el-select>
                     </th>
+                    <td> 
+                        <el-input class = "mt-5" type="number" :min = "0" v-model="item.amountToWithdraw"></el-input>
+                    </td>
                     <td> 
                         <el-input class = "mt-5" type="number" :min = "0" v-model="item.amountToPay"></el-input>
                     </td>
@@ -28,8 +36,8 @@
                 <tr>
                     <th></th>
                     <th>Balance</th>
-                    <th>Deposit/Payment</th>
                     <th>Withdraw</th>
+                    <th>Deposit/Payment</th>
                 </tr>
                 <tr v-for="item in loanToPayList">
                     <th scope="row">{{ item.product_name }}</th>
@@ -44,11 +52,11 @@
                         </span>
                     </td>
                     <td>
-                        <el-input v-if = "item.type == 'LOAN'" class = "mt-5" type="number" :min = "0" v-model="item.amountToPay" :disabled = "Number(item.balance) <= 0" :max = "Number(item.balance)"></el-input>
-                        <el-input v-else class = "mt-5" type="number" :min = "0" v-model="item.amountToPay"></el-input>
+                        <el-input v-if = "item.type != 'LOAN'" :disabled = "Number(item.balance) <= 0" class = "mt-5" type="number" :min = "0" :max = "Number(item.balance)" v-model="item.amountToWithdraw"></el-input>
                     </td>
                     <td>
-                        <el-input v-if = "item.type != 'LOAN'" :disabled = "Number(item.balance) <= 0" class = "mt-5" type="number" :min = "0" :max = "Number(item.balance)" v-model="item.amountToWithdraw"></el-input>
+                        <el-input v-if = "item.type == 'LOAN'" class = "mt-5" type="number" :min = "0" v-model="item.amountToPay" :disabled = "Number(item.balance) <= 0" :max = "Number(item.balance)"></el-input>
+                        <el-input v-else class = "mt-5" type="number" :min = "0" v-model="item.amountToPay"></el-input>
                     </td>
                 </tr>
             </tbody>
@@ -105,7 +113,7 @@ export default {
 
         },
     	otherParticulars(){
-            let arr = {particular_id : null, amountToPay : null}
+            let arr = {particular_id : null, amountToPay : null, amountToWithdraw : null}
             this.otherToPay.push(arr)
         },
         getMemberAccount(){

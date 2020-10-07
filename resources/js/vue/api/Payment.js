@@ -50,5 +50,9 @@ export default {
 
 	setPaymentPayroll(params) {
 		return axios.post($baseUrl + '/payment/set-payment-payroll', params)
-	}
+	},
+
+	getPaymentParticular(params){
+		return axios.post($baseUrl + '/payment/get-payment-particular', params)
+	},
 }

@@ -409,4 +409,120 @@ class VoucherHelper
     }
 
 
+    public static function getVoucherParticular($filter){
+        $voucher_details = VoucherDetails::find()->innerJoinWith(['voucher', 'particular'])
+            ->joinWith(['member'])
+            ->select([ 'voucher_details.*',
+                'general_voucher.name as voucher_name',
+                'general_voucher.date_transact'
+            ])
+            ->where('general_voucher.posted_date IS NOT NULL');
+
+        if(isset($filter['particular_id'])){
+            $voucher_details = $voucher_details->andWhere(['voucher_details.particular_id' => $filter['particular_id']]);
+        }
+        if(isset($filter['member_id'])){
+            $voucher_details = $voucher_details->andWhere(['member_id' => $filter['member_id']]);
+        }
+        if(isset($filter['date'])){
+            $start = $filter['date']['start'];
+            $end = $filter['date']['end'];
+            $voucher_details = $voucher_details->andWhere('general_voucher.date_transact BETWEEN "'.$start.'" AND "'.$end.'"');
+        }
+
+        $voucher_details = $voucher_details->orderBy('general_voucher.posted_date')
+            ->asArray()->all();
+        
+        return $voucher_details;
+    }
+
+    public static function printList($postData){
+        $member = $postData['member'];
+        $particular = $postData['particular'];
+        $period = $postData['period']['start'] . " To " .$postData['period']['end'] ;
+        $total_amount = $postData['total_amount'];
+        $transaction = $postData['transaction'];
+
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">PARTICULAR PAYMENTS</div></tr>
+        </table>';
+
+        $accountDetail = '<table>';
+
+        if($member){
+            $accountDetail .= '
+            <tr>
+                <td style = "font-weight: bold;">NAME: </td> 
+                <td><span>[member]</span></td>
+            </tr>';
+        }
+        $accountDetail .= '
+            <tr>
+                <td style = "font-weight: bold;">PARTICULAR: </td> 
+                <td><span>[particular]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">PERIOD: </td> 
+                <td>[period] </td>
+            </tr> 
+        </table>';
+
+        $accountDetail .= '<table class = "mt-10">
+            <tr>
+                <td style = "font-weight: bold;">TOTAL DEBIT: </td> 
+                <td>[total_debit]</td>
+                <td width = "50px"></td>
+                <td style = "font-weight: bold;">TOTAL CREDITS: </td> 
+                <td>[total_credit]</td>
+            </tr>
+        </table>';
+
+
+        $accountDetail = str_replace('[member]', $member, $accountDetail);
+        $accountDetail = str_replace('[particular]', $particular, $accountDetail);
+        $accountDetail = str_replace('[period]', $period, $accountDetail);
+        $accountDetail = str_replace('[total_credit]', Yii::$app->view->formatNumber($total_amount['credit']), $accountDetail);
+        $accountDetail = str_replace('[total_debit]', Yii::$app->view->formatNumber($total_amount['debit']), $accountDetail);
+
+        $listTemplate .= $accountDetail;
+
+        if(count($transaction) > 0){
+            $transTable = '<table class = "list-table table table-bordered mt-10" width = "100%">
+                <tr>';
+            if(!$member){
+                $transTable .= '<th>Name</th>';
+            }
+            $transTable .= '<th>Particular</th> 
+                    <th>OR Number</th> 
+                    <th>Date</th> 
+                    <th>Debit</th> 
+                    <th>Credit</th> 
+                </tr>';
+            foreach ($transaction as $trans) {
+                $fullname = $trans['member'] ? $trans['member']['fullname'] : $trans['payment_name'];
+                $particular = $trans['particular'] ? $trans['particular']['name'] : "";
+                $transDate = date('Y-m-d', strtotime($trans['date_transact']));
+                $credit = isset($trans['credit']) && floatval($trans['credit']) > 0 ? Yii::$app->view->formatNumber($trans['credit']) : "";
+                $debit = isset($trans['debit']) && floatval($trans['debit']) > 0 ? Yii::$app->view->formatNumber($trans['debit']) : "";
+                $transTable .= '<tr>';
+
+                if(!$member){
+                    $transTable .= '<td>'.$fullname.'</td>';
+                }
+
+                $transTable .=' <td>'.$particular.'</td> 
+                    <td>'.$trans['gv_num'].'</td> 
+                    <td>'.$transDate.'</td> 
+                    <td>'.$debit.'</td> 
+                    <td>'.$credit.'</td> 
+                </tr>';
+            }
+
+            $transTable .= '</table>';
+        }
+        $listTemplate = $listTemplate . $transTable;
+
+        return $listTemplate;
+    }
 }

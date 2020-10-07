@@ -14,6 +14,8 @@ use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\accounts\ShareHelper;
 use app\helpers\accounts\TimeDepositHelper;
+use app\helpers\payment\PaymentHelper;
+use app\helpers\voucher\VoucherHelper;
 
 
 use yii\db\conditions\OrCondition;
@@ -227,6 +229,10 @@ class SiteController extends Controller
                 $template = ShareHelper::printList($postData['data']);
             else if($accType == 'TimeDeposit')
                 $template = TimeDepositHelper::printList($postData['data']);
+            else if($accType == 'PaymentParticular')
+                $template = PaymentHelper::printList($postData['data']);
+            else if($accType == 'VoucherParticular')
+                $template = VoucherHelper::printList($postData['data']);
             
             $type = $postData['type'];
             if($type == "pdf"){

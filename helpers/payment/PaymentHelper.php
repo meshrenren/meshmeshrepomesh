@@ -1020,5 +1020,105 @@ class PaymentHelper
         
         return $payment_record;
 	}
+
+	public static function getPaymentsParticular($filter){
+		$payment_record = PaymentRecordList::find()->innerJoinWith(['paymentRecord', 'particular'])
+			->joinWith(['member'])
+			->select([ 'payment_record_list.*',
+				'payment_record.name as payment_name',
+				'payment_record.date_transact'
+			])
+			->where('payment_record.posted_date IS NOT NULL');
+
+		if(isset($filter['particular_id'])){
+			$payment_record = $payment_record->andWhere(['payment_record_list.particular_id' => $filter['particular_id']]);
+		}
+		if(isset($filter['member_id'])){
+			$payment_record = $payment_record->andWhere(['member_id' => $filter['member_id']]);
+		}
+		if(isset($filter['date'])){
+			$start = $filter['date']['start'];
+			$end = $filter['date']['end'];
+			$payment_record = $payment_record->andWhere('payment_record.date_transact BETWEEN "'.$start.'" AND "'.$end.'"');
+		}
+
+		$payment_record = $payment_record->orderBy('payment_record.posted_date')
+			->asArray()->all();
+        
+        return $payment_record;
+	}
+
+	public static function printList($postData){
+        $member = $postData['member'];
+        $particular = $postData['particular'];
+        $period = $postData['period']['start'] . " To " .$postData['period']['end'] ;
+        $total_amount = $postData['total_amount'];
+        $transaction = $postData['transaction'];
+
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">PARTICULAR PAYMENTS</div></tr>
+        </table>';
+
+        $accountDetail = '<table>';
+
+        if($member){
+        	$accountDetail .= '
+            <tr>
+                <td style = "font-weight: bold;">NAME: </td> 
+                <td><span>[member]</span></td>
+            </tr>';
+        }
+        $accountDetail .= '
+            <tr>
+                <td style = "font-weight: bold;">PARTICULAR: </td> 
+                <td><span>[particular]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">PERIOD: </td> 
+                <td>[period] </td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">TOTAL PAYMENTS: </td> 
+                <td>[total_amount]</td>
+            </tr>
+        </table>';
+
+        $accountDetail = str_replace('[member]', $member, $accountDetail);
+        $accountDetail = str_replace('[particular]', $particular, $accountDetail);
+        $accountDetail = str_replace('[period]', $period, $accountDetail);
+        $accountDetail = str_replace('[total_amount]', Yii::$app->view->formatNumber($total_amount), $accountDetail);
+
+        $listTemplate .= $accountDetail;
+
+        if(count($transaction) > 0){
+            $transTable = '<table class = "list-table table table-bordered mt-10" width = "100%">
+                <tr>
+                    <th>Name</th> 
+                    <th>Particular</th> 
+                    <th>OR Number</th> 
+                    <th>Date</th> 
+                    <th>Amount</th> 
+                </tr>';
+            foreach ($transaction as $trans) {
+            	$fullname = $trans['member'] ? $trans['member']['fullname'] : $trans['payment_name'];
+            	$particular = $trans['particular'] ? $trans['particular']['name'] : "";
+                $transDate = date('Y-m-d', strtotime($trans['date_transact']));
+                $amount = isset($trans['amount']) && floatval($trans['amount']) > 0 ? Yii::$app->view->formatNumber($trans['amount']) : "";
+                $transTable .= '<tr>
+                    <td>'.$fullname.'</td> 
+                    <td>'.$particular.'</td> 
+                    <td>'.$trans['or_num'].'</td> 
+                    <td>'.$transDate.'</td> 
+                    <td>'.$amount.'</td> 
+                </tr>';
+            }
+
+            $transTable .= '</table>';
+        }
+        $listTemplate = $listTemplate . $transTable;
+
+        return $listTemplate;
+    }
 }
 	

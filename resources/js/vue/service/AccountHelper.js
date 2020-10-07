@@ -129,6 +129,12 @@ export default class AccountHelper{
                     totalOtherToPay += parseFloat(la.amountToPay)
                     
                 }
+                else if(la.particular_id && la.amountToWithdraw && la.amountToWithdraw > 0){
+                    let arr
+                    arr = {particular_id : la.particular_id, particular_name: null, amount: la.amountToPay, type : "DEBIT", account_type : "OTHERS"}
+                    toPaySave.push(arr)
+                    totalOtherToWithdraw += parseFloat(la.amountToWithdraw)
+                }
             })
         }
 
