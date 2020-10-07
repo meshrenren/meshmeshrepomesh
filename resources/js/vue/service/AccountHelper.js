@@ -79,6 +79,7 @@ export default class AccountHelper{
         let totalOtherToPay = 0
         let totalOtherToWithdraw = 0
 
+        console.log('setVoucherAccount', loanToPayList, otherToPay)
         if(loanToPayList && loanToPayList.length > 0){
             let hasLimitLoan = false
             _forEach(loanToPayList, la =>{
@@ -131,7 +132,7 @@ export default class AccountHelper{
                 }
                 else if(la.particular_id && la.amountToWithdraw && la.amountToWithdraw > 0){
                     let arr
-                    arr = {particular_id : la.particular_id, particular_name: null, amount: la.amountToPay, type : "DEBIT", account_type : "OTHERS"}
+                    arr = {particular_id : la.particular_id, particular_name: null, amount: la.amountToWithdraw, type : "DEBIT", account_type : "OTHERS"}
                     toPaySave.push(arr)
                     totalOtherToWithdraw += parseFloat(la.amountToWithdraw)
                 }
