@@ -53,7 +53,7 @@ class SavingsHelper
             $model = $model->where(['fk_savings_id' => $fk_savings_id]);
         }
         
-        return $model->orderBy('posted_date')->asArray()->all();
+        return $model->orderBy('posted_date, id')->asArray()->all();
     }
 
     public static function saveSavingsTransaction($data){

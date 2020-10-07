@@ -48,24 +48,25 @@ export default class AccountHelper{
 
         if(loans && loans.length > 0){
             _forEach(loans, rs =>{
-                if(!notIncLoan || (notIncLoan && notIncLoan.indexOf(rs.product.id) < 0)){
-                    if(Number(rs.principal_balance) > 0 || (allowZeroBal && allowZeroBal.indexOf(rs.product.id) >= 0)){ 
-                        let arr = {}
-                        arr.member_id = rs.member_id
-                        arr.key = "LOAN_" + rs.particular_id
-                        arr.account_no = rs.account_no
-                        arr.product_id = rs.loan_id
-                        arr.product_name = rs.product.product_name
-                        arr.type = "LOAN"
-                        arr.balance = parseFloat(rs.principal_balance).toFixed(2)
-                        arr.particular_id = rs.product.particular_id
-                        arr.principal = parseFloat(rs.principal).toFixed(2)
-                        arr.amountToPay = null
+                if(rs && rs.account_no){
+                    if(!notIncLoan || (notIncLoan && notIncLoan.indexOf(rs.product.id) < 0)){
+                        if(Number(rs.principal_balance) > 0 || (allowZeroBal && allowZeroBal.indexOf(rs.product.id) >= 0)){ 
+                            let arr = {}
+                            arr.member_id = rs.member_id
+                            arr.key = "LOAN_" + rs.particular_id
+                            arr.account_no = rs.account_no
+                            arr.product_id = rs.loan_id
+                            arr.product_name = rs.product.product_name
+                            arr.type = "LOAN"
+                            arr.balance = parseFloat(rs.principal_balance).toFixed(2)
+                            arr.particular_id = rs.product.particular_id
+                            arr.principal = parseFloat(rs.principal).toFixed(2)
+                            arr.amountToPay = null
 
-                        allAccounts.push(arr)
+                            allAccounts.push(arr)
+                        }
                     }
                 }
-                
             })
         }
 
