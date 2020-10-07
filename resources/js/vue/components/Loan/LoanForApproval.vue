@@ -285,7 +285,6 @@ export default {
                 let otherToPay = this.$refs.processAccount.otherToPay
                 let setVoucherAccount = this.$ah.setVoucherAccount(loanToPay, otherToPay)
 
-                console.log('setVoucherAccount', setVoucherAccount)
                 if(!setVoucherAccount.success){
                     if(setVoucherAccount.error == "ERR_LOAN_BALANCE"){
                         this.showMessage('error', 'AMOUNT TO PAY is greater than LOAN BALANCE', 5000)
@@ -300,6 +299,7 @@ export default {
                     this.loanToPaySave = dataVoucher.accToPaySave
                 }
             }
+            console.log('totalOtherToPay', totalOtherToPay, totalOtherToWithdraw)
 
             cashOnHand = parseFloat(cashOnHand) + parseFloat(totalOtherToWithdraw)
 
