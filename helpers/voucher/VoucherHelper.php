@@ -500,7 +500,7 @@ class VoucherHelper
                     <th>Credit</th> 
                 </tr>';
             foreach ($transaction as $trans) {
-                $fullname = $trans['member'] ? $trans['member']['fullname'] : $trans['payment_name'];
+                $fullname = $trans['member'] ? $trans['member']['fullname'] : $trans['voucher_name'];
                 $particular = $trans['particular'] ? $trans['particular']['name'] : "";
                 $transDate = date('Y-m-d', strtotime($trans['date_transact']));
                 $credit = isset($trans['credit']) && floatval($trans['credit']) > 0 ? Yii::$app->view->formatNumber($trans['credit']) : "";

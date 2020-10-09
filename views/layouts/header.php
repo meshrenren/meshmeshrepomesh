@@ -59,6 +59,10 @@ use yii\helpers\Html;
                                 'label'     => 'View Voucher', 
                                 'url'       => ['general-voucher/view']
                             ],
+                            [
+                                'label'     => 'View Particulars', 
+                                'url'       => ['general-voucher/view-particulars']
+                            ],
                         	/*[
                         		'label'     => 'View Voucher Summary',
                         		'url'       => ['general-voucher/view-summary']
@@ -85,10 +89,16 @@ use yii\helpers\Html;
                                 'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_add")
                             ], 
                             [
-                              'label'     => 'Export Payroll',
-                              'url'       => ['payment/export-payroll'],
-                              'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
+                                'label'     => 'Export Payroll',
+                                'url'       => ['payment/export-payroll'],
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
                             ],
+                            [
+                                'label'     => 'View Particulars', 
+                                'url'       => ['payment/view-particulars'],
+                                'visible'   => Yii::$app->user->identity->checkUserAccess("_payment_", "_view")
+                            ],
+                            /*
                         	/*[
                         		 'label'     => 'Loan Closure Payments',
                         		 'url'       => ['loan/loan-closure'],

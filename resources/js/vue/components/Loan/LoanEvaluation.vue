@@ -496,13 +496,13 @@ export default {
     	enterLoanAmount(){
     		console.log("Eva")
     		this.$refs.evaluationForm.validateField('amount', valid => {
+    			console.log(valid, valid)
     			if (valid) {
-    				this.evaluationForm.loan_amount = this.evaluationForm.amount
-    				this.evaluateLoan(true)
+    				
     			}
     			else{
-    				
-    				console.log("Has Error")
+    				this.evaluationForm.loan_amount = this.evaluationForm.amount
+    				this.evaluateLoan(true)
     			}
     		})
     	},
