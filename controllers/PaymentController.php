@@ -873,7 +873,7 @@ class PaymentController extends \yii\web\Controller
     public function actionViewParticulars(){
         $this->layout = 'main-vue';
 
-        $filter  = ['category' => ['LOAN', 'SAVINGS', 'SHARE', 'OTHERS']];
+        $filter  = ['category' => ['LOAN', 'SAVINGS', 'SHARE', 'TIME_DEPOSIT', 'OTHERS']];
         $orderBy = "name ASC";
         $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
         $memberList = MemberHelper::getMemberList(null, true);

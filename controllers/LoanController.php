@@ -719,6 +719,7 @@ class LoanController extends \yii\web\Controller
     				$sharetransaction->running_balance = $shareaccount->balance + $loanaccount->savings_retention;
     				$sharetransaction->remarks = "posted as Retention from loan ".$loanmodel->account_no;
     				$sharetransaction->reference_number = $gv_num; //"GV123.sample";
+                    $sharetransaction->posted_date = $transac_date;
     				
     				$shareaccount->balance = $shareaccount->balance + $loanaccount->savings_retention;
     				

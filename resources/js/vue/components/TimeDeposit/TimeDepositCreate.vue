@@ -12,7 +12,7 @@
 						<el-table :data="accountListData"  height="450" stripe border style = "margin-top:10px;">
 				            <el-table-column label="Account Number">
 				                <template slot-scope="scope">
-				                    <span style="margin-left: 10px">{{ scope.row.accountnumber }}</span>
+				                    <span style="margin-left: 10px">{{ scope.row.account_no }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Account Name">

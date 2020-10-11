@@ -42,7 +42,7 @@ class TimeDepositAccount extends \yii\db\ActiveRecord
             [['member_id', 'fk_td_product', 'term', 'created_by'], 'integer'],
             [['amount', 'balance', 'interest_rate'], 'number'],
             [['maturity_date', 'cancelled_date', 'date_created'], 'safe'],
-            [['accountnumber'], 'string', 'max' => 25],
+            [['accountnumber', 'account_no'], 'string', 'max' => 25],
             [['account_status'], 'string', 'max' => 15],
         ];
     }

@@ -46,6 +46,10 @@
                                     </template>
                                     
                                 </tr>
+                                <tr v-if = "voucher.cancelled_date">
+                                    <th class = "tlabel" style="text-align: left;">Status: </th>
+                                    <td class = "tvalue"> CANCELLED </td>
+                                </tr>
                             </table>
                             <el-table
                                 class = "mt-20 el-table-bordered"

@@ -162,10 +162,10 @@ class SavingsHelper
         $savingsproduct = Savingsproduct::findOne($savingsaccount->saving_product_id);
 
         $running_balance = $savingsaccount->balance;
-        if($transaction_type == "CASHDEP"){
+        if($transaction_type == "CASHDEP" || $transaction_type == "CANCASHDEP"){
             $running_balance = $savingsaccount->balance + $amount;
         }
-        else if($transaction_type == "WITHDRWL"){
+        else if($transaction_type == "WITHDRWL" || $transaction_type == "CANWITHDRWL"){
             $running_balance = $savingsaccount->balance - $amount;
         }
         
@@ -195,5 +195,29 @@ class SavingsHelper
         }
 
         return ['success' => $success, 'error' => $error];
+    }
+
+    public static function cancelReference($ref_no, $cancelled_date){
+        $transactionList = SavingsTransaction::find()->where(['ref_no' => $ref_no])->all();
+        $success = true;
+
+        foreach ($transactionList as $transaction) {
+            $savingsDetails['account_no'] = $transaction->fk_share_id;
+            $savingsDetails['remarks'] = "posted as cancel from ".$transaction->ref_no;
+            $savingsDetails['ref_num'] = 'CAN'.$transaction->ref_no;
+            $savingsDetails['amount'] = $transaction->amount * -1;
+            $savingsDetails['transaction_date'] = \Yii::$app->user->identity->DateTimeNow;
+            $savingsDetails['transaction_type'] = 'CAN'.$transaction->transaction_type;
+
+            $savingsTransaction = static::transactionSavings($savingsDetails);
+            if($savingsTransaction['success']){
+                $transaction->is_cancelled = 1;
+                $transaction->save();
+            } 
+            else{
+                $success = false;
+            }
+        }
+        return ['success' => $success];
     }
 }

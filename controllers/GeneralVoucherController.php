@@ -9,6 +9,7 @@ use app\helpers\journal\JournalHelper;
 use app\helpers\member\MemberHelper;
 use app\models\AccountParticulars;
 use app\models\VoucherDetails;
+use \app\models\LoanTransaction;
 
 use app\models\GeneralVoucher;
 
@@ -256,7 +257,7 @@ class GeneralVoucherController extends \yii\web\Controller
     public function actionViewParticulars(){
         $this->layout = 'main-vue';
 
-        $filter  = ['category' => ['LOAN', 'SAVINGS', 'SHARE', 'OTHERS']];
+        $filter  = ['category' => ['LOAN', 'SAVINGS', 'SHARE', 'TIME_DEPOSIT', 'OTHERS']];
         $orderBy = "name ASC";
         $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
         $memberList = MemberHelper::getMemberList(null, true);
@@ -282,5 +283,13 @@ class GeneralVoucherController extends \yii\web\Controller
 
             return ['data' => $paymentRecordList];
         }
+    }
+
+    //add permission on action
+
+    public function actionCancelVoucher($id){
+
+        VoucherHelper::unpostVoucher($id);
+
     }
 }

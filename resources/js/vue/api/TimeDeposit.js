@@ -14,4 +14,13 @@ export default {
 	processAccount(params){	
 		return axios.post($baseUrl + '/time-deposit/process-account', params)
 	},
+
+	printList(data, type){
+		let params = {
+			data : data,
+			type : type
+		}
+
+		return axios.post($baseUrl + '/time-deposit/print-list', params)
+	}
 }

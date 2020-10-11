@@ -7,6 +7,8 @@ use \app\models\GeneralVoucher;
 use \app\models\voucherDetails;
 use \app\models\LoanAccount;
 use \app\models\LoanProduct;
+use \app\models\LoanTransaction;
+
 
 use app\helpers\journal\JournalHelper;
 use app\helpers\particulars\ParticularHelper;
@@ -237,7 +239,7 @@ class VoucherHelper
                 
                 echo "Posting " . $row['type'].' for ' . $memberName . ' ......<br/>';
 
-                if($row['type']=='LOAN')
+                if($row['type'] =='LOAN')
                 {
                     //IF CREDIT, THIS WILL BE LOAN PAYMENT
                     if($row['credit']  && floatval($row['credit'] ) > 0){
@@ -524,5 +526,97 @@ class VoucherHelper
         $listTemplate = $listTemplate . $transTable;
 
         return $listTemplate;
+    }
+
+    //For now this function is for Loan Release only with no other loan payments
+    public static function unpostVoucher($ref_id)
+    {
+        //echo 'wow';
+        try {
+            
+            $success = true;
+            $transaction = \Yii::$app->db->beginTransaction();
+            
+            $dateTimeToday = \Yii::$app->user->identity->DateTimeNow;
+            $dateToday = date('Y-m-d', strtotime($dateTimeToday));
+            $generalVoucher = GeneralVoucher::find()->where(['id'=>$ref_id])
+                ->andWhere('cancelled_date IS NULL')
+                ->andWhere('posted_date IS NOT NULL')->one();
+            
+            if(!$generalVoucher){
+                echo "Voucher with GV Number maybe already cancelled or not found";
+                echo "<h3> Please close the window </h3>";
+                die;
+            }
+            $gv_num = $generalVoucher->gv_num;
+
+            //Check if has other loan payment
+            $loanPayment = LoanTransaction::find()->where(['OR_no' =>$gv_num, 'transaction_type' => 'PAYPARTIAL'])->count();
+            if($loanPayment > 0){
+                echo "Vouher has loan payments. This facility is for Loan Release only.";
+                echo "<h3> Please close the window </h3>";
+                die;
+            }
+
+            //Get Loan Transaction
+            $loanRelease = LoanTransaction::find()->where(['OR_no' => $gv_num, 'transaction_type' => 'RELEASE'])->one();
+            if($loanRelease){
+                $cancelLoanRelease = LoanHelper::cancelLoanRelease($loanRelease->loan_account);
+                if(!$cancelLoanRelease['success']){
+                    if(isset($cancelLoanRelease['error']) == 'release_has_payment'){
+                       echo "Loan account has already payment. Cancelled account must have no other transaction.";
+                        echo "<h3> Please close the window </h3>";
+                        die; 
+                    }
+                    $success = true;
+                }
+            }
+            else{
+                echo "Loan Release not found. This facility is for Loan Release only.";
+                echo "<h3> Please close the window </h3>";
+                die; 
+            }
+
+            if($success){
+
+                //Get Share Transaction
+                $cancelShare = ShareHelper::cancelReference($gv_num, $dateTimeToday);
+                if(!$cancelShare['success']){
+                    echo "Error on cancelling share transaction.";
+                    echo "<h3> Please close the window </h3>";
+                    die;
+                }
+
+                //Cancel Savings Transaction
+                $cancelSavings = SavingsHelper::cancelReference($gv_num, $dateTimeToday);
+                if(!$cancelSavings['success']){
+                    echo "Error on cancelling savings transaction.";
+                    echo "<h3> Please close the window </h3>";
+                    die;
+                    $success = false;
+                }
+            }
+
+
+            if($success){
+                $generalVoucher->cancelled_date = $dateTimeToday;
+                $generalVoucher->save();
+
+                $transaction->commit();
+                //$transaction->rollBack(); // Rollback for now
+                echo "<br/><h3>Cancelled</h3>";
+            }
+            else {
+                $transaction->rollBack();
+                echo "<br/><h3>Not Cancelled. Please contact admin or the developer</h3>";
+            }
+
+            echo "<br/><h3>Close Window.</h3>";
+            
+            
+        } catch (\Exception $e) {
+            var_dump($e);
+            echo $e->getMessage();
+        }
     }
 }

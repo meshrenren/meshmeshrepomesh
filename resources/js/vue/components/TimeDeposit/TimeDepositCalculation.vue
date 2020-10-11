@@ -207,7 +207,7 @@ export default {
 
             let data = {
                 account    : account,
-                account_no : account.accountnumber,
+                account_no : account.account_no,
                 account_name : accName,
                 amount : account.amount,
                 transaction : this.transactionList

@@ -672,4 +672,101 @@ class LoanHelper
 
     }
 
+    public static function cancelLoanRelease($account_no){
+        $account = LoanAccount::findOne($account_no);
+
+        //check if have loan payment
+        $loanPayment = LoanTransaction::find()->where(['loan_account' => $account_no, 'transaction_type' => 'PAYPARTIAL'])->count();
+        if($loanPayment > 0){
+            return ['success' => false, 'error' => 'release_has_payment'];
+        }
+        $success = true;
+
+        $loanRelease = LoanTransaction::find()->where(['loan_account' => $account_no, 'transaction_type' => 'RELEASE'])->one();
+        if($loanRelease){
+
+            $amount = $loanRelease->amount;
+            $ref_num = 'CAN'.$loanRelease->OR_no;
+            $transaction_date = \Yii::$app->user->identity->DateTimeNow;
+            $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+
+            $loanTransaction = new LoanTransaction();
+            $loanTransaction->loan_account = $account_no;
+            $loanTransaction->amount = round($amount, 2) * -1;
+            $loanTransaction->transaction_type= 'CNRELEASE';
+            $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+            $loanTransaction->transaction_date = $transaction_date;
+            $loanTransaction->running_balance = 0;
+            $loanTransaction->remarks="cancelled loan release";
+            $loanTransaction->prepaid_intpaid = 0;
+            $loanTransaction->interest_paid = 0;
+            $loanTransaction->OR_no= $ref_num;
+            $loanTransaction->principal_paid = 0;
+            $loanTransaction->arrears_paid = 0;
+            $loanTransaction->date_posted = $dateToday;
+            $loanTransaction->interest_earned = 0;
+
+            if(!$loanTransaction->save())
+            {
+                $success = false;
+            }
+
+            $account->principal_balance = $loanTransaction->running_balance;
+            $account->status = 'CANCEL';
+
+            if(!$account->save())
+            {
+                $success = false;
+            }
+
+            if($success){
+                //Cancel other payment of the release
+            }
+        }
+
+        return ['success' => $success];;
+    }
+
+    public static function loanTransaction($trans){
+        $success = false;
+        $amount = $trans['amount'];
+        $ref_num = $trans['ref_num'];
+        $transaction_date = $trans['transaction_date'];
+        $transaction_type = $trans['transaction_type'];
+        $remarks = $trans['remarks'];
+
+        $running_balance = isset($trans['running_balance']) ? $trans['running_balance'] : 0;
+        $prepaid_intpaid = isset($trans['prepaid_intpaid']) ? $trans['prepaid_intpaid'] : 0; 
+        $principal_paid = isset($trans['principal_paid']) ? $trans['principal_paid'] : 0;
+        $interest_earned = isset($trans['interest_earned']) ? $trans['interest_earned'] : 0;
+
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+
+        $loanTransaction = new LoanTransaction();
+        $loanTransaction->loan_account = $account_no;
+        $loanTransaction->amount = round($amount, 2) * -1;
+        $loanTransaction->transaction_type= $transaction_type;
+        $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+        $loanTransaction->transaction_date = $transaction_date;
+        $loanTransaction->running_balance = $running_balance;
+        $loanTransaction->remarks=$remarks;
+        $loanTransaction->prepaid_intpaid = $prepaid_intpaid;
+        $loanTransaction->interest_paid = 0;
+        $loanTransaction->OR_no= $ref_num;
+        $loanTransaction->principal_paid = $principal_paid;
+        $loanTransaction->arrears_paid = 0;
+        $loanTransaction->date_posted = $dateToday;
+        $loanTransaction->interest_earned = $interest_earned;
+
+        if($loanTransaction->save()){
+            $success = false;
+        }
+
+        return $success;
+    }
+
+    public static function cancelPayment($ref_num){
+
+    }
+
 }

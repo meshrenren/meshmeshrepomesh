@@ -1,5 +1,5 @@
 <template>
-	<div class="time-deposit-list">
+	<div class="time-deposit-list" v-loading = "pageLoading">
 		<div class="box box-info">
             <div class="box-header with-border">
               	<h3 class="box-title">Time Deposit Accounts</h3>
@@ -39,7 +39,7 @@
 				            </el-table-column>
 				            <el-table-column label="Account No">
 				                <template slot-scope="scope">
-				                    <span>{{ scope.row.accountnumber }}</span>
+				                    <span>{{ scope.row.account_no }}</span>
 				                </template>
 				            </el-table-column>
 				            <el-table-column label="Amount">
@@ -68,6 +68,7 @@
 				                </template>
 				            </el-table-column>
 		   				</el-table>
+		   				<el-button class = 'mt-10' type = "primary" @click = "print('print')">Print</el-button>
 					</el-col>
 					<el-col :span = "12">
 						<el-row :gutter = "5">
@@ -77,7 +78,7 @@
 							</el-col>
 							<el-col :span = "10">
 								<label>Account Number</label>
-								<el-input v-model="selectedAccount.accountnumber" :disabled = "true"></el-input>
+								<el-input v-model="selectedAccount.account_no" :disabled = "true"></el-input>
 							</el-col>
 						</el-row>
 
@@ -123,13 +124,16 @@
 </template>
 
 <script>
-	window.noty = require('noty')
-    import Noty from 'noty'
-    import cloneDeep from 'lodash/cloneDeep' 
-  	import _forEach from 'lodash/forEach'
+window.noty = require('noty')
+import Noty from 'noty'
+import cloneDeep from 'lodash/cloneDeep' 
+	import _forEach from 'lodash/forEach'
 
+import _message from '../../mixins/messageDialog.js'
+import fileExport from '../../mixins/fileExport'
 export default {
 	props: ['dataTimeDepositAccounts', 'typeList', 'header'],
+	mixins: [_message, fileExport],
 	data: function () {
 		let status = {ACTIVE : 'ACTIVE', MATURED : 'MATURED', CLOSED : 'CLOSED', ALL : 'ALL'}
 
@@ -141,7 +145,8 @@ export default {
 			tdAccount 		: null,
 			statusList 		: status,
 			tdStatus 		: "ALL",
-			permission 		: {}
+			permission 		: {},
+			pageLoading 	: false
 		}
 	},
     computed: {
@@ -221,7 +226,34 @@ export default {
 				this.selectedAccount = {}
 				location.reload()
 			}
-		}
+		},
+		print(type){
+    		if(this.accountList.length == 0){
+    			this.showMessage('error', 'No data to print.', 3000)
+                return
+    		}
+    		this.pageLoading = true
+
+    		let data = {
+    			status : this.tdStatus,
+    			transaction : this.accountList
+    		}
+
+			this.$API.TimeDeposit.printList(data, type)
+			.then(result => {
+				let res = result.data
+				if(type == 'pdf'){
+					this.exporter(type, 'Time Deposit List', res)
+				}
+				else if(type == 'print'){
+					this.winPrint(res.data, 'Time Deposit List')
+				}
+			})
+			.catch(err => { console.log(err)})
+			.then(_ => { this.pageLoading = false })
+
+    		//window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
+    	}
 	}
 }
 </script>

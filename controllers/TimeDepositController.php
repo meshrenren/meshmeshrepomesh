@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use Yii;
+use \Mpdf\Mpdf;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
@@ -91,7 +92,7 @@ class TimeDepositController extends \yii\web\Controller
                     ];
                 }
                 //Create new TD account
-                $model = $this->createNewAccount($tdaccount);
+                $model = $this->createNewAccount($tdaccount, $ref_no);
 
     	        if($model->save()){
                     $success = true;
@@ -134,7 +135,7 @@ class TimeDepositController extends \yii\web\Controller
                             'type'          => 'TIME_DEPOSIT', // Time Deposit
                             'amount'        => $model->amount,
                             'member_id'     => $member_id,
-                            'particular_id' => 1,
+                            'particular_id' => 20,
                         	'product_id'    => $tdaccount['fk_td_product'], 
                         	'account_no'    => $model->accountnumber,
                             'or_num'        => $ref_no,
@@ -467,6 +468,7 @@ class TimeDepositController extends \yii\web\Controller
                     $trans->transaction_type = $savings_transaction['transaction_type'];
                     $trans->amount = $savings_transaction['amount'];
                     $trans->balance = $balance;
+                    $trans->ref_no = $gv_num;
                     $trans->remarks = $savings_transaction['remarks'];
                     $trans->transaction_date = $transaction_date;
                     $trans->transacted_by = \Yii::$app->user->identity->id;
@@ -486,6 +488,7 @@ class TimeDepositController extends \yii\web\Controller
                     $trans->amount = $balance;
                     $trans->balance = 0;
                     $trans->remarks = '';
+                    $trans->ref_no = $gv_num;
                     $trans->transaction_date = $transaction_date;
                     $trans->transacted_by = \Yii::$app->user->identity->id;
                     if($trans->save()){
@@ -509,7 +512,7 @@ class TimeDepositController extends \yii\web\Controller
                         $getrate = TimeDepositHelper::getInterestRate(12, $renew_amount);
                         $new_account['interest_rate'] = $getrate; 
                         $new_account['open_date'] = $open_date; 
-                        $renewAccount = $this->createNewAccount($new_account);
+                        $renewAccount = $this->createNewAccount($new_account, $gv_num);
                         if($renewAccount == null){
                             $success = false;
                         }
@@ -651,7 +654,7 @@ class TimeDepositController extends \yii\web\Controller
         }
     }
 
-    public function createNewAccount($tdaccount){
+    public function createNewAccount($tdaccount, $gv_num){
 
         $today = Yii::$app->user->identity->DateNow;
         $todayDateTime = Yii::$app->user->identity->DateTimeNow;
@@ -660,11 +663,14 @@ class TimeDepositController extends \yii\web\Controller
         $model->attributes = $tdaccount;
         $product = \app\models\TimeDepositProduct::find()->where(['id' => $tdaccount['fk_td_product']])->one();
 
+        $openDate = isset($tdaccount['open_date']) ? $tdaccount['open_date'] : $today;
+
         $trans_serial = $product->trans_serial + 1;
         $trans_serial_pad = str_pad($trans_serial, 6, '0', STR_PAD_LEFT);
+        $trans_serial_pad_4 = str_pad($trans_serial, 4, '0', STR_PAD_LEFT);
         $model->accountnumber = $product->id . "-" . $trans_serial_pad;
+        $model->account_no = $product->id . "-" . date("Y", strtotime($openDate)) . "-" . $trans_serial_pad_4;
 
-        $openDate = isset($tdaccount['open_date']) ? $tdaccount['open_date'] : $today;
 
         $mature_days = date('Y-m-d', strtotime($openDate. ' + '. $tdaccount['term'] . ' months'));
 
@@ -692,6 +698,7 @@ class TimeDepositController extends \yii\web\Controller
             $tdTransaction->amount = $model->amount;
             $tdTransaction->balance = $model->amount;
             $tdTransaction->transaction_date = $todayDateTime;
+            $tdTransaction->ref_no = $gv_num;
             $tdTransaction->transacted_by = \Yii::$app->user->identity->id;
             $tdTransaction->save();
 
@@ -701,4 +708,38 @@ class TimeDepositController extends \yii\web\Controller
         return null;
     }
 
+    public function actionPrintList(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+
+            $template = TimeDepositHelper::listingPrint($postData['data']);
+            
+            $type = $postData['type'];
+            if($type == "pdf"){
+                // Set up MPDF configuration
+                $config = [
+                    'mode' => '+utf-8', 
+                    "allowCJKoverflow" => true, 
+                    "autoScriptToLang" => true,
+                    "allow_charset_conversion" => false,
+                    "autoLangToFont" => true,
+                    'orientation' => 'L'
+                ];
+                $mpdf = new Mpdf($config);
+                $mpdf->WriteHTML($template);
+
+                // Download the PDF file
+                $mpdf->Output();
+                exit();
+            }
+            else{
+                return [ 'data' => $template];
+            }
+        }
+        
+    }
 }

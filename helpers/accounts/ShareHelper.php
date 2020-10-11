@@ -145,10 +145,10 @@ class ShareHelper
         $shareaccount = Shareaccount::findOne($shareDetails['account_no']);
 
         $running_balance = $shareaccount->balance;
-        if($transaction_type == "CASHDEP"){
+        if($transaction_type == "CASHDEP" || $transaction_type == "CANCASHDEP"){
             $running_balance = $shareaccount->balance + $amount;
         }
-        else if($transaction_type == "WITHDRWL"){
+        else if($transaction_type == "WITHDRWL" || $transaction_type == "CANWITHDRWL"){
             $running_balance = $shareaccount->balance - $amount;
         }
     
@@ -173,11 +173,34 @@ class ShareHelper
         }
         else
         {
-            //var_dump($savingstransaction->error);
             $error = $sharetransaction->errors;
             $success = false;
         }
 
         return ['success' => $success, 'error' => $error];
+    }
+
+    public static function cancelReference($ref_no, $cancelled_date){
+        $transactionList = ShareTransaction::find()->where(['reference_number' => $ref_no])->all();
+        $success = true;
+
+        foreach ($transactionList as $transaction) {
+            $shareDetails['account_no'] = $transaction->fk_share_id;
+            $shareDetails['remarks'] = "posted as cancel from ".$transaction->reference_number;
+            $shareDetails['ref_num'] = 'CAN'.$transaction->reference_number;
+            $shareDetails['amount'] = $transaction->amount * -1;
+            $shareDetails['transaction_date'] = \Yii::$app->user->identity->DateTimeNow;
+            $shareDetails['transaction_type'] = 'CAN'.$transaction->transaction_type;
+
+            $sharetransaction = static::transactionShare($shareDetails);
+            if($sharetransaction['success']){
+                $transaction->is_cancelled = 1;
+                $transaction->save();
+            }  
+            else{
+                $success = false;
+            }
+        }
+        return ['success' => $success];
     }
 }

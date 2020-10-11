@@ -144,4 +144,93 @@ class TimeDepositHelper
 
         return $listTemplate;
     }
+
+    public static function listingPrint($postData){
+        $status = $postData['status'];
+        $transaction = $postData['transaction'];
+
+        $statusStr = ucfirst(strtolower($status));
+        $title = "List of " . $statusStr . " Time Deposit Accounts (Computation with Compound Interest)";
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">'.$title.'</div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">As Of '.date("Y-m-d").'</div></tr>
+        </table>';
+
+        $accountDetail = '<table class = "mt-20">
+            <tr>
+                <td style = "font-weight: bold;">Total Principal Amount: </td> 
+                <td><span>[total_principal_amount]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Total Interest Expense: </td> 
+                <td>[total_interest_expense] </td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Total Amount Matured: </td> 
+                <td>[total_amount_matured]</td>
+            </tr>
+        </table>';
+
+        $total_principal_amount = 0;
+        $total_interest_expense = 0;
+        $total_amount_matured = 0;
+        if(count($transaction) > 0){
+            $transTable = '<table class = "table table-bordered mt-10" width = "100%">
+                <tr>
+                    <th>Account Name</th> 
+                    <th>Account Number</th> 
+                    <th>Date Open</th> 
+                    <th>Principal Amount</th> 
+                    <th>Interest Expense</th> 
+                    <th>Amount Matured</th> 
+                </tr>';
+
+            foreach ($transaction as $trans) {
+                $fullname = $trans['member'] ? $trans['member']['fullname'] : $trans['account_name'];
+                $open_date = date('Y-m-d', strtotime($trans['open_date']));
+                $amount = $trans['amount'] && floatval($trans['amount']) > 0 ? floatval($trans['amount']) : 0;
+                $amount_mature = $trans['amount_mature'] && floatval($trans['amount_mature']) > 0 ? floatval($trans['amount_mature']) : 0;
+                $interest_expense = $amount_mature - $amount;
+
+                if(count($trans['transactions']) > 0){
+                    $interest_expense = 0;
+                    foreach ($trans['transactions'] as $tdTrans) {
+                        if($tdTrans['transaction_type'] == 'TDINTEREST'){
+                            $interest_expense = floatval($tdTrans['amount']);
+                        }
+                    }
+                    $amount_mature = $amount + $interest_expense;
+                }
+
+                $total_principal_amount += $amount;
+                $total_interest_expense += $interest_expense;
+                $total_amount_matured += $amount_mature;
+                
+                $amount_str = $amount > 0 ? Yii::$app->view->formatNumber($amount) : "";
+                $amount_mature_str = $amount_mature > 0 ? Yii::$app->view->formatNumber($amount_mature) : "";
+                $interest_expense_str = $interest_expense > 0 ? Yii::$app->view->formatNumber($interest_expense) : "";
+
+                $transTable .= '<tr>
+                    <td>'.$fullname.'</td> 
+                    <td>'.$trans['account_no'].'</td> 
+                    <td>'.$open_date.'</td> 
+                    <td>'.$amount_str.'</td> 
+                    <td>'.$interest_expense_str.'</td> 
+                    <td>'.$amount_mature_str.'</td> 
+                </tr>';
+            }
+
+            $transTable .= '</table>';
+        }
+        $accountDetail = str_replace('[total_principal_amount]', Yii::$app->view->formatNumber($total_principal_amount), $accountDetail);
+        $accountDetail = str_replace('[total_interest_expense]', Yii::$app->view->formatNumber($total_interest_expense), $accountDetail);
+        $accountDetail = str_replace('[total_amount_matured]', Yii::$app->view->formatNumber($total_amount_matured), $accountDetail);
+
+        $listTemplate .= $accountDetail;
+
+        $listTemplate = $listTemplate . $transTable;
+
+        return $listTemplate;
+    }
 }
