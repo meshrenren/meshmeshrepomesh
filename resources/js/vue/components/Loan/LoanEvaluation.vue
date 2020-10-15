@@ -128,6 +128,17 @@
 									  	</el-form-item>
 									  	<!-- Retention is actually for Share -->
 										<el-checkbox @change = "savingsChange" v-model="evaluationForm.is_savings">1% Retention?</el-checkbox>
+										<el-row :gutter = "20">
+						        			<el-col :span="8">
+						        				<el-checkbox v-if = "evaluationForm.product_loan_id  == 20" @change = "changeInterestType" v-model="evaluationForm.interest_on_amount">Deduct Interest on Loan?</el-checkbox>
+						        			</el-col>
+						        			<el-col :span="8">
+												<el-input v-model="dynamicInterest"  placeholder = "Set Interest Rate"></el-input>
+						        			</el-col>
+						        		</el-row>
+										<!-- If misc loan -->
+										
+										
 									</el-col>
 									<el-col :span="24">
 										<el-row :gutter = "20">
@@ -331,7 +342,7 @@ export default {
 	props: ['dataLoanProduct', 'dataDefaultSettings'],
 	mixins: [dialogComponent],
 	data: function () {
-		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : false, savings_retention: null, transaction_date : null}
+		let form = {product_loan_id : null, duration : null, duration_type : "Months", amount : null, service_charge : true, is_savings : false, savings_retention: null, transaction_date : null, interest_on_amount : false}
 		let durationList = [ {value : 6, label : 6},
 			{value : 12, label : 12},
 			{value : 24, label : 24},
@@ -353,7 +364,8 @@ export default {
 			durationList 			:  durationList,
 			showFormModal 			: false,
 			loanEvalFormData 		: {},
-			loanTransaction 		: []
+			loanTransaction 		: [],
+			dynamicInterest 		: null,
 		}
 	},
 	created(){
@@ -426,6 +438,9 @@ export default {
 		},
 		savingsChange(value){
 			console.log("value", value)
+			this.evaluateLoan()
+		},
+		changeInterestType(){
 			this.evaluateLoan()
 		},
     	populateField(data){
@@ -679,6 +694,15 @@ export default {
 			  	let principal_amt = this.evaluationForm.amount
 			  	this.evaluationForm.credit_preinterest = parseFloat(principal_amt * getProduct.prepaid_interest).toFixed(2);
 			  	this.evaluationForm.debit_loan = Number(principal_amt) + Number(this.evaluationForm.credit_preinterest);
+
+			  	if(this.evaluationForm.interest_on_amount){
+			  		let int = getProduct.prepaid_interest
+			  		if(this.dynamicInterest){
+			  			int = Number(this.dynamicInterest) / 100
+			  		}
+			  		this.evaluationForm.credit_preinterest = parseFloat(principal_amt * int).toFixed(2);
+			  		this.evaluationForm.debit_loan = Number(principal_amt);
+			  	}
 			}
 			/*
 				----- end of doing consideration #1 ------
@@ -983,23 +1007,26 @@ export default {
     	*/
     	getPrepaidDebit(balanceCutOff, account, product){
     		let amt = 0
-    		let calVersion = this.$ch.checkVersion(account.release_date)
-			console.log("'balanceCutOff'", balanceCutOff, account, product, calVersion)
+    		if(product.interest_type_id == 1){
 
-    		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
-    			if(product.id != 1){
-	    			amt = balanceCutOff * parseFloat(account.prepaid_int)
-	    		} 
-    		}
-    		else{
-    			console.log("'balanceCutOff'", balanceCutOff)
-    			if([3,5,6,8,12,14].indexOf(Number(product.id)) >= 0){
-	    			amt = balanceCutOff * parseFloat(account.prepaid_int) / (1 + parseFloat(account.prepaid_int))
+	    		let calVersion = this.$ch.checkVersion(account.release_date)
+				console.log("'balanceCutOff'", balanceCutOff, account, product, calVersion)
+
+	    		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
+	    			if(product.id != 1){
+		    			amt = balanceCutOff * parseFloat(account.prepaid_int)
+		    		} 
 	    		}
 	    		else{
-	    			amt = balanceCutOff * parseFloat(account.prepaid_int)
+	    			console.log("'balanceCutOff'", balanceCutOff)
+	    			if([3,5,6,8,12,14].indexOf(Number(product.id)) >= 0){
+		    			amt = balanceCutOff * parseFloat(account.prepaid_int) / (1 + parseFloat(account.prepaid_int))
+		    		}
+		    		else{
+		    			amt = balanceCutOff * parseFloat(account.prepaid_int)
+		    		}
 	    		}
-    		}
+	    	}
 
     		return amt
     		

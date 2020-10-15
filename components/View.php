@@ -94,6 +94,51 @@ class View extends \yii\web\View
 
         return $vr;
     }
+
+    public function incrementLetter($curr_letter, $count = 1)
+        {
+            $strlen = strlen($curr_letter);
+
+            $firstAscii = ord("A");
+            $lastAscii = ord("A");
+
+            $first_letter = '';
+            $last_letter = '';
+
+            if($strlen == 1){
+                $ascii = ord($curr_letter);
+                $ascii2 = $ascii + $count;
+
+                $last_letter = chr($ascii2);
+            }
+
+            if($strlen == 2){
+                $arrLetter = str_split($curr_letter);
+                $fLetter = $arrLetter[0];
+                $lLetter = $arrLetter[1];
+                
+                $ascii = ord($lLetter);
+                $ascii2 = $ascii + $count;
+
+                $firstAscii = ord($fLetter);
+
+                $first_letter = $fLetter;
+                $last_letter = chr($ascii2);
+            }
+
+            $minus = $ascii2 - 90;
+            $whole = 0;
+            if($ascii2 > 90){
+                $mod = $minus % 26; // For second letter
+                $temp = $strlen > 1 ? floor(($ascii + $firstAscii - 90) / 26) - 1: floor($minus / 26) ;
+                $whole = $temp; // For first letter'
+                $fAscii = $firstAscii + $whole;
+                $lAscii = $lastAscii + ($mod - 1); // Include previous letter
+                $first_letter = chr($fAscii);
+                $last_letter = chr($lAscii);
+            }
+            return $first_letter . $last_letter;
+        }
 }
 
 ?>

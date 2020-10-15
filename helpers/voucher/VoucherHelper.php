@@ -447,7 +447,7 @@ class VoucherHelper
 
         $listTemplate = '<table width = "100%">
             <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
-            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">PARTICULAR PAYMENTS</div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">PARTICULAR Disbursement</div></tr>
         </table>';
 
         $accountDetail = '<table>';

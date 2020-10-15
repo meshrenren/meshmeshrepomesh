@@ -68,7 +68,8 @@
 	        		</el-col>
 	        		<el-col :span="18">
 	        			<div class = "right-toolbar">
-            				<el-button type = "default" @click = "printForm('print')">PRINT</el-button>            			
+            				<el-button type = "default" @click = "printForm('print')">PRINT</el-button>      
+            				<el-button type = "default" @click = "exportReportToExcel('print')">EXCEL</el-button>          			
             			</div>
 	        			<el-table
 							:data="voucherList"
@@ -83,7 +84,7 @@
 
 				            <el-table-column label="Name" fixed>      
 				                <template slot-scope="scope"> 
-				                	{{ scope.row.member ? scope.row.member.fullname : scope.row.payment_name }} 
+				                	{{ scope.row.member ? scope.row.member.fullname : scope.row.voucher_name }} 
 				                </template>                       
 				            </el-table-column>
 
@@ -163,6 +164,17 @@ export default {
 		}
 	},
     computed:{
+    	tableList(){
+			let list = cloneDeep(this.voucherList)
+			_forEach(list, vl =>{
+				vl.voucher_name = vl.member ? vl.member.fullname : vl.voucher_name
+				vl.particular_name = vl.particular.name
+				vl.debit_amount = this.$nf.formatNumber(vl.debit, 2)
+				vl.credit_amount = this.$nf.formatNumber(vl.credit, 2)
+			})
+
+			return list
+		},
         totalAmount(){
         	let credit = 0
         	let debit = 0
@@ -241,6 +253,58 @@ export default {
 			.then(_ => { this.pageLoading = false })
 
     		//window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
+    	},
+    	exportReportToExcel(){
+    		if(this.voucherList.length == 0){
+    			this.showMessage('error', 'No data to print.', 3000)
+                return
+    		}
+    		this.pageLoading = true
+
+    		let cols = [
+                {
+                    label: "GV Number",
+                    prop: "gv_num",
+                    active: true,
+                },
+                {
+                    label: "Name",
+                    prop: "voucher_name",
+                    active: true,
+                },
+                {
+                    label: "Particular",
+                    prop: "particular_name",
+                    active: true,
+                },
+                {
+                    label: "Date",
+                    prop: "date_transact",
+                    active: true,
+                },
+                {
+                    label: "Debit",
+                    prop: "debit_amount",
+                    active: true,
+                },
+                {
+                    label: "Credit",
+                    prop: "credit_amount",
+                    active: true,
+                },
+            ]
+			let title = 'Particular Disbursement'
+
+    		this.$API.Report.exportReportToExcel(this.tableList, title, cols)
+            .then(res => {
+                this.exporter('xlsx', 'Particular Disbursement', res.data)
+            })
+            .catch(err => {
+                console.log(err)
+            })
+            .finally(_ => {
+                 this.pageLoading = false
+            })
     	}
     }
 }

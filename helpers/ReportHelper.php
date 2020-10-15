@@ -15,6 +15,10 @@ class ReportHelper
                 'bold' => true,
                 'size' => 18
             ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+            ],
+
         ];
 
         $topColumn = [
@@ -170,7 +174,7 @@ class ReportHelper
         foreach ($dataRows as $row) {
             $let = $startCol;
             foreach ($columns as $key => $col) {
-                $ind = $col['field'];
+                $ind = $col['prop'];
                 $label = "";
                 if(isset($row[$ind])){
                     $label = $row[$ind];

@@ -13,4 +13,17 @@ export default {
 		})
 	},
 
+	exportReportToExcel(list, title, headers) {
+		return axios({
+			method: 'post',
+			url: $baseUrl+ '/report/default-excel-export',
+			data: {
+				data: list,
+				title: title,
+				headers: headers
+			},
+			responseType: 'blob'
+		})
+	},
+
 }
