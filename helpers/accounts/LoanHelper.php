@@ -275,11 +275,13 @@ class LoanHelper
                 <td><span>[summry_as_of]</span></td>
             </tr> 
         </table>';
+
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
         $listTemplate = str_replace('[account_name]', $details['fullname'], $listTemplate);
         $listTemplate = str_replace('[account_station]', $details['station'], $listTemplate);
         $listTemplate = str_replace('[total_principal]', Yii::$app->view->formatNumber($details['totalPrincipal']), $listTemplate);
         $listTemplate = str_replace('[total_balance]', Yii::$app->view->formatNumber($details['totalBalance']), $listTemplate);
-        $listTemplate = str_replace('[summry_as_of]', Yii::$app->view->getCutOff(), $listTemplate);
+        $listTemplate = str_replace('[summry_as_of]', $dateToday, $listTemplate);
 
         $transTable = "";
         if(count($loanList) > 0){
