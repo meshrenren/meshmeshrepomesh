@@ -26,4 +26,31 @@ export default {
 		})
 	},
 
+	getLoanAging(params){	
+
+		return axios.post($baseUrl + '/report/get-loan-aging', params)
+	},
+
+	printLoanAging(data, type){	
+		let params = {
+			data : data,
+			type : type,
+		}
+
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-loan-aging',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-loan-aging',
+				data: params,
+			})
+		}
+	},
 }

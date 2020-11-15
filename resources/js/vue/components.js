@@ -171,3 +171,12 @@ Vue.component('process-account', ProcessAccount)
 
 
 /* --- END --- */
+
+/* Report */
+/* --- START --- */
+
+import ReportLoanAging from './components/Reports/ReportLoanAging.vue'
+Vue.component('report-loan-aging', ReportLoanAging)
+
+
+/* --- END --- */

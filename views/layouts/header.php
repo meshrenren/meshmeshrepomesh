@@ -232,6 +232,24 @@ use yii\helpers\Html;
                     [
                         'label'     => 'Reports',
                         'url'       => '#', 
+                        'items'      => [
+                            [
+                                'label'     => 'Loan Aging', 
+                                'url'       => ['report/loan-aging']
+                            ],
+                        ],
+                        'visible'   => Yii::$app->user->identity->checkUserAccess("_reports_", "_view")
+                    ],
+                    [
+                        'label'     => 'Backup',
+                        'url'       => '#', 
+                        'items'      => [
+                            [
+                                'label'     => 'Database Backup', 
+                                'url'       => ['site/backup-database'],
+                                'linkOptions' => ['target' => "_blank"]
+                            ],
+                        ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_reports_", "_view")
                     ],
                 ],

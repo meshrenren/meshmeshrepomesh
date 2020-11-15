@@ -194,4 +194,139 @@ class ReportHelper
 
         return $result;
     }
+
+
+    public static function printLoanAging($postData){
+        $date = $postData['date'];
+        $loanList = $postData['loanList'];
+        $header = $postData['header'];
+        $grandTotal = $postData['grandTotal'];
+
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">SUMMARY OF AGING VARIOUS LOAN</div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">AS OF '.$date.'</div></tr>
+        </table>';
+
+
+        foreach ($loanList as $loan) {
+
+            if(count($loan['stationAging']) > 0){
+                $transTable = "<div class = 'mb-10'>";
+                $transTable .= "<label style = 'font-size: 14px;'><strong>". $loan['product_name'] ."</strong></label>";
+                foreach ($loan['stationAging'] as $station) {
+                    $transTable .= "<div class = 'mb-5'>";
+                    $transTable .= "<span style = 'font-size: 14px; text-decoration: underline;'>". $station['station_name'] ."</span>";
+                    if(count($station['list']) > 0){
+                        /*$tableList = static::tableList($header, $station['list']);
+                        $transTable .= $tableList;*/
+
+                        $tableList = '<table class = "list-table table table-bordered mt-10" width = "100%">
+                            <tr>
+                                <th width = "20%">Name</th>
+                                <th width = "20%">1-3 Months</th>
+                                <th width = "20%">4-6 Months</th>
+                                <th width = "20%">7-12 Months</th>
+                                <th width = "20%">Over 1 Year</th>
+                            </tr>';
+
+                        $total = ['one_three' => 0, 'four_six' => 0, 'seven_twelve' => 0, 'over_one_year' => 0];
+                        foreach ($station['list'] as $trans) {
+                            $one_three = isset($trans['one_three']) && floatval($trans['one_three']) > 0 ? floatval($trans['one_three']) : 0;
+                            $four_six = isset($trans['four_six']) && floatval($trans['four_six']) > 0 ? floatval($trans['four_six']) : 0;
+                            $seven_twelve = isset($trans['seven_twelve']) && floatval($trans['seven_twelve']) > 0 ? floatval($trans['seven_twelve']) : 0;
+                            $over_one_year = isset($trans['over_one_year']) && floatval($trans['over_one_year']) > 0 ? floatval($trans['over_one_year']) : 0;
+
+                            $total['one_three'] += $one_three;
+                            $total['four_six'] += $four_six;
+                            $total['seven_twelve'] += $seven_twelve;
+                            $total['over_one_year'] += $over_one_year;
+
+                            $one_three_display = floatval($one_three) > 0 ? Yii::$app->view->formatNumber($one_three) : "";
+                            $four_six_display = floatval($four_six) > 0 ? Yii::$app->view->formatNumber($four_six) : "";
+                            $seven_twelve_display = floatval($seven_twelve) > 0 ? Yii::$app->view->formatNumber($seven_twelve) : "";
+                            $over_one_year_display = floatval($over_one_year) > 0 ? Yii::$app->view->formatNumber($over_one_year) : "";
+                            $tableList .= '<tr>
+                                <td width = "20%">'.$trans['fullname'].'</td>
+                                <td width = "20%">'.$one_three_display.'</td>
+                                <td width = "20%">'.$four_six_display.'</td>
+                                <td width = "20%">'.$seven_twelve_display.'</td>
+                                <td width = "20%">'.$over_one_year_display.'</td>
+                            </tr>';
+
+                        }
+                        $tableList .= '<tr style = "font-weight: bolf;">
+                                <td width = "20%">TOTAL</td>
+                                <td width = "20%">'.Yii::$app->view->formatNumber($total['one_three']).'</td>
+                                <td width = "20%">'.Yii::$app->view->formatNumber($total['four_six']).'</td>
+                                <td width = "20%">'.Yii::$app->view->formatNumber($total['seven_twelve']).'</td>
+                                <td width = "20%">'.Yii::$app->view->formatNumber($total['over_one_year']).'</td>
+                            </tr>
+                        </table>';
+                        $transTable .= $tableList;
+
+                    }
+                    $transTable .= "</div>";
+                }
+                
+                $subTotal = $loan['totalAging'];
+                $transTable .= '<table style = "font-weight: bold; color : #0483ce;" class = "list-table table mt-10" width = "100%">
+                        <tr>
+                            <td width = "20%">SUB TOTAL</td>
+                            <td width = "20%">'.Yii::$app->view->formatNumber($subTotal['one_three']).'</td>
+                            <td width = "20%">'.Yii::$app->view->formatNumber($subTotal['four_six']).'</td>
+                            <td width = "20%">'.Yii::$app->view->formatNumber($subTotal['seven_twelve']).'</td>
+                            <td width = "20%">'.Yii::$app->view->formatNumber($subTotal['over_one_year']).'</td>
+                        </tr>
+                    </table>';
+                $transTable .= "</div><hr>";
+                $listTemplate = $listTemplate . $transTable;
+            }
+        }
+
+        $listTemplate .= '<table style = "font-weight: bold; color : #e43939;" class = "list-table table mt-10" width = "100%">
+            <tr>
+                <td width = "20%">GRAND TOTAL</td>
+                <td width = "20%">'.Yii::$app->view->formatNumber($grandTotal['one_three']).'</td>
+                <td width = "20%">'.Yii::$app->view->formatNumber($grandTotal['four_six']).'</td>
+                <td width = "20%">'.Yii::$app->view->formatNumber($grandTotal['seven_twelve']).'</td>
+                <td width = "20%">'.Yii::$app->view->formatNumber($grandTotal['over_one_year']).'</td>
+            </tr>
+        </table>';
+
+        return $listTemplate;
+    }
+
+    public static function tableList($header, $list, $getTotal = false){
+        $transTable = '<table class = "list-table table table-bordered mt-10" width = "100%">
+            <tr>';
+        foreach ($header as $key => $value) {
+            $transTable .= '<th>'.$value['label'].'</th>';
+        }
+
+        $transTable .= '</tr>';
+        $total = array();
+        foreach ($list as $trans) {
+            $transTable .= '<tr>';
+            foreach ($header as $key => $head) {
+                $val = isset($trans[$head['prop']]) ? $trans[$head['prop']] : null;
+                if(isset($head['type'])){
+                    if($head['type'] == 'number'){
+                       $val = $val && floatval($val) > 0 ? Yii::$app->view->formatNumber($val) : null;
+                       if(!isset($total[$head['prop']])){
+                            $total[$head['prop']] = 0;
+                       }
+                       $total[$head['prop']] += floatval($val);
+                    }
+                }
+                $val = $val !== null ? $val : "";
+                $transTable .= '<td>'.$val.'</td>';
+            }
+            $transTable .= '</tr>';
+        }
+
+        $transTable .= '</table>';
+
+        return $transTable;
+    }
 }
