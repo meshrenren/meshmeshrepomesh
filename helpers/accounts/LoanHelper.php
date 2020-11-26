@@ -100,6 +100,23 @@ class LoanHelper
     }
 
 
+
+    public static function getLoanAging(){
+        $loanAccount = \app\models\LoanAccount::find()
+            ->select(['loanaccount.id', 'account_no', 'loan_id', 'member_id', 'release_date', 'principal', 'principal_balance', 'term'])
+            ->innerJoinWith(['member' => function ($query) {
+                    $query->select(['member.id', "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname", "station_id" ]);
+                }
+            ])
+            ->where('status != "Cancel" AND status != "Verified" ')
+            ->andWhere('principal_balance > 0')
+            ->orderBy('member.last_name')
+            ->asArray()->all();
+
+        return $loanAccount;
+    }
+
+
     public static function getLoanTransaction($loan_account, $filter=null, $orderBy = null){
         $accountList = LoanTransaction::find();
         if($loan_account != null){
@@ -124,6 +141,16 @@ class LoanHelper
             $getProduct = $getProduct->asArray();
         }
         $getProduct = $getProduct->one();
+
+        return $getProduct;
+    }
+
+    public static function getProductList($filter, $asArray = false){
+        $getProduct= LoanProduct::find()->where($filter);
+        if($asArray){
+            $getProduct = $getProduct->asArray();
+        }
+        $getProduct = $getProduct->all();
 
         return $getProduct;
     }

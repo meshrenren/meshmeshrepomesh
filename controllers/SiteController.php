@@ -16,6 +16,9 @@ use app\helpers\accounts\ShareHelper;
 use app\helpers\accounts\TimeDepositHelper;
 use app\helpers\payment\PaymentHelper;
 use app\helpers\voucher\VoucherHelper;
+use app\helpers\GlobalHelper;
+use app\helpers\Backup_Database;
+
 
 
 use yii\db\conditions\OrCondition;
@@ -390,5 +393,41 @@ class SiteController extends Controller
             }
         }
         
+    }
+
+    public function actionBackupDatabase(){
+        $host = Yii::$app->params['dbHost'];
+        $user = Yii::$app->params['dbUser'];
+        $pass = Yii::$app->params['dbPassword'];
+        $name = Yii::$app->params['dbName'];
+        $mysqlExportPath ='sample.sql';
+        //ob_start();
+        define("DB_USER", $user);
+        define("DB_PASSWORD", $pass);
+        define("DB_NAME", $name);
+        define("DB_HOST", $host);
+
+        // Report all errors
+        error_reporting(E_ALL);
+        // Set script max execution time
+        set_time_limit(900); // 15 minutes
+
+        if (php_sapi_name() != "cli") {
+            echo '<div style="font-family: monospace;">';
+        }
+
+        //$host, $username, $passwd, $dbName, $charset
+        $backupDatabase = new Backup_Database($host, $user, $pass, $name, "utf8");
+        $result = $backupDatabase->backupTables(TABLES, BACKUP_DIR) ? 'OK' : 'KO';
+        $backupDatabase->obfPrint('Backup result: ' . $result, 1);
+
+        // Use $output variable for further processing, for example to send it by email
+        //$output = $backupDatabase->getOutput();
+
+        if (php_sapi_name() != "cli") {
+            echo '</div>';
+            ob_start();
+            ob_end_clean();
+        }
     }
 }

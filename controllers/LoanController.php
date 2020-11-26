@@ -117,8 +117,9 @@ class LoanController extends \yii\web\Controller
         if(\Yii::$app->getRequest()->getBodyParams())
         {
             $post = \Yii::$app->getRequest()->getBodyParams();
-            $transaction = LoanHelper::getLoanTransaction($post['loan_account']);
-            return $transaction;
+            $loanAccounts = LoanHelper::getLoanAging();
+
+            return ['data' => $loanAccounts];
         }
     }
 

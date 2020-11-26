@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use Yii;
 use app\helpers\ReportHelper;
+use app\helpers\accounts\LoanHelper;
+use app\helpers\settings\SettingsHelper;
 
 use \PhpOffice\PhpSpreadsheet\Spreadsheet;
 use \PhpOffice\PhpSpreadsheet\Writer\Pdf;
@@ -15,6 +17,71 @@ class ReportController extends \yii\web\Controller
     public function actionIndex()
     {
         return $this->render('index');
+    }
+
+    public function actionLoanAging(){
+        $this->layout = 'main-vue';
+
+        $loanProducts = LoanHelper::getProductList(['is_active' => 1], true);
+        $stationList = SettingsHelper::getStation();
+
+        //$memberList = MemberHelper::getMemberList(null, true);
+
+        $pageData = [
+            'loanProducts' => $loanProducts,
+            'stationList'   => $stationList
+        ];
+
+        return $this->render('loan-aging', [
+            'pageData'    => $pageData
+        ]);
+    }
+
+    public function actionGetLoanAging(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = Yii::$app->getRequest()->getBodyParams();
+            $transaction = LoanHelper::getLoanAging();
+
+            return ['data' => $transaction];
+        }
+
+        return false;
+    }
+
+    public function actionPrintLoanAging(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            
+            $template = ReportHelper::printLoanAging($postData['data']);
+            $type = $postData['type'];
+            if($type == "pdf"){
+                // Set up MPDF configuration
+                $config = [
+                    'mode' => '+utf-8', 
+                    "allowCJKoverflow" => true, 
+                    "autoScriptToLang" => true,
+                    "allow_charset_conversion" => false,
+                    "autoLangToFont" => true,
+                    'orientation' => 'L'
+                ];
+                $mpdf = new Mpdf($config);
+                $mpdf->WriteHTML($template);
+
+                // Download the PDF file
+                $mpdf->Output();
+                exit();
+            }
+            else{
+                return [ 'data' => $template];
+            }
+        }
     }
 
     public function actionDefaultExcelExport(){
@@ -73,8 +140,8 @@ class ReportController extends \yii\web\Controller
                 $letRow = $letRow + 2;
             }
 
-            //$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, "Xlsx");
-            $writer = new Xlsx($spreadsheet);
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, "Xlsx");
+            //$writer = new Xlsx($spreadsheet);
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             ob_end_clean();
             $writer->save("php://output");

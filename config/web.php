@@ -51,7 +51,6 @@ $config = [
 			 ],
 		],  */
         'db' => require(__DIR__ . '/db.php'),
-        
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
@@ -61,11 +60,25 @@ $config = [
         'view' => [
              'class' => 'app\components\View',
          ],
+        'backup' => [
+            'class' => 'amoracr\backup\Backup',
+            // Path for storing the backups
+            'backupDir' => '@app/backups',
+            // Directories that will be added to backup
+            'directories' => [
+                // format: <inner backup filename> => <path/to/dir>
+                /*'images' => '@app/web/images',
+                'uploads' => '@app/web/uploads',*/
+            ],
+        ],
     ],
 	'modules' => [
        'gridview' =>  [
             'class' => '\kartik\grid\Module'
-        ]
+        ],
+        'backup' => [
+            'class' => 'spanjeta\modules\backup\Module',
+        ],
 	],
 	
     'as beforeRequest' => [  //if guest user access site so, redirect to login page.
