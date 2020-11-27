@@ -49,8 +49,8 @@
                             </el-form-item>
                         </el-col>
                         <el-col :span="8">
-                            <el-form-item label="GV Number" prop="or_num">
-                                <el-input :disabled = "disableForm" type="text" v-model="voucherModel.gv_num" ref="or_num"></el-input>
+                            <el-form-item label="GV Number" prop="gv_num">
+                                <el-input :disabled = "disableForm" type="text" v-model="voucherModel.gv_num" ref="gv_num"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col :span="8">
@@ -453,6 +453,12 @@ export default {
                     }
                     
                 }
+                else{
+                    let getInd = vm.getInAllAccount(rs.key)
+                    if(getInd >= 0){
+                        vm.allTotalAccount.splice(getInd, 1)
+                    }
+                }
             })
             vm.loadingPage = false
 
@@ -747,8 +753,46 @@ export default {
             }
             return null
         },
+        validateVoucher(){
+            let text = ""
+            let type = "error"
+            let hasError = false
+
+            this.$refs['voucherForm'].validate((valid) => {
+                if (valid) {
+                }
+                else{
+                    hasError = true
+                    text = "Please complete Payment Details."
+                }
+            });
+
+            if(!hasError){
+                if(this.allTotalAccount.length <= 0){
+                    hasError = true
+                    text = "Please add accounts to pay."
+                }
+            }
+
+            if(hasError){
+                new Noty({
+                    theme: 'relax',
+                    type: type,
+                    layout: 'topRight',
+                    text: text,
+                    timeout: 3000
+                }).show();
+            }
+            
+            return hasError
+
+        },
         createVoucher(){
             let vm = this
+
+            if(this.validateVoucher()){
+                return;
+            }
 
             if(this.totalAmount.debit != this.totalAmount.credit){
                 new Noty({
@@ -853,12 +897,12 @@ export default {
                     account.push(acct)
                 }
 
-                tCre += acct.credit ? this.$nf.numberFixed(Number(acct.credit), 2) : 0
-                tDeb += acct.debit ? this.$nf.numberFixed(Number(acct.debit), 2) : 0
+                tCre += acct.credit ? Number(acct.credit) : 0
+                tDeb += acct.debit ? Number(acct.debit) : 0
             })
 
-            this.totalAmount.debit =  tDeb
-            this.totalAmount.credit = tCre
+            this.totalAmount.debit =  this.$nf.numberFixed(tDeb, 2)
+            this.totalAmount.credit = this.$nf.numberFixed(tCre, 2)
 
             return account
         },
