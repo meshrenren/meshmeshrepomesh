@@ -853,8 +853,8 @@ export default {
                     account.push(acct)
                 }
 
-                tCre += acct.credit ? this.$nf.numberFixed(Number(acct.credit)) : 0
-                tDeb += acct.debit ? this.$nf.numberFixed(Number(acct.debit)) : 0
+                tCre += acct.credit ? this.$nf.numberFixed(Number(acct.credit), 2) : 0
+                tDeb += acct.debit ? this.$nf.numberFixed(Number(acct.debit), 2) : 0
             })
 
             this.totalAmount.debit =  tDeb
