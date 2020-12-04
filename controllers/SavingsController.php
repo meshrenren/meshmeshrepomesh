@@ -14,7 +14,7 @@ use \app\models\PaymentRecord;
 use kartik\mpdf\Pdf; 
 use \Mpdf\Mpdf;
 
-use app\helpers\particulars\PaymentHelper;
+use app\helpers\payment\PaymentHelper;
 use app\helpers\particulars\ParticularHelper;
 use app\helpers\accounts\SavingsHelper;
 use app\helpers\journal\JournalHelper;

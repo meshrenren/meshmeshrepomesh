@@ -35,7 +35,7 @@ class GeneralVoucherController extends \yii\web\Controller
         /*$filter  = ['category' => ['OTHERS', 'SAVINGS', 'SHARE', 'LOAN', 'TIME_DEPOSIT']];
         $orderBy = [new \yii\db\Expression('FIELD (category,"OTHERS","LOAN","SAVINGS","SHARE","TIME_DEPOSIT"), name ASC')];
         $getParticular = ParticularHelper::getParticulars($filter, $orderBy);*/
-        $filter  = ['category' => ['OTHERS']];
+        $filter  = ['category' => ['OTHERS', 'LOAN']];
         $orderBy = "name ASC";
         $getParticular = ParticularHelper::getParticulars($filter, $orderBy);
 

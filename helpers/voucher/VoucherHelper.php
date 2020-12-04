@@ -295,17 +295,20 @@ class VoucherHelper
                     if($row['debit']  && floatval($row['debit'] ) > 0){
 
                         echo "refund amount .. ".$row['debit']." | <br/>";
-                        $loanDetails = array();
-                        $loanDetails['amount'] = $row['debit'];
-                        $loanDetails['ref_num'] = $generalVoucher->gv_num;
-                        $loanDetails['transaction_date'] = $dateToday;
-                        $loanRefund = LoanHelper::loanRefund($row['account_no'], $loanDetails);
-                        
-                        if(!$loanRefund['success']){
-                            var_dump($loanRefund['error']);
-                            $success = false;
-                            break;
+                        if($row['account_no']){
+                            $loanDetails = array();
+                            $loanDetails['amount'] = $row['debit'];
+                            $loanDetails['ref_num'] = $generalVoucher->gv_num;
+                            $loanDetails['transaction_date'] = $dateToday;
+                            $loanRefund = LoanHelper::loanRefund($row['account_no'], $loanDetails);
+                            
+                            if(!$loanRefund['success']){
+                                var_dump($loanRefund['error']);
+                                $success = false;
+                                break;
+                            }
                         }
+                        
                     }
                     
                     
