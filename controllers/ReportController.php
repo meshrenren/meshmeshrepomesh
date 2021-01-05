@@ -43,7 +43,7 @@ class ReportController extends \yii\web\Controller
         if(\Yii::$app->getRequest()->getBodyParams())
         {
             $post = Yii::$app->getRequest()->getBodyParams();
-            $transaction = LoanHelper::getLoanAging();
+            $transaction = LoanHelper::getActiveLoans();
 
             return ['data' => $transaction];
         }
@@ -82,6 +82,74 @@ class ReportController extends \yii\web\Controller
                 return [ 'data' => $template];
             }
         }
+    }
+
+
+
+    public function actionPrintLoanArrears(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            
+            $template = ReportHelper::printLoanArrears($postData['data']);
+            $type = $postData['type'];
+            if($type == "pdf"){
+                // Set up MPDF configuration
+                $config = [
+                    'mode' => '+utf-8', 
+                    "allowCJKoverflow" => true, 
+                    "autoScriptToLang" => true,
+                    "allow_charset_conversion" => false,
+                    "autoLangToFont" => true,
+                    'orientation' => 'L'
+                ];
+                $mpdf = new Mpdf($config);
+                $mpdf->WriteHTML($template);
+
+                // Download the PDF file
+                $mpdf->Output();
+                exit();
+            }
+            else{
+                return [ 'data' => $template];
+            }
+        }
+    }
+
+
+    public function actionLoanArrears(){
+        $this->layout = 'main-vue';
+
+        $loanProducts = LoanHelper::getProductList(['is_active' => 1], true);
+        $stationList = SettingsHelper::getStation();
+
+        //$memberList = MemberHelper::getMemberList(null, true);
+
+        $pageData = [
+            'loanProducts' => $loanProducts,
+            'stationList'   => $stationList
+        ];
+
+        return $this->render('loan-arrears', [
+            'pageData'    => $pageData
+        ]);
+    }
+
+    public function actionGetLoanArrears(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams())
+        {
+            $post = Yii::$app->getRequest()->getBodyParams();
+            $transaction = LoanHelper::getLoanArrears();
+
+            return ['data' => $transaction];
+        }
+
+        return false;
     }
 
     public function actionDefaultExcelExport(){

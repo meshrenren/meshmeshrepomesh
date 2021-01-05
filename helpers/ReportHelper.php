@@ -297,6 +297,35 @@ class ReportHelper
         return $listTemplate;
     }
 
+    public static function printLoanArrears($postData){
+        $date = $postData['date'];
+        $loanList = $postData['loanList'];
+        $header = $postData['header'];
+        $grandTotal = $postData['grandTotal'];
+
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">SUMMARY OF AGING VARIOUS LOAN</div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">AS OF '.$date.'</div></tr>
+        </table>';
+
+
+        foreach ($loanList as $loan) {
+
+            if(count($loan['arrearsList']) > 0){
+                $transTable = "<div class = 'mb-10'>";
+                $transTable .= "<label style = 'font-size: 14px;'><strong>". $loan['product_name'] ."</strong></label>";
+
+                $tableList = static::tableList($header, $station['list'], true);
+                $transTable .= $tableList;
+
+                $transTable .= "</div>";
+            }
+        }
+
+        return $listTemplate;
+    }
+
     public static function tableList($header, $list, $getTotal = false){
         $transTable = '<table class = "list-table table table-bordered mt-10" width = "100%">
             <tr>';

@@ -237,6 +237,10 @@ use yii\helpers\Html;
                                 'label'     => 'Loan Aging', 
                                 'url'       => ['report/loan-aging']
                             ],
+                            [
+                                'label'     => 'Loan Arrears', 
+                                'url'       => ['report/loan-arrears']
+                            ],
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_reports_", "_view")
                     ],

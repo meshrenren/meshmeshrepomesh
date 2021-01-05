@@ -112,7 +112,8 @@ class ParticularHelper
 		//if monthend, process interests
 		if($nextDay['is_month_end']==1)
 		{
-			static::calculateSavingsInterest($nextDay);
+			//Remove savings calcultion every month.
+			//static::calculateSavingsInterest($nextDay);
 			
 		}
 		

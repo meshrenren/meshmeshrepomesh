@@ -252,8 +252,8 @@ class PaymentHelper
 					//1. insert to payment transaction
 					$loanTransaction = new LoanTransaction();
 					$loanTransaction->loan_account = $row['account_no'];
-					//$loanTransaction->loan_id = $product->id;
-					//$loanTransaction->member_id = $account->member_id;
+					$loanTransaction->loan_id = $product->id;
+					$loanTransaction->member_id = $account->member_id;
 					echo "Principal Bal => " . $account->principal_balance . "<br>";
 					$running_balance = round($account->principal_balance - $principal_pay, 2);
 					$asSavings = 0;

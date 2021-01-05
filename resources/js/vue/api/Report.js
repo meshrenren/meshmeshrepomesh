@@ -31,6 +31,11 @@ export default {
 		return axios.post($baseUrl + '/report/get-loan-aging', params)
 	},
 
+	getLoanArrears(params){	
+
+		return axios.post($baseUrl + '/report/get-loan-arrears', params)
+	},
+
 	printLoanAging(data, type){	
 		let params = {
 			data : data,

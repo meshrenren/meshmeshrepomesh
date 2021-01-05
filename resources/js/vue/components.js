@@ -178,5 +178,8 @@ Vue.component('process-account', ProcessAccount)
 import ReportLoanAging from './components/Reports/ReportLoanAging.vue'
 Vue.component('report-loan-aging', ReportLoanAging)
 
+import ReportLoanArrears from './components/Reports/ReportLoanArrears.vue'
+Vue.component('report-loan-arrears', ReportLoanArrears)
+
 
 /* --- END --- */

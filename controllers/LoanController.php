@@ -1018,4 +1018,17 @@ class LoanController extends \yii\web\Controller
     	
     	return $this->render('payment-cancellation', []);
     }
+
+
+    public function actionCalculateRebates(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $post = \Yii::$app->getRequest()->getBodyParams();
+        
+        if($post)
+        {
+            $interest = PaymentHelper::getCurrentInterest($post['accountnumber'], $post['int_rate']);
+            
+            return $interest;
+        }
+    }
 }

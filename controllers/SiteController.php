@@ -430,4 +430,28 @@ class SiteController extends Controller
             ob_end_clean();
         }
     }
+
+    public function actionTestSavings(){
+
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand("
+            select * from calendar where date_id>=(SELECT date_id FROM `calendar` where date = '2020-08-30' limit 1)
+            order by date limit 2");
+        
+        $result = $command->queryAll();
+        
+        $x = 0;
+        $currentDay = array();
+        $nextDay = array();
+        foreach ($result as $row)
+        {
+            if($x==0)
+                $currentDay = $row;
+            else $nextDay = $row;
+            
+            $x++;
+        }
+
+        ParticularHelper::calculateSavingsInterest($nextDay);
+    }
 }

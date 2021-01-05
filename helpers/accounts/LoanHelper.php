@@ -101,9 +101,9 @@ class LoanHelper
 
 
 
-    public static function getLoanAging(){
+    public static function getActiveLoans(){
         $loanAccount = \app\models\LoanAccount::find()
-            ->select(['loanaccount.id', 'account_no', 'loan_id', 'member_id', 'release_date', 'principal', 'principal_balance', 'term'])
+            ->select(['loanaccount.id', 'account_no', 'loan_id', 'member_id', 'release_date', 'principal', 'principal_balance', 'term', 'principal_amortization_quincena'])
             ->innerJoinWith(['member' => function ($query) {
                     $query->select(['member.id', "CONCAT(member.last_name,', ',member.first_name,' ',member.middle_name) fullname", "station_id" ]);
                 }
@@ -402,6 +402,21 @@ class LoanHelper
         return $listTemplate;
     }
 
+    public static function getLoanArrears(){
+        $activeLoan = static::getActiveLoans();
+        $accountList = array();
+        foreach ($activeLoan as $key => $loan) {
+            $getArrear = static::getArrears($loan['account_no']);
+            if($getArrear['arrearAmount'] > 0){
+                $loan['arrears'] = $getArrear['arrearAmount'];
+
+                array_push($accountList, $loan);
+            }
+        }
+
+        return $accountList;
+
+    }
 
     /*
     To get arrear, count the month that the member hasn't paid yet
@@ -410,8 +425,11 @@ class LoanHelper
     Current Date: 2020-04; 
     Arrears: 15,000; Member hasn't paid for 3 month (5,000 x 3)
     */
-    public static function getArrears($account_no){
-        $loanAccount = static::getLoanAccount($account_no);
+    public static function getArrears($account_no, $loanAccount = null){
+        if($loanAccount == null){
+            $loanAccount = static::getLoanAccount($account_no);
+        }
+        
         $arrearAmount = 0;
         if($loanAccount && $loanAccount->principal_balance > 0){
             $principal = floatval($loanAccount->principal);
@@ -419,7 +437,7 @@ class LoanHelper
             $principal_paid = $principal - $principal_balance;
             $release_date = $loanAccount->release_date;
             //get payment
-            $getPayments = PaymentHelper::getPayments($loanAccount->account_no, 'LOAN');
+            //$getPayments = PaymentHelper::getPayments($loanAccount->account_no, 'LOAN');
 
             $getLoanMaturity = GlobalHelper::addDate($release_date, $loanAccount->term, 'month', 'Y-m-d');
 
@@ -427,16 +445,20 @@ class LoanHelper
             if(strtotime($getLoanMaturity) < strtotime($curSystemDate)){ //If lampas na sa maturity date
                 $curSystemDate = $getLoanMaturity;
                 $arrearAmount = $principal - $principal_paid;
+
             }
             else{
                 $diffDays = GlobalHelper::getDiffDays($release_date, $curSystemDate);
 
-                $moPrin = ($diffDays - 30) / 30; //deduct 1 mo then divide to get the months;
+                //$moPrin = ($diffDays - 30) / 30; //deduct 1 mo then divide to get the months;
+                $moPrin = $diffDays / 30; 
                 $moPrin = intval($moPrin);
 
                 $principal_pay = (floatval($loanAccount->principal_amortization_quincena) * 2) * $moPrin;
 
                 $arrearAmount = $principal_pay - $principal_paid;
+
+                
 
             }
             if($arrearAmount <= 0){

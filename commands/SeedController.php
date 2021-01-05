@@ -3318,6 +3318,43 @@ class SeedController extends Controller
         }
     }
 
+    public function actionRemoveInt(){
+        $getAllAccount = \app\models\SavingAccounts::find()/*->where(['account_no' => '1-000197'])*/->all();
+        foreach ($getAllAccount as $keyAcc => $valAcc) {
+            $getTransaction = \app\models\SavingsTransaction::find()->where(['fk_savings_id' => $valAcc->account_no])->all(); 
+            $running_balance = 0;
+            foreach ($getTransaction as $keyTrans => $valueTrans) {
+                if($valueTrans->transaction_type == 'CASHDEP'){
+                   $running_balance = $running_balance + $valueTrans->amount;
+                }
+
+                if($valueTrans->transaction_type == 'WITHDRWL'){
+                   $running_balance = $running_balance - $valueTrans->amount;
+                }
+
+                if($valueTrans->transaction_type == 'INTEREST'){
+                    $valueTrans->delete();
+                }
+                else{
+                    $valueTrans->running_balance = $running_balance;
+                    $valueTrans->save();
+                }
+
+            }
+
+            $valAcc->balance = $running_balance;
+            $valAcc->save();
+
+            echo "Account " . $valAcc->account_no . " \tBalance: ". $running_balance;
+            echo "\n";
+
+            /*if(floatval($running_balance) != floatval($valAcc->balance)){
+                echo "Not match bal :" . $valAcc->account_no . " \t" . $running_balance . " \t" . $valAcc->balance;
+                echo "\n";
+            }*/
+        }
+    }
+
 }
 
 
