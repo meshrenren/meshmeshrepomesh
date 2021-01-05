@@ -431,7 +431,7 @@ class SiteController extends Controller
         }
     }
 
-    public function actionTestSavings(){
+    /*public function actionTestSavings(){
 
         $connection = Yii::$app->getDb();
         $command = $connection->createCommand("
@@ -453,5 +453,5 @@ class SiteController extends Controller
         }
 
         ParticularHelper::calculateSavingsInterest($nextDay);
-    }
+    }*/
 }
