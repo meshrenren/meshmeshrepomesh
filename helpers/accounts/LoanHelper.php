@@ -49,6 +49,13 @@ class LoanHelper
                     if($lastPayment){
                         $accArr['account_last_payment'] = $lastPayment->date_posted;
                     }
+
+                    //Get rebates
+                    $accArr['rebates'] = 0;
+                    if($acc['principal_balance'] <= 0){
+                        $getRebate = static::calculateRebate($acc['account_no']);
+                        $accArr['rebates'] = $getRebate['rebateAmount'];
+                    }
                     //Check LoanController -> actionGetAccountLoanInfo for updates
                 }
 
@@ -132,6 +139,11 @@ class LoanHelper
 
     public static function getLastPayment($loan_account){
         $accTrans = LoanTransaction::find()->where(['loan_account' => $loan_account, 'transaction_type' => "PAYPARTIAL"])->orderBy('date_posted DESC')->one();
+        return $accTrans;
+    }
+
+    public static function getLastFullPayment($loan_account){
+        $accTrans = LoanTransaction::find()->where(['loan_account' => $loan_account])->andWhere("transaction_type = 'PAYPARTIAL' OR transaction_type = 'PAYCLOSE'")->andWhere('running_balance <= 0')->orderBy('date_posted ASC')->one();
         return $accTrans;
     }
 
@@ -723,6 +735,62 @@ class LoanHelper
 
     }
 
+    public static function loanRebates($account_no, $loanDetails){
+        $success = false;
+        $error = null;
+
+        $amount = $loanDetails['amount'];
+        $ref_num = $loanDetails['ref_num'];
+        $transaction_date = $loanDetails['transaction_date'];
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+
+        $account = LoanAccount::findOne($account_no);
+
+        /*$principal_pay = floatval($amount) * -1;
+        $running_balance = round($account->principal_balance - $principal_pay, 2);*/
+        
+        $running_balance = $account->principal_balance;
+        $transaction_type="REBATES";
+        /*if($running_balance == 0){
+            $account->status='Closed';
+        }*/
+
+        $loanTransaction = new LoanTransaction();
+        $loanTransaction->loan_account = $account_no;
+        $loanTransaction->amount = round($amount, 2);
+        $loanTransaction->transaction_type= $transaction_type;
+        $loanTransaction->transacted_by = \Yii::$app->user->identity->id;
+        $loanTransaction->transaction_date = $transaction_date;
+        $loanTransaction->running_balance = $running_balance;
+        $loanTransaction->remarks="rebates";
+        $loanTransaction->prepaid_intpaid = 0;
+        $loanTransaction->interest_paid = 0;
+        $loanTransaction->OR_no= $ref_num;
+        $loanTransaction->principal_paid = 0;
+        $loanTransaction->arrears_paid = 0;
+        $loanTransaction->date_posted = $dateToday;
+        $loanTransaction->interest_earned = 0;
+        
+        //$account->principal_balance = $loanTransaction->running_balance;
+
+        if( $loanTransaction->save())
+        {
+            //Calculate Rebate
+            if($running_balance == 0){
+
+            }
+
+            $success = true;    
+        }
+        else{
+            $success = false;
+            $error = $loanTransaction->errors;
+        }
+
+        return ['success' => $success, 'error' => $error];
+
+    }
+
     public static function cancelLoanRelease($account_no){
         $account = LoanAccount::findOne($account_no);
 
@@ -818,6 +886,163 @@ class LoanHelper
 
     public static function cancelPayment($ref_num){
 
+    }
+
+    public static function getRebates($member_id){
+
+        //Get latest loan for each product.
+        $query = new \yii\db\Query;
+        $query->select('*')
+            ->from('loanaccount la')
+            ->where('la.member_id = '. $member_id)
+            ->groupBy('la.loan_id');
+        $loanAccounts = $query->all();
+        $accountList = array();
+        if(count($loanAccounts) >= 1){
+            foreach ($loanAccounts as $loan) {
+                $acc = \app\models\LoanAccount::find()
+                    ->innerJoinWith(['product'])
+                    ->where(['loanaccount.member_id' => $member_id, 'loan_id' =>  $loan['loan_id']])
+                    ->andWhere('status != "Cancel" AND status != "Verified" ')
+                    ->orderBy('release_date DESC')
+                    ->asArray()->one();
+
+                $accArr = array();
+                if($acc){
+                    $accArr = $acc;
+
+                    if($acc['principal_balance'] <= 0){
+                        $getRebate = static::calculateRebate($acc['account_no']);
+                        $accArr['rebates'] = $getRebate['rebateAmount'];
+                        $accArr['account_last_payment'] = $getRebate['last_payment'];
+                    }
+
+                    if(!isset($accArr['account_last_payment']) || $accArr['account_last_payment'] == null){
+                        //Last Payment
+                        $accArr['account_last_payment'] = "";
+                        $lastPayment = static::getLastPayment($acc['account_no']);
+                        if($lastPayment){
+                            $accArr['account_last_payment'] = $lastPayment->date_posted;
+                        }
+                    }
+
+                    array_push($accountList, $accArr);
+
+                }
+
+            }
+        }
+
+        return $accountList;
+    }
+
+    public static function calculateRebate($account_no){
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+        $toRebates = 0;
+        $lastPaymentDate = null;
+
+        $acc = \app\models\LoanAccount::find()->innerJoinWith(['product'])->where(['account_no' => $account_no])->one();
+
+        //Do not include Regular Loan and if interest type = 2 (interest nga dili na ibalik like misc loan ug calamity loan)
+        if($acc && $acc->prepaid && floatval($acc->prepaid) > 0 &&
+            $acc->principal_balance <= 0 && $acc->loan_id !== 2 && 
+            $acc->product->interest_type_id != 2){ 
+
+            //get rebates transaction
+            $transRebates = LoanTransaction::find()->where(['loan_account' => $acc->account_no, 'transaction_type' => 'REBATES'])->one();
+            if(!$transRebates){   
+                $lastPayment = static::getLastFullPayment($account_no);                 
+                if($lastPayment){
+                    $lastPaymentDate = $lastPayment->date_posted; 
+                    $noOfDaysPassed = date_diff(date_create($lastPaymentDate), date_create($acc['release_date']));
+
+                    //rebates calculation
+                    $pi = $acc->prepaid / $acc->term;
+                    $monthsPaid = ($noOfDaysPassed->format("%y") * 12) + $noOfDaysPassed->format("%m");
+                    $pi_paid = $pi * $monthsPaid;
+
+                    $toRebates = $acc->prepaid - $pi_paid;
+                }
+            }
+        }
+
+        return ['rebateAmount' => $toRebates, 'last_payment' => $lastPaymentDate];
+    }
+
+    public static function printRebates($dataLoan){
+        $details = $dataLoan['details'];
+        $loanList = isset($dataLoan['loanList']) ? $dataLoan['loanList'] : null;
+        $member = isset($dataLoan['member']) && $dataLoan['member'] ? $dataLoan['member'] : null;
+
+        $listTemplate = Yii::$app->params['formTemplate']['header_layout'];
+
+        $listTemplate .= '<table class = "no-border mt-20">
+            <tr>
+                <td style = "font-weight: bold;">NAME: </td> 
+                <td><span>[account_name]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Date: </td> 
+                <td>[date] </td>
+            </tr> 
+        </table>';
+
+        $dateToday = date('Y-m-d', strtotime(\Yii::$app->user->identity->DateTimeNow));
+        $listTemplate = str_replace('[account_name]', $details['fullname'], $listTemplate);
+        $listTemplate = str_replace('[date]', $dateToday, $listTemplate);
+
+        if($loanList == null){
+            $loanList = [];
+            //get list here
+            $loanList = static::getRebates($member['id']);
+        }
+
+        $transTable = "";
+        if(count($loanList) > 0){
+            $total_rebates = 0;
+            $transTable = '<table width = "100%" style = "margin-top: 20px;">
+                <tr>
+                    <th style = "font-weight: bold; border: 1px solid #000;">Loan Type</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Rebates</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Principal Loan</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Loan Balance</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Loan Date</th> 
+                    <th style = "font-weight: bold; border: 1px solid #000;">Last Payment</th> 
+                </tr>';
+            foreach ($loanList as $trans) {
+                $rebates = 0;
+                if(isset($trans['rebates']) && floatval($trans['rebates']) > 0){
+                    $total_rebates += floatval($trans['rebates']);
+                    $rebates = floatval($trans['rebates']);
+                }
+                $rebates = Yii::$app->view->formatNumber($rebates);
+
+                $transTable .= '<tr>
+                    <td style = "border: 1px solid #000;">'.$trans['product']['product_name'].'</td> 
+                    <td style = "border: 1px solid #000; font-weight: bold;">'.$rebates.'</td> 
+                    <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal']).'</td> 
+                    <td style = "border: 1px solid #000;">'.Yii::$app->view->formatNumber($trans['principal_balance']).'</td>
+                    <td style = "border: 1px solid #000;">'.$trans['release_date'].'</td> 
+                    <td style = "border: 1px solid #000;">'.$trans['account_last_payment'].'</td>
+                </tr>';
+
+            }
+
+            $total_rebates_dis = $total_rebates && floatval($total_rebates) > 0 ? Yii::$app->view->formatNumber($total_rebates) : "";
+            $transTable .= '<tr>
+                    <td style = "border: 1px solid #000;">TOTAL</td> 
+                    <td style = "border: 1px solid #000; font-weight: bold;">'.$total_rebates_dis.'</td> 
+                    <td style = "border: 1px solid #000;"></td> 
+                    <td style = "border: 1px solid #000;"></td>
+                    <td style = "border: 1px solid #000;"></td> 
+                    <td style = "border: 1px solid #000;"></td>
+                </tr>';
+
+            $transTable .= '</table>';
+        }
+        $listTemplate = $listTemplate . $transTable;
+
+        return $listTemplate;
     }
 
 }

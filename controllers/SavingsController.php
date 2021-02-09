@@ -582,4 +582,15 @@ class SavingsController extends \yii\web\Controller
         }
         
     }
+
+    public function actionCutOff(){
+        $this->layout = 'main-vue';
+        $year = date('Y') - 1;
+
+        $savingsAccount = SavingsHelper::calculateCutOffInterest($year);
+        
+        return $this->render('cut-off', [ 
+            'savingsAccount' => $savingsAccount
+        ]);
+    }
 }

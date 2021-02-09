@@ -1019,6 +1019,20 @@ class LoanController extends \yii\web\Controller
     	return $this->render('payment-cancellation', []);
     }
 
+    public function actionTestRebates(){
+        $count = 0;
+        $members = \app\models\Member::find()->all();
+        foreach ($members as $key => $mem) {
+            $memRebates = LoanHelper::getRebates($mem->id);
+            $count += count($memRebates);
+        }
+        var_dump($count);
+
+        /*$memRebates = LoanHelper::getRebates('000019');
+        var_dump($memRebates);*/
+        
+    }
+
 
     public function actionCalculateRebates(){
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -1030,5 +1044,42 @@ class LoanController extends \yii\web\Controller
             
             return $interest;
         }
+    }
+
+    public function actionPrintRebates(){
+
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if(\Yii::$app->getRequest()->getBodyParams()){
+
+            $postData = \Yii::$app->getRequest()->getBodyParams();
+            $dataLoan = $postData['dataLoan'];
+            $type = $postData['type'];
+            
+            $template = LoanHelper::printRebates($dataLoan);
+            
+            $type = $postData['type'];
+            if($type == "pdf"){
+                // Set up MPDF configuration
+                $config = [
+                    'mode' => '+utf-8', 
+                    "allowCJKoverflow" => true, 
+                    "autoScriptToLang" => true,
+                    "allow_charset_conversion" => false,
+                    "autoLangToFont" => true,
+                    'orientation' => 'L'
+                ];
+                $mpdf = new Mpdf($config);
+                $mpdf->WriteHTML($template);
+
+                // Download the PDF file
+                $mpdf->Output();
+                exit();
+            }
+            else{
+                return [ 'data' => $template];
+            }
+        }
+        
     }
 }

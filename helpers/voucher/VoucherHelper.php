@@ -61,6 +61,7 @@ class VoucherHelper
             $voucher->account_no = isset($value['account_no']) ? $value['account_no'] : null;
             $voucher->type = isset($value['type']) ? $value['type'] : null;
             $voucher->gv_num = isset($value['gv_num']) ? $value['gv_num'] :  $voucherModel ? $voucherModel->gv_num : null;
+            $voucher->is_prepaid = isset($value['is_prepaid']) ? $value['is_prepaid'] : null;
 
             if($posted_date){
                 $voucher->posted_date = $posted_date;
@@ -291,22 +292,40 @@ class VoucherHelper
                         }
                     }
 
-                    //IF DEBIT, This mostly for refund
+                    //IF DEBIT, This mostly for refund / rebates
                     if($row['debit']  && floatval($row['debit'] ) > 0){
 
-                        echo "refund amount .. ".$row['debit']." | <br/>";
                         if($row['account_no']){
-                            $loanDetails = array();
-                            $loanDetails['amount'] = $row['debit'];
-                            $loanDetails['ref_num'] = $generalVoucher->gv_num;
-                            $loanDetails['transaction_date'] = $dateToday;
-                            $loanRefund = LoanHelper::loanRefund($row['account_no'], $loanDetails);
-                            
-                            if(!$loanRefund['success']){
-                                var_dump($loanRefund['error']);
-                                $success = false;
-                                break;
+                            //If prepaid this is for rebates
+                            if(intval($row['is_prepaid']) === 1){
+                                echo "rebates amount .. ".$row['debit']." | <br/>";
+                                $loanDetails = array();
+                                $loanDetails['amount'] = $row['debit'];
+                                $loanDetails['ref_num'] = $generalVoucher->gv_num;
+                                $loanDetails['transaction_date'] = $dateToday;
+                                $loanRefund = LoanHelper::loanRebates($row['account_no'], $loanDetails);
+                                
+                                if(!$loanRefund['success']){
+                                    var_dump($loanRefund['error']);
+                                    $success = false;
+                                    break;
+                                }
                             }
+                            else{
+                                echo "refund amount .. ".$row['debit']." | <br/>";
+                                $loanDetails = array();
+                                $loanDetails['amount'] = $row['debit'];
+                                $loanDetails['ref_num'] = $generalVoucher->gv_num;
+                                $loanDetails['transaction_date'] = $dateToday;
+                                $loanRefund = LoanHelper::loanRefund($row['account_no'], $loanDetails);
+                                
+                                if(!$loanRefund['success']){
+                                    var_dump($loanRefund['error']);
+                                    $success = false;
+                                    break;
+                                }                            
+                            }
+                            
                         }
                         
                     }

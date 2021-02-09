@@ -7,6 +7,8 @@ use \app\models\SavingAccounts;
 use \app\models\Savingsproduct;
 use \app\models\SavingsTransaction;
 
+use app\helpers\GlobalHelper;
+
 class SavingsHelper 
 {
     public static function getProduct($filter, $asArray = false){
@@ -219,5 +221,74 @@ class SavingsHelper
             }
         }
         return ['success' => $success];
+    }
+
+    //Cut off interest earned within the year
+    public static function calculateCutOffInterest($year){
+
+        $savingsaccounts = SavingAccounts::find()->joinWith(['member'])->where('savingsaccount.balance >= 0 AND savingsaccount.is_active = 1')->asArray()->all();
+
+        $int_rate = GlobalHelper::getSAInterest() / 365;
+        $accountList = [];
+
+        foreach ($savingsaccounts as $acc) {
+
+            //Get last balance from last year
+            $lastTrans = SavingsTransaction::find()->where(['fk_savings_id' => $acc['account_no']])->andWhere("DATE_FORMAT(transaction_date, '%Y') < '".$year."'")->orderBy('transaction_date DESC, id DESC')->one();
+
+            $lastDate = date('Y', strtotime($acc['date_created'])) == $year ? date('Y-m-d', strtotime($acc['date_created'])) : $year . "-01-01";
+            $lastBalance = 0;
+            if($lastTrans){
+                //$lastDate = $year . "-01-01";
+                $lastDate = $lastTrans->transaction_date;
+                $lastBalance = $lastTrans->running_balance;
+
+            }
+
+            $totalInterest = 0;
+
+            //get all transaction within the year and calculate interest
+            $transactionList = SavingsTransaction::find()->where(['fk_savings_id' => $acc['account_no']])->andWhere("DATE_FORMAT(transaction_date, '%Y') = '$year'")->orderBy('transaction_date ASC')->asArray()->all();
+            if(count($transactionList) > 0){
+                foreach ($transactionList as $trans) {
+
+                    $noOfDaysPassed = date_diff(date_create($lastDate), date_create($trans['transaction_date']));
+                    $noOfDaysPassed = $noOfDaysPassed->format("%a");
+                    //var_dump($noOfDaysPassed . " - " . $lastBalance);
+                    //To calculate interest
+                    $interest = ($int_rate * floatval($lastBalance)) * $noOfDaysPassed;
+                    if($interest > 0){
+                        $totalInterest += $interest;
+                    }
+
+                    //var_dump($lastDate . " - " . $interest);
+
+                    $lastDate = $trans['transaction_date'];
+                    $lastBalance = $trans['running_balance'];
+
+                }
+            }
+            else{
+                $lastBalance = $acc['balance'];
+            }
+
+            //Calculate last interest up to end of the year
+            $noOfDaysPassed = date_diff(date_create($lastDate), date_create($year . "-12-31"));
+            $noOfDaysPassed = $noOfDaysPassed->format("%a");
+            //To calculate interest
+            $interest = ($int_rate * floatval($lastBalance)) * $noOfDaysPassed;
+            if($interest > 0){
+                $totalInterest += $interest;
+            } 
+
+            if($totalInterest > 0){
+                $acc['total_interest'] = $totalInterest;
+                $acc['total_interest']= number_format($acc['total_interest'], 2, '.', '');
+                array_push($accountList, $acc);
+            }
+            
+        }
+
+        return $accountList;
     }
 }

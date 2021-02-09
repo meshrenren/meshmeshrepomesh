@@ -43,6 +43,7 @@
 			        			</div>
 			        			<div class = "toolbar-right">
 			        				<el-button size="mini" @click="printLoanSummary('print')">Print Summary</el-button>
+			        				<el-button size="mini" @click="printRebates('print')">Rebates</el-button>
 			        			</div>
 								<el-table class = "mt-20" :data="accountLoanList" height = "350px" stripe border>
 						            <el-table-column label="Action">
@@ -248,7 +249,7 @@ export default {
             dataLoan['loanList'] = this.accountLoanList
             dataLoan['member'] = this.memberDetails
 
-
+            this.pageLoading = true
             this.$API.Loan.printSummary(dataLoan, 'print')
             .then(result => {
                 let res = result.data
@@ -262,7 +263,32 @@ export default {
             .catch(err => { console.log(err)})
             .then(_ => { this.pageLoading = false })
         },
+        printRebates(type){
+        	let dataLoan = {}
+            let dataAccount = {}
+            dataAccount['fullname'] = this.memberDetails.last_name + " "  + this.memberDetails.first_name + " " + this.memberDetails.middle_name
+            dataAccount['station'] = ""
+            dataAccount['id'] = this.memberDetails.id
+            if(this.memberDetails.station){
+                dataAccount['station']  = this.memberDetails.station.name
+            }
+        	dataLoan['details'] = dataAccount
+            dataLoan['member'] = this.memberDetails
 
+            this.pageLoading = true
+        	this.$API.Loan.printRebates(dataLoan, 'print')
+            .then(result => {
+                let res = result.data
+                if(type == 'pdf'){
+                    this.exporter(type, 'Loan Rebates', res)
+                }
+                else if(type == 'print'){
+                    this.winPrint(res.data, 'Loan Rebates')
+                }
+            })
+            .catch(err => { console.log(err)})
+            .then(_ => { this.pageLoading = false })
+        },
         printLoanLedger(type){
         	if(this.getAllHistory.length == 0){
                 new Noty({

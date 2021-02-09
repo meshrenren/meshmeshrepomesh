@@ -3355,6 +3355,53 @@ class SeedController extends Controller
         }
     }
 
+    public function actionSeedRebates(){
+        $query = new \yii\db\Query;
+        $query->select('*');
+        $query->from('zold_loanledger llm')->where("Remarks = 'Rebates'");
+        $loanLedger = $query->all();
+
+        foreach ($loanLedger as $key => $loan) {
+            //Find loan account base on transac num
+            $loanAccount = \app\models\LoanAccount::find()->where(['olddb_transacnum' => $loan['TransacNum']])->one();
+            if($loanAccount){
+                //echo "Rebates : has loan" . $loanAccount->id . "\n";
+
+                //Find loan transaction
+                $loanTrans = \app\models\LoanTransaction::find()->where(['loan_id' => $loanAccount->loan_id, 'OR_no' => $loan['GVORNum']])->one();
+                if($loanTrans){
+                    $rebates = 0;
+                    if($loan['AddOnInt'] !== null){
+                        $rebates = $loan['AddOnInt'];
+                    }
+                    else if($loan['Rebates'] !== null){
+                        $rebates = $loan['Rebates'];
+                    }
+                    $rebates = floatval(str_replace(",", "", $rebates));
+                    if($rebates < 0){
+                        $rebates = $rebates * -1;
+                    }
+                    $loanTrans->amount = $rebates;
+                    $loanTrans->transaction_type = "REBATES";
+                    $loanTrans->save();
+
+                    echo "Rebates : has transaction" . $rebates . "\n";
+                }
+                else{
+                    echo "Rebates : has no transaction" . $loan['TransacNum'] . "\t" . $loan['GVORNum'] . "\t" . $loanAccount->account_no . "\t". $loan['Name'] . "\n";
+                }
+
+                
+                
+            }
+            /*else{
+                echo "Rebates : has no loan" . $loan['GVORNum'] . "\t" . $loan['Name'] . "\n";
+            }*/
+
+            
+        }
+    }
+
 }
 
 

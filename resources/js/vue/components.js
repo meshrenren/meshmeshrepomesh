@@ -47,6 +47,9 @@ Vue.component('savings-account-create', SavingsAccountCreate)
 import SavingsAccountList from './components/Savings/SavingsAccountList.vue'
 Vue.component('savings-account-list', SavingsAccountList)
 
+import SavingsCutOff from './components/Savings/SavingsCutOff.vue'
+Vue.component('savings-cut-off', SavingsCutOff)
+
 /* --- END --- */
 
 

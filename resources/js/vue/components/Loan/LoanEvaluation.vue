@@ -880,6 +880,7 @@ export default {
     				credit_interest = parseFloat(lastTran.interest_accum).toFixed(2);
     			}
     			else{
+    				console.log('"HERE')
     				credit_interest = this.getInterestLoan(lastTran.total_amount_paid, latestLoan, getProduct)
     			}
 				this.evaluationForm.credit_interest = parseFloat(credit_interest).toFixed(2);

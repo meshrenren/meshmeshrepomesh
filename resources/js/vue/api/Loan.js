@@ -104,6 +104,27 @@ export default {
 			})
 		}
 	},
+	printRebates(dataLoan, type){	
+		let params = {
+			dataLoan : dataLoan,
+			type : type
+		}
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/loan/print-rebates',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: '/loan/print-rebates',
+				data: params,
+			})
+		}
+	},
 
 	getCurrentLoanInterestSincePreviousTransaction(accountnumber, interest_rate) {
 		let params = {

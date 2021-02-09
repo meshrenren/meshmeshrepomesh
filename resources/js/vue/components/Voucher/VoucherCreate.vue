@@ -179,7 +179,13 @@
                                               idth="50">
                                                 <template slot-scope="scope" v-if = "scope.row.showDebit">
                                                     <div v-if = "scope.row.type == 'LOAN'">
-                                                        <el-input type="number" :min = "0" v-model="scope.row.debit" :disabled = "Number(scope.row.balance) >= 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                        <template v-if = "scope.row.is_prepaid">
+                                                            <el-input type="number" :min = "0" :max = "Number(scope.row.balance)" v-model="scope.row.debit" :disabled = "Number(scope.row.balance) <= 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                        </template>
+                                                        <template v-else>
+                                                            <el-input type="number" :min = "0" v-model="scope.row.debit" :disabled = "Number(scope.row.balance) >= 0" @keyup.enter.native = "addAccounts"></el-input>
+                                                        </template>
+                                                        
                                                     </div>
                                                     <div v-else>
                                                         <el-input type="number" :min = "0" v-model="scope.row.debit" @keyup.enter.native = "addAccounts"></el-input>
@@ -718,24 +724,48 @@ export default {
 
                     //Add PI for Loan that has pi particular field
                     if(Number(rs.product.pi_particular_id) > 0){
-                        let arr = cloneDeep(this.accountModel)
-                        arr.member_id = rs.member_id
-                        arr.fullname = this.getMemberName(rs.member_id)
-                        arr.key = "LOAN_PI_" + rs.account_no
-                        arr.account_no = rs.account_no
-                        arr.product_id = rs.loan_id
-                        arr.product_name = "PI " + rs.product.product_name
-                        arr.type = "LOAN"
-                        arr.balance = parseFloat(rs.principal_balance).toFixed(2)
-                        arr.particular_id = rs.product.pi_particular_id
-                        arr.is_prepaid = true
+                        //Get for rebates
+                        if(rs.rebates && Number(rs.rebates) > 0){
+                            let arr = cloneDeep(this.accountModel)
+                            arr.member_id = rs.member_id
+                            arr.fullname = this.getMemberName(rs.member_id)
+                            arr.key = "LOAN_PI_" + rs.account_no
+                            arr.account_no = rs.account_no
+                            arr.product_id = rs.loan_id
+                            arr.product_name = "PI " + rs.product.product_name
+                            arr.type = "LOAN"
+                            arr.balance = parseFloat(rs.rebates).toFixed(2)
+                            arr.particular_id = rs.product.pi_particular_id
+                            arr.is_prepaid = true
 
-                        let credit = this.getAmount(arr.key, 'CREDIT')
-                        arr.credit = credit
-                        arr.showDebit = false
+                            let debit = this.getAmount(arr.key, 'DEBIT')
+                            arr.debit = debit
+                            arr.showCredit = false
 
-                        allAccounts.push(arr)
+                            console.log('rebates', arr)
+                            allAccounts.push(arr)
+                        }
+                        else if(rs.prepaid_amortization_quincena && Number(rs.prepaid_amortization_quincena) > 0){
+                            let arr = cloneDeep(this.accountModel)
+                            arr.member_id = rs.member_id
+                            arr.fullname = this.getMemberName(rs.member_id)
+                            arr.key = "LOAN_PI_" + rs.account_no
+                            arr.account_no = rs.account_no
+                            arr.product_id = rs.loan_id
+                            arr.product_name = "PI " + rs.product.product_name
+                            arr.type = "LOAN"
+                            arr.balance = parseFloat(rs.principal_balance).toFixed(2)
+                            arr.particular_id = rs.product.pi_particular_id
+                            arr.is_prepaid = true
+
+                            let credit = this.getAmount(arr.key, 'CREDIT')
+                            arr.credit = credit
+                            arr.showDebit = false
+
+                            allAccounts.push(arr)
+                        }
                     }
+
                 })
             }
             this.accountSelected.list = allAccounts
