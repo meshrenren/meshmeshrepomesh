@@ -32,7 +32,7 @@ class LoanCutoff extends \yii\db\ActiveRecord
     {
         return [
             [['loan_id', 'member_id', 'year', 'created_by'], 'integer'],
-            [['prepaid_interest', 'interest_earned'], 'number'],
+            [['prepaid_interest', 'interest_earned', 'prepaid_interest_cutoff', 'interest_earned_cutoff'], 'number'],
             [['date_created'], 'safe'],
         ];
     }

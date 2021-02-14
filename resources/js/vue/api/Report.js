@@ -58,4 +58,50 @@ export default {
 			})
 		}
 	},
+
+	printLoanArrears(data, type){	
+		let params = {
+			data : data,
+			type : type,
+		}
+
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-loan-arrears',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-loan-arrears',
+				data: params,
+			})
+		}
+	},
+
+	printTableList(data, type){	
+		let params = {
+			data : data,
+			type : type,
+		}
+
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-table-list',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-table-list',
+				data: params,
+			})
+		}
+	},
 }
