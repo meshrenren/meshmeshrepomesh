@@ -7,6 +7,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\SavingAccounts;
+use app\models\SavingsTransaction;
 use \app\models\JournalHeader;
 use \app\models\JournalDetails;
 use \app\models\GeneralVoucher;
@@ -583,14 +584,143 @@ class SavingsController extends \yii\web\Controller
         
     }
 
+    //This should be run after the cutoff year. Example this cutoff is for 2020. It should be run on 2021
     public function actionCutOff(){
         $this->layout = 'main-vue';
-        $year = date('Y') - 1;
+        $cutOff = Yii::$app->view->getCutOff();
+        $cutOffYear =  date('Y', strtotime($cutOff));
 
-        $savingsAccount = SavingsHelper::calculateCutOffInterest($year);
+        $cutoffDone = false;
+
+        //Check if has cutoff data from last year
+        $getcutOff = SavingsTransaction::find()->where('YEAR(transaction_date) = "' . $cutOffYear . '" AND transaction_type = "INTEREST"')->count(); //E.G. Current year 2021. Result is 2020
+
+        $savingsAccount = [];
+        if($getcutOff > 0){
+            $cutoffDone = true;
+        }
+        else{
+            $savingsAccount = SavingsHelper::calculateCutOffInterest($cutOffYear);
+        }
+
         
+        $pageData = [
+            'cutOff' => $cutOff,
+            'cutOffYear' => $cutOffYear,
+        ];
+
         return $this->render('cut-off', [ 
-            'savingsAccount' => $savingsAccount
+            'savingsAccount' => $savingsAccount,
+            'pageData' => $pageData,
+            'cutoffDone' => $cutoffDone
         ]);
+    }
+
+    public function actionSaveCutoff()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $post = \Yii::$app->getRequest()->getBodyParams();
+        
+        if($post)
+        {
+            $success = false;
+            $error = '';
+            $data = null;
+
+            $dateToday = date('Y-m-d H:i:s', strtotime(\Yii::$app->user->identity->DateTimeNow));
+            $currentDate = ParticularHelper::getCurrentDay();
+            $systemDate = date("Y-m-d", strtotime($currentDate));
+
+            $cutOff = Yii::$app->view->getCutOff();
+            $cutOffYear =  date('Y', strtotime($cutOff));
+
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $success = true;
+                $savingsToSave = $post['savingsToSave'];
+                $voucherDetails = $post['voucherDetails'];
+                $gv_num = $post['gv_num'];
+                $transaction_date = $post['transaction_date'];
+
+                //Save savings transaction
+                foreach ($savingsToSave as $savings) {
+                    $getSavingsAccount = SavingAccounts::findOne($savings['account_no']);
+
+                    $amount = $savings['total_interest'];
+                    $running_balance = $getSavingsAccount->balance + $amount;
+
+                    $acct_transaction = [
+                        'fk_savings_id' => $savings['account_no'],
+                        'amount' => $amount,
+                        'transaction_type' => 'INTEREST',
+                        'transaction_date' => $transaction_date,
+                        'running_balance' => $running_balance,
+                        'remarks' => 'Added as interest for year ' . $cutOffYear,
+                        'ref_no' => $gv_num,
+                    ];
+
+                    $saveSD = SavingsHelper::saveSavingsTransaction($acct_transaction);
+                    //return $saveSD;
+                    if($saveSD){
+                        $getSavingsAccount->balance = $running_balance;
+                        $getSavingsAccount->save();
+
+                    }
+                    else{
+                        $success = false;
+                    }
+                }
+
+                if($success){
+                    //Save in voucher
+                    $voucherData = array();
+                    $voucherData['gv_num'] = $gv_num;
+                    $voucherData['name'] = "DILG XI EMPC";
+                    $voucherData['type'] = 'Group';
+                    $voucherData['date_transact'] = $transaction_date;
+                    $voucherData['posted_date'] = $systemDate;
+
+                
+                    $voucherModel = VoucherHelper::saveVoucher($voucherData);
+                    if($voucherModel){
+                        $entries =  $voucherDetails;
+                        foreach ($entries as  $key => $ent) {
+                            $entries[$key]['member_id'] = null;
+                            $entries[$key]['posted_date'] = $systemDate;
+                        }
+                        $saveEntries = VoucherHelper::insertEntries($entries, $voucherModel->id, $systemDate);
+                        if(!$saveEntries){
+                            $success = false;
+                        }
+                        else{
+                            $success = VoucherHelper::saveJournalVoucherBase($voucherModel->id);
+                        }
+                    }else{
+                        $success = false;
+                    }
+                }
+
+                if($success){
+                    $transaction->commit();
+                }
+                else{
+                    $transaction->rollBack();
+                }
+                
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+
+            return [
+                'success'   => $success,
+                'error'     => $error,
+                'data'      => $data
+            ];
+        }
+        
     }
 }

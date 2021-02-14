@@ -693,6 +693,7 @@ export default {
             let checkBalanceText = ""
             _forEach(vm.accountSelected.list, rs =>{
                 let acct = cloneDeep(rs)
+                if(rs)
                 if(rs.amount && Number(rs.amount) > 0){
                     if(rs.type == "LOAN" && !rs.is_prepaid && Number(rs.amount) > Number(rs.balance)){
                         isBalance = false

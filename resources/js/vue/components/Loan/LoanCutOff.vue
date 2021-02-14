@@ -58,7 +58,7 @@
 				                </template>                      
 				            </el-table-column>
 
-				            <el-table-column label="Balance" prop = "principal_balance" >  
+				            <el-table-column label="Balance" prop = "principal_balance" sortable >  
 				                <template slot-scope="scope"> 
 				                	{{ $nf.formatNumber(scope.row.principal_balance, 2) }} 
 				                </template>                      

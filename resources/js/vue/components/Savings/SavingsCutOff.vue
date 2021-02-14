@@ -6,7 +6,10 @@
             </div>
             <div class = "box-body">
             	<el-row :gutter="20">
-            		<el-col :span="20">
+            		<el-col :span="24">
+            			<div class = "right-toolbar mb-10">
+            				<el-button type = "primary" @click = "setVoucher()">SAVE</el-button>            			
+            			</div>
             			<el-input class = "mb-10" v-model="search" size="mini" placeholder="Search account name"/>
 						<el-table 
 							:data="savingsList.filter(data => !search || (data.account_name && data.account_name.toLowerCase().includes(search.toLowerCase())) || (data.member && data.member.fullname.toLowerCase().includes(search.toLowerCase())))"
@@ -34,19 +37,25 @@
 				            </el-table-column>
 				            <el-table-column label="Interest" prop = "total_interest">
 				                <template slot-scope="scope">
-				                   	<span >{{ $nf.formatNumber(scope.row.total_interest, 2) }}</span>
+				                	<el-input v-model="scope.row.total_interest">
+									</el-input>
+				                   <!-- 	<span >{{ $nf.formatNumber(scope.row.total_interest, 2) }}</span> -->
 				                </template>
 				            </el-table-column>
-				            <!-- <el-table-column label="Action">
-				                <template slot-scope="scope">
-				                    <el-button size="mini" @click="selectAccount(scope.index, scope.row)">Select</el-button>
-				                </template>
-				            </el-table-column> -->
 				        </el-table>
             		</el-col>
             	</el-row>
             </div>
         </div>
+        <voucher-view-form 
+            :data-list = "voucherList"
+            :gv-required = "true"
+            :date-transact = "dateTransact"
+            v-if="isShowVoucher"
+            :visible.sync="isShowVoucher"
+            @close="isShowVoucher = false"
+            @processvoucher="processVoucher">
+        </voucher-view-form>
     </div>
 </template>
 <script> 
@@ -56,7 +65,7 @@
     import _forEach from 'lodash/forEach'  
 
 export default {
-	props: ['dataTransaction'],
+	props: ['dataTransaction', 'pageData'],
 	data: function () {
 		return{
 			pageLoading 			: false,
@@ -66,7 +75,12 @@ export default {
 			loadingTransTable 		: false,
 			accountTransactionList 	: [],
 			accountSelected 		: {},
-			samplePrint 			: ""
+			samplePrint 			: "",
+			voucherList 			: [],
+			dateTransact 			: this.pageData.cutOff,
+			year 					: this.pageData.cutOffYear,
+			isShowVoucher 			: false,
+			savingsToSave 			: []
 		}
 	},
 	created(){
@@ -133,107 +147,68 @@ export default {
                 this.loadingTable = false
             })
 		},
-		selectAccount(index, data){
-			this.accountSelected = cloneDeep(data)
-			this.getTransaction(this.accountSelected.account_no)
-		},
-    	getTransaction(account_no){
-    		this.loadingTransTable = true
+    	setVoucher(){
+    		let totalInterest = 0
+    		let transactionToSave = []
+    		_forEach(this.savingsList, savings =>{
+    			if(savings.total_interest > 0){
+    				totalInterest += parseFloat(savings.total_interest)
+    				transactionToSave.push(savings)
+    			}
+    		})
+    		this.savingsToSave = transactionToSave
 
-            this.$API.Savings.getTransaction(account_no)
+    		totalInterest = this.$nf.numberFixed(totalInterest)
+
+    		let list = []
+            //Set product name
+            let arr = {particular_name: 'Interest Expense', amount: totalInterest, type : "DEBIT", account_no : null, account_name : "DILG XI EMPC" }
+            list.push(arr)
+            arr = {particular_name: 'Savings Deposit', amount: totalInterest, type : "CREDIT", account_no : null, account_name : "DILG XI EMPC" }
+            list.push(arr)
+
+    		this.voucherList = list
+            
+            this.isShowVoucher = true
+    	},
+    	
+    	processVoucher(data){
+            this.saveCutOff(data.gv_num, data.voucher_entries, data.transaction_date)
+        },
+        saveCutOff(gvNumber, voucherDetails, transaction_date){
+
+      		this.pageLoading = true
+
+      		let data = {
+				savingsToSave: this.savingsToSave,
+                voucherDetails : voucherDetails,
+                gv_num : gvNumber,
+                transaction_date : transaction_date
+			}
+			console.log('data', data)
+            this.$API.Savings.saveCutoff(data)
             .then(result => {
-                var res = result.data
-                if(res.length > 0 ){
-                    this.accountTransactionList = res
+                let res = result.data
+                if(res.success){
+                	location.reload()
+                }
+                else{
+                	new Noty({
+	                    theme: 'relax',
+	                    type: "error",
+	                    layout: 'topRight',
+	                    text: "An error occured. Please contact administrator.",
+	                    timeout: 3000
+	                }).show();
                 }
             })
             .catch(err => {
                 console.log(err)
             })
             .then(_ => { 
-                this.loadingTransTable = false
+                this.pageLoading = false
             })
-    	},
-    	printForm(type){
-    		if(this.transactionList.length == 0){
-    			new Noty({
-                    theme: 'relax',
-                    type: "error",
-                    layout: 'topRight',
-                    text: "No transaction to process.",
-                    timeout: 3000
-                }).show();
-                return
-    		}
-    		console.log("Here")
-    		this.pageLoading = true
-    		let account = cloneDeep(this.accountSelected)
-    		let accName = account.account_name
-    		if(account.member){
-    			accName = account.member.fullname
-    		}
-
-    		let data = {
-    			account_no : account.account_no,
-    			account_name : accName,
-    			balance : account.balance,
-    			transaction : this.transactionList
-    		}
-
-			this.$API.General.printList(data, type, 'Savings')
-			.then(result => {
-				let res = result.data
-				if(type == 'pdf'){
-					this.exporter(type, 'Savings Deposit Transaction', res)
-				}
-				else if(type == 'print'){
-					this.winPrint(res.data, 'Savings Deposit Transaction')
-				}
-			})
-			.catch(err => { console.log(err)})
-			.then(_ => { this.pageLoading = false })
-
-    		//window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
-    	},
-    	printBalance(type){
-    		if(!this.accountSelected){
-    			new Noty({
-                    theme: 'relax',
-                    type: "error",
-                    layout: 'topRight',
-                    text: "Please select account.",
-                    timeout: 3000
-                }).show();
-                return
-    		}
-
-    		this.pageLoading = true
-    		let account = cloneDeep(this.accountSelected)
-    		let accName = account.account_name
-    		if(account.member){
-    			accName = account.member.fullname
-    		}
-
-    		let data = {
-    			account_no : account.account_no,
-    			account_name : accName,
-    			balance : account.balance,
-    			transaction : this.transactionList
-    		}
-
-			this.$API.General.printBalance(data, type, 'Savings')
-			.then(result => {
-				let res = result.data
-				if(type == 'pdf'){
-					this.exporter(type, 'Savings Account', res)
-				}
-				else if(type == 'print'){
-					this.winPrint(res.data, 'Savings Account')
-				}
-			})
-			.catch(err => { console.log(err)})
-			.then(_ => { this.pageLoading = false })
-    	}
+      	},
 	}
 }
 </script>

@@ -52,4 +52,8 @@ export default {
 		}
 		return axios.post($baseUrl + '/savings/get-transaction', params)
 	},
+
+	saveCutoff(params){	
+		return axios.post($baseUrl + '/savings/save-cutoff', params)
+	},
 }
