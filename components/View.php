@@ -64,6 +64,17 @@ class View extends \yii\web\View
         return $count > 0 ? chr($count + 64) . chr($char+64) : chr($char+64);
     }
 
+    /* 
+        FOR CUT OFF YEAR 
+        E.G.
+        Current Year: 2021
+
+    */
+
+    /* 
+        Base the example above
+        return 2020-12-31 
+    */
     public function getCutOff() {
         $lastYear = intval(date('Y')) - 1;
         $cutOff = date($lastYear.'-12-31');
@@ -71,8 +82,23 @@ class View extends \yii\web\View
         return $cutOff;
     } 
 
+    /* 
+        Base the example above
+        return 2021-12-31 
+    */
     public function getCutOffThisYear() {
         $cutOff = date('Y-12-31');
+       
+        return $cutOff;
+    } 
+
+    /* 
+        Base the example above
+        return 2019-12-31 
+    */
+    public function getCutOffPrevYear() {
+        $prevYear = intval(date('Y')) - 2;
+        $cutOff = date($prevYear.'-12-31');
        
         return $cutOff;
     } 

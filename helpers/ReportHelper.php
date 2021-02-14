@@ -301,7 +301,6 @@ class ReportHelper
         $date = $postData['date'];
         $loanList = $postData['loanList'];
         $header = $postData['header'];
-        $grandTotal = $postData['grandTotal'];
 
         $listTemplate = '<table width = "100%">
             <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
@@ -316,10 +315,41 @@ class ReportHelper
                 $transTable = "<div class = 'mb-10'>";
                 $transTable .= "<label style = 'font-size: 14px;'><strong>". $loan['product_name'] ."</strong></label>";
 
-                $tableList = static::tableList($header, $station['list'], true);
+                $tableList = static::tableList($header, $loan['arrearsList'], true);
                 $transTable .= $tableList;
 
                 $transTable .= "</div>";
+                $listTemplate = $listTemplate . $transTable;
+            }
+        }
+
+        return $listTemplate;
+    }
+
+    public static function printTableList($postData){
+        $title = $postData['title'];
+        $date = $postData['date'];
+        $dataList = $postData['dataList'];
+        $header = $postData['header'];
+
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">'.$title.'</div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">AS OF '.$date.'</div></tr>
+        </table>';
+
+
+        foreach ($dataList as $data) {
+
+            if(isset($data['tableList']) && count($data['tableList']) > 0){
+                $transTable = "<div class = 'mb-10'>";
+                $transTable .= "<label style = 'font-size: 14px;'><strong>". $data['name'] ."</strong></label>";
+
+                $tableList = static::tableList($header, $data['tableList'], true);
+                $transTable .= $tableList;
+
+                $transTable .= "</div>";
+                $listTemplate = $listTemplate . $transTable;
             }
         }
 
@@ -352,7 +382,23 @@ class ReportHelper
                 $transTable .= '<td>'.$val.'</td>';
             }
             $transTable .= '</tr>';
+
         }
+
+        $transTable .= '<tr style = "font-weight: bolf;">';
+        foreach ($header as $key => $head) {
+            if($key == 0){
+                $transTable .= '<td><strong>TOTAL</strong></td>';
+                continue;
+            }
+
+            if(isset($total[$head['prop']])){
+                $transTable .= '<td><strong>'.$total[$head['prop']].'</strong></td>';
+            }else{
+                $transTable .= '<td></td>';
+            }
+        }
+        $transTable .= '</tr>';
 
         $transTable .= '</table>';
 

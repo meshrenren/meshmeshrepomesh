@@ -7,6 +7,7 @@ use yii\filters\AccessControl;
 use \Mpdf\Mpdf;
 use app\models\LoanAccount;
 use app\models\LoanProduct;
+use app\models\LoanCutoff;
 
 use app\models\LoanTransaction;
 use app\models\SavingsAccounts;
@@ -290,16 +291,16 @@ class LoanController extends \yii\web\Controller
                 $firstTransaction = null;
                 $getTransactions = LoanTransaction::find()->where(['loan_account' => $acc['account_no'], 'is_cancelled' => "0"])
                     ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "PAYCLOSE" OR transaction_type = "EMERGENCY"')
-                    ->andWhere('date_posted <= "' . $systemDate . '"')
+                    ->andWhere('transaction_date <= "' . $systemDate . '"')
                     ->orderBy('date_posted')
                     ->asArray()->all();
                 $transLength = count($getTransactions);
 
                 foreach ($getTransactions as $transKey => $transaction) {
 
-                    $last_tran_date = $transaction['date_posted'];
+                    $last_tran_date = $transaction['transaction_date'];
 
-                    if($transaction['date_posted'] <= $cutOff){
+                    if($transaction['transaction_date'] <= $cutOff){
                         $balance_after_cutoff = $transaction['running_balance'];
                         $lastRunningBal = $transaction['running_balance'];
                         continue;
@@ -316,18 +317,18 @@ class LoanController extends \yii\web\Controller
                     }
 
                     //Recalculate interest earned. Dili magsalig sa DB
-                    $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['date_posted'], $lastRunningBal, $acc['int_rate']);
+                    $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['transaction_date'], $lastRunningBal, $acc['int_rate']);
                     $interest_accum = $interest_accum + $interestEarned;
                     //var_dump($interestEarned);
 
                     //If at the last transaction
                     if($transLength == $transKey+1){
-                        $interestEarnedLast = LoanHelper::getInterest($transaction['date_posted'], $systemDate, $transaction['running_balance'], $acc['int_rate']);
+                        $interestEarnedLast = LoanHelper::getInterest($transaction['transaction_date'], $systemDate, $transaction['running_balance'], $acc['int_rate']);
                         $interest_accum = $interest_accum + $interestEarnedLast;
                         //var_dump($interestEarned);
                     }
 
-                    $lastPayment = $transaction['date_posted'];
+                    $lastPayment = $transaction['transaction_date'];
                     $lastRunningBal = $transaction['running_balance'];
                     $amount_balance = $transaction['running_balance'];
                 }
@@ -1046,6 +1047,7 @@ class LoanController extends \yii\web\Controller
         }
     }
 
+
     public function actionPrintRebates(){
 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -1079,6 +1081,96 @@ class LoanController extends \yii\web\Controller
             else{
                 return [ 'data' => $template];
             }
+        }
+        
+    }
+
+    //This should be run after the cutoff year. Example this cutoff is for 2020. It should be run on 2021
+    public function actionRegularCutoff(){
+
+        $this->layout = 'main-vue';
+
+        $accountList = [];
+        $systemDateYear = date("Y", strtotime(ParticularHelper::getCurrentDay()));
+        //Check if has cutoff data from last year
+        $getcutOff = LoanCutoff::find()->where(['loan_id' => 2, 'year' => $systemDateYear-1])->count(); //E.G. Current year 2021. Result is 2020
+        if($getcutOff == 0){
+            $accountList = LoanHelper::calculateYearlyCutOff(2);
+        }
+
+        $pageData = ['accountList' => $accountList, 'type' => "RL"];
+
+        return $this->render('loan-cutoff', ['pageData' => $pageData]);
+    }
+
+    //This should be run after the cutoff year. Example this cutoff is for 2020. It should be run on 2021
+    public function actionApplianceCutoff(){
+
+        $this->layout = 'main-vue';
+
+        $accountList = [];
+        $systemDateYear = date("Y", strtotime(ParticularHelper::getCurrentDay()));
+        //Check if has cutoff data from last year
+        $getcutOff = LoanCutoff::find()->where(['loan_id' => 1, 'year' => $systemDateYear-1])->count(); //E.G. Current year 2021. Result is 2020
+        if($getcutOff == 0){
+            $accountList = LoanHelper::calculateYearlyCutOff(1);
+        }
+
+        $pageData = ['accountList' => $accountList, 'type' => "RL"];
+
+        return $this->render('loan-cutoff', ['pageData' => $pageData]);
+    }
+
+    public function actionSaveCutoff()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $post = \Yii::$app->getRequest()->getBodyParams();
+        
+        if($post)
+        {
+            $success = false;
+            $error = '';
+            $data = null;
+
+            $dateToday = date('Y-m-d H:i:s', strtotime(\Yii::$app->user->identity->DateTimeNow));
+
+            $transaction = \Yii::$app->db->beginTransaction();
+            try {
+                $success = true;
+                $accounts = $post['accounts'];
+                $systemDateYear = date("Y", strtotime(ParticularHelper::getCurrentDay())); //E.G. Current year 2021. Result is 2020
+                $cutoffYear = $systemDateYear - 1;
+                foreach ($accounts as $acc) {
+                    $model = new LoanCutoff;
+                    $model->attributes = $acc;
+                    $model->year = $cutoffYear;
+                    $model->date_created = $dateToday;
+                    $model->created_by = \Yii::$app->user->identity->id;
+
+                    if(!$model->save()){
+                        $success = false;
+                    }
+                }
+                if($success){
+                    $transaction->commit();
+                }
+                else{
+                    $transaction->rollBack();
+                }
+                
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                throw $e;
+            }
+
+            return [
+                'success'   => $success,
+                'error'     => $error,
+                'data'      => $data
+            ];
         }
         
     }

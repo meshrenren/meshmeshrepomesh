@@ -317,6 +317,9 @@ export default {
     	amountChange(val){
     		this.getRate(this.tdAccountDetails.fk_td_product, this.tdAccountDetails.term, val)
     	},
+    	serviceChargeChange(val){
+    		this.getRate(this.tdAccountDetails.fk_td_product, this.tdAccountDetails.term, this.tdAccountDetails.amount)
+    	},
     	getRate(product_id, term_count, amount){
     		this.tdAccountDetails.interest_rate = null
     		if(product_id && term_count > 0 && amount > 0){
@@ -332,11 +335,11 @@ export default {
 						this.tdAccountDetails.interest_rate = rate.interest_rate
 						//Associate or Extended
 						this.serviceFee = 0
-						if(this.memberDetails.member_type_id){
+						/*if(this.memberDetails.member_type_id){
 							let interestAmount = Number(this.tdAccountDetails.amount) * (Number(rate.interest_rate)/100)
 							let serviceCharge =  this.$nf.numberFixed(interestAmount, 2) * (Number(rate.interest_rate)/100)
 							this.serviceFee = this.$nf.numberFixed(serviceCharge, 2)
-						}
+						}*/
 						this.totalIncurred = Number(this.serviceFee) + this.tdAccountDetails.amount
 						this.tdAccountDetails.service_amount = this.serviceFee
 						

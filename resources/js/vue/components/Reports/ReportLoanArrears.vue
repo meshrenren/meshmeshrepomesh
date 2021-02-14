@@ -255,14 +255,14 @@ export default {
     			]
     		}
 
-			this.$API.Report.printLoanAging(data, type)
+			this.$API.Report.printLoanArrears(data, type)
 			.then(result => {
 				let res = result.data
 				if(type == 'pdf'){
-					this.exporter(type, 'Particular Payments', res)
+					this.exporter(type, 'Loan Arrears', res)
 				}
 				else if(type == 'print'){
-					this.winPrint(res.data, 'Particular Payments')
+					this.winPrint(res.data, 'Loan Arrears')
 				}
 			})
 			.catch(err => { console.log(err)})

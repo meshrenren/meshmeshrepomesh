@@ -133,5 +133,9 @@ export default {
 		}
 
 		return axios.post($baseUrl + '/loan/get-current-loan-interest', params)
-	}
+	},
+
+	saveCutoff(params){
+		return axios.post($baseUrl + '/loan/save-cutoff', params)
+	},
 }

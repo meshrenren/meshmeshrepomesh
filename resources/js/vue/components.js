@@ -88,6 +88,9 @@ Vue.component('loan-evaluation-form', LoanEvaluationForm)
 import LoanClosure from './components/Loan/LoanClosure.vue'
 Vue.component('loan-closure', LoanClosure)
 
+import LoanCutOff from './components/Loan/LoanCutOff.vue'
+Vue.component('loan-cut-off', LoanCutOff)
+
 /* --- END --- */
 
 
@@ -183,6 +186,9 @@ Vue.component('report-loan-aging', ReportLoanAging)
 
 import ReportLoanArrears from './components/Reports/ReportLoanArrears.vue'
 Vue.component('report-loan-arrears', ReportLoanArrears)
+
+import ReportSavingsList from './components/Reports/ReportSavingsList.vue'
+Vue.component('report-savings-list', ReportSavingsList)
 
 
 /* --- END --- */
