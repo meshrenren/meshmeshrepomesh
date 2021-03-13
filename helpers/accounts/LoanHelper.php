@@ -1046,6 +1046,153 @@ class LoanHelper
         return $listTemplate;
     }
 
+    //This are fo those account that already has loan for this year. Kay nalate ko ug parun nag renew n sila nga wala pay cutoff year T_T
+    public static function calculateYearlyCutOffWithCurrentLoan($loan_id){
+
+        $query = new \yii\db\Query;
+        $query->select('member_id')
+            ->from('loanaccount la')
+            ->where("loan_id = " . $loan_id) //Appliance Loan and RL.
+            ->groupBy('member_id');
+        $loanMember = $query->all();
+        
+        $currentDate = ParticularHelper::getCurrentDay();
+        $systemDate = date("Y-m-d", strtotime($currentDate));
+        $systemDateYear = date("Y", strtotime($currentDate));
+        $cutOffPrev = Yii::$app->view->getCutOffPrevYear();
+        $cutOff = Yii::$app->view->getCutOff();
+
+        /*var_dump($cutOffPrev);
+        var_dump($systemDateYear);*/
+
+        $accountList = array();
+        foreach ($loanMember as $member) {
+            //Check if has cutoff
+            /*if($member['member_id'] == 55){
+                var_dump("expression");
+        die;
+            }*/
+
+            //Get regular Loan
+            $acc = \app\models\LoanAccount::find()
+                ->innerJoinWith(['product', 'member'])
+                ->where(['loanaccount.member_id' => $member['member_id'], 'loanaccount.loan_id' => $loan_id])
+                ->andWhere('loanaccount.account_no = "2-000896" OR loanaccount.account_no = "2-001327" 
+                    OR loanaccount.account_no = "2-002481" OR loanaccount.account_no = "2-002919" 
+                    OR loanaccount.account_no = "2-002046" OR loanaccount.account_no = "2-002734" 
+                    OR loanaccount.account_no = "2-002376" OR loanaccount.account_no = "2-002213" 
+                    OR loanaccount.account_no = "2-002355" OR loanaccount.account_no = "2-002770"')
+                ->andWhere('status != "Cancel" AND status != "Verified"')
+                ->orderBy('release_date DESC')
+                ->asArray()->one();
+            /*if($member['member_id'] == 55){
+                var_dump($acc);
+                die;
+            }*/
+
+            //Test 2019 cutoff
+            if($acc){
+                $calVersion = Yii::$app->view->getVersion($acc['release_date']);
+
+                //For appliance loan. Check if old version
+                if($acc['loan_id'] == 1 && $calVersion != "1"){
+                    continue;
+                }
+
+                $release_date = $acc['release_date'];
+                $prepaid_interest = 0;
+                $interest_accum = 0;
+                $last_tran_date = $acc['release_date'];
+                $total_amount_paid = 0;
+                $balance_after_cutoff = 0;
+                $balance_after_cutoff = $acc['principal'];
+                $amount_balance = $acc['principal_balance'];
+
+                
+
+                $lastPayment = date('Y-m-d', strtotime($cutOffPrev . ' +1 day'));
+                $lastRunningBal = $acc['principal'];
+                if($release_date > $lastPayment){
+                   $lastPayment =  $release_date;
+                }
+                
+                $firstTransaction = null;
+                $getTransactions = LoanTransaction::find()->where(['loan_account' => $acc['account_no'], 'is_cancelled' => "0"])
+                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "PAYCLOSE" OR transaction_type = "EMERGENCY"')
+                    ->andWhere('transaction_date > "' . $cutOffPrev . '"')
+                    ->andWhere('transaction_date < "' . $systemDateYear . '-01-01' . '"')
+                    ->orderBy('date_posted')
+                    ->asArray()->all();
+                $transLength = count($getTransactions);
+
+                foreach ($getTransactions as $transKey => $transaction) {
+
+                    $last_tran_date = $transaction['transaction_date'];
+
+                    if($transaction['transaction_date'] <= $cutOffPrev){
+                        $balance_after_cutoff = $transaction['running_balance'];
+                        $lastRunningBal = $transaction['running_balance'];
+                        continue;
+                    }
+
+
+                    if($transaction['transaction_type'] == "PAYPARTIAL"){
+                        if($transaction['amount'] > 0){
+                            $total_amount_paid = $total_amount_paid + $transaction['amount'];
+                        }
+                    }
+
+                    if($transaction['prepaid_intpaid'] && floatval($transaction['prepaid_intpaid']) > 0){
+                        $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+                    }
+
+                    //Recalculate interest earned. Dili magsalig sa DB
+                    $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['transaction_date'], $lastRunningBal, $acc['int_rate']);
+                    $interest_accum = $interest_accum + $interestEarned;
+                    //var_dump( $interestEarned . " - " . $lastPayment . " - "  . $transaction['date_posted'] . " - " . $lastRunningBal . " - " . $acc['int_rate'] );
+
+                    //If at the last transaction
+                    if($transLength == $transKey+1){
+                        $interestEarnedLast = LoanHelper::getInterest($transaction['transaction_date'], $cutOff, $transaction['running_balance'], $acc['int_rate']);
+                        $interest_accum = $interest_accum + $interestEarnedLast;
+                    }
+
+                    $lastPayment = $transaction['transaction_date'];
+                    $lastRunningBal = $transaction['running_balance'];
+                    $amount_balance = $transaction['running_balance'];
+
+                }
+
+                //CUT OF PI AND INTEREST
+                if($acc['loan_id'] == 2 || ($acc['loan_id'] == 1 && $calVersion == "1") ) {// Regular loan
+                    //If loan exist before cut off. Get Cut Off Data
+                    if($release_date <= $cutOffPrev){
+                        $cutOffYear = date('Y', strtotime($cutOffPrev));
+                        $getCutOff = LoanHelper::getCutOff($cutOffYear, $acc['loan_id'], $acc['member_id']);
+
+                        if($getCutOff){
+                            $prepaid_interest += $getCutOff['finalPi'];
+                            $interest_accum += $getCutOff['finalInt'];
+                        }
+                    }
+                    
+                }
+                $prepaid_interest = round($prepaid_interest, 2);
+                $interest_accum = round($interest_accum, 2);
+                $acc['cutoff_pi'] =  $prepaid_interest; // In case of adjustment in the vue, add orig var
+                $acc['cutoff_int'] =  $interest_accum; // In case of adjustment in the vue, add orig var
+                $acc['cutoff_pi_orig'] =  $prepaid_interest;
+                $acc['cutoff_int_orig'] =  $interest_accum;
+
+                if($prepaid_interest > 0 || $interest_accum > 0){
+                    array_push($accountList, $acc);
+                }
+
+            }
+        }
+        return $accountList;
+    }
+
     public static function calculateYearlyCutOff($loan_id){
 
         $query = new \yii\db\Query;
@@ -1059,6 +1206,7 @@ class LoanHelper
         $systemDate = date("Y-m-d", strtotime($currentDate));
         $systemDateYear = date("Y", strtotime($currentDate));
         $cutOffPrev = Yii::$app->view->getCutOffPrevYear();
+        $cutOff = Yii::$app->view->getCutOff();
 
         $accountList = array();
         foreach ($loanMember as $member) {
@@ -1135,7 +1283,7 @@ class LoanHelper
 
                     //If at the last transaction
                     if($transLength == $transKey+1){
-                        $interestEarnedLast = LoanHelper::getInterest($transaction['transaction_date'], $systemDate, $transaction['running_balance'], $acc['int_rate']);
+                        $interestEarnedLast = LoanHelper::getInterest($transaction['transaction_date'], $cutOff, $transaction['running_balance'], $acc['int_rate']);
                         $interest_accum = $interest_accum + $interestEarnedLast;
                     }
 
@@ -1144,7 +1292,6 @@ class LoanHelper
                     $amount_balance = $transaction['running_balance'];
 
                 }
-
                 //CUT OF PI AND INTEREST
                 if($acc['loan_id'] == 2 || ($acc['loan_id'] == 1 && $calVersion == "1") ) {// Regular loan
                     //If loan exist before cut off. Get Cut Off Data

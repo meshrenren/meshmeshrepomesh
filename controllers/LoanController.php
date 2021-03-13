@@ -336,7 +336,13 @@ class LoanController extends \yii\web\Controller
                 //CUT OF PI AND INTEREST
                 if($acc['loan_id'] == 2 || ($acc['loan_id'] == 1 && $calVersion == "1") ) {// Regular loan
                     //If loan exist before cut off. Get Cut Off Data
-                    if($release_date <= $cutOff){
+                    //The loan account id condition is for those renewed loans before the cut off for 2020. Kay nalate man ko ug parun sa cutoff. So if ever nagrenew nani sila tanan. Pwede n tanggalon.
+                    if($release_date <= $cutOff 
+                        || ($acc['account_no']) == '2-000055' || ($acc['account_no']) == '2-000090'  
+                        || ($acc['account_no']) == '2-000224'  || ($acc['account_no']) == '2-000224'
+                        || ($acc['account_no']) == '2-000156' || ($acc['account_no']) == '2-000262'
+                        || ($acc['account_no']) == '2-000182' || ($acc['account_no']) == '2-000167'
+                        || ($acc['account_no']) == '2-000186' || ($acc['account_no']) == '2-000263'){
                         $cutOffYear = date('Y', strtotime($cutOff));
                         $getCutOff = LoanHelper::getCutOff($cutOffYear, $acc['loan_id'], $acc['member_id']);
                         if($getCutOff){
@@ -1085,7 +1091,26 @@ class LoanController extends \yii\web\Controller
         
     }
 
+    //This are fo those account that already has loan for this year. Kay nalate ko ug parun nag renew n sila nga wala pay cutoff year T_T
+    public function actionRegularCutoffWithLoan(){
+
+        $this->layout = 'main-vue';
+
+        $accountList = [];
+        $systemDateYear = date("Y", strtotime(ParticularHelper::getCurrentDay()));
+        //Check if has cutoff data from last year
+        $getcutOff = LoanCutoff::find()->where(['loan_id' => 2, 'year' => $systemDateYear-1])->count(); //E.G. Current year 2021. Result is 2020
+        if($getcutOff == 0){
+            $accountList = LoanHelper::calculateYearlyCutOffWithCurrentLoan(2);
+        }
+
+        $pageData = ['accountList' => $accountList, 'type' => "RL"];
+
+        return $this->render('loan-cutoff', ['pageData' => $pageData]);
+    }
+
     //This should be run after the cutoff year. Example this cutoff is for 2020. It should be run on 2021
+    //NOTE FOR YOU REN: In case wala nagrenew tong mga nagloan before naparun ang cut off. Please ipangcheck sila. Need nimo iadjust ilang cut off for 2021 HUH!!!!!! Nagsave ka ug notepad ato sa ilaha. Please check RegularLoanBeforeCutoff2021.txt file. Mao na sila ang mga nagload before pa nimo naparun ni siya karon nga year 2021. Please delete this after checking and running 2021 cutoff.
     public function actionRegularCutoff(){
 
         $this->layout = 'main-vue';
