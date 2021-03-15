@@ -494,7 +494,6 @@ class ReportHelper
                 /*->select(['loanaccount.loan_id', 'loanaccount.member_id'])*/;
                 }
             , ])
-            ->where('member.station_id = 11')
             ->orderBy('member.last_name ASC')
             ->asArray()->all();
 
