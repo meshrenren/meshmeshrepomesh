@@ -77,7 +77,8 @@
 				            style="width: 100%"
 				            class = "mt-10"
 				            max-height = "500px"
-				    		show-summary >
+				    		show-summary
+				    		:summary-method="getSummaries" >
 
 				            <el-table-column  prop="gv_num" label="GV Number" fixed>                             
 				            </el-table-column>
@@ -100,13 +101,13 @@
 				                </template>                      
 				            </el-table-column>
 
-				            <el-table-column label="Debit" >  
+				            <el-table-column label="Debit" prop = "debit" >  
 				                <template slot-scope="scope"> 
 				                	{{ $nf.formatNumber(scope.row.debit, 2) }} 
 				                </template>                      
 				            </el-table-column>
 
-				            <el-table-column label="Credit" >  
+				            <el-table-column label="Credit" prop = "credit">  
 				                <template slot-scope="scope"> 
 				                	{{ $nf.formatNumber(scope.row.credit, 2) }} 
 				                </template>                      
@@ -187,6 +188,32 @@ export default {
         }
     },  
 	methods:{	
+		getSummaries(param) {
+	        const { columns, data } = param;
+	        const sums = [];
+	        columns.forEach((column, index) => {
+	          	if (index === 0) {
+		            sums[index] = 'TOTAL';
+		            return;
+	          	}
+	          	const values = data.map(item => Number(item[column.property]));
+	         	if (!values.every(value => isNaN(value))) {
+		            sums[index] = values.reduce((prev, curr) => {
+		              const value = Number(curr);
+		              if (!isNaN(value)) {
+		                return prev + curr;
+		              } else {
+		                return prev;
+		              }
+		            }, 0);
+		            sums[index] = this.$nf.formatNumber(sums[index], 2)
+	          	} else {
+	            	sums[index] = '';
+	          	}
+        	});
+
+        	return sums;
+      	},
 		getVoucher(){
 			let form = cloneDeep(this.searchForm)
 			if(form.filterDate[0] == null || form.filterDate[1] == null){

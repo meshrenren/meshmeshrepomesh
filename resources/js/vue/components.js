@@ -190,5 +190,8 @@ Vue.component('report-loan-arrears', ReportLoanArrears)
 import ReportSavingsList from './components/Reports/ReportSavingsList.vue'
 Vue.component('report-savings-list', ReportSavingsList)
 
+import ReportDividendRefund from './components/Reports/ReportDividendRefund.vue'
+Vue.component('report-dividend-refund', ReportDividendRefund)
+
 
 /* --- END --- */

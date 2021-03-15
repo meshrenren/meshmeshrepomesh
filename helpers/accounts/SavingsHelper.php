@@ -291,4 +291,54 @@ class SavingsHelper
 
         return $accountList;
     }
+
+    public static function printCutOff($postData){
+        $totalInterestEarned = $postData['totalInterestEarned'];
+        $transaction = $postData['transaction'];
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Savings Interest Earned</div></tr>
+        </table>';
+
+        $accountDetail = '<table>
+            <tr>
+                <td style = "font-weight: bold;">Total Interest Earned: </td> 
+                <td><span>[total_interest]</span></td>
+            </tr> 
+        </table>';
+
+        $accountDetail = str_replace('[total_interest]', Yii::$app->view->formatNumber($totalInterestEarned), $accountDetail);
+
+        $listTemplate .= $accountDetail;
+
+        if(count($transaction) > 0){
+            $transTable = '<table class = "table table-bordered mt-10" width = "100%">
+                <tr>
+                    <th>ID</th> 
+                    <th>Name</th> 
+                    <th>Balance</th> 
+                    <th>Interest Earned</th> 
+                </tr>';
+            foreach ($transaction as $trans) {
+                $fullName = $trans['account_name'];
+                if(!$fullName){
+                    $fullName = $trans['member']['fullname'];
+                }
+                $transTable .= '<tr>
+                    <td>'.$trans['account_no'].'</td> 
+                    <td>'.$fullName.'</td> 
+                    <td>'.Yii::$app->view->formatNumber($trans['balance']).'</td> 
+                    <td>'.$trans['total_interest'].'</td> 
+                </tr>';
+            }
+
+            $transTable .= '</table>';
+        }
+
+        $listTemplate = $listTemplate . $transTable;
+
+        $listTemplate .= $accountDetail;
+
+        return $listTemplate;
+    }
 }

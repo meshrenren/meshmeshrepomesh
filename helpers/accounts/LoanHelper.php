@@ -1322,4 +1322,155 @@ class LoanHelper
         return $accountList;
     }
 
+    //This is use for dividen ang refund
+    public static function getLoanInterestEarned($loans, $year){
+
+        $currentDate = ParticularHelper::getCurrentDay();
+        $systemDate = date("Y-m-d", strtotime($currentDate));
+        $systemDateYear = date("Y", strtotime($currentDate));
+        $cutOffPrev = Yii::$app->view->getCutOffPrevYear();
+        $yearStart = Yii::$app->view->getCutOff();
+
+        $accountList = array();
+        $totalLoanInterest = 0;
+        if(count($loans) >= 1){
+            foreach ($loans as $loan) {
+                $arr = $loan;
+                $totalInterestEarned = 0;
+                //Get interest for loan other than regular
+                if($loan['loan_id'] != 2){
+                    //Get loan transaction for that year
+                    $getTransactions = LoanTransaction::find()
+                        ->select(['loan_transaction.*', 'la.release_date as loan_release_date', 'la.loan_id as loan_loan_id', 'la.prepaid_int as loan_prepaid_int', 'la.account_no as loan_account_no'])
+                        ->innerJoin('loanaccount la', 'la.account_no = loan_transaction.loan_account')
+                        ->where(['la.loan_id' => $loan['loan_id'], 'la.member_id' => $loan['member_id'], 'is_cancelled' => "0"])
+                        ->andWhere('loan_transaction.transaction_type = "PAYPARTIAL"')
+                        ->andWhere("DATE_FORMAT(loan_transaction.transaction_date, '%Y') = '$year'")
+                        ->orderBy('loan_transaction.date_posted')
+                        ->asArray()->all();
+
+                    $transLength = count($getTransactions);
+
+                    if($transLength > 0){
+
+                        $account_no = null;
+                        foreach ($getTransactions as $transKey => $trans) {
+                            $calVersion = Yii::$app->view->getVersion($trans['loan_release_date']);
+                            //Do not include appliance loan old calculation
+                            if(($calVersion == "1" && $trans['loan_loan_id'] == 1)){
+                                continue;
+                            }
+                            
+                            if($trans['running_balance'] == 0){
+                                continue;
+                            }
+                            $getInterestLoan = static::getInterestLoan($trans['amount'], $trans['loan_release_date'], $trans['loan_prepaid_int'], $trans['loan_loan_id']);
+                            $totalInterestEarned += floatval($getInterestLoan);
+
+                            $account_no = $trans['loan_account_no'];
+                        }
+                        $arr['transaction'] = $getTransactions;
+                    }
+                }
+                
+                if($loan['loan_id'] == 2 || $loan['loan_id'] == 1){
+                    $getInterestRegularAppliance = static::getInterestRegularAppliance($loan['member_id'], $loan['loan_id'], 2019);
+                    if($loan['loan_id'] == 1){
+                        $totalInterestEarned += $getInterestRegularAppliance['totalInterestEarned'];
+                    }
+                    else{
+                        $totalInterestEarned = $getInterestRegularAppliance['totalInterestEarned'];
+                    }
+
+                }
+
+                if($totalInterestEarned > 0){
+                    $arr['totalInterestEarned'] = round($totalInterestEarned, 2);
+                    array_push($accountList, $arr);
+                    $totalLoanInterest += $totalInterestEarned;
+                }
+                
+            }
+        }
+
+        return ['accountList' => $accountList, 'totalLoanInterest' => $totalLoanInterest];
+    }
+
+
+    public static function getInterestRegularAppliance($member_id, $loan_id, $year){
+        $totalInterestEarned = 0;
+        //Get loan transaction for that year
+        $getTransactions = LoanTransaction::find()
+            ->select(['loan_transaction.*', 'la.release_date as loan_release_date', 'la.loan_id as loan_loan_id', 'la.prepaid_int as loan_prepaid_int', 'la.account_no as loan_account_no', 'la.int_rate as loan_int_rate'])
+            ->innerJoin('loanaccount la', 'la.account_no = loan_transaction.loan_account')
+            ->where(['la.loan_id' => $loan_id, 'la.member_id' => $member_id, 'is_cancelled' => "0"])
+            ->andWhere('loan_transaction.transaction_type = "RELEASE" OR loan_transaction.transaction_type = "PAYPARTIAL" OR loan_transaction.transaction_type = "PAYCLOSE" OR loan_transaction.transaction_type = "EMERGENCY"')
+            ->andWhere("DATE_FORMAT(loan_transaction.transaction_date, '%Y') = '$year'")
+            ->orderBy('loan_transaction.date_posted, loan_transaction.id')
+            ->asArray()->all();
+
+        $transLength = count($getTransactions);
+        $startYear = $year . "-01-01";
+        $endYear = $year . "-12-31";
+
+        if($transLength > 0){
+            $account_no = null;
+            $count = 0;
+            //Get last running balance
+            $getLastTransactions = LoanTransaction::find()
+            ->innerJoin('loanaccount la', 'la.account_no = loan_transaction.loan_account')
+            ->where(['la.loan_id' => $loan_id, 'la.member_id' => $member_id, 'is_cancelled' => "0"])
+            ->andWhere('loan_transaction.transaction_type = "RELEASE" OR loan_transaction.transaction_type = "PAYPARTIAL" OR loan_transaction.transaction_type = "PAYCLOSE" OR loan_transaction.transaction_type = "EMERGENCY"')
+            ->andWhere("loan_transaction.transaction_date < '$startYear'")
+            ->orderBy('loan_transaction.date_posted DESC')
+            ->asArray()->one();
+            $lastRunningBal = $getLastTransactions ? $getLastTransactions['running_balance'] : 0;
+            $lastPayment = $startYear;
+
+
+            foreach ($getTransactions as $transKey => $trans) {
+                $calVersion = Yii::$app->view->getVersion($trans['loan_release_date']);
+                //If appliance and new release. Continue
+                if($calVersion != "1" && $trans['loan_loan_id'] == 1){
+                    continue;
+                }
+                
+                $interestEarned = LoanHelper::getInterest($lastPayment, $trans['transaction_date'], $lastRunningBal, $trans['loan_int_rate']);
+                $totalInterestEarned = $totalInterestEarned + $interestEarned;
+
+                //If at the last transaction
+                if($transLength == $transKey+1){
+                    $interestEarnedLast = LoanHelper::getInterest($trans['transaction_date'], $endYear, $trans['running_balance'], $trans['loan_int_rate']);
+                    $totalInterestEarned = $totalInterestEarned + $interestEarnedLast;
+                }
+
+                $lastPayment = $trans['transaction_date'];
+                $lastRunningBal = $trans['running_balance'];
+            }
+            $arr['transaction'] = $getTransactions;
+        }
+
+        return ['transaction' => $getTransactions, 'totalInterestEarned' => $totalInterestEarned];
+    }
+
+    public static function getInterestLoan($amount, $release_date, $prepaid_int, $product_id){
+        $amt = 0;
+        $calVersion = Yii::$app->view->getVersion($release_date);
+
+        if($calVersion == '1-2020.08'){ // //New policy update from August 2020
+            $amt = $amount * floatval($prepaid_int);
+        }
+        else{
+            if(in_array(intval($product_id), [3,5,6,8,12,14]) >= 0){
+                $amt = $amount * floatval($prepaid_int) / (1 + floatval($prepaid_int));
+            }
+            else{
+                $amt = $amount * floatval($prepaid_int);
+            }
+        }
+
+        return $amt;
+        
+    }
+
 }

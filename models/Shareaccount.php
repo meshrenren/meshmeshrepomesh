@@ -81,4 +81,12 @@ class Shareaccount extends \yii\db\ActiveRecord
         return $this->hasOne(ShareTransaction::className(), [ 'fk_share_id' => 'accountnumber' ] )->orderBy('id DESC');
     }
 
+    public function getTransaction() {
+        return $this->hasMany(ShareTransaction::className(), [ 'fk_share_id' => 'accountnumber' ] );
+    }
+
+    public function getLoanAccounts() {
+        return $this->hasMany(LoanAccount::className(), [ 'member_id' => 'fk_memid' ] );
+    }
+
 }

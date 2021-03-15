@@ -8,7 +8,8 @@
             	<el-row :gutter="20">
             		<el-col :span="24">
             			<div class = "right-toolbar mb-10">
-            				<el-button type = "primary" @click = "setVoucher()">SAVE</el-button>            			
+            				<el-button type = "primary" @click = "setVoucher()">SAVE</el-button>     
+            				<el-button type = "primary" @click = "printCutOff('print')">PRINT</el-button>           			
             			</div>
             			<el-input class = "mb-10" v-model="search" size="mini" placeholder="Search account name"/>
 						<el-table 
@@ -62,10 +63,12 @@
 	window.noty = require('noty')
     import Noty from 'noty'
     import cloneDeep from 'lodash/cloneDeep'  
-    import _forEach from 'lodash/forEach'  
+    import _forEach from 'lodash/forEach'
+	import fileExport from '../../mixins/fileExport'  
 
 export default {
 	props: ['dataTransaction', 'pageData'],
+	mixins: [fileExport],
 	data: function () {
 		return{
 			pageLoading 			: false,
@@ -73,9 +76,6 @@ export default {
 			loadingTable 			: false,
 			search 					: "",
 			loadingTransTable 		: false,
-			accountTransactionList 	: [],
-			accountSelected 		: {},
-			samplePrint 			: "",
 			voucherList 			: [],
 			dateTransact 			: this.pageData.cutOff,
 			year 					: this.pageData.cutOffYear,
@@ -87,19 +87,17 @@ export default {
 		//this.getAccountList()
 	},
 	computed:{
-		transactionList(){
-			let list = cloneDeep(this.accountTransactionList)
+		totalInterestEarned(){
+			let totalInterest = 0
+    		let transactionToSave = []
+    		_forEach(this.savingsList, savings =>{
+    			if(savings.total_interest > 0){
+    				totalInterest += parseFloat(savings.total_interest)
+    				transactionToSave.push(savings)
+    			}
+    		})
 
-			_forEach(list, ls =>{
-				ls['amount_out'] = ''
-				ls['amount_in'] = ''
-				if(ls.transaction_type == 'WITHDRWL')
-					ls.amount_out = cloneDeep(ls.amount)
-				else
-					ls.amount_in = cloneDeep(ls.amount)
-			})
-
-			return list
+    		return {transactionToSave , totalInterest}
 		}
 	},
 	methods:{
@@ -148,15 +146,7 @@ export default {
             })
 		},
     	setVoucher(){
-    		let totalInterest = 0
-    		let transactionToSave = []
-    		_forEach(this.savingsList, savings =>{
-    			if(savings.total_interest > 0){
-    				totalInterest += parseFloat(savings.total_interest)
-    				transactionToSave.push(savings)
-    			}
-    		})
-    		this.savingsToSave = transactionToSave
+    		this.savingsToSave = cloneDeep(this.totalInterestEarned.transactionToSave)
 
     		totalInterest = this.$nf.numberFixed(totalInterest)
 
@@ -170,6 +160,38 @@ export default {
     		this.voucherList = list
             
             this.isShowVoucher = true
+    	},
+    	printCutOff(type){
+    		if(this.savingsList.length == 0){
+    			new Noty({
+                    theme: 'relax',
+                    type: "error",
+                    layout: 'topRight',
+                    text: "No transaction to process.",
+                    timeout: 3000
+                }).show();
+                return
+    		}
+    		console.log("Here")
+    		this.pageLoading = true
+    		let data = {
+    			totalInterestEarned : this.totalInterestEarned.totalInterest,
+    			transaction : this.savingsList
+    		}
+
+			this.$API.Savings.printCutOff(data, type)
+			.then(result => {
+				let res = result.data
+				if(type == 'pdf'){
+					this.exporter(type, 'Savings Interest Earned', res)
+				}
+				else if(type == 'print'){
+
+					this.winPrint(res.data, 'Savings Interest Earned')
+				}
+			})
+			.catch(err => { console.log(err)})
+			.then(_ => { this.pageLoading = false })
     	},
     	
     	processVoucher(data){

@@ -4,6 +4,10 @@ namespace app\helpers;
 
 use Yii;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use \app\models\Shareaccount;
+use \app\models\ShareTransaction;
+
+use app\helpers\accounts\LoanHelper;
 
 
 class ReportHelper 
@@ -403,5 +407,59 @@ class ReportHelper
         $transTable .= '</table>';
 
         return $transTable;
+    }
+
+    public static function getDividendRefund(){
+
+        $cutOff = Yii::$app->view->getCutOff();
+        $cutOffYear = date("Y", strtotime($cutOff));
+        $year = $cutOffYear;
+
+        //Get member that has share capital
+        $getAccounts = Shareaccount::find()->innerJoinWith([/*'product', */'member'])
+            ->joinWith(['transaction' => function ($query) use ($year) {
+                $query->where("DATE_FORMAT(transaction_date, '%Y') = '$year'")
+                ->orderBy('transaction_date ASC');
+                }
+            ])
+            ->with(['loanAccounts' => function ($query){
+                $query->select('DISTINCT(loanaccount.loan_id) as loan_id, loanaccount.member_id')
+                /*->select(['loanaccount.loan_id', 'loanaccount.member_id'])*/;
+                }
+            , ])
+            ->orderBy('member.last_name ASC')
+            ->asArray()->all();
+
+        $accountList = array();
+        foreach ($getAccounts as $acc) {
+            $transactionList = $acc['transaction'];
+            $lastBalance = 0;
+            $totalBalance = 0;
+            $totalAmount = 0;
+            $countTrans = count($transactionList);
+            if($countTrans > 0){
+                foreach ($transactionList as $trans) {
+                    $lastBalance = $trans['running_balance'];
+                    $totalBalance += $trans['running_balance'];
+                    $totalAmount += $trans['amount'];
+                }
+                $acc['average_running_balance'] = $totalBalance / $countTrans ;
+                $acc['total_running_balance'] = $totalBalance;
+                $acc['count_transaction'] = $countTrans;
+                $acc['totalAmount'] = $totalAmount;
+            }
+
+            $acc['transaction'] = $transactionList;
+            $acc['last_running_balance'] = $lastBalance;
+
+            //$acc['loanAccountsOld'] = $acc['loanAccounts'];
+            $getLoanInterestEarned = LoanHelper::getLoanInterestEarned($acc['loanAccounts'], $year);
+            $acc['loanAccounts'] = $getLoanInterestEarned['accountList'];
+            $acc['totalLoanInterest'] = $getLoanInterestEarned['totalLoanInterest'];
+
+            array_push($accountList, $acc);
+        }
+
+        return $accountList;
     }
 }

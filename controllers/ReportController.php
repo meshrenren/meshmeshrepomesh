@@ -268,4 +268,29 @@ class ReportController extends \yii\web\Controller
         }
     }
 
+    public function actionDividendRefund(){
+        $this->layout = 'main-vue';
+
+        $loandProduct  = \app\models\LoanProduct::find()->joinWith(['serviceCharge'])->where(['is_active' => 1])
+            ->asArray()->all();
+        $stationList = SettingsHelper::getStation();
+        $pageData = [
+            'stationList'   => $stationList,
+            'loandProducts' => $loandProduct
+        ];
+
+        return $this->render('dividen-refund', [
+            'pageData'    => $pageData
+        ]);
+    }
+
+    public function actionGetDividendRefund(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $post = Yii::$app->getRequest()->getBodyParams();
+        $accountList = ReportHelper::getDividendRefund();
+
+        return ['data' => $accountList];
+    }
+
 }

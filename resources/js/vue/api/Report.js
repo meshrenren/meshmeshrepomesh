@@ -104,4 +104,9 @@ export default {
 			})
 		}
 	},
+
+	getDividendRefund(){	
+
+		return axios.get($baseUrl + '/report/get-dividend-refund')
+	},
 }

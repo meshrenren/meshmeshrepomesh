@@ -203,4 +203,8 @@ class ShareHelper
         }
         return ['success' => $success];
     }
+
+    public static function getShareAverage(){
+        
+    }
 }

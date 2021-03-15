@@ -984,12 +984,10 @@ export default {
     	getInterestLoan(totalPaid, account, product){
     		let amt = 0
     		let calVersion = this.$ch.checkVersion(account.release_date)
-    		console.log("getInterestLoan", totalPaid, account, product)
+    		console.log("getInterestLoan", calVersion, totalPaid, account, product)
 
     		if(calVersion == '1-2020.08'){ // //New policy update from August 2020
-    			if(product.id != 1){
-	    			amt = totalPaid * parseFloat(account.prepaid_int)
-	    		}
+    			amt = totalPaid * parseFloat(account.prepaid_int)
     		}
     		else{
     			if([3,5,6,8,12,14].indexOf(Number(product.id)) >= 0){

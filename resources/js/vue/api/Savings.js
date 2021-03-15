@@ -56,4 +56,26 @@ export default {
 	saveCutoff(params){	
 		return axios.post($baseUrl + '/savings/save-cutoff', params)
 	},
+
+	printCutOff(data, type){	
+		let params = {
+			data : data,
+			type : type,
+		}
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/savings/print-cut-off',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/savings/print-cut-off',
+				data: params,
+			})
+		}
+	},
 }
