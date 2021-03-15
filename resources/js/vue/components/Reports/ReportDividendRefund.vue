@@ -22,7 +22,8 @@
              </el-form>
             	<el-row :gutter="20">
             		<el-col :span="24">
-            			<div class = "right-toolbar mb-10">       			
+            			<div class = "right-toolbar mb-10">  
+                            <el-button type = "default" @click = "printList('print')">PRINT</el-button>     			
             			</div>
             			<!-- <el-input class = "mb-10" v-model="search" size="mini" placeholder="Search account name"/> -->
 						<el-table 
@@ -38,7 +39,7 @@
 				            </el-table-column> -->
 				            <el-table-column label="Name"  width="230">
 				                <template slot-scope="scope">
-				                   	<span v-if = "scope.row.station_name" >{{ scope.row.station_name }}</span>
+				                   	<span v-if = "scope.row.station_name" ><strong>{{ scope.row.station_name }}</strong></span>
                                     <span v-else >{{ scope.row.member.fullname }}</span>
 				                </template>
 				            </el-table-column>
@@ -52,7 +53,7 @@
                                     v-for="item in loandProducts"
                                     :key = "item.id"
                                     :prop="'loan_id_' + item.id"
-                                    :label="item.shor_name"
+                                    :label="item.short_name"
                                     header-align = "center">
                                     <template slot-scope="scope">
                                        <span >{{ $nf.formatNumber(scope.row['loan_id_' + item.id], 2) }}</span>
@@ -186,6 +187,49 @@ export default {
                 this.pageLoading = false
             })
       	},
+        printList(type){
+
+            this.pageLoading = true
+            let header = [
+                {label : "Name", prop : "fullname"},
+                {label : "Average Balance", prop : "average_running_balance", type : 'number'}
+            ]
+
+            _forEach(this.loandProducts, ln => {
+                let arr = {
+                    label : ln.short_name,
+                    prop : 'loan_id_' + ln.id,
+                    type : 'number',
+                }
+                header.push(arr)
+            })
+
+            let moreHeader = [
+                {label : "Total Interest Earned", prop : "totalLoanInterest", type : 'number'}
+            ]
+            header = header.concat(moreHeader)
+
+            let data = {
+                loanList : this.tableList,
+                header
+                
+            }
+
+            this.$API.Report.printInterstEarned(data, type)
+            .then(result => {
+                let res = result.data
+                if(type == 'pdf'){
+                    this.exporter(type, 'Interest Earned', res)
+                }
+                else if(type == 'print'){
+                    this.winPrint(res.data, 'Interest Earned')
+                }
+            })
+            .catch(err => { console.log(err)})
+            .then(_ => { this.pageLoading = false })
+
+            //window.location.href = this.$baseUrl+"/savings/print-withdraw?account_no="+this.accountDetails.account_no;
+        }
 	}
 }
 </script>

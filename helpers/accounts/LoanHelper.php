@@ -1396,7 +1396,7 @@ class LoanHelper
         return ['accountList' => $accountList, 'totalLoanInterest' => $totalLoanInterest];
     }
 
-
+    //This is use for cut off only
     public static function getInterestRegularAppliance($member_id, $loan_id, $year){
         $totalInterestEarned = 0;
         //Get loan transaction for that year
@@ -1471,6 +1471,69 @@ class LoanHelper
 
         return $amt;
         
+    }
+
+    public static function getInterestByAccount($account){
+
+        $currentDate = ParticularHelper::getCurrentDay();
+        $systemDate = date("Y-m-d", strtotime($currentDate));
+        $cutOff = Yii::$app->view->getCutOff();
+        $release_date = $account['release_date'];
+
+        $getTransactions = LoanTransaction::find()->where(['loan_account' => $account['account_no'], 'is_cancelled' => "0"])
+                    ->andWhere('transaction_type = "RELEASE" OR transaction_type = "PAYPARTIAL" OR transaction_type = "PAYCLOSE" OR transaction_type = "EMERGENCY"')
+                    ->andWhere('transaction_date <= "' . $systemDate . '"')
+                    ->orderBy('date_posted')
+                    ->asArray()->all();
+        $transLength = count($getTransactions);
+
+        $lastPayment = date('Y-m-d', strtotime($cutOff . ' +1 day'));
+        $lastRunningBal = $account['principal'];
+        if($release_date > $lastPayment){
+           $lastPayment =  $release_date;
+        }
+        $interest_accum = 0;
+        $total_amount_paid = 0;
+        $prepaid_interest = 0;
+
+        foreach ($getTransactions as $transKey => $transaction) {
+
+            $last_tran_date = $transaction['transaction_date'];
+
+            if($transaction['transaction_date'] <= $cutOff){
+                $balance_after_cutoff = $transaction['running_balance'];
+                $lastRunningBal = $transaction['running_balance'];
+                continue;
+            }
+
+            if($transaction['transaction_type'] == "PAYPARTIAL"){
+                if($transaction['amount'] > 0){
+                    $total_amount_paid = $total_amount_paid + $transaction['amount'];
+                }
+            }
+
+            if($transaction['prepaid_intpaid'] && floatval($transaction['prepaid_intpaid']) > 0){
+                $prepaid_interest = $prepaid_interest + $transaction['prepaid_intpaid'];
+            }
+
+            //Recalculate interest earned. Dili magsalig sa DB
+            $interestEarned = LoanHelper::getInterest($lastPayment, $transaction['transaction_date'], $lastRunningBal, $account['int_rate']);
+            $interest_accum = $interest_accum + $interestEarned;
+            //var_dump($interestEarned);
+
+            //If at the last transaction
+            if($transLength == $transKey+1){
+                $interestEarnedLast = LoanHelper::getInterest($transaction['transaction_date'], $systemDate, $transaction['running_balance'], $account['int_rate']);
+                $interest_accum = $interest_accum + $interestEarnedLast;
+                //var_dump($interestEarned);
+            }
+
+            $lastPayment = $transaction['transaction_date'];
+            $lastRunningBal = $transaction['running_balance'];
+            $amount_balance = $transaction['running_balance'];
+        }
+
+        return ['interest_earned' => $interest_accum];
     }
 
 }

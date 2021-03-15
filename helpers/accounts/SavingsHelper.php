@@ -8,6 +8,7 @@ use \app\models\Savingsproduct;
 use \app\models\SavingsTransaction;
 
 use app\helpers\GlobalHelper;
+use app\helpers\ReportHelper;
 
 class SavingsHelper 
 {
@@ -144,6 +145,26 @@ class SavingsHelper
         $listTemplate = $listTemplate . $transTable;
 
         $listTemplate .= $accountDetail;
+
+        return $listTemplate;
+    }
+
+    public static function printAccountList($postData){
+        $transaction = $postData['transaction'];
+        $header = $postData['header'];
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Savings Account List</div></tr>
+        </table>';
+
+        $transTable = "<div>";
+        if(count($transaction) > 0){
+            $tableList = ReportHelper::tableList($header, $transaction);
+            $transTable .= $tableList;
+        }
+        $transTable .= "</div>";
+
+        $listTemplate = $listTemplate . $transTable;;
 
         return $listTemplate;
     }

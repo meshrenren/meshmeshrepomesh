@@ -109,4 +109,27 @@ export default {
 
 		return axios.get($baseUrl + '/report/get-dividend-refund')
 	},
+
+	printInterstEarned(data, type){	
+		let params = {
+			data : data,
+			type : type,
+		}
+
+		if(type == 'pdf'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-interest-earned',
+				data: params,
+				responseType: 'blob'
+			})
+		}
+		else if(type == 'print'){
+			return axios({
+				method: 'post',
+				url: $baseUrl + '/report/print-interest-earned',
+				data: params,
+			})
+		}
+	},
 }

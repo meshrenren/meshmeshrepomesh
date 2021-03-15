@@ -236,6 +236,12 @@ class SiteController extends Controller
                 $template = PaymentHelper::printList($postData['data']);
             else if($accType == 'VoucherParticular')
                 $template = VoucherHelper::printList($postData['data']);
+            else if($accType == 'VoucherParticular')
+                $template = VoucherHelper::printList($postData['data']);
+            else if($accType == 'SavingsAccount')
+                $template = SavingsHelper::printAccountList($postData['data']);
+            else if($accType == 'ShareAccount')
+                $template = ShareHelper::printAccountList($postData['data']);
             
             $type = $postData['type'];
             if($type == "pdf"){

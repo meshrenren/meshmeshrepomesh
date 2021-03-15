@@ -202,7 +202,7 @@ class LoanController extends \yii\web\Controller
                         ->orderBy('release_date DESC')
                         ->asArray()->one();
 
-                     $accArr = array();
+                    $accArr = array();
                     if($acc){
                         $accArr = $acc;
                         //Getarrear
@@ -214,6 +214,14 @@ class LoanController extends \yii\web\Controller
                         $lastPayment = LoanHelper::getLastPayment($acc['account_no']);
                         if($lastPayment){
                             $acc['account_last_payment'] = $lastPayment->date_posted;
+                        }
+
+                        $calVersion = Yii::$app->view->getVersion($acc['release_date']);
+                        //For appliance loan. Check if old version
+                        if($acc['loan_id'] == 2 || ($acc['loan_id'] == 1 && $calVersion != "1")){
+                            //getInterestByAccount
+                            $getInterest = LoanHelper::getInterestByAccount($acc);
+                            $acc['interest_earned'] = $getInterest['interest_earned'];
                         }
                         //Check LoanHelper -> getAccountLoanInfo for updates
                         array_push($accountList, $acc);

@@ -7,6 +7,8 @@ use \app\models\Shareaccount;
 use \app\models\ShareProduct;
 use \app\models\ShareTransaction;
 
+use app\helpers\ReportHelper;
+
 class ShareHelper 
 {
 
@@ -204,7 +206,24 @@ class ShareHelper
         return ['success' => $success];
     }
 
-    public static function getShareAverage(){
-        
+    public static function printAccountList($postData){
+        $transaction = $postData['transaction'];
+        $header = $postData['header'];
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Share Account List</div></tr>
+        </table>';
+
+        $transTable = "<div>";
+        if(count($transaction) > 0){
+            $tableList = ReportHelper::tableList($header, $transaction);
+            $transTable .= $tableList;
+        }
+        $transTable .= "</div>";
+
+        $listTemplate = $listTemplate . $transTable;;
+
+        return $listTemplate;
     }
+
 }

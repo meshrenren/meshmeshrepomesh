@@ -375,11 +375,19 @@ class ReportHelper
                 $val = isset($trans[$head['prop']]) ? $trans[$head['prop']] : null;
                 if(isset($head['type'])){
                     if($head['type'] == 'number'){
-                       $val = $val && floatval($val) > 0 ? Yii::$app->view->formatNumber($val) : null;
-                       if(!isset($total[$head['prop']])){
+                        if($val && floatval($val) > 0){
+                            $val = Yii::$app->view->formatNumber($val);
+                        }
+                        else if($val <= 0){
+                            $val = $val;
+                        }
+                        else{
+                            $val = null;
+                        }
+                        if(!isset($total[$head['prop']])){
                             $total[$head['prop']] = 0;
-                       }
-                       $total[$head['prop']] += floatval($val);
+                        }
+                        $total[$head['prop']] += floatval($val);
                     }
                 }
                 $val = $val !== null ? $val : "";
@@ -409,6 +417,65 @@ class ReportHelper
         return $transTable;
     }
 
+    public static function printInterstEarned($postData){
+        $loanList = $postData['loanList'];
+        $header = $postData['header'];
+
+        $cutOff = Yii::$app->view->getCutOff();
+        $cutOffYear = date("Y", strtotime($cutOff));
+        $start = $cutOffYear . "-01-01";
+        $end = $cutOffYear . "-12-31";
+
+        $listTemplate = '<table width = "100%">
+            <tr><td width = "100%" align = "center"><div>DILG XI EMPLOYEES MULTI-PURPOSE COOPERATIVE SYSTEMS<div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">Interest Earned</div></tr>
+            <tr><td width = "100%" align = "center"><div style = "font-size: 18px;">'.$start.' to '.$end.'</div></tr>
+        </table>';
+
+        $transTable = "<div>";
+        $transTable = '<table class = "list-table table table-bordered mt-10" width = "100%">
+            <tr>';
+        foreach ($header as $key => $value) {
+            $transTable .= '<th>'.$value['label'].'</th>';
+        }
+
+        foreach ($loanList as $trans) {
+            $transTable .= '<tr>';
+            foreach ($header as $key => $head) {
+                $val = isset($trans[$head['prop']]) ? $trans[$head['prop']] : null;
+                if(isset($head['type'])){
+                    if($head['type'] == 'number'){
+                       $val = $val && floatval($val) > 0 ? Yii::$app->view->formatNumber($val) : null;
+                       if(!isset($total[$head['prop']])){
+                            $total[$head['prop']] = 0;
+                       }
+                       $total[$head['prop']] += floatval($val);
+                    }
+                }
+                $val = $val !== null ? $val : "";
+                if($head['prop'] == 'fullname'){
+                    if(isset($trans['station_name']) && $trans['station_name']){
+                        $val = '<strong>'.$trans['station_name'] .'</strong>';
+                    }
+                    else{
+                        $val = $trans['member']['fullname'];
+                    }
+                }
+                $transTable .= '<td>'.$val.'</td>';
+            }
+            $transTable .= '</tr>';
+
+        }
+        $transTable .= '</tr>';
+
+        $transTable .= '</table>';
+
+        $transTable .= "</div>";
+        $listTemplate = $listTemplate . $transTable;
+
+        return $listTemplate;
+    }
+
     public static function getDividendRefund(){
 
         $cutOff = Yii::$app->view->getCutOff();
@@ -427,6 +494,7 @@ class ReportHelper
                 /*->select(['loanaccount.loan_id', 'loanaccount.member_id'])*/;
                 }
             , ])
+            ->where('member.station_id = 11')
             ->orderBy('member.last_name ASC')
             ->asArray()->all();
 

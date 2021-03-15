@@ -83,6 +83,11 @@
 						                    <span v-if = "scope.row.arrears && scope.row.arrears > 0">{{ $nf.formatNumber(scope.row.arrears, 2)  }}</span>
 						                </template>
 						            </el-table-column>
+						            <el-table-column label="Interest">
+						                <template slot-scope="scope">
+						                    <span v-if = "scope.row.arrears && scope.row.arrears > 0">{{ $nf.formatNumber(scope.row.interest_earned, 2)  }}</span>
+						                </template>
+						            </el-table-column>
 						            <el-table-column label="Duration">
 						                <template slot-scope="scope">
 						                    <span>{{ scope.row.term }}</span>

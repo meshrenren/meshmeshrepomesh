@@ -7,9 +7,12 @@
             <div class = "box-body">
             	<el-row :gutter="20">
             		<el-col :span="10">
+            			<div class = "right-toolbar mb-10">
+            				<el-button type = "default" @click = "printAccountList('print')">Print List </el-button>
+            			</div>
             			<el-input class = "mb-10" v-model="search" size="mini" placeholder="Search account name"/>
 						<el-table 
-							:data="savingsList.filter(data => !search || (data.account_name && data.account_name.toLowerCase().includes(search.toLowerCase())) || (data.member && data.member.fullname.toLowerCase().includes(search.toLowerCase())))"
+							:data="savingsAccList.filter(data => !search || (data.account_name && data.account_name.toLowerCase().includes(search.toLowerCase())) || (data.member && data.member.fullname.toLowerCase().includes(search.toLowerCase())))"
 							style="width: 100%" 
 							height="450px" stripe border 
 							v-loading = "loadingTable">
@@ -143,6 +146,20 @@ export default {
 		this.getAccountList()
 	},
 	computed:{
+		savingsAccList(){
+			let list = cloneDeep(this.savingsList)
+
+			_forEach(list, ls =>{
+				ls['amount_out'] = ''
+				ls['amount_in'] = ''
+				if(ls.account_name)
+					ls.account_name = ls.account_name
+				else
+					ls.account_name = ls.member ? ls.member.fullname : ""
+			})
+
+			return list
+		},
 		transactionList(){
 			let list = cloneDeep(this.accountTransactionList)
 
@@ -270,6 +287,36 @@ export default {
 				}
 				else if(type == 'print'){
 					this.winPrint(res.data, 'Savings Account')
+				}
+			})
+			.catch(err => { console.log(err)})
+			.then(_ => { this.pageLoading = false })
+    	},
+    	printAccountList(type){
+    		this.pageLoading = true
+    		let account = cloneDeep(this.accountSelected)
+    		let accName = account.account_name
+    		if(account.member){
+    			accName = account.member.fullname
+    		}
+
+    		let data = {
+    			transaction : this.savingsAccList,
+    			header : [
+    				{label : "Account No.", prop : "account_no"},
+                	{label : "Name", prop : "account_name"},
+                	{label : "Balance", prop : "balance", type : 'number'}
+    			]
+    		}
+
+			this.$API.General.printList(data, type, 'SavingsAccount')
+			.then(result => {
+				let res = result.data
+				if(type == 'pdf'){
+					this.exporter(type, 'Savings Account List', res)
+				}
+				else if(type == 'print'){
+					this.winPrint(res.data, 'Savings Account List')
 				}
 			})
 			.catch(err => { console.log(err)})
