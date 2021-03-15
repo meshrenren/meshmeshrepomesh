@@ -18,6 +18,8 @@ use yii\helpers\Html;
             <span class="sr-only">Toggle navigation</span>
         </a>
         <?php
+        $cutOff = Yii::$app->view->getCutOff();
+        $cutOffYear = date("Y", strtotime($cutOff));
         echo yii\bootstrap\Nav::widget(
             [
                 'options' => ['class' => 'nav navbar-nav'],
@@ -240,6 +242,14 @@ use yii\helpers\Html;
                             [
                                 'label'     => 'Loan Arrears', 
                                 'url'       => ['report/loan-arrears']
+                            ],
+                            [
+                                'label'     => 'Savings Cut Off', 
+                                'url'       => ['savings/cut-off']
+                            ],
+                            [
+                                'label'     => 'Time Deposit List Cut Off', 
+                                'url'       => ['time-deposit/list?year='.$cutOffYear]
                             ],
                         ],
                         'visible'   => Yii::$app->user->identity->checkUserAccess("_reports_", "_view")

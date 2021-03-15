@@ -148,7 +148,7 @@ export default {
     	setVoucher(){
     		this.savingsToSave = cloneDeep(this.totalInterestEarned.transactionToSave)
 
-    		totalInterest = this.$nf.numberFixed(totalInterest)
+    		let totalInterest = this.$nf.numberFixed(this.totalInterestEarned.totalInterest, 2)
 
     		let list = []
             //Set product name

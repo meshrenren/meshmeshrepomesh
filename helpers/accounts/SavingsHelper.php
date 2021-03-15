@@ -310,6 +310,8 @@ class SavingsHelper
         $accountDetail = str_replace('[total_interest]', Yii::$app->view->formatNumber($totalInterestEarned), $accountDetail);
 
         $listTemplate .= $accountDetail;
+        $totalBalance = 0;
+        $totalInterest = 0;
 
         if(count($transaction) > 0){
             $transTable = '<table class = "table table-bordered mt-10" width = "100%">
@@ -324,11 +326,13 @@ class SavingsHelper
                 if(!$fullName){
                     $fullName = $trans['member']['fullname'];
                 }
+                $totalBalance += $trans['balance'];
+                $totalInterest += $trans['total_interest'];
                 $transTable .= '<tr>
                     <td>'.$trans['account_no'].'</td> 
                     <td>'.$fullName.'</td> 
                     <td>'.Yii::$app->view->formatNumber($trans['balance']).'</td> 
-                    <td>'.$trans['total_interest'].'</td> 
+                    <td>'.Yii::$app->view->formatNumber($trans['total_interest']).'</td> 
                 </tr>';
             }
 
@@ -337,7 +341,21 @@ class SavingsHelper
 
         $listTemplate = $listTemplate . $transTable;
 
-        $listTemplate .= $accountDetail;
+        $accountDetail2 = '<table>
+            <tr>
+                <td style = "font-weight: bold;">Total Balance: </td> 
+                <td><span>[total_balance]</span></td>
+            </tr> 
+            <tr>
+                <td style = "font-weight: bold;">Total Interest Earned: </td> 
+                <td><span>[total_interest]</span></td>
+            </tr>
+        </table>';
+
+        $accountDetail2 = str_replace('[total_balance]', Yii::$app->view->formatNumber($totalBalance), $accountDetail2);
+        $accountDetail2 = str_replace('[total_interest]', Yii::$app->view->formatNumber($totalInterest), $accountDetail2);
+
+        $listTemplate .= $accountDetail2;
 
         return $listTemplate;
     }

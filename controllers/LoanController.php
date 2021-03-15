@@ -338,11 +338,11 @@ class LoanController extends \yii\web\Controller
                     //If loan exist before cut off. Get Cut Off Data
                     //The loan account id condition is for those renewed loans before the cut off for 2020. Kay nalate man ko ug parun sa cutoff. So if ever nagrenew nani sila tanan. Pwede n tanggalon.
                     if($release_date <= $cutOff 
-                        || ($acc['account_no']) == '2-000055' || ($acc['account_no']) == '2-000090'  
-                        || ($acc['account_no']) == '2-000224'  || ($acc['account_no']) == '2-000224'
-                        || ($acc['account_no']) == '2-000156' || ($acc['account_no']) == '2-000262'
-                        || ($acc['account_no']) == '2-000182' || ($acc['account_no']) == '2-000167'
-                        || ($acc['account_no']) == '2-000186' || ($acc['account_no']) == '2-000263'){
+                        || ($acc['account_no']) == '2-003004' || ($acc['account_no']) == '2-003006'  
+                        || ($acc['account_no']) == '2-003007'  || ($acc['account_no']) == '2-003005'
+                        || ($acc['account_no']) == '2-003008' || ($acc['account_no']) == '2-003009'
+                        || ($acc['account_no']) == '2-003012' || ($acc['account_no']) == '2-003010'
+                        || ($acc['account_no']) == '2-003011' || ($acc['account_no']) == '2-003014'){
                         $cutOffYear = date('Y', strtotime($cutOff));
                         $getCutOff = LoanHelper::getCutOff($cutOffYear, $acc['loan_id'], $acc['member_id']);
                         if($getCutOff){

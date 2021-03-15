@@ -132,7 +132,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import _message from '../../mixins/messageDialog.js'
 import fileExport from '../../mixins/fileExport'
 export default {
-	props: ['dataTimeDepositAccounts', 'typeList', 'header'],
+	props: ['dataTimeDepositAccounts', 'typeList', 'header', 'pageData'],
 	mixins: [_message, fileExport],
 	data: function () {
 		let status = {ACTIVE : 'ACTIVE', MATURED : 'MATURED', CLOSED : 'CLOSED', ALL : 'ALL'}
@@ -146,7 +146,8 @@ export default {
 			statusList 		: status,
 			tdStatus 		: "ALL",
 			permission 		: {},
-			pageLoading 	: false
+			pageLoading 	: false,
+			year 			: this.pageData && this.pageData.year ? this.pageData.year : null
 		}
 	},
     computed: {

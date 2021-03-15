@@ -288,16 +288,23 @@ class TimeDepositController extends \yii\web\Controller
         }
     }
 
-    public function actionList(){
+    public function actionList($year = null){
         $this->layout = 'main-vue';
         
         $date = date("Y-m-d");
-        $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member', 'transactions'])
-            ->asArray()->all();
+        $tdlist = \app\models\TimeDepositAccount::find()->joinWith(['member', 'transactions']);
+        if($year){
+            $tdlist = $tdlist->andWhere("DATE_FORMAT(open_date, '%Y') = '$year' OR DATE_FORMAT(maturity_date, '%Y') = '$year'");
+        }
+        $tdlist = $tdlist->asArray()->all();
+        $pageData = [
+            'year' => $year
+        ];
         return $this->render('list', [
             'tdAccounts'    => $tdlist,
             'typeList'      => 'td_list',
-            'header'        => 'All Accounts'
+            'header'        => 'All Accounts',
+            'pageData'      => $pageData
         ]);
 
     }
